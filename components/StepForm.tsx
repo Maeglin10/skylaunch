@@ -13,10 +13,45 @@ const BUSINESS_TYPES = [
 const TONES = ["Professional", "Friendly", "Bold", "Luxurious"];
 
 const TEMPLATES = [
-  { id: "landing", label: "Landing Page", desc: "Conversion-focused, single page", icon: "🚀" },
-  { id: "vitrine", label: "Site Vitrine", desc: "Professional multi-page presence", icon: "🏢" },
-  { id: "ecommerce", label: "E-commerce", desc: "Online store with cart", icon: "🛍️" },
+  // Marketing
+  { id: "landing", label: "Landing Page", desc: "High-conversion single page", icon: "🚀", category: "Marketing" },
+  { id: "saas", label: "SaaS Product", desc: "Software product with features & pricing", icon: "⚡", category: "Tech" },
+  { id: "agency", label: "Creative Agency", desc: "Bold portfolio-first agency site", icon: "🎨", category: "Agency" },
+  // Business
+  { id: "vitrine", label: "Business Vitrine", desc: "Professional multi-page presence", icon: "🏢", category: "Business" },
+  { id: "consultant", label: "Consultant / Coach", desc: "Authority-building personal brand", icon: "🎯", category: "Personal" },
+  { id: "portfolio", label: "Portfolio", desc: "Work showcase for creatives & devs", icon: "💼", category: "Personal" },
+  // Commerce
+  { id: "ecommerce", label: "E-commerce Store", desc: "Full online store with cart", icon: "🛍️", category: "Commerce" },
+  { id: "restaurant", label: "Restaurant / Food", desc: "Menu, reservations, ambiance", icon: "🍽️", category: "Hospitality" },
+  { id: "hotel", label: "Hotel / B&B", desc: "Rooms, gallery, booking CTA", icon: "🏨", category: "Hospitality" },
+  // Services
+  { id: "healthcare", label: "Healthcare / Clinic", desc: "Trust-first medical practice site", icon: "🏥", category: "Health" },
+  { id: "realestate", label: "Real Estate", desc: "Property listings & agent profile", icon: "🏠", category: "Property" },
+  { id: "fitness", label: "Fitness / Wellness", desc: "Classes, trainers, transformation", icon: "💪", category: "Health" },
+  // Events & Social
+  { id: "event", label: "Event / Conference", desc: "Speakers, schedule, tickets", icon: "🎪", category: "Events" },
+  { id: "nonprofit", label: "Non-profit / NGO", desc: "Mission-driven, donation-focused", icon: "❤️", category: "Social" },
+  { id: "startup", label: "Startup Launch", desc: "Pre-launch waitlist & social proof", icon: "🌟", category: "Tech" },
+  // Premium
+  { id: "luxury", label: "Luxury / Couture", desc: "Dark marble, gold accents, haute couture", icon: "💎", category: "Premium" },
+  { id: "brutalist", label: "Brutalist Editorial", desc: "Bold, raw, massive typography", icon: "◼", category: "Premium" },
+  { id: "magazine", label: "Magazine / Editorial", desc: "Grid-based journalistic layout", icon: "📰", category: "Premium" },
+  { id: "aurora", label: "Aurora / Wellness", desc: "Iridescent gradients, soft glow", icon: "✦", category: "Premium" },
+  { id: "3d-tech", label: "3D Tech / Web3", desc: "Holographic grid, glitch effects", icon: "⬡", category: "Premium" },
+  { id: "minimal-pro", label: "Minimal Pro", desc: "Architecture-grade negative space", icon: "—", category: "Premium" },
 ];
+
+// Group templates by category, preserving insertion order
+const TEMPLATE_CATEGORIES = TEMPLATES.reduce<{ category: string; templates: typeof TEMPLATES }[]>((acc, t) => {
+  const existing = acc.find((g) => g.category === t.category);
+  if (existing) {
+    existing.templates.push(t);
+  } else {
+    acc.push({ category: t.category, templates: [t] });
+  }
+  return acc;
+}, []);
 
 const TOTAL_STEPS = 5;
 
@@ -216,17 +251,36 @@ export function StepForm() {
                 </div>
               </Field>
               <Field label="Template">
-                <div className="grid grid-cols-1 gap-3">
-                  {TEMPLATES.map((t) => (
-                    <button key={t.id} type="button" onClick={() => set("template", t.id)}
-                      className={`flex items-center gap-4 p-4 rounded-xl border text-left transition-all ${form.template === t.id ? "border-violet-600 bg-violet-600/10" : "border-zinc-700 hover:border-zinc-500"}`}>
-                      <span className="text-2xl">{t.icon}</span>
-                      <div>
-                        <div className="text-white font-medium">{t.label}</div>
-                        <div className="text-zinc-400 text-sm">{t.desc}</div>
+                <div className="space-y-6">
+                  {TEMPLATE_CATEGORIES.map((group) => (
+                    <div key={group.category}>
+                      <div className="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-2">
+                        {group.category}
                       </div>
-                      {form.template === t.id && <Check className="w-5 h-5 text-violet-400 ml-auto" />}
-                    </button>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        {group.templates.map((t) => (
+                          <button
+                            key={t.id}
+                            type="button"
+                            onClick={() => set("template", t.id)}
+                            className={`flex flex-col items-start gap-2 p-3 rounded-xl border text-left transition-all ${
+                              form.template === t.id
+                                ? "border-violet-600 bg-violet-600/10"
+                                : "border-zinc-700 hover:border-zinc-500"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between w-full">
+                              <span className="text-xl">{t.icon}</span>
+                              {form.template === t.id && <Check className="w-4 h-4 text-violet-400" />}
+                            </div>
+                            <div>
+                              <div className="text-white font-medium text-sm leading-tight">{t.label}</div>
+                              <div className="text-zinc-500 text-xs mt-0.5 leading-snug">{t.desc}</div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   ))}
                 </div>
               </Field>
