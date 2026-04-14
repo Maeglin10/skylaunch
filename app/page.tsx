@@ -211,7 +211,7 @@ function ThemesSection() {
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-[#09090b] text-white">
+    <div id="main-content" className="min-h-screen bg-[#09090b] text-white">
       {/* Nav */}
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-zinc-800/60 bg-[#09090b]/80 backdrop-blur-md">
         <div className="mx-auto max-w-5xl px-6 h-14 flex items-center justify-between">
@@ -262,7 +262,7 @@ export default function HomePage() {
                 Browse 181 themes
               </Link>
             </div>
-            <p className="text-zinc-600 text-sm mt-4">Free preview — no credit card required</p>
+            <p className="text-zinc-300 text-sm mt-4">Free preview — no credit card required</p>
           </motion.div>
         </div>
       </section>
@@ -329,7 +329,8 @@ export default function HomePage() {
       </section>
 
       <footer className="border-t border-zinc-800 px-6 py-8 text-center text-zinc-500 text-sm">
-        © 2025 AeviaLaunch — A product by Valentin Milliand ·{" "}
+        © 2025 AeviaLaunch — A product by{" "}
+        <a href="https://valentin-milliand.vercel.app" rel="noopener noreferrer" className="hover:text-zinc-300 transition-colors">Valentin Milliand</a> ·{" "}
         <Link href="/themes" className="hover:text-zinc-300 transition-colors">Themes</Link>
         {" · "}
         <Link href="/configure" className="hover:text-zinc-300 transition-colors">Build my site</Link>

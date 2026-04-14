@@ -96,7 +96,7 @@ function SiteThemeCard({ theme, index }: { theme: typeof SITE_THEMES[0]; index: 
             </div>
             <div className="flex-1">
               <h3 className="text-lg font-bold text-white mb-2">{theme.label}</h3>
-              <p className="text-xs text-zinc-400 leading-relaxed">{theme.desc}</p>
+              <p className="text-xs text-zinc-300 leading-relaxed">{theme.desc}</p>
             </div>
             <div className="mt-5 pt-4 border-t border-white/5 flex items-center justify-between">
               <span className="text-xs text-zinc-600 font-mono">{theme.id}</span>
@@ -183,7 +183,7 @@ export default function ThemesGallery() {
   const visibleImpact = showAllImpact ? filteredImpact : filteredImpact.slice(0, 48);
 
   return (
-    <div className="min-h-screen bg-[#080809]">
+    <div id="main-content" className="min-h-screen bg-[#080809]">
       {/* Sticky header */}
       <div className="border-b border-white/5 bg-[#080809]/80 backdrop-blur-md sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
@@ -213,7 +213,7 @@ export default function ThemesGallery() {
             Pick your<br />
             <span className="bg-gradient-to-r from-violet-400 via-fuchsia-400 to-pink-400 bg-clip-text text-transparent">perfect style.</span>
           </h1>
-          <p className="text-zinc-400 text-base sm:text-lg max-w-lg mx-auto leading-relaxed mb-8">
+          <p className="text-zinc-300 text-base sm:text-lg max-w-lg mx-auto leading-relaxed mb-8">
             181 themes across 2 collections. Click any theme to see a live preview with real content.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-5 text-sm text-zinc-500">
@@ -331,7 +331,7 @@ export default function ThemesGallery() {
             <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at 50% -20%, rgba(124,58,237,0.2) 0%, transparent 60%)" }} />
             <div className="relative">
               <h2 className="text-3xl sm:text-5xl font-black text-white mb-5" style={{ letterSpacing: "-0.03em" }}>Your site, live in 2 hours.</h2>
-              <p className="text-zinc-400 text-base sm:text-lg mb-8 max-w-lg mx-auto">
+              <p className="text-zinc-300 text-base sm:text-lg mb-8 max-w-lg mx-auto">
                 Pick a theme, fill the form, our AI writes your copy — we deploy it on your domain, fully optimised.
               </p>
               <Link href="/configure"
