@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+@theme {
+  --color-premium-bg: #050505;
+  --color-premium-card: rgba(255, 255, 255, 0.03);
+  --color-premium-accent: #ff2d55;
+  --color-premium-accent-glow: rgba(255, 45, 85, 0.5);
+  
+  --font-display: "Playfair Display", serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+
+  --animation-float: float 6s ease-in-out infinite;
+}
+
+@layer base {
+  :root {
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.6);
+  }
+
+  body.premium-theme {
+    @apply bg-premium-bg text-white selection:bg-premium-accent selection:text-white;
+    font-family: var(--font-sans);
+  }
+
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    @apply tracking-tight;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-premium-card backdrop-blur-xl border border-white/5;
+  }
+  
+  .text-glow {
+    text-shadow: 0 0 10px var(--color-premium-accent-glow), 0 0 20px var(--color-premium-accent-glow);
+  }
+
+  .mask-reveal {
+    mask-image: linear-gradient(to right, black, black, transparent);
+    mask-size: 200% 100%;
+    animation: mask-slide 1.5s ease-out forwards;
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes mask-slide {
+  from { mask-position: 100% 0; }
+  to { mask-position: 0 0; }
+}
