@@ -26,9 +26,14 @@ export default function HomePage() {
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-zinc-800/60 bg-[#09090b]/80 backdrop-blur-md">
         <div className="mx-auto max-w-5xl px-6 h-14 flex items-center justify-between">
           <span className="font-bold text-white">Sky<span className="text-violet-400">Launch</span></span>
-          <Link href="/configure" className="px-4 py-1.5 rounded-full bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold transition-colors">
-            Get started
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link href="/themes" className="text-zinc-400 hover:text-white text-sm transition-colors">
+              Browse themes
+            </Link>
+            <Link href="/configure" className="px-4 py-1.5 rounded-full bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold transition-colors">
+              Get started
+            </Link>
+          </div>
         </div>
       </nav>
 
@@ -63,8 +68,11 @@ export default function HomePage() {
               <Link href="/configure" className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-violet-600 hover:bg-violet-500 text-white font-bold text-lg transition-colors">
                 Build my site <ArrowRight className="w-5 h-5" />
               </Link>
-              <span className="text-zinc-500 text-sm">Free preview — no credit card required</span>
+              <Link href="/themes" className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-zinc-700 hover:border-zinc-500 text-zinc-300 hover:text-white font-semibold text-lg transition-colors">
+                Browse themes
+              </Link>
             </div>
+            <p className="text-zinc-600 text-sm mt-4">Free preview — no credit card required</p>
           </motion.div>
         </div>
       </section>
