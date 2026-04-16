@@ -1,0 +1,19 @@
+/* Avia Design System — Shared Tokens */
+:root {
+  --avia-bg:          #09090b;
+  --avia-surface:     #18181b;
+  --avia-surface-2:   #27272a;
+  --avia-border:      #3f3f46;
+  --avia-border-dim:  #27272a;
+  --avia-text:        #fafafa;
+  --avia-text-muted:  #a1a1aa;
+  --avia-text-dim:    #71717a;
+  --avia-accent:      #7c3aed;
+  --avia-accent-hover:#6d28d9;
+  --avia-accent-light:#8b5cf6;
+  --avia-gold:        #c9a96e;
+  --avia-radius-sm:   6px;
+  --avia-radius:      12px;
+  --avia-radius-lg:   24px;
+  --avia-radius-full: 9999px;
+}
