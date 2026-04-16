@@ -1,5 +1,5 @@
 "use client";
-import { motion, useEffect, useMotionValue, useSpring } from "framer-motion";
+import { motion, useMotionValue, useSpring } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import "../premium.css";

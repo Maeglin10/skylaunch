@@ -15,7 +15,7 @@ export default function BrutalistEditorial() {
     <div className="premium-theme bg-white text-black min-h-screen font-mono selection:bg-black selection:text-white">
       <nav className="fixed top-0 left-0 w-full z-50 p-6 flex justify-between items-center border-b-[6px] border-black bg-white">
         <Link href="/" className="text-3xl font-black tracking-tighter uppercase italic">PROTO_LOG</Link>
-        <span className="text-xs font-bold tracking-[0.2em] uppercase">SYSTEM_TIME: {new Date().toLocaleTimeString()}</span>
+        <span suppressHydrationWarning className="text-xs font-bold tracking-[0.2em] uppercase">SYSTEM_TIME: {new Date().toLocaleTimeString()}</span>
       </nav>
 
       <main className="pt-32">
