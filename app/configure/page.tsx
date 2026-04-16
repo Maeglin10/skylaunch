@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { StepForm } from "@/components/StepForm";
 
 export default function ConfigurePage() {
@@ -8,7 +9,9 @@ export default function ConfigurePage() {
           <h1 className="text-3xl font-bold text-white mb-3">Build your site</h1>
           <p className="text-zinc-300">5 quick steps — under 3 minutes</p>
         </div>
-        <StepForm />
+        <Suspense fallback={<div className="text-zinc-500">Loading...</div>}>
+          <StepForm />
+        </Suspense>
       </div>
     </div>
   );

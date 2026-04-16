@@ -2,7 +2,7 @@ export interface TemplateMetadata {
   id: string;
   name: string;
   description: string;
-  category: "Tech" | "Luxury" | "Editorial" | "Creative" | "Minimal";
+  category: "Tech" | "Luxury" | "Editorial" | "Creative" | "Minimal" | "Free";
   style: "Dark" | "Light" | "Vibrant";
   tags: string[];
 }
@@ -1287,5 +1287,85 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Minimal",
     style: "Light",
     tags: ["Fashion", "Lookbook", "Minimal"],
+  },
+  {
+    id: "impact-161",
+    name: "Essential SaaS",
+    description: "Clean SaaS Landing Page with WordPress/Elementor-ready semantic HTML block structure.",
+    category: "Free",
+    style: "Light",
+    tags: ["SaaS", "Landing", "Free"],
+  },
+  {
+    id: "impact-162",
+    name: "Essential Cafe",
+    description: "Local Cafe theme with warm colors, classic layout, and direct WordPress container mapping.",
+    category: "Free",
+    style: "Light",
+    tags: ["Local Business", "Food", "Free"],
+  },
+  {
+    id: "impact-163",
+    name: "Essential Blog",
+    description: "Clean Personal Blog layout with sidebar, classic typography, and WordPress-ready structure.",
+    category: "Free",
+    style: "Light",
+    tags: ["Blog", "Personal", "Free"],
+  },
+  {
+    id: "impact-164",
+    name: "Essential Agency",
+    description: "Minimalist B&W Agency layout, strictly structured for easy WordPress conversion.",
+    category: "Free",
+    style: "Dark",
+    tags: ["Agency", "Portfolio", "Free"],
+  },
+  {
+    id: "impact-165",
+    name: "Essential App",
+    description: "App Promo landing page with simple device mockup and bright, clean UI structure.",
+    category: "Free",
+    style: "Light",
+    tags: ["App", "Promo", "Free"],
+  },
+  {
+    id: "impact-166",
+    name: "Essential Photography",
+    description: "Clean dark-mode Photography Portfolio using CSS columns for an easy Masonry grid.",
+    category: "Free",
+    style: "Dark",
+    tags: ["Photography", "Portfolio", "Free"],
+  },
+  {
+    id: "impact-167",
+    name: "Essential Real Estate",
+    description: "Clean Real Estate listing block with search hero element, standard flex/grid usage.",
+    category: "Free",
+    style: "Light",
+    tags: ["Real Estate", "Listing", "Free"],
+  },
+  {
+    id: "impact-168",
+    name: "Essential E-Commerce",
+    description: "Minimalist E-Commerce layout with hero banner and standard product grid.",
+    category: "Free",
+    style: "Light",
+    tags: ["E-commerce", "Shop", "Free"],
+  },
+  {
+    id: "impact-169",
+    name: "Essential Newsletter",
+    description: "Newsletter signup landing page, highly conversion-focused with elegant typography.",
+    category: "Free",
+    style: "Light",
+    tags: ["Newsletter", "Landing", "Free"],
+  },
+  {
+    id: "impact-170",
+    name: "Essential CV",
+    description: "Consultant CV/Resume layout with solid structural hierarchy and clean sidebar.",
+    category: "Free",
+    style: "Light",
+    tags: ["CV", "Resume", "Free"],
   },
 ];

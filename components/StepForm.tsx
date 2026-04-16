@@ -1,9 +1,27 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, ArrowLeft, Loader2, Check } from "lucide-react";
+
+const THEME_ICONS: Record<string, string> = {
+  landing: "🚀", saas: "⚡", agency: "🎨", vitrine: "🏢",
+  consultant: "🎯", portfolio: "💼", ecommerce: "🛍️", restaurant: "🍽️",
+  hotel: "🏨", healthcare: "🏥", realestate: "🏠", fitness: "💪",
+  event: "🎪", nonprofit: "❤️", startup: "🌟", luxury: "💎",
+  brutalist: "◼", magazine: "📰", aurora: "✦", "3d-tech": "⬡", "minimal-pro": "—",
+};
+
+const THEME_LABELS: Record<string, string> = {
+  landing: "Landing Page", saas: "SaaS Product", agency: "Creative Agency",
+  vitrine: "Business Vitrine", consultant: "Consultant & Coach", portfolio: "Portfolio",
+  ecommerce: "E-commerce Store", restaurant: "Restaurant & Food", hotel: "Hotel & B&B",
+  healthcare: "Healthcare & Clinic", realestate: "Real Estate", fitness: "Fitness & Wellness",
+  event: "Event & Conference", nonprofit: "Non-profit & NGO", startup: "Startup Launch",
+  luxury: "Luxury & Couture", brutalist: "Brutalist Editorial", magazine: "Magazine & Editorial",
+  aurora: "Aurora & Wellness", "3d-tech": "3D Tech & Web3", "minimal-pro": "Minimal Pro",
+};
 
 const BUSINESS_TYPES = [
   "Restaurant", "Agency", "Coach", "Consultant",
@@ -73,12 +91,27 @@ const initial: FormState = {
 
 export function StepForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<FormState>(initial);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
 
-  const set = (k: keyof FormState, v: string) => setForm((f) => ({ ...f, [k]: v }));
+  useEffect(() => {
+    const templateParam = searchParams.get("template");
+    if (templateParam) {
+      setForm(f => ({ ...f, template: templateParam }));
+      setSelectedTemplate(templateParam);
+    }
+  }, [searchParams]);
+
+  const set = (k: keyof FormState, v: string) => {
+    setForm((f) => ({ ...f, [k]: v }));
+    if (k === "template") {
+      setSelectedTemplate(v);
+    }
+  };
 
   const canNext = () => {
     if (step === 1) return form.businessName && form.businessType && form.tagline;
@@ -145,6 +178,20 @@ export function StepForm() {
 
   return (
     <div className="w-full max-w-xl">
+      {/* Template pre-selection banner */}
+      {selectedTemplate && THEME_LABELS[selectedTemplate] && (
+        <div className="mb-6 flex items-center gap-3 px-4 py-3 rounded-xl bg-violet-500/10 border border-violet-500/20">
+          <span className="text-2xl">{THEME_ICONS[selectedTemplate] ?? "🎨"}</span>
+          <div className="flex-1 min-w-0">
+            <div className="text-white text-sm font-semibold">{THEME_LABELS[selectedTemplate]}</div>
+            <div className="text-violet-400 text-xs">Template selected</div>
+          </div>
+          <a href="/themes" className="text-zinc-400 hover:text-white text-xs transition-colors shrink-0">
+            Change →
+          </a>
+        </div>
+      )}
+
       {/* Progress */}
       <div className="flex items-center gap-2 mb-8">
         {Array.from({ length: TOTAL_STEPS }).map((_, i) => (

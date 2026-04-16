@@ -39,6 +39,15 @@ const SITE_CATEGORY_ACCENT: Record<string, string> = {
   Social: "#e11d48", Premium: "#c9a96e",
 };
 
+const TYPE_FILTERS = [
+  { label: "All", value: "all", ids: null as string[] | null },
+  { label: "🚀 Landing", value: "landing", ids: ["landing", "startup", "vitrine", "consultant"] },
+  { label: "🏢 Business", value: "business", ids: ["saas", "agency", "healthcare", "realestate", "fitness", "nonprofit"] },
+  { label: "🛍️ E-commerce", value: "ecommerce", ids: ["ecommerce", "restaurant", "hotel"] },
+  { label: "💎 Premium", value: "premium", ids: ["luxury", "brutalist", "magazine", "aurora", "3d-tech", "minimal-pro"] },
+  { label: "💼 Portfolio", value: "portfolio", ids: ["portfolio", "event"] },
+];
+
 // ── Impact vault categories & colors ─────────────────────────────────────────
 
 const IMPACT_CATS = ["All", "Tech", "Creative", "Minimal", "Luxury", "Editorial"] as const;
@@ -165,6 +174,7 @@ function ImpactInner({ t, catColor }: { t: typeof TEMPLATES_REGISTRY[0]; catColo
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function ThemesGallery() {
+  const [typeFilter, setTypeFilter] = useState("all");
   const [siteFilter, setSiteFilter] = useState("All");
   const [impactFilter, setImpactFilter] = useState<typeof IMPACT_CATS[number]>("All");
   const [impactSearch, setImpactSearch] = useState("");
@@ -172,7 +182,11 @@ export default function ThemesGallery() {
 
   const SITE_CATEGORIES = ["All", "Marketing", "Tech", "Agency", "Business", "Personal", "Commerce", "Hospitality", "Health", "Property", "Events", "Social", "Premium"];
 
-  const filteredSite = siteFilter === "All" ? SITE_THEMES : SITE_THEMES.filter(t => t.category === siteFilter);
+  const typeFilteredThemes = typeFilter === "all"
+    ? SITE_THEMES
+    : SITE_THEMES.filter(t => TYPE_FILTERS.find(f => f.value === typeFilter)?.ids?.includes(t.id));
+
+  const filteredSite = siteFilter === "All" ? typeFilteredThemes : typeFilteredThemes.filter(t => t.category === siteFilter);
 
   const filteredImpact = TEMPLATES_REGISTRY.filter(t => {
     const catMatch = impactFilter === "All" || t.category === impactFilter;
@@ -231,6 +245,23 @@ export default function ThemesGallery() {
               <p className="text-zinc-500 text-sm mt-1">Choose one when generating your site — includes full AI copy</p>
             </div>
             <span className="text-zinc-600 text-sm font-mono shrink-0">21 themes</span>
+          </div>
+
+          {/* Type filter */}
+          <div className="flex flex-wrap gap-2 mb-8">
+            {TYPE_FILTERS.map(f => (
+              <button
+                key={f.value}
+                onClick={() => setTypeFilter(f.value)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  typeFilter === f.value
+                    ? "bg-violet-600 text-white"
+                    : "bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-600"
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
           </div>
 
           {/* Category filter */}
