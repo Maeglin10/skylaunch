@@ -401,11 +401,11 @@ export function GeneratedSite({ session }: { session: SessionData }) {
   useGlobalStyles(premiumCSS);
 
   // -------------------------------------------------------------------------
-  // Scroll parallax ref (for fullbleed hero)
+  // Scroll parallax (window-based — avoids FM target ref hydration error)
   // -------------------------------------------------------------------------
   const heroRef = useRef(null);
-  const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
-  const parallaxY = useTransform(scrollYProgress, [0, 1], [0, -80]);
+  const { scrollYProgress } = useScroll();
+  const parallaxY = useTransform(scrollYProgress, [0, 0.3], [0, -80]);
 
   return (
     <div style={{ fontFamily, backgroundColor: bgMain, color: textPrimary, overflowX: "hidden" }}>

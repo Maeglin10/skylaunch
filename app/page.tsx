@@ -217,7 +217,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-5xl px-6 h-14 flex items-center justify-between">
           <span className="font-bold text-white">Sky<span className="text-violet-400">Launch</span></span>
           <div className="flex items-center gap-3">
-            <Link href="/themes" className="text-zinc-400 hover:text-white text-sm transition-colors hidden sm:block">
+            <Link href="/themes" className="text-zinc-400 hover:text-white text-sm transition-colors">
               Browse themes
             </Link>
             <Link href="/configure" className="px-4 py-1.5 rounded-full bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold transition-colors">

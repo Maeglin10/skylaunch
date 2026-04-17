@@ -1,12 +1,28 @@
 "use client";
 
-import { use } from "react";
+import { use, useState, useEffect } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight, Sparkles } from "lucide-react";
-import { GeneratedSite } from "@/components/GeneratedSite";
 import type { SessionData } from "@/lib/sessions";
 import { generateMockContent } from "@/lib/mockContent";
+
+// Prevent SSR to avoid Framer Motion useScroll ref hydration error
+const GeneratedSite = dynamic(
+  () => import("@/components/GeneratedSite").then((m) => ({ default: m.GeneratedSite })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center min-h-[60vh] text-zinc-600">
+        <div className="text-center">
+          <div className="animate-spin w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full mx-auto mb-3" />
+          <p className="text-sm">Loading preview…</p>
+        </div>
+      </div>
+    ),
+  }
+);
 
 // All available themes with display metadata
 const THEMES_META: Record<string, { label: string; icon: string; category: string; premium: boolean }> = {
@@ -98,6 +114,8 @@ function buildMockSession(id: string): SessionData {
 
 export default function ThemePreviewPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const meta = THEMES_META[id];
 
   if (!meta) notFound();
@@ -195,8 +213,8 @@ export default function ThemePreviewPage({ params }: { params: Promise<{ id: str
           </div>
         </div>
 
-        {/* The actual site */}
-        <GeneratedSite session={session} />
+        {/* The actual site — only render client-side to avoid FM ref hydration error */}
+        {mounted && <GeneratedSite session={session} />}
       </div>
 
       {/* Sticky bottom CTA */}
