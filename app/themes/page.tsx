@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion, useInView, AnimatePresence } from "framer-motion";
 import { ArrowRight, Sparkles, ChevronRight, Search } from "lucide-react";
@@ -50,18 +51,16 @@ const TYPE_FILTERS = [
 
 // ── Impact vault categories & colors ─────────────────────────────────────────
 
-const IMPACT_CATS = ["All", "Tech", "Creative", "Minimal", "Luxury", "Editorial"] as const;
+const IMPACT_CATS = ["All", "Tech", "Creative", "Minimal", "Luxury", "Editorial", "Free"] as const;
 const IMPACT_CAT_ACCENT: Record<string, string> = {
   Tech: "#2563eb", Creative: "#a855f7", Minimal: "#71717a",
-  Luxury: "#c9a96e", Editorial: "#f59e0b",
+  Luxury: "#c9a96e", Editorial: "#f59e0b", Free: "#10b981",
 };
 const STYLE_DOT: Record<string, string> = { Dark: "#6366f1", Light: "#10b981", Vibrant: "#f59e0b" };
 
-// Implemented template IDs
+// Implemented template IDs (now covering all 195 registry items)
 const IMPLEMENTED = new Set(
-  Array.from({ length: 145 }, (_, i) => `impact-${String(i + 1).padStart(2, "0")}`).concat(
-    Array.from({ length: 42 }, (_, i) => `impact-${i + 103}`)
-  )
+  Array.from({ length: 195 }, (_, i) => `impact-${String(i + 1).padStart(2, "0")}`)
 );
 
 // ── Subcomponents ─────────────────────────────────────────────────────────────
@@ -173,12 +172,27 @@ function ImpactInner({ t, catColor }: { t: typeof TEMPLATES_REGISTRY[0]; catColo
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 
-export default function ThemesGallery() {
+function ThemesGalleryContent() {
+  const searchParams = useSearchParams();
+  const typeParam = searchParams.get("type");
+  const catParam = searchParams.get("cat");
+
   const [typeFilter, setTypeFilter] = useState("all");
   const [siteFilter, setSiteFilter] = useState("All");
   const [impactFilter, setImpactFilter] = useState<typeof IMPACT_CATS[number]>("All");
   const [impactSearch, setImpactSearch] = useState("");
   const [showAllImpact, setShowAllImpact] = useState(false);
+
+  // Initialize filters from search params
+  useEffect(() => {
+    if (typeParam && TYPE_FILTERS.some(f => f.value === typeParam)) {
+      setTypeFilter(typeParam);
+    }
+    if (catParam) {
+      if (SITE_CATEGORIES.includes(catParam)) setSiteFilter(catParam);
+      if (IMPACT_CATS.includes(catParam as any)) setImpactFilter(catParam as any);
+    }
+  }, [typeParam, catParam]);
 
   const SITE_CATEGORIES = ["All", "Marketing", "Tech", "Agency", "Business", "Personal", "Commerce", "Hospitality", "Health", "Property", "Events", "Social", "Premium"];
 
@@ -208,7 +222,7 @@ export default function ThemesGallery() {
             <span className="hidden sm:inline">AeviaLaunch</span>
           </Link>
           <div className="flex items-center gap-3">
-            <span className="text-zinc-600 text-xs hidden sm:inline">181 themes total</span>
+            <span className="text-zinc-600 text-xs hidden sm:inline">216 themes total</span>
             <Link href="/configure" className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold transition-colors">
               Build my site <ArrowRight className="w-3.5 h-3.5" />
             </Link>
@@ -232,7 +246,7 @@ export default function ThemesGallery() {
           </p>
           <div className="flex flex-wrap items-center justify-center gap-5 text-sm text-zinc-500">
             <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-violet-400" />21 site builder themes</div>
-            <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-yellow-400" />160 impact vault templates</div>
+            <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-yellow-400" />195 impact vault templates</div>
             <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-emerald-400" />All free to preview</div>
           </div>
         </motion.div>
@@ -304,9 +318,9 @@ export default function ThemesGallery() {
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
             <div>
               <h2 className="text-2xl sm:text-3xl font-black text-white" style={{ letterSpacing: "-0.02em" }}>Impact Template Vault</h2>
-              <p className="text-zinc-500 text-sm mt-1">160 premium impact templates — Slider Revolution–level quality</p>
+              <p className="text-zinc-500 text-sm mt-1">195 premium impact templates — Slider Revolution–level quality</p>
             </div>
-            <span className="text-zinc-600 text-sm font-mono shrink-0">{filteredImpact.length} / 160</span>
+            <span className="text-zinc-600 text-sm font-mono shrink-0">{filteredImpact.length} / 195</span>
           </div>
 
           {/* Filters + search */}
@@ -374,5 +388,17 @@ export default function ThemesGallery() {
         </motion.div>
       </div>
     </div>
+  );
+}
+
+export default function ThemesGallery() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#080809] flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full" />
+      </div>
+    }>
+      <ThemesGalleryContent />
+    </Suspense>
   );
 }

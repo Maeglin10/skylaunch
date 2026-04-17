@@ -20,6 +20,14 @@ const trust = [
   "SEO optimised",
   "Delivered in 2 hours",
 ];
+ 
+const HOMEPAGE_TABS = [
+  { label: "Landing", value: "landing", icon: "🚀" },
+  { label: "Business", value: "business", icon: "🏢" },
+  { label: "Shop", value: "ecommerce", icon: "🛍️" },
+  { label: "Premium", value: "premium", icon: "💎" },
+  { label: "Portfolio", value: "portfolio", icon: "💼" },
+];
 
 // Featured site-builder themes for homepage
 const FEATURED_THEMES = [
@@ -129,7 +137,7 @@ function ThemesSection() {
               <span className="text-xs font-bold text-violet-400 uppercase tracking-widest">Theme Library</span>
             </div>
             <h2 className="text-3xl sm:text-4xl font-black text-white leading-tight" style={{ letterSpacing: "-0.02em" }}>
-              181 themes.<br />
+              216 themes.<br />
               <span className="text-zinc-500">One click to preview.</span>
             </h2>
           </div>
@@ -170,7 +178,7 @@ function ThemesSection() {
           transition={{ duration: 0.5, delay: 0.25 }}
           className="mb-8"
         >
-          <p className="text-[11px] font-bold text-zinc-600 uppercase tracking-widest mb-4">Impact Vault — 160 templates</p>
+          <p className="text-[11px] font-bold text-zinc-600 uppercase tracking-widest mb-4">Impact Vault — 195 templates</p>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
             {FEATURED_IMPACT.map((t, i) => (
               <motion.div
@@ -193,10 +201,10 @@ function ThemesSection() {
           className="flex flex-wrap items-center justify-center gap-8 py-6 border-t border-zinc-800"
         >
           {[
-            { n: "181", label: "Total themes" },
-            { n: "5", label: "Style categories" },
+            { n: "216", label: "Total themes" },
+            { n: "6", label: "Style categories" },
             { n: "21", label: "Site builder templates" },
-            { n: "160", label: "Impact vault templates" },
+            { n: "195", label: "Impact vault templates" },
           ].map(({ n, label }) => (
             <div key={label} className="text-center">
               <div className="text-2xl font-black text-white">{n}</div>
@@ -215,7 +223,18 @@ export default function HomePage() {
       {/* Nav */}
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-zinc-800/60 bg-[#09090b]/80 backdrop-blur-md">
         <div className="mx-auto max-w-5xl px-6 h-14 flex items-center justify-between">
-          <span className="font-bold text-white">Sky<span className="text-violet-400">Launch</span></span>
+          <span className="font-bold text-white">Aevia<span className="text-violet-400">Launch</span></span>
+          
+          {/* Category Tabs */}
+          <div className="hidden lg:flex items-center gap-1">
+            {HOMEPAGE_TABS.map(tab => (
+              <Link key={tab.value} href={`/themes?type=${tab.value}`} 
+                className="px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider text-zinc-400 hover:text-white hover:bg-white/5 transition-all">
+                {tab.label}
+              </Link>
+            ))}
+          </div>
+
           <div className="flex items-center gap-3">
             <Link href="/themes" className="text-zinc-400 hover:text-white text-sm transition-colors">
               Browse themes
@@ -259,10 +278,22 @@ export default function HomePage() {
                 Build my site <ArrowRight className="w-5 h-5" />
               </Link>
               <Link href="/themes" className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-zinc-700 hover:border-zinc-500 text-zinc-300 hover:text-white font-semibold text-lg transition-colors">
-                Browse 181 themes
+                Browse 216 themes
               </Link>
             </div>
-            <p className="text-zinc-300 text-sm mt-4">Free preview — no credit card required</p>
+
+            {/* Visual Tabs for Categories */}
+            <div className="mt-12 flex flex-wrap justify-center gap-2 max-w-2xl mx-auto">
+              {HOMEPAGE_TABS.map(tab => (
+                <Link key={tab.value} href={`/themes?type=${tab.value}`} 
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/5 hover:border-violet-500/50 hover:bg-violet-500/5 transition-all group">
+                  <span className="text-sm group-hover:scale-110 transition-transform">{tab.icon}</span>
+                  <span className="text-xs font-bold text-zinc-400 group-hover:text-white uppercase tracking-wider">{tab.label}</span>
+                </Link>
+              ))}
+            </div>
+
+            <p className="text-zinc-300 text-sm mt-8">Free preview — no credit card required</p>
           </motion.div>
         </div>
       </section>
@@ -329,7 +360,7 @@ export default function HomePage() {
       </section>
 
       <footer className="border-t border-zinc-800 px-6 py-8 text-center text-zinc-500 text-sm">
-        © 2025 AeviaLaunch — A product by{" "}
+        © 2026 AeviaLaunch — A product by{" "}
         <a href="https://valentin-milliand.vercel.app" rel="noopener noreferrer" className="hover:text-zinc-300 transition-colors">Valentin Milliand</a> ·{" "}
         <Link href="/themes" className="hover:text-zinc-300 transition-colors">Themes</Link>
         {" · "}
