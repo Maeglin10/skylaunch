@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, AnimatePresence } from "pure-framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import Image from "next/image";
 import { X, Menu, Search, Award, Zap, Activity, Globe, Shield, Command, Plus, ArrowUpRight, Maximize2, MoveRight, Layers, Box, Compass, Sparkles, MoveVertical, Target, Radio, CheckCircle2, Leaf, Wind } from "lucide-react";
