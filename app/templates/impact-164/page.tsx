@@ -1,79 +1,232 @@
-import { motion } from "framer-motion";
+"use client";
+
+import { motion, AnimatePresence } from "framer-motion";
+import { useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
+import { X, Menu, Search, Award, Zap, Activity, Globe, Shield, Command, Plus, ArrowUpRight, Maximize2, MoveRight, Layers, Box, Compass, Sparkles, MoveVertical, Target, Radio, CheckCircle2, User, Briefcase } from "lucide-react";
 import "../premium.css";
 
-export default function EssentialAgencyBW() {
+const PROJECTS = [
+  { id: 1, title: "FINTECH_VOID", cat: "Platform", value: "Verified", img: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=1000&auto=format&fit=crop" },
+  { id: 2, title: "HEALTH_RECLAIM", cat: "Interface", value: "Active", img: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?q=80&w=1000&auto=format&fit=crop" },
+  { id: 3, title: "NEON_ECOMMERCE", cat: "System", value: "Locked", img: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=1000&auto=format&fit=crop" },
+];
+
+export default function OnyxStudioSPA() {
+  const [view, setView] = useState<"onyx" | "project" | "logic">("onyx");
+  const [activeItem, setActiveItem] = useState(0);
+
   return (
-    <div className="bg-black text-white min-h-screen font-sans selection:bg-white selection:text-black">
-      {/* HEADER BLOCK */}
-      <header className="px-8 py-8 flex justify-between items-center border-b border-white/10">
-        <div className="font-black text-2xl uppercase tracking-tighter">Onyx.</div>
-        <button className="text-sm font-bold uppercase tracking-widest border border-white/20 px-6 py-2 hover:bg-white hover:text-black transition-colors rounded-sm">Contact</button>
-      </header>
-
-      {/* HERO BLOCK */}
-      <section className="px-8 py-32 md:py-48 max-w-6xl mx-auto">
-        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-            <h1 className="text-6xl md:text-9xl font-black uppercase tracking-tighter leading-[0.85] mb-8">We build<br/><span className="text-white/40">digital products.</span></h1>
-            <p className="text-xl md:text-3xl font-light text-white/60 max-w-2xl leading-snug mb-16">A lean design and engineering studio partnering with ambitious founders to launch market-defining software.</p>
-            <div className="w-16 h-16 rounded-full border border-white/20 flex items-center justify-center animate-bounce">
-                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M12 5v14M5 12l7 7 7-7" />
-                </svg>
-            </div>
-        </motion.div>
-      </section>
-
-      {/* SERVICES BLOCK */}
-      <section className="border-t border-white/10 pt-32 pb-32 px-8">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
-            <div className="md:col-span-1">
-                <h2 className="text-sm font-bold uppercase tracking-widest text-white/40">Our Capabilities</h2>
-            </div>
-            <div className="md:col-span-3 grid grid-cols-1 sm:grid-cols-2 gap-12">
-                {[
-                    { title: "Product Strategy", desc: "User research, market analysis, and product roadmapping." },
-                    { title: "UX/UI Design", desc: "Wireframing, prototyping, and high-fidelity interface design." },
-                    { title: "Web Architecture", desc: "Scalable front-end systems with React, Next.js, and headless CMS." },
-                    { title: "Brand Identity", desc: "Logo design, typographic systems, and visual guidelines." }
-                ].map((s, i) => (
-                    <div key={i}>
-                        <h3 className="text-2xl font-bold mb-4">{s.title}</h3>
-                        <p className="text-white/60 leading-relaxed font-light">{s.desc}</p>
-                    </div>
-                ))}
-            </div>
+    <div className="premium-theme bg-black text-white min-h-screen selection:bg-white selection:text-black font-sans overflow-x-hidden">
+      
+      {/* Background HUD Layers */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[45vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase">
+           ONYX
         </div>
-      </section>
+        <div className="absolute inset-x-0 top-0 bottom-0 left-1/2 -translate-x-1/2 w-[1px] bg-white/5" />
+        <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.05] mix-blend-screen" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#000000_100%)] opacity-80" />
+      </div>
 
-      {/* SELECTED WORK BLOCK */}
-      <section className="border-t border-white/10 pt-32 pb-32 px-8">
-        <div className="max-w-6xl mx-auto">
-            <h2 className="text-sm font-bold uppercase tracking-widest text-white/40 mb-16">Selected Work</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {[
-                    { client: "FinTech Platform", img: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=800" },
-                    { client: "Healthcare App", img: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&q=80&w=800" },
-                    { client: "E-Commerce", img: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=800" },
-                    { client: "SaaS Dashboard", img: "https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?auto=format&fit=crop&q=80&w=800" },
-                ].map((work, i) => (
-                    <div key={i} className="group cursor-pointer">
-                        <div className="relative aspect-video bg-white/5 mb-6 overflow-hidden">
-                            <Image src={work.img} alt={work.client} fill className="object-cover opacity-60 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500 grayscale" />
+      {/* Editorial HUD Nav */}
+      <nav className="fixed top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-center bg-transparent backdrop-blur-3xl border-b border-white/10 font-mono text-white">
+        <div className="flex gap-12 items-center text-white font-sans">
+           <button onClick={() => setView("onyx")} className="text-xl font-black italic tracking-tighter hover:text-stone-300 transition-colors flex items-center gap-4 text-white uppercase font-sans font-sans">
+              ONYX_STUDIO&trade;
+           </button>
+           <div className="hidden lg:flex gap-8 text-[10px] font-black uppercase tracking-widest opacity-20 italic font-mono font-sans font-sans">
+              Status: Studio_Sync_Active
+              <span className="text-white font-sans">Ref: 0x164</span>
+           </div>
+        </div>
+        <div className="hidden md:flex gap-12 text-[10px] font-black uppercase tracking-[0.4em] opacity-30 font-mono font-sans font-sans">
+           <button onClick={() => setView("onyx")} className={`hover:opacity-100 transition-opacity ${view === 'onyx' ? 'text-white opacity-100 underline decoration-white underline-offset-8 italic' : ''}`}>THE_ONYX</button>
+           <button onClick={() => setView("logic")} className={`hover:opacity-100 transition-opacity ${view === 'logic' ? 'text-white opacity-100 underline decoration-white underline-offset-8 italic' : ''}`}>THE_LOGIC</button>
+        </div>
+        <div className="flex items-center gap-8 text-white font-sans font-sans">
+           <Search className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer font-sans" />
+           <Menu className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer font-sans" />
+        </div>
+      </nav>
+
+      <AnimatePresence mode="wait">
+        
+        {/* THE ONYX VIEW (LANDING) */}
+        {view === "onyx" && (
+          <motion.div key="onyx" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-48 pb-32 px-12 max-w-[1800px] mx-auto min-h-screen flex flex-col justify-center relative z-10 font-sans font-sans">
+             <header className="mb-24 border-b border-white/20 pb-12 flex flex-col md:flex-row justify-between items-end gap-12 text-white font-sans font-sans font-sans">
+                <div className="font-sans font-sans">
+                   <span className="text-[10px] uppercase font-black tracking-[1em] opacity-40 mb-4 block underline decoration-white/10 underline-offset-8 italic font-mono text-white font-sans font-sans font-sans">Visual_Capture // Series_164</span>
+                   <h1 className="text-7xl md:text-[12vw] font-black italic uppercase tracking-tighter leading-[0.75] font-sans italic text-white font-sans">PURE. <br/> <span className="text-transparent font-sans" style={{ WebkitTextStroke: "2px rgba(255,255,255,0.6)" }}>STUDIO.</span></h1>
+                </div>
+                <div className="text-right flex flex-col items-end font-sans font-sans font-sans">
+                   <div className="text-3xl font-black mb-4 tracking-tighter uppercase opacity-10 italic font-mono text-stone-300 font-mono font-sans font-sans">Dynamic_Sync</div>
+                   <div className="w-64 h-[2px] bg-white/5 rounded-none overflow-hidden font-sans font-sans font-sans">
+                      <motion.div animate={{ width: ['20%', '90%', '40%', '75%'] }} transition={{ duration: 4, repeat: Infinity }} className="h-full bg-white/80 font-sans font-sans font-sans" />
+                   </div>
+                </div>
+             </header>
+
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-white font-sans font-sans font-sans">
+                {PROJECTS.map((p, i) => (
+                  <motion.div 
+                    key={p.id} initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: i * 0.1 }}
+                    className="group relative h-[60vh] rounded-none overflow-hidden border border-white/5 hover:border-white/20 transition-all cursor-pointer shadow-2xl bg-white/5 font-sans font-sans font-sans"
+                    onClick={() => { setActiveItem(i); setView("project"); }}
+                  >
+                     <Image src={p.img} alt={p.title} fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[2s] group-hover:scale-110 opacity-60 group-hover:opacity-100 font-sans font-sans font-sans" />
+                     <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 to-transparent font-sans font-sans font-sans" />
+                     <div className="absolute inset-0 bg-white/5 group-hover:bg-transparent transition-colors duration-1000 font-sans font-sans" />
+                     
+                     <div className="absolute inset-10 flex flex-col justify-between font-sans font-sans font-sans">
+                        <div className="flex justify-between items-start text-white font-sans font-sans font-sans">
+                           <div className="p-4 bg-white/10 border border-white/20 rounded-none opacity-0 group-hover:opacity-100 transition-opacity font-mono font-sans font-sans">
+                              <Briefcase className="w-5 h-5 text-white font-sans font-sans font-sans font-sans" />
+                           </div>
+                           <div className="text-[10px] font-black uppercase tracking-widest opacity-20 italic font-mono font-sans font-sans">UNIT_0x{i+164}</div>
                         </div>
-                        <h3 className="text-2xl font-bold group-hover:underline">{work.client}</h3>
-                    </div>
+                        <div className="text-white font-sans font-sans font-sans">
+                           <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-2 block italic text-stone-300 font-mono font-sans font-sans font-sans font-sans">{p.cat} // {p.value}</span>
+                           <h3 className="text-5xl font-black italic uppercase tracking-tighter leading-none transition-all group-hover:tracking-widest font-sans font-sans font-sans font-sans font-sans">{p.title}</h3>
+                        </div>
+                     </div>
+                  </motion.div>
                 ))}
-            </div>
-        </div>
-      </section>
+             </div>
+          </motion.div>
+        )}
 
-      {/* FOOTER BLOCK */}
-      <footer className="border-t border-white/10 py-16 px-8 text-center bg-white/5">
-        <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter mb-8">Ready to start?</h2>
-        <button className="bg-white text-black px-8 py-4 font-bold uppercase tracking-widest text-sm hover:bg-gray-200 transition-colors">Start a Project</button>
+        {/* THE PROJECT VIEW (DETAIL) */}
+        {view === "project" && (
+          <motion.div key="project" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen font-sans font-sans font-sans">
+             <button onClick={() => setView("onyx")} className="fixed top-12 left-12 z-[60] bg-white text-black p-5 rounded-none hover:scale-110 transition-transform shadow-2xl font-sans font-sans font-sans">
+                <X className="w-6 h-6 font-sans font-sans font-sans font-sans font-sans" />
+             </button>
+
+             <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen pt-24 lg:pt-0 font-sans font-sans font-sans font-sans">
+                <div className="lg:col-span-12 relative flex items-center justify-center p-8 md:p-32 overflow-hidden h-screen bg-black font-sans font-sans font-sans font-sans font-sans font-sans font-sans">
+                   <div className="absolute inset-0 opacity-10 font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans">
+                      <Image src={PROJECTS[activeItem].img} alt="Background" fill className="object-cover grayscale font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans" />
+                   </div>
+                   <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[40vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase text-white font-sans font-sans font-sans font-sans font-sans font-sans">
+                      CORE
+                   </div>
+                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#000000_100%)] font-sans font-sans font-sans font-sans font-sans" />
+                   
+                   <div className="max-w-[1500px] w-full grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10 font-sans text-white font-sans font-sans font-sans font-sans font-sans font-sans font-sans">
+                      <motion.div initial={{ scale: 1.1, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1 }} className="relative aspect-square w-full rounded-none overflow-hidden border border-white/10 group bg-neutral-900 shadow-2xl font-sans font-sans font-sans font-sans font-sans font-sans font-sans">
+                         <Image src={PROJECTS[activeItem].img} alt="Spec" fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[3s] opacity-80 font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans" priority />
+                         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-100 font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans" />
+                         <div className="absolute top-12 left-12 p-4 bg-black/60 backdrop-blur-3xl rounded-none border-2 border-white/10 z-20 font-sans font-sans font-sans font-sans font-sans font-sans font-sans">
+                            <Layers className="w-6 h-6 text-white animate-pulse font-sans font-sans font-sans font-sans font-sans font-sans font-sans" />
+                         </div>
+                      </motion.div>
+
+                      <div className="flex flex-col justify-center space-y-12 text-white font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans">
+                         <div className="space-y-6 font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans">
+                            <span className="text-[10px] uppercase tracking-[1em] font-black opacity-30 mb-8 block underline decoration-white decoration-4 underline-offset-8 italic font-mono text-white font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans">Metric_Sync // {PROJECTS[activeItem].cat}</span>
+                            <h1 className="text-7xl md:text-[8vw] font-black italic uppercase tracking-tighter leading-none text-white font-sans font-sans font-sans font-sans font-sans font-sans">{PROJECTS[activeItem].title}</h1>
+                            <div className="text-4xl font-black italic tracking-tighter opacity-10 italic text-white font-mono font-sans font-sans font-sans font-sans font-sans font-sans font-sans">Ref: {PROJECTS[activeItem].value}</div>
+                         </div>
+
+                         <p className="text-3xl font-light italic leading-relaxed uppercase tracking-tight opacity-40 text-white leading-relaxed font-sans font-sans font-sans font-sans font-sans font-sans font-sans">
+                            Structural allocation for mission {PROJECTS[activeItem].title}. System integrity at 100%. Thermal load nominal at 32C. Every coordinate synchronized.
+                         </p>
+
+                         <div className="grid grid-cols-2 gap-12 py-12 border-y border-white/10 font-mono text-white font-sans font-sans font-sans font-sans font-sans font-sans font-sans">
+                            {[
+                              { icon: <Command className="w-5 h-5" />, l: "Logic", v: "Phase_Shift" },
+                              { icon: <Zap className="w-5 h-5" />, l: "Sync", v: "Active" },
+                              { icon: <Shield className="w-5 h-5" />, l: "Security", v: "High_Impact" },
+                              { icon: <Activity className="w-5 h-5" />, l: "Status", v: "Verified" },
+                            ].map((s, i) => (
+                              <div key={i} className="flex gap-6 items-center font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans">
+                                 <div className="opacity-20 text-white font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans">{s.icon}</div>
+                                 <div className="text-left font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans">
+                                    <div className="text-[10px] font-black opacity-30 uppercase tracking-widest mb-1 italic text-white font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans">{s.l}</div>
+                                    <div className="text-sm font-black uppercase italic tracking-tighter text-white font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans">{s.v}</div>
+                                 </div>
+                              </div>
+                            ))}
+                         </div>
+
+                         <div className="flex gap-6 pt-8 font-mono font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans">
+                            <button onClick={() => setView("onyx")} className="flex-grow py-8 bg-white text-black font-black uppercase text-xs tracking-[1em] hover:bg-stone-200 transition-all shadow-2xl font-mono font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans">
+                               Return_to_Onyx
+                            </button>
+                            <button className="px-12 py-8 border border-white/10 text-[10px] font-black uppercase tracking-[0.5em] hover:scale-105 transition-all text-white font-mono font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans">
+                               PDF_Spec
+                            </button>
+                         </div>
+                      </div>
+                   </div>
+                </div>
+             </div>
+          </motion.div>
+        )}
+
+        {/* THE LOGIC VIEW (INFO) */}
+        {view === "logic" && (
+          <motion.div key="logic" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen flex flex-col justify-center font-sans font-sans font-sans font-sans font-sans ont-sans">
+             <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center text-white font-sans font-sans font-sans font-sans font-sans font-sans font-sans">
+                <div className="space-y-16 text-white font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans">
+                   <span className="text-[10px] uppercase font-black tracking-[1.5em] opacity-30 block underline decoration-white decoration-2 underline-offset-8 italic font-mono text-stone-300 font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans">The_Logic_Protocol</span>
+                   <h2 className="text-7xl md:text-[10vw] font-black italic tracking-tighter leading-none text-white uppercase font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans">The <br/> Truth.</h2>
+                   <p className="text-3xl md:text-4xl font-light italic opacity-60 leading-relaxed uppercase tracking-tight text-white font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans">
+                      We treat architecture as code. Every structure is a function of its environmental variables and tectonic intent. 100% precision. Zero noise.
+                   </p>
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t border-white/10 font-mono text-white font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans">
+                      {[
+                        { icon: <Sparkles className="w-6 h-6" />, t: "Adaptive Flow", v: "Dynamic Load Sync" },
+                        { icon: <Plus className="w-6 h-6" />, t: "Structural Sync", v: "Deep_Material_ID" },
+                      ].map((item, i) => (
+                        <div key={i} className="flex gap-8 group font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans">
+                           <div className="w-16 h-16 rounded-none border border-white flex items-center justify-center text-white group-hover:bg-white group-hover:text-black transition-all shadow-xl font-mono font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans">
+                              {item.icon}
+                           </div>
+                           <div className="text-left text-white font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans">
+                              <h4 className="text-2xl font-black uppercase italic tracking-tighter text-white leading-none mb-2 font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans">{item.t}</h4>
+                              <p className="text-[10px] opacity-30 uppercase tracking-[0.3em] font-black leading-relaxed text-white/40 text-white font-mono font-mono font-mono font-mono font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans">{item.v}</p>
+                           </div>
+                        </div>
+                      ))}
+                   </div>
+                </div>
+                <div className="relative aspect-square bg-white/5 rounded-none p-12 overflow-hidden border border-white/10 group shadow-2xl font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans">
+                   <Image src="https://images.unsplash.com/photo-1541829070764-84a7d30dee62?q=80&w=1000&auto=format&fit=crop" alt="The Archive" fill className="object-cover opacity-20 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-[3s] font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans" />
+                   <div className="absolute inset-x-0 bottom-12 flex justify-center font-mono font-sans font-mono font-mono font-mono font-mono font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans">
+                      <div className="px-12 py-6 bg-white text-black text-[10px] font-black uppercase tracking-widest italic animate-bounce cursor-pointer hover:bg-stone-200 transition-all rounded-none font-mono font-sans font-sans font-sans font-sans font-sans font-sans font-sans">
+                         Establish_Handshake
+                      </div>
+                   </div>
+                </div>
+             </div>
+          </motion.div>
+        )}
+
+      </AnimatePresence>
+
+      {/* Global Status HUD */}
+      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em] italic text-white leading-none font-mono font-sans font-mono font-mono font-mono font-mono font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans">
+         <div className="flex gap-12 text-white font-mono font-sans font-mono font-sans font-mono font-sans font-mono font-sans font-mono font-sans font-mono font-sans">
+            <span>Onyx_Studio_OS_Alpha</span>
+            <span>Uptime: 99.9%</span>
+         </div>
+         <div className="flex gap-4 items-end text-white font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans">
+            <div className="text-right leading-tight italic font-mono font-sans font-mono font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans">
+               Archival_Control <br /> v4.0.164
+            </div>
+            <div className="flex gap-[4px] h-4 font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans">
+               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-full bg-white opacity-${i*20} font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans font-sans`}></div>)}
+            </div>
+         </div>
       </footer>
+
+      <style jsx global>{`
+        ::-webkit-scrollbar { width: 0px; }
+      `}</style>
     </div>
   );
 }
