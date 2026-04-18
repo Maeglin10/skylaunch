@@ -74,7 +74,7 @@ export default function OnePageDotNav() {
          Segment_Mapping_Active_v.061
       </div>
 
-      <style jsx global>{`
+      <style>{`
         .no-scrollbar::-webkit-scrollbar {
           display: none;
         }

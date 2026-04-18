@@ -69,6 +69,19 @@ function SiteThemeCard({ theme, index }: { theme: typeof SITE_THEMES[0]; index: 
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: "-40px" });
   const accent = SITE_CATEGORY_ACCENT[theme.category] ?? "#7c3aed";
+  
+  const [isHovered, setIsHovered] = useState(false);
+  const [showIframe, setShowIframe] = useState(false);
+  
+  useEffect(() => {
+    let timeout: NodeJS.Timeout;
+    if (isHovered) {
+      timeout = setTimeout(() => setShowIframe(true), 300);
+    } else {
+      setShowIframe(false);
+    }
+    return () => clearTimeout(timeout);
+  }, [isHovered]);
 
   return (
     <motion.div ref={ref}
@@ -78,38 +91,65 @@ function SiteThemeCard({ theme, index }: { theme: typeof SITE_THEMES[0]; index: 
       className="group"
     >
       <Link href={`/themes/${theme.id}`} className="block h-full">
-        <div className="relative h-full rounded-2xl border overflow-hidden transition-all duration-300 hover:-translate-y-1"
-          style={{ background: theme.premium ? "linear-gradient(135deg,#0f0f0f,#1a1208)" : "linear-gradient(135deg,#0f0f11,#13131a)", borderColor: "rgba(255,255,255,0.07)" }}>
-          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+        <div 
+          className="relative h-full rounded-2xl flex flex-col border overflow-hidden transition-all duration-300 hover:-translate-y-1 group/card min-h-[300px]"
+          style={{ background: theme.premium ? "linear-gradient(135deg,#0f0f0f,#1a1208)" : "linear-gradient(135deg,#0f0f11,#13131a)", borderColor: "rgba(255,255,255,0.07)" }}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
+          <div className="absolute inset-0 opacity-0 group-hover/card:opacity-100 transition-opacity duration-500 pointer-events-none"
             style={{ background: `radial-gradient(ellipse at 50% 0%, ${accent}18 0%, transparent 70%)` }} />
-          <div className="relative p-6 flex flex-col h-full min-h-[240px]">
-            <div className="flex items-start justify-between mb-5">
-              <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg" style={{ background: `${accent}20`, border: `1px solid ${accent}30` }}>
-                  {theme.icon}
-                </div>
-                <div>
-                  <span className="text-[10px] font-bold uppercase tracking-[0.15em]" style={{ color: accent }}>{theme.category}</span>
-                  {theme.premium && (
-                    <div className="flex items-center gap-1 mt-0.5">
-                      <Sparkles className="w-3 h-3" style={{ color: "#c9a96e" }} />
-                      <span className="text-[9px] uppercase tracking-widest font-bold" style={{ color: "#c9a96e" }}>Premium</span>
-                    </div>
-                  )}
-                </div>
+            
+          {/* Thumbnail Area */}
+          <div className="w-full aspect-[16/10] border-b border-white/5 relative overflow-hidden bg-[#050505]">
+            {showIframe ? (
+              <div className="absolute inset-0 opacity-0 animate-in fade-in duration-500 delay-100 fill-mode-forwards cursor-pointer">
+                <iframe 
+                   src={`/themes/${theme.id}`} 
+                   className="absolute top-0 left-0 w-[400%] h-[400%] origin-top-left scale-25 pointer-events-none opacity-80"
+                   sandbox="allow-scripts allow-same-origin"
+                   loading="lazy"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0d] via-[#0a0a0d]/40 to-transparent" />
               </div>
-              <div className="w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0" style={{ background: accent }}>
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center text-center">
+                 <div className="w-full h-full border border-white/5 flex items-center justify-center p-6"
+                   style={{ background: `radial-gradient(ellipse at center, ${accent}20 0%, transparent 70%)` }}>
+                   <div className="flex flex-col items-center gap-3">
+                     <span className="text-4xl">{theme.icon}</span>
+                     <span className="text-zinc-600 font-mono text-[10px] tracking-widest uppercase opacity-50">Live Preview</span>
+                   </div>
+                 </div>
+              </div>
+            )}
+          </div>
+
+          <div className="relative p-5 flex flex-col flex-1">
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-[0.15em]" style={{ color: accent }}>{theme.category}</span>
+                {theme.premium && (
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <Sparkles className="w-3 h-3" style={{ color: "#c9a96e" }} />
+                    <span className="text-[9px] uppercase tracking-widest font-bold" style={{ color: "#c9a96e" }}>Premium</span>
+                  </div>
+                )}
+              </div>
+              <div className="w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover/card:opacity-100 transition-all duration-300 translate-x-2 group-hover/card:translate-x-0 shrink-0" style={{ background: accent }}>
                 <ArrowRight className="w-3.5 h-3.5 text-white" />
               </div>
             </div>
+            
             <div className="flex-1">
               <h3 className="text-lg font-bold text-white mb-2">{theme.label}</h3>
-              <p className="text-xs text-zinc-300 leading-relaxed">{theme.desc}</p>
+              <p className="text-xs text-zinc-400 leading-relaxed max-w-[90%]">{theme.desc}</p>
             </div>
+            
             <div className="mt-5 pt-4 border-t border-white/5 flex items-center justify-between">
-              <span className="text-xs text-zinc-600 font-mono">{theme.id}</span>
-              <span className="text-xs font-semibold flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: accent }}>
-                Preview <ChevronRight className="w-3 h-3" />
+              <span className="text-[10px] text-zinc-600 font-mono uppercase">{theme.id}</span>
+              <span className="text-[10px] font-semibold uppercase tracking-wider flex items-center gap-1 opacity-0 group-hover/card:opacity-100 transition-opacity" style={{ color: accent }}>
+                Preview build <ChevronRight className="w-3 h-3" />
               </span>
             </div>
           </div>
@@ -133,11 +173,11 @@ function ImpactCard({ t, index, shown }: { t: typeof TEMPLATES_REGISTRY[0]; inde
       className={`group ${!isLive ? "opacity-40" : ""}`}
     >
       {isLive ? (
-        <Link href={`/templates/${t.id}`} className="block">
+        <Link href={`/templates/${t.id}`} className="block h-full">
           <ImpactInner t={t} catColor={catColor} />
         </Link>
       ) : (
-        <div>
+        <div className="h-full">
           <ImpactInner t={t} catColor={catColor} />
         </div>
       )}
@@ -146,24 +186,68 @@ function ImpactCard({ t, index, shown }: { t: typeof TEMPLATES_REGISTRY[0]; inde
 }
 
 function ImpactInner({ t, catColor }: { t: typeof TEMPLATES_REGISTRY[0]; catColor: string }) {
+  const [isHovered, setIsHovered] = useState(false);
+  const [showIframe, setShowIframe] = useState(false);
+  
+  useEffect(() => {
+    let timeout: NodeJS.Timeout;
+    if (isHovered) {
+      timeout = setTimeout(() => setShowIframe(true), 300); // 300ms delay to prevent network spam on quick swipe
+    } else {
+      setShowIframe(false);
+    }
+    return () => clearTimeout(timeout);
+  }, [isHovered]);
+
   return (
-    <div className="relative rounded-xl border overflow-hidden transition-all duration-300 hover:-translate-y-0.5 p-4"
-      style={{ background: "linear-gradient(135deg,#0a0a0d,#111118)", borderColor: "rgba(255,255,255,0.06)" }}>
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-400"
-        style={{ background: `radial-gradient(ellipse at 50% 0%, ${catColor}10 0%, transparent 70%)` }} />
-      <div className="relative flex items-center justify-between mb-3">
-        <span className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full"
-          style={{ color: catColor, background: `${catColor}15`, border: `1px solid ${catColor}20` }}>
-          {t.category}
-        </span>
-        <span className="text-[9px] text-zinc-700 font-mono">{t.id}</span>
+    <div 
+      className="relative rounded-xl border flex flex-col overflow-hidden h-full transition-all duration-300 hover:-translate-y-0.5 group/card"
+      style={{ background: "linear-gradient(135deg,#0a0a0d,#111118)", borderColor: "rgba(255,255,255,0.06)" }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div className="absolute inset-0 opacity-0 group-hover/card:opacity-100 transition-opacity duration-400 pointer-events-none"
+        style={{ background: `radial-gradient(ellipse at 50% 0%, ${catColor}15 0%, transparent 60%)` }} />
+      
+      {/* Thumbnail Area */}
+      <div className="w-full aspect-video border-b border-white/5 relative overflow-hidden bg-[#050505]">
+        {showIframe ? (
+          <div className="absolute inset-0 opacity-0 animate-in fade-in duration-500 delay-100 fill-mode-forwards">
+            <iframe 
+               src={`/templates/${t.id}`} 
+               className="absolute top-0 left-0 w-[400%] h-[400%] origin-top-left scale-25 pointer-events-none opacity-80"
+               sandbox="allow-scripts allow-same-origin"
+               loading="lazy"
+            />
+            {/* Dark gradient overlay so text remains readable if iframe is bright */}
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0d] via-[#0a0a0d]/40 to-transparent" />
+          </div>
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center p-6 text-center">
+            {/* Abstract Placeholder when not hovered */}
+             <div className="w-full h-full rounded-lg border border-white/5 flex items-center justify-center"
+               style={{ background: `radial-gradient(ellipse at center, ${catColor}20 0%, transparent 70%)` }}>
+                <span className="text-zinc-600 font-mono text-[10px] tracking-widest uppercase opacity-50">Preview</span>
+             </div>
+          </div>
+        )}
       </div>
-      <div className="relative">
-        <p className="text-white text-sm font-semibold leading-tight mb-1.5">{t.name}</p>
-        <p className="text-zinc-500 text-[11px] leading-snug line-clamp-2">{t.description}</p>
-        <div className="flex items-center gap-2 mt-2.5">
+
+      <div className="p-4 relative flex-1 flex flex-col">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full z-10 font-sans shadow-sm"
+            style={{ color: catColor, background: `${catColor}15`, border: `1px solid ${catColor}30` }}>
+            {t.category}
+          </span>
+          <span className="text-[9px] text-zinc-600 font-mono z-10">{t.id}</span>
+        </div>
+        <div className="relative flex-1">
+          <p className="text-white text-sm font-semibold leading-tight mb-1.5">{t.name}</p>
+          <p className="text-zinc-500 text-[11px] leading-snug line-clamp-2">{t.description}</p>
+        </div>
+        <div className="flex items-center gap-2 mt-4">
           <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: STYLE_DOT[t.style] }} />
-          <span className="text-[9px] text-zinc-600">{t.style}</span>
+          <span className="text-[9px] text-zinc-600 font-mono uppercase tracking-wider">{t.style}</span>
         </div>
       </div>
     </div>
@@ -252,54 +336,63 @@ function ThemesGalleryContent() {
         </motion.div>
 
         {/* ── Section 1: Site Builder ────────────────────────────────── */}
-        <div className="mb-24">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-2xl sm:text-3xl font-black text-white" style={{ letterSpacing: "-0.02em" }}>Site Builder Themes</h2>
-              <p className="text-zinc-500 text-sm mt-1">Choose one when generating your site — includes full AI copy</p>
+        <div className="mb-24 flex flex-col lg:flex-row gap-10">
+          
+          {/* Left Sidebar Filters for Site Builder */}
+          <div className="w-full lg:w-64 shrink-0">
+            <div className="sticky top-24">
+              <div className="mb-6">
+                <h2 className="text-xl font-black text-white" style={{ letterSpacing: "-0.02em" }}>Site Builder</h2>
+                <p className="text-zinc-500 text-xs mt-1">21 themes with full AI copy</p>
+              </div>
+
+              <div className="mb-8">
+                <h3 className="text-xs font-bold text-zinc-600 uppercase tracking-widest mb-3">Type</h3>
+                <div className="flex flex-col gap-1.5">
+                  {TYPE_FILTERS.map(f => (
+                    <button
+                      key={f.value}
+                      onClick={() => setTypeFilter(f.value)}
+                      className={`text-left px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                        typeFilter === f.value
+                          ? "bg-violet-600/10 text-violet-400"
+                          : "text-zinc-400 hover:text-white hover:bg-white/5"
+                      }`}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-xs font-bold text-zinc-600 uppercase tracking-widest mb-3">Category</h3>
+                <div className="flex flex-wrap gap-1.5">
+                  {SITE_CATEGORIES.map(cat => (
+                    <button key={cat} onClick={() => setSiteFilter(cat)}
+                      className="px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all duration-200"
+                      style={{
+                        background: siteFilter === cat ? (cat === "Premium" ? "#c9a96e" : "#7c3aed") : "rgba(255,255,255,0.03)",
+                        color: siteFilter === cat ? "#fff" : "rgba(255,255,255,0.4)",
+                        border: siteFilter === cat ? `1px solid ${cat === "Premium" ? "#c9a96e" : "#7c3aed"}` : "1px solid rgba(255,255,255,0.05)",
+                      }}>
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
-            <span className="text-zinc-600 text-sm font-mono shrink-0">21 themes</span>
           </div>
 
-          {/* Type filter */}
-          <div className="flex flex-wrap gap-2 mb-8">
-            {TYPE_FILTERS.map(f => (
-              <button
-                key={f.value}
-                onClick={() => setTypeFilter(f.value)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                  typeFilter === f.value
-                    ? "bg-violet-600 text-white"
-                    : "bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-600"
-                }`}
-              >
-                {f.label}
-              </button>
-            ))}
+          {/* Right Grid for Site Builder Themes */}
+          <div className="flex-1">
+            <AnimatePresence mode="wait">
+              <motion.div key={siteFilter + typeFilter} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
+                className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                {filteredSite.map((t, i) => <SiteThemeCard key={t.id} theme={t} index={i} />)}
+              </motion.div>
+            </AnimatePresence>
           </div>
-
-          {/* Category filter */}
-          <div className="flex flex-wrap gap-2 mb-8">
-            {SITE_CATEGORIES.map(cat => (
-              <button key={cat} onClick={() => setSiteFilter(cat)}
-                className="px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200"
-                style={{
-                  background: siteFilter === cat ? (cat === "Premium" ? "#c9a96e" : "#7c3aed") : "rgba(255,255,255,0.05)",
-                  color: siteFilter === cat ? "#fff" : "rgba(255,255,255,0.45)",
-                  border: siteFilter === cat ? `1px solid ${cat === "Premium" ? "#c9a96e" : "#7c3aed"}` : "1px solid rgba(255,255,255,0.08)",
-                }}>
-                {cat}
-                {cat !== "All" && <span className="ml-1.5 opacity-50">{SITE_THEMES.filter(t => t.category === cat).length}</span>}
-              </button>
-            ))}
-          </div>
-
-          <AnimatePresence mode="wait">
-            <motion.div key={siteFilter} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredSite.map((t, i) => <SiteThemeCard key={t.id} theme={t} index={i} />)}
-            </motion.div>
-          </AnimatePresence>
         </div>
 
         {/* Divider */}
@@ -314,58 +407,73 @@ function ThemesGalleryContent() {
         </div>
 
         {/* ── Section 2: Impact Vault ───────────────────────────────── */}
-        <div>
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
-            <div>
-              <h2 className="text-2xl sm:text-3xl font-black text-white" style={{ letterSpacing: "-0.02em" }}>Impact Template Vault</h2>
-              <p className="text-zinc-500 text-sm mt-1">195 premium impact templates — Slider Revolution–level quality</p>
+        <div className="flex flex-col lg:flex-row gap-10">
+          
+          {/* Left Sidebar Filters for Impact Vault */}
+          <div className="w-full lg:w-64 shrink-0">
+            <div className="sticky top-24">
+              <div className="mb-6">
+                <h2 className="text-xl font-black text-white" style={{ letterSpacing: "-0.02em" }}>Impact Vault</h2>
+                <div className="flex items-center gap-2 mt-1 hidden lg:flex">
+                  <span className="text-zinc-600 text-xs font-mono">{filteredImpact.length} / 195</span>
+                </div>
+              </div>
+
+              <div className="relative mb-8">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                <input
+                  type="text"
+                  value={impactSearch}
+                  onChange={e => setImpactSearch(e.target.value)}
+                  placeholder="Search templates…"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm bg-white/5 border border-white/10 text-white placeholder:text-zinc-500 outline-none focus:border-violet-500/50 transition-colors"
+                />
+              </div>
+
+              <div>
+                <h3 className="text-xs font-bold text-zinc-600 uppercase tracking-widest mb-3">Category</h3>
+                <div className="flex flex-col gap-1.5">
+                  {IMPACT_CATS.map(cat => (
+                    <button key={cat} onClick={() => setImpactFilter(cat)}
+                      className="text-left flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200"
+                      style={{
+                        background: impactFilter === cat ? `${IMPACT_CAT_ACCENT[cat] ?? "#7c3aed"}15` : "transparent",
+                        color: impactFilter === cat ? (IMPACT_CAT_ACCENT[cat] ?? "#7c3aed") : "rgba(255,255,255,0.4)",
+                      }}>
+                      <div className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full" style={{ background: IMPACT_CAT_ACCENT[cat] ?? "#7c3aed", opacity: impactFilter === cat ? 1 : 0.3 }} />
+                        {cat}
+                      </div>
+                      {cat !== "All" && <span className="text-[10px] font-mono opacity-50">{TEMPLATES_REGISTRY.filter(t => t.category === cat).length}</span>}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
-            <span className="text-zinc-600 text-sm font-mono shrink-0">{filteredImpact.length} / 195</span>
           </div>
 
-          {/* Filters + search */}
-          <div className="flex flex-col sm:flex-row gap-3 mb-8">
-            <div className="flex flex-wrap gap-2">
-              {IMPACT_CATS.map(cat => (
-                <button key={cat} onClick={() => setImpactFilter(cat)}
-                  className="px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200"
-                  style={{
-                    background: impactFilter === cat ? (IMPACT_CAT_ACCENT[cat] ?? "#7c3aed") : "rgba(255,255,255,0.05)",
-                    color: impactFilter === cat ? "#fff" : "rgba(255,255,255,0.45)",
-                    border: impactFilter === cat ? `1px solid ${IMPACT_CAT_ACCENT[cat] ?? "#7c3aed"}` : "1px solid rgba(255,255,255,0.08)",
-                  }}>
-                  {cat}
-                  {cat !== "All" && <span className="ml-1.5 opacity-50">{TEMPLATES_REGISTRY.filter(t => t.category === cat).length}</span>}
+          {/* Right Grid for Impact Vault */}
+          <div className="flex-1">
+            <div className="flex lg:hidden items-center justify-between gap-4 mb-6">
+               <span className="text-zinc-600 text-sm font-mono shrink-0">{filteredImpact.length} / 195</span>
+            </div>
+
+            <AnimatePresence mode="wait">
+              <motion.div key={`${impactFilter}-${impactSearch}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
+                className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+                {visibleImpact.map((t, i) => <ImpactCard key={t.id} t={t} index={i} shown />)}
+              </motion.div>
+            </AnimatePresence>
+
+            {filteredImpact.length > 48 && !showAllImpact && (
+              <div className="text-center mt-12 w-full">
+                <button onClick={() => setShowAllImpact(true)}
+                  className="px-8 py-3 rounded-full border border-zinc-700 hover:border-zinc-500 text-zinc-300 hover:text-white text-sm font-semibold transition-colors">
+                  Load all {filteredImpact.length} templates
                 </button>
-              ))}
-            </div>
-            <div className="relative sm:ml-auto">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-600" />
-              <input
-                type="text"
-                value={impactSearch}
-                onChange={e => setImpactSearch(e.target.value)}
-                placeholder="Search templates…"
-                className="pl-9 pr-4 py-1.5 rounded-full text-xs bg-white/5 border border-white/10 text-white placeholder:text-zinc-600 outline-none focus:border-violet-500/50 w-full sm:w-48"
-              />
-            </div>
+              </div>
+            )}
           </div>
-
-          <AnimatePresence mode="wait">
-            <motion.div key={`${impactFilter}-${impactSearch}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
-              className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-              {visibleImpact.map((t, i) => <ImpactCard key={t.id} t={t} index={i} shown />)}
-            </motion.div>
-          </AnimatePresence>
-
-          {filteredImpact.length > 48 && !showAllImpact && (
-            <div className="text-center mt-10">
-              <button onClick={() => setShowAllImpact(true)}
-                className="px-8 py-3 rounded-full border border-zinc-700 hover:border-zinc-500 text-zinc-300 hover:text-white text-sm font-semibold transition-colors">
-                Load all {filteredImpact.length} templates
-              </button>
-            </div>
-          )}
         </div>
 
         {/* CTA */}

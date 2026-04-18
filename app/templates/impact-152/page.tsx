@@ -1,53 +1,233 @@
 "use client";
-import { motion } from "framer-motion";
+
+import { motion, AnimatePresence } from "framer-motion";
+import { useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
+import { X, Menu, Search, Award, Zap, Activity, Globe, Shield, Command, Plus, ArrowUpRight, Maximize2, MoveRight, Layers, Box, Compass, Sparkles, MoveVertical, Target, Radio, CheckCircle2, MapPin, Compass as CompassIcon } from "lucide-react";
 import "../premium.css";
 
-export default function TravelMagazine() {
+const STORIES = [
+  { id: 1, title: "CORE_SVALBARD", cat: "Arctic", value: "Verified", img: "https://images.unsplash.com/photo-1517090504586-3bf49cf204e3?q=80&w=1000&auto=format&fit=crop" },
+  { id: 2, title: "VOID_BOLIVIA", cat: "Desert", value: "Active", img: "https://images.unsplash.com/photo-1542640244-7e672d6cef21?q=80&w=1000&auto=format&fit=crop" },
+  { id: 3, title: "NEON_TOKYO", cat: "Urban", value: "Locked", img: "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?q=80&w=1000&auto=format&fit=crop" },
+];
+
+export default function WandererJournalSPA() {
+  const [view, setView] = useState<"wanderer" | "story" | "logic">("wanderer");
+  const [activeItem, setActiveItem] = useState(0);
+
   return (
-    <div className="premium-theme bg-[#fdfdfc] text-[#1a1a1a] min-h-screen font-serif selection:bg-black selection:text-white">
-      <nav className="fixed top-0 left-0 w-full z-50 p-8 flex justify-between items-end border-b border-black/5 bg-white/60 backdrop-blur-xl">
-        <div>
-            <Link href="/" className="text-3xl font-black tracking-tighter uppercase italic">Wanderer.</Link>
-            <div className="text-[8px] tracking-[0.4em] uppercase opacity-40 mt-1">International Edition // No. 152</div>
+    <div className="premium-theme bg-[#fdfdfc] text-[#1a1a1a] min-h-screen selection:bg-black selection:text-white font-serif overflow-x-hidden">
+      
+      {/* Background HUD Layers */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[45vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase">
+           WANDERER
         </div>
-        <div className="flex gap-12 text-[10px] tracking-widest uppercase font-bold opacity-60">
-            <span>Stories</span><span>Archive</span><span>Print</span>
+        <div className="absolute inset-x-0 top-0 bottom-0 left-1/2 -translate-x-1/2 w-[1px] bg-black/5" />
+        <div className="absolute inset-0 bg-[#fdfdfc]/40 backdrop-blur-[2px]" />
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.05] mix-blend-multiply" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#fdfdfc_100%)] opacity-80" />
+      </div>
+
+      {/* Editorial HUD Nav */}
+      <nav className="fixed top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-center bg-transparent backdrop-blur-3xl border-b border-black/10 font-mono text-black">
+        <div className="flex gap-12 items-center">
+           <button onClick={() => setView("wanderer")} className="text-xl font-black italic tracking-tighter hover:text-stone-800 transition-colors flex items-center gap-4 text-black uppercase">
+              WANDERER&trade;
+           </button>
+           <div className="hidden lg:flex gap-8 text-[10px] font-black uppercase tracking-widest opacity-20 italic font-mono">
+              Status: Journal_Sync_Active
+              <span className="text-black">Ref: 0x152</span>
+           </div>
+        </div>
+        <div className="hidden md:flex gap-12 text-[10px] font-black uppercase tracking-[0.4em] opacity-30 font-mono">
+           <button onClick={() => setView("wanderer")} className={`hover:opacity-100 transition-opacity ${view === 'wanderer' ? 'text-black opacity-100 underline decoration-black underline-offset-8 italic' : ''}`}>THE_WANDERER</button>
+           <button onClick={() => setView("logic")} className={`hover:opacity-100 transition-opacity ${view === 'logic' ? 'text-black opacity-100 underline decoration-black underline-offset-8 italic' : ''}`}>THE_LOGIC</button>
+        </div>
+        <div className="flex items-center gap-8 text-black">
+           <Search className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
+           <Menu className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
         </div>
       </nav>
 
-      <main className="pt-48 px-8 pb-32 max-w-7xl mx-auto">
-        <header className="mb-32">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1 }} className="flex flex-col md:flex-row justify-between items-baseline gap-8 mb-12">
-                <h1 className="text-7xl md:text-[13vw] font-black tracking-tighter leading-[0.85] uppercase italic">Into the<br/>Silent North.</h1>
-                <div className="max-w-xs">
-                    <p className="text-lg italic opacity-60 leading-relaxed mb-8">Exploring the remote archipelagos of Svalbard as the midnight sun begins its descent.</p>
-                    <span className="text-xs font-bold tracking-widest uppercase pb-1 border-b-2 border-black">Read Feature</span>
+      <AnimatePresence mode="wait">
+        
+        {/* THE WANDERER VIEW (LANDING) */}
+        {view === "wanderer" && (
+          <motion.div key="wanderer" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-48 pb-32 px-12 max-w-[1800px] mx-auto min-h-screen flex flex-col justify-center relative z-10 font-serif">
+             <header className="mb-24 border-b border-black/20 pb-12 flex flex-col md:flex-row justify-between items-end gap-12 text-black">
+                <div>
+                   <span className="text-[10px] uppercase font-black tracking-[1em] opacity-40 mb-4 block underline decoration-black/10 underline-offset-8 italic font-mono text-black">Visual_Capture // Series_152</span>
+                   <h1 className="text-7xl md:text-[12vw] font-black italic uppercase tracking-tighter leading-[0.75]">PURE. <br/> <span className="text-transparent" style={{ WebkitTextStroke: "2px rgba(0,0,0,0.6)" }}>TRAVEL.</span></h1>
                 </div>
-            </motion.div>
-            
-            <motion.div initial={{ opacity: 0, scale: 1.05 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 1.5 }} className="relative aspect-[21/9] rounded-2xl overflow-hidden shadow-2xl">
-                <Image src="https://images.unsplash.com/photo-1517090504586-3bf49cf204e3?auto=format&fit=crop&q=80&w=2000" alt="Arctic Landscape" fill className="object-cover" />
-            </motion.div>
-        </header>
+                <div className="text-right flex flex-col items-end">
+                   <div className="text-3xl font-black mb-4 tracking-tighter uppercase opacity-10 italic font-mono text-[#1a1a1a]">Journal_Sync</div>
+                   <div className="w-64 h-[2px] bg-black/5 rounded-none overflow-hidden">
+                      <motion.div animate={{ width: ['20%', '90%', '40%', '75%'] }} transition={{ duration: 4, repeat: Infinity }} className="h-full bg-black/80" />
+                   </div>
+                </div>
+             </header>
 
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-12">
-            {[
-                { title: "The Salt Flats", cat: "Bolivia", img: "https://images.unsplash.com/photo-1542640244-7e672d6cef21?auto=format&fit=crop&q=80&w=800" },
-                { title: "Neon Tokyo", cat: "Japan", img: "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&q=80&w=800" },
-                { title: "Fjord Serene", cat: "Norway", img: "https://images.unsplash.com/photo-1527004013197-933c4bb611b3?auto=format&fit=crop&q=80&w=800" }
-            ].map((article, i) => (
-                <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} className="group cursor-pointer">
-                    <div className="relative aspect-[3/4] mb-8 overflow-hidden rounded-xl">
-                        <Image src={article.img} alt={article.title} fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-700 group-hover:scale-105" />
-                    </div>
-                    <span className="text-[10px] tracking-widest uppercase opacity-40 block mb-2">{article.cat}</span>
-                    <h3 className="text-3xl font-black tracking-tighter uppercase italic group-hover:text-amber-600 transition-colors">{article.title}</h3>
-                </motion.div>
-            ))}
-        </section>
-      </main>
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-black">
+                {STORIES.map((p, i) => (
+                  <motion.div 
+                    key={p.id} initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: i * 0.1 }}
+                    className="group relative h-[60vh] rounded-none overflow-hidden border border-black/5 hover:border-black/20 transition-all cursor-pointer shadow-2xl bg-white/5"
+                    onClick={() => { setActiveItem(i); setView("story"); }}
+                  >
+                     <Image src={p.img} alt={p.title} fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[2s] group-hover:scale-110 opacity-80 group-hover:opacity-100" />
+                     <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/60 to-transparent" />
+                     <div className="absolute inset-0 bg-stone-500/10 group-hover:bg-transparent transition-colors duration-1000" />
+                     
+                     <div className="absolute inset-10 flex flex-col justify-between">
+                        <div className="flex justify-between items-start text-white">
+                           <div className="p-4 bg-white/10 border border-white/20 rounded-none opacity-0 group-hover:opacity-100 transition-opacity">
+                              <CompassIcon className="w-5 h-5 text-white" />
+                           </div>
+                           <div className="text-[10px] font-black uppercase tracking-widest opacity-20 italic">UNIT_0x{i+152}</div>
+                        </div>
+                        <div className="text-white">
+                           <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-2 block italic text-stone-300 font-mono">{p.cat} // {p.value}</span>
+                           <h3 className="text-5xl font-black italic uppercase tracking-tighter leading-none transition-all group-hover:tracking-widest font-serif">{p.title}</h3>
+                        </div>
+                     </div>
+                  </motion.div>
+                ))}
+             </div>
+          </motion.div>
+        )}
+
+        {/* THE STORY VIEW (DETAIL) */}
+        {view === "story" && (
+          <motion.div key="story" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen">
+             <button onClick={() => setView("wanderer")} className="fixed top-12 left-12 z-[60] bg-black text-white p-5 rounded-none hover:scale-110 transition-transform shadow-2xl">
+                <X className="w-6 h-6" />
+             </button>
+
+             <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen pt-24 lg:pt-0">
+                <div className="lg:col-span-12 relative flex items-center justify-center p-8 md:p-32 overflow-hidden h-screen bg-[#fdfdfc]">
+                   <div className="absolute inset-0 opacity-10">
+                      <Image src={STORIES[activeItem].img} alt="Background" fill className="object-cover grayscale" />
+                   </div>
+                   <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[40vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase text-black font-serif">
+                      CORE
+                   </div>
+                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#fdfdfc_100%)]" />
+                   
+                   <div className="max-w-[1500px] w-full grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10 font-serif text-black">
+                      <motion.div initial={{ scale: 1.1, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1 }} className="relative aspect-square w-full rounded-none overflow-hidden border border-black/10 group bg-neutral-900 shadow-2xl">
+                         <Image src={STORIES[activeItem].img} alt="Spec" fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[3s] opacity-80" priority />
+                         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60" />
+                         <div className="absolute top-12 left-12 p-4 bg-black/60 backdrop-blur-3xl rounded-none border-2 border-white/10 z-20">
+                            <Layers className="w-6 h-6 text-white animate-pulse" />
+                         </div>
+                      </motion.div>
+
+                      <div className="flex flex-col justify-center space-y-12 text-black">
+                         <div className="space-y-6">
+                            <span className="text-[10px] uppercase tracking-[1em] font-black opacity-30 mb-8 block underline decoration-black decoration-4 underline-offset-8 italic font-mono text-black">Dynamic_Sync // {STORIES[activeItem].cat}</span>
+                            <h1 className="text-7xl md:text-[8vw] font-black italic uppercase tracking-tighter leading-none text-black font-serif">{STORIES[activeItem].title}</h1>
+                            <div className="text-4xl font-black italic tracking-tighter opacity-10 italic text-stone-600 font-mono">Archive: {STORIES[activeItem].value}</div>
+                         </div>
+
+                         <p className="text-3xl font-light italic leading-relaxed uppercase tracking-tight opacity-40 text-black leading-relaxed">
+                            Structural allocation for mission {STORIES[activeItem].title}. System integrity at 100%. Every coordinate synchronized. Perfect archival.
+                         </p>
+
+                         <div className="grid grid-cols-2 gap-12 py-12 border-y border-black/10 font-mono text-black/60 text-black font-mono">
+                            {[
+                              { icon: <MapPin className="w-5 h-5" />, l: "Logic", v: "Phase_Shift" },
+                              { icon: <Zap className="w-5 h-5" />, l: "Sync", v: "Active" },
+                              { icon: <Shield className="w-5 h-5" />, l: "Security", v: "High_Impact" },
+                              { icon: <Activity className="w-5 h-5" />, l: "Status", v: "Verified" },
+                            ].map((s, i) => (
+                              <div key={i} className="flex gap-6 items-center">
+                                 <div className="opacity-20">{s.icon}</div>
+                                 <div className="text-left">
+                                    <div className="text-[10px] font-black opacity-30 uppercase tracking-widest mb-1 italic text-black">{s.l}</div>
+                                    <div className="text-sm font-black uppercase italic tracking-tighter text-black">{s.v}</div>
+                                 </div>
+                              </div>
+                            ))}
+                         </div>
+
+                         <div className="flex gap-6 pt-8 font-mono font-mono">
+                            <button onClick={() => setView("wanderer")} className="flex-grow py-8 bg-black text-white font-black uppercase text-xs tracking-[1em] hover:bg-stone-800 transition-all shadow-2xl font-mono">
+                               Return_to_Wanderer
+                            </button>
+                            <button className="px-12 py-8 border border-black/10 text-[10px] font-black uppercase tracking-[0.5em] hover:scale-105 transition-all text-black font-mono">
+                               PDF_Spec
+                            </button>
+                         </div>
+                      </div>
+                   </div>
+                </div>
+             </div>
+          </motion.div>
+        )}
+
+        {/* THE LOGIC VIEW (INFO) */}
+        {view === "logic" && (
+          <motion.div key="logic" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen flex flex-col justify-center font-serif">
+             <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center text-black">
+                <div className="space-y-16">
+                   <span className="text-[10px] uppercase font-black tracking-[1.5em] opacity-30 block underline decoration-black decoration-2 underline-offset-8 italic font-mono text-black">The_Logic_Protocol</span>
+                   <h2 className="text-7xl md:text-[10vw] font-black italic tracking-tighter leading-none text-black uppercase font-serif">The <br/> Truth.</h2>
+                   <p className="text-3xl md:text-4xl font-light italic opacity-60 leading-relaxed uppercase tracking-tight text-black font-serif">
+                      We treat architecture as code. Every structure is a function of its environmental variables and tectonic intent. 100% precision. Zero noise.
+                   </p>
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t border-black/10 font-mono text-black font-mono">
+                      {[
+                        { icon: <Sparkles className="w-6 h-6" />, t: "Adaptive Flow", v: "Dynamic Load Sync" },
+                        { icon: <Plus className="w-6 h-6" />, t: "Structural Sync", v: "Deep_Material_ID" },
+                      ].map((item, i) => (
+                        <div key={i} className="flex gap-8 group">
+                           <div className="w-16 h-16 rounded-none border border-black flex items-center justify-center text-black group-hover:bg-black group-hover:text-white transition-all shadow-xl">
+                              {item.icon}
+                           </div>
+                           <div className="text-left text-black">
+                              <h4 className="text-2xl font-black uppercase italic tracking-tighter text-black leading-none mb-2 font-serif">{item.t}</h4>
+                              <p className="text-[10px] opacity-30 uppercase tracking-[0.3em] font-black leading-relaxed text-black font-mono font-mono">{item.v}</p>
+                           </div>
+                        </div>
+                      ))}
+                   </div>
+                </div>
+                <div className="relative aspect-square bg-stone-900/10 rounded-none p-12 overflow-hidden border border-black/10 group shadow-2xl">
+                   <Image src="https://images.unsplash.com/photo-1541829070764-84a7d30dee62?q=80&w=1000&auto=format&fit=crop" alt="The Archive" fill className="object-cover opacity-20 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-[3s]" />
+                   <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-80" />
+                   <div className="absolute inset-x-0 bottom-12 flex justify-center font-mono">
+                      <div className="px-12 py-6 bg-black text-white text-[10px] font-black uppercase tracking-widest italic animate-bounce cursor-pointer hover:bg-stone-800 transition-all rounded-none font-mono font-mono">
+                         Establish_Handshake
+                      </div>
+                   </div>
+                </div>
+             </div>
+          </motion.div>
+        )}
+
+      </AnimatePresence>
+
+      {/* Global Status HUD */}
+      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em] italic text-black leading-none font-mono">
+         <div className="flex gap-12 text-black font-mono">
+            <span>Wanderer_OS_Alpha</span>
+            <span>Uptime: 99.9%</span>
+         </div>
+         <div className="flex gap-4 items-end text-black font-mono font-mono">
+            <div className="text-right leading-tight italic">
+               Archival_Control <br /> v4.0.152
+            </div>
+            <div className="flex gap-[4px] h-4">
+               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-full bg-black opacity-${i*20}`}></div>)}
+            </div>
+         </div>
+      </footer>
+
+      <style jsx global>{`
+        ::-webkit-scrollbar { width: 0px; }
+      `}</style>
     </div>
   );
 }

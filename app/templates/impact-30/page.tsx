@@ -114,7 +114,7 @@ export default function MouseTrapParticles() {
          </div>
       </footer>
 
-      <style jsx global>{`
+      <style>{`
         .glass-card {
           background: rgba(255, 255, 255, 0.02);
           box-shadow: 0 50px 100px -20px rgba(0, 0, 0, 0.5);

@@ -95,7 +95,7 @@ export default function PhotographyLightLeak() {
          <div className="font-serif italic text-2xl opacity-40">Fine Art Photography Unit.</div>
       </footer>
 
-      <style jsx global>{`
+      <style>{`
         .bg-gradient-radial {
           background-image: radial-gradient(var(--tw-gradient-stops));
         }

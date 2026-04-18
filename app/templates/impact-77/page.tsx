@@ -53,7 +53,7 @@ export default function PhotographyParallaxTiltGrid() {
          </div>
       </main>
 
-      <style jsx global>{`
+      <style>{`
         .perspective-2000 {
           perspective: 2000px;
         }

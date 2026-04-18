@@ -98,7 +98,7 @@ export default function DynamicLiveStream() {
 
       </main>
 
-      <style jsx global>{`
+      <style>{`
         .glass {
           background: rgba(225, 29, 72, 0.05);
           backdrop-filter: blur(20px);

@@ -122,7 +122,7 @@ export default function MagneticHUD() {
          </div>
       </footer>
 
-      <style jsx global>{`
+      <style>{`
         .glass {
           background: rgba(2, 2, 5, 0.6);
           backdrop-filter: blur(40px);

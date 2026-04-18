@@ -1,59 +1,233 @@
 "use client";
-import { motion } from "framer-motion";
+
+import { motion, AnimatePresence } from "framer-motion";
+import { useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
+import { X, Menu, Search, Award, Zap, Activity, Globe, Shield, Command, Plus, ArrowUpRight, Maximize2, MoveRight, Layers, Box, Compass, Sparkles, MoveVertical, Target, Radio, CheckCircle2, PenTool, Layout } from "lucide-react";
 import "../premium.css";
 
 const SERVICES = [
-  { id: "01", title: "Brand Identity", desc: "Crafting distinct visual worlds.", color: "bg-rose-500", img: "https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&q=80&w=800" },
-  { id: "02", title: "Web Architecture", desc: "Engineered for speed and wonder.", color: "bg-indigo-500", img: "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&q=80&w=800" },
-  { id: "03", title: "Digital Craft", desc: "Elevating every touchpoint.", color: "bg-emerald-500", img: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&q=80&w=800" },
+  { id: 1, title: "BRAND_IDENTITY", cat: "Visual", value: "Verified", img: "https://images.unsplash.com/photo-1541643600914-78b084683601?q=80&w=1000&auto=format&fit=crop" },
+  { id: 2, title: "WEB_ARCHITECTURE", cat: "Core", value: "Active", img: "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?q=80&w=1000&auto=format&fit=crop" },
+  { id: 3, title: "DIGITAL_CRAFT", cat: "Experience", value: "Locked", img: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=1000&auto=format&fit=crop" },
 ];
 
-export default function AgencyServicesDiagonal() {
+export default function ObliqStudioSPA() {
+  const [view, setView] = useState<"obliq" | "service" | "logic">("obliq");
+  const [activeItem, setActiveItem] = useState(0);
+
   return (
-    <div className="premium-theme bg-[#0d0d0d] text-white min-h-screen font-sans selection:bg-white selection:text-black">
-      <nav className="fixed top-0 left-0 w-full z-50 p-8 flex justify-between items-center bg-black/40 backdrop-blur-xl">
-        <Link href="/" className="text-lg font-black tracking-tighter uppercase italic">OBLIQ_STUDIO</Link>
-        <span className="text-[10px] tracking-widest uppercase opacity-40">Services v.2026</span>
+    <div className="premium-theme bg-[#0d0d0d] text-rose-400 min-h-screen selection:bg-rose-600 selection:text-white font-sans overflow-x-hidden">
+      
+      {/* Background HUD Layers */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[45vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase">
+           OBLIQ
+        </div>
+        <div className="absolute inset-x-0 top-0 bottom-0 left-1/2 -translate-x-1/2 w-[1px] bg-white/5" />
+        <div className="absolute inset-0 bg-[#0d0d0d]/40 backdrop-blur-[2px]" />
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.05] mix-blend-screen" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#0d0d0d_100%)] opacity-80" />
+      </div>
+
+      {/* Editorial HUD Nav */}
+      <nav className="fixed top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-center bg-transparent backdrop-blur-3xl border-b border-rose-500/10 font-mono text-white">
+        <div className="flex gap-12 items-center text-rose-400">
+           <button onClick={() => setView("obliq")} className="text-xl font-black italic tracking-tighter hover:text-white transition-colors flex items-center gap-4 text-rose-500">
+              OBLIQ_OS&trade;
+           </button>
+           <div className="hidden lg:flex gap-8 text-[10px] font-black uppercase tracking-widest opacity-20 italic">
+              Status: Studio_Sync_Active
+              <span className="text-white">Ref: 0x154</span>
+           </div>
+        </div>
+        <div className="hidden md:flex gap-12 text-[10px] font-black uppercase tracking-[0.4em] opacity-30">
+           <button onClick={() => setView("obliq")} className={`hover:opacity-100 transition-opacity ${view === 'obliq' ? 'text-white opacity-100 underline decoration-white underline-offset-8 italic' : ''}`}>THE_OBLIQ</button>
+           <button onClick={() => setView("logic")} className={`hover:opacity-100 transition-opacity ${view === 'logic' ? 'text-white opacity-100 underline decoration-white underline-offset-8 italic' : ''}`}>THE_LOGIC</button>
+        </div>
+        <div className="flex items-center gap-8 text-white">
+           <Search className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
+           <Menu className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
+        </div>
       </nav>
 
-      <main className="pt-40">
-        <header className="px-8 pb-32 max-w-5xl">
-            <motion.h1 initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} className="text-6xl md:text-[10vw] font-black tracking-tighter leading-[0.8] uppercase italic mb-12">Beyond<br/>the Norm.</motion.h1>
-            <p className="text-xl md:text-2xl opacity-40 leading-relaxed font-light italic">We don't just build websites. We design digital systems that command attention and drive visceral engagement.</p>
-        </header>
+      <AnimatePresence mode="wait">
+        
+        {/* THE OBLIQ VIEW (LANDING) */}
+        {view === "obliq" && (
+          <motion.div key="obliq" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-48 pb-32 px-12 max-w-[1800px] mx-auto min-h-screen flex flex-col justify-center relative z-10 font-sans">
+             <header className="mb-24 border-b border-rose-500/20 pb-12 flex flex-col md:flex-row justify-between items-end gap-12 text-white">
+                <div>
+                   <span className="text-[10px] uppercase font-black tracking-[1em] opacity-40 mb-4 block underline decoration-rose-500/10 underline-offset-8 italic font-mono text-rose-500">Visual_Capture // Series_154</span>
+                   <h1 className="text-7xl md:text-[12vw] font-black italic uppercase tracking-tighter leading-[0.75]">PURE. <br/> <span className="text-transparent" style={{ WebkitTextStroke: "2px rgba(244,63,94,0.6)" }}>STUDIO.</span></h1>
+                </div>
+                <div className="text-right flex flex-col items-end">
+                   <div className="text-3xl font-black mb-4 tracking-tighter uppercase opacity-10 italic font-mono text-rose-600">Studio_Sync</div>
+                   <div className="w-64 h-[2px] bg-white/5 rounded-none overflow-hidden">
+                      <motion.div animate={{ width: ['20%', '90%', '40%', '75%'] }} transition={{ duration: 4, repeat: Infinity }} className="h-full bg-rose-500" />
+                   </div>
+                </div>
+             </header>
 
-        <div className="space-y-0">
-            {SERVICES.map((s, i) => (
-                <motion.div key={i} initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ duration: 1 }} className="relative h-[60vh] md:h-[80vh] group overflow-hidden cursor-pointer">
-                    <div className="absolute inset-0 grayscale opacity-40 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-1000">
-                        <Image src={s.img} alt={s.title} fill className="object-cover" />
-                    </div>
-                    
-                    <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors" />
-
-                    <div className="relative h-full flex flex-col justify-end p-8 md:p-16">
-                        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
-                            <div>
-                                <span className={`text-[10px] font-black tracking-widest uppercase px-4 py-1 ${s.color} text-white rounded-full inline-block mb-6`}>{s.id} // Process</span>
-                                <h2 className="text-5xl md:text-8xl font-black tracking-tighter uppercase italic leading-none">{s.title}</h2>
-                            </div>
-                            <p className="max-w-xs text-lg opacity-60 leading-relaxed italic">{s.desc}</p>
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-white">
+                {SERVICES.map((p, i) => (
+                  <motion.div 
+                    key={p.id} initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: i * 0.1 }}
+                    className="group relative h-[60vh] rounded-none overflow-hidden border border-rose-500/10 hover:border-rose-500/40 transition-all cursor-pointer shadow-2xl bg-white/5"
+                    onClick={() => { setActiveItem(i); setView("service"); }}
+                  >
+                     <Image src={p.img} alt={p.title} fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[2s] group-hover:scale-110 opacity-60 group-hover:opacity-100" />
+                     <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 to-transparent" />
+                     <div className="absolute inset-0 bg-rose-500/10 group-hover:bg-transparent transition-colors duration-1000" />
+                     
+                     <div className="absolute inset-10 flex flex-col justify-between">
+                        <div className="flex justify-between items-start text-white">
+                           <div className="p-4 bg-white/10 border border-white/20 rounded-none opacity-0 group-hover:opacity-100 transition-opacity">
+                              <PenTool className="w-5 h-5 text-rose-400" />
+                           </div>
+                           <div className="text-[10px] font-black uppercase tracking-widest opacity-20 italic">SERVICE_0x{i+154}</div>
                         </div>
-                    </div>
+                        <div className="text-white">
+                           <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-2 block italic text-rose-300">{p.cat} // {p.value}</span>
+                           <h3 className="text-5xl font-black italic uppercase tracking-tighter leading-none transition-all group-hover:tracking-widest font-sans">{p.title}</h3>
+                        </div>
+                     </div>
+                  </motion.div>
+                ))}
+             </div>
+          </motion.div>
+        )}
 
-                    <div className="absolute top-0 right-0 w-32 h-32 flex justify-center items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Link href={`/templates/impact-154`} className="w-16 h-16 rounded-full bg-white text-black flex items-center justify-center -rotate-45 group-hover:rotate-0 transition-transform duration-500">
-                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                <path d="M5 12h14m-7-7 7 7-7 7" />
-                            </svg>
-                        </Link>
-                    </div>
-                </motion.div>
-            ))}
-        </div>
-      </main>
+        {/* THE SERVICE VIEW (DETAIL) */}
+        {view === "service" && (
+          <motion.div key="service" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen font-sans">
+             <button onClick={() => setView("obliq")} className="fixed top-12 left-12 z-[60] bg-white text-black p-5 rounded-none hover:scale-110 transition-transform shadow-2xl">
+                <X className="w-6 h-6" />
+             </button>
+
+             <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen pt-24 lg:pt-0 font-sans">
+                <div className="lg:col-span-12 relative flex items-center justify-center p-8 md:p-32 overflow-hidden h-screen bg-[#0d0d0d]">
+                   <div className="absolute inset-0 opacity-10">
+                      <Image src={SERVICES[activeItem].img} alt="Background" fill className="object-cover grayscale" />
+                   </div>
+                   <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[40vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase text-rose-500 font-sans">
+                      CORE
+                   </div>
+                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#0d0d0d_100%)]" />
+                   
+                   <div className="max-w-[1500px] w-full grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10 font-sans text-white">
+                      <motion.div initial={{ scale: 1.1, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1 }} className="relative aspect-square w-full rounded-none overflow-hidden border border-rose-500/20 group bg-neutral-900 shadow-2xl">
+                         <Image src={SERVICES[activeItem].img} alt="Spec" fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[3s] opacity-80" priority />
+                         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60" />
+                         <div className="absolute top-12 left-12 p-4 bg-black/60 backdrop-blur-3xl rounded-none border-2 border-white/10 z-20 font-sans">
+                            <Layers className="w-6 h-6 text-rose-400 animate-pulse font-sans" />
+                         </div>
+                      </motion.div>
+
+                      <div className="flex flex-col justify-center space-y-12 text-white font-sans">
+                         <div className="space-y-6">
+                            <span className="text-[10px] uppercase tracking-[1em] font-black opacity-30 mb-8 block underline decoration-white decoration-4 underline-offset-8 italic font-mono text-rose-600">Visual_Sync // {SERVICES[activeItem].cat}</span>
+                            <h1 className="text-7xl md:text-[8vw] font-black italic uppercase tracking-tighter leading-none text-white font-sans">{SERVICES[activeItem].title}</h1>
+                            <div className="text-4xl font-black italic tracking-tighter opacity-10 italic text-rose-500 font-sans">Ref: {SERVICES[activeItem].value}</div>
+                         </div>
+
+                         <p className="text-3xl font-light italic leading-relaxed uppercase tracking-tight opacity-40 text-white leading-relaxed font-sans">
+                            Structural allocation for mission {SERVICES[activeItem].title}. System integrity at 100%. Every coordinate synchronized. Perfect craft.
+                         </p>
+
+                         <div className="grid grid-cols-2 gap-12 py-12 border-y border-white/10 font-mono text-white/60 text-rose-400">
+                            {[
+                              { icon: <Layout className="w-5 h-5" />, l: "Logic", v: "Phase_Shift" },
+                              { icon: <Zap className="w-5 h-5" />, l: "Sync", v: "Active" },
+                              { icon: <Shield className="w-5 h-5" />, l: "Security", v: "High_Impact" },
+                              { icon: <Activity className="w-5 h-5" />, l: "Status", v: "Verified" },
+                            ].map((s, i) => (
+                              <div key={i} className="flex gap-6 items-center">
+                                 <div className="opacity-20 text-rose-400">{s.icon}</div>
+                                 <div className="text-left font-sans">
+                                    <div className="text-[10px] font-black opacity-30 uppercase tracking-widest mb-1 italic text-white font-sans">{s.l}</div>
+                                    <div className="text-sm font-black uppercase italic tracking-tighter text-white font-sans">{s.v}</div>
+                                 </div>
+                              </div>
+                            ))}
+                         </div>
+
+                         <div className="flex gap-6 pt-8 font-mono">
+                            <button onClick={() => setView("obliq")} className="flex-grow py-8 bg-rose-600 text-white font-black uppercase text-xs tracking-[1em] hover:bg-rose-500 transition-all shadow-2xl font-mono">
+                               Return_to_Obliq
+                            </button>
+                            <button className="px-12 py-8 border border-white/20 text-[10px] font-black uppercase tracking-[0.5em] hover:scale-105 transition-all text-white font-mono">
+                               PDF_Spec
+                            </button>
+                         </div>
+                      </div>
+                   </div>
+                </div>
+             </div>
+          </motion.div>
+        )}
+
+        {/* THE LOGIC VIEW (INFO) */}
+        {view === "logic" && (
+          <motion.div key="logic" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen flex flex-col justify-center font-sans">
+             <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center text-white">
+                <div className="space-y-16 text-white font-sans">
+                   <span className="text-[10px] uppercase font-black tracking-[1.5em] opacity-30 block underline decoration-rose-400 decoration-2 underline-offset-8 italic font-mono text-rose-700">The_Logic_Protocol</span>
+                   <h2 className="text-7xl md:text-[10vw] font-black italic tracking-tighter leading-none text-white uppercase font-sans">The <br/> Truth.</h2>
+                   <p className="text-3xl md:text-4xl font-light italic opacity-60 leading-relaxed uppercase tracking-tight text-white/60 font-sans">
+                      We treat architecture as code. Every structure is a function of its environmental variables and tectonic intent. 100% precision. Zero noise.
+                   </p>
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t border-white/10 font-mono text-rose-400">
+                      {[
+                        { icon: <Sparkles className="w-6 h-6" />, t: "Adaptive Flow", v: "Dynamic Load Sync" },
+                        { icon: <Plus className="w-6 h-6" />, t: "Structural Sync", v: "Deep_Material_ID" },
+                      ].map((item, i) => (
+                        <div key={i} className="flex gap-8 group">
+                           <div className="w-16 h-16 rounded-none border border-rose-500 flex items-center justify-center text-rose-500 group-hover:bg-rose-500 group-hover:text-black transition-all shadow-xl font-mono font-sans font-sans font-sans font-sans">
+                              {item.icon}
+                           </div>
+                           <div className="text-left text-white font-sans font-sans font-sans font-sans">
+                              <h4 className="text-2xl font-black uppercase italic tracking-tighter text-white leading-none mb-2 font-sans">{item.t}</h4>
+                              <p className="text-[10px] opacity-30 uppercase tracking-[0.3em] font-black leading-relaxed text-rose-400/40 text-rose-500 font-mono font-mono font-mono font-mono">{item.v}</p>
+                           </div>
+                        </div>
+                      ))}
+                   </div>
+                </div>
+                <div className="relative aspect-square bg-rose-900/10 rounded-none p-12 overflow-hidden border border-rose-500/20 group shadow-2xl font-sans font-sans font-sans font-sans">
+                   <Image src="https://images.unsplash.com/photo-1541829070764-84a7d30dee62?q=80&w=1000&auto=format&fit=crop" alt="The Archive" fill className="object-cover opacity-20 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-[3s]" />
+                   <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
+                   <div className="absolute inset-x-0 bottom-12 flex justify-center font-mono font-sans font-mono font-mono font-mono font-mono font-mono">
+                      <div className="px-12 py-6 bg-rose-600 text-white text-[10px] font-black uppercase tracking-widest italic animate-bounce cursor-pointer hover:bg-rose-500 transition-all rounded-none font-mono">
+                         Establish_Handshake
+                      </div>
+                   </div>
+                </div>
+             </div>
+          </motion.div>
+        )}
+
+      </AnimatePresence>
+
+      {/* Global Status HUD */}
+      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em] italic text-rose-600 leading-none font-mono font-sans font-mono font-mono font-mono font-mono font-mono">
+         <div className="flex gap-12 text-rose-600 font-mono font-sans font-mono">
+            <span>Obliq_Studio_OS_Alpha</span>
+            <span>Uptime: 99.9%</span>
+         </div>
+         <div className="flex gap-4 items-end text-rose-600">
+            <div className="text-right leading-tight italic font-mono font-sans font-mono">
+               Archival_Control <br /> v4.0.154
+            </div>
+            <div className="flex gap-[4px] h-4">
+               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-full bg-rose-500 opacity-${i*20}`}></div>)}
+            </div>
+         </div>
+      </footer>
+
+      <style jsx global>{`
+        ::-webkit-scrollbar { width: 0px; }
+      `}</style>
     </div>
   );
 }

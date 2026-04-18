@@ -108,7 +108,7 @@ export default function FoodLiquidMenu() {
          </div>
       </footer>
 
-      <style jsx global>{`
+      <style>{`
         .glass {
           background: rgba(255, 255, 255, 0.02);
           backdrop-filter: blur(40px);

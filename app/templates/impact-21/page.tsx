@@ -1,104 +1,216 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
+import { ArrowRight, ShoppingCart, Plus, X, Menu, Search, Filter, Info, ChevronRight } from "lucide-react";
 import "../premium.css";
 
-export default function EcommerceNeoMinimal() {
+const PRODUCTS = [
+  { id: 1, name: "MONOLITH_CHAIR", price: 2850, tag: "Sculpture", img: "https://images.unsplash.com/photo-1592078615290-033ee584e226?q=80&w=1000&auto=format&fit=crop", desc: "A singular piece of cast aluminum, hand-polished to a mirror finish. Form follows purely structural logic." },
+  { id: 2, name: "ORB_LIGHT_01", price: 950, tag: "Lighting", img: "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?q=80&w=1000&auto=format&fit=crop", desc: "Floating sphere of hand-blown frosted glass. Suspended by a surgical-grade steel thread." },
+  { id: 3, name: "LIN_VASE", price: 420, tag: "Object", img: "https://images.unsplash.com/photo-1581783898377-1c85bf937427?q=80&w=1000&auto=format&fit=crop", desc: "Geometric reduction of a classical form. Matte black ceramic with zero-glaze finish." },
+  { id: 4, name: "STARK_TABLE", price: 5400, tag: "Furniture", img: "https://images.unsplash.com/photo-1533090161767-e6ffed986c88?q=80&w=1000&auto=format&fit=crop", desc: "Massive solid oak slab over a brutalist concrete base. A dialogue between organic and industrial." },
+];
+
+export default function MinimalistObjectSPA() {
+  const [view, setView] = useState<"catalog" | "object" | "process">("catalog");
+  const [activeItem, setActiveItem] = useState(0);
+  const [cart, setCart] = useState(0);
+
   return (
-    <div className="premium-theme bg-white text-black min-h-screen selection:bg-black selection:text-white">
+    <div className="premium-theme bg-white text-black min-h-screen selection:bg-black selection:text-white font-sans overflow-x-hidden">
       
-      {/* Editorial Navigation */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-12 flex justify-between items-center mix-blend-difference invert">
-        <Link href="/" className="text-xl font-black tracking-tight uppercase">Neo.Object</Link>
-        <div className="flex gap-12 font-mono text-[10px] uppercase font-bold opacity-40">
-           <a href="#" className="hover:opacity-100">Boutique</a>
-           <a href="#" className="hover:opacity-100">Cart (0)</a>
+      {/* Global Navigation */}
+      <nav className="fixed top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-center bg-white/80 backdrop-blur-xl border-b border-black/5">
+        <button onClick={() => setView("catalog")} className="text-xl font-black uppercase tracking-tighter hover:opacity-100 transition-opacity">
+           NEO.OBJECT&trade;
+        </button>
+        <div className="hidden md:flex gap-12 text-[10px] font-black uppercase tracking-[0.4em] opacity-30">
+           <button onClick={() => setView("catalog")} className={`hover:opacity-100 transition-opacity ${view === 'catalog' ? 'text-black opacity-100' : ''}`}>COLLECTION</button>
+           <button onClick={() => setView("process")} className={`hover:opacity-100 transition-opacity ${view === 'process' ? 'text-black opacity-100' : ''}`}>PROCESS</button>
+        </div>
+        <div className="flex items-center gap-8">
+           <div className="hidden lg:flex items-center gap-2 opacity-30 text-[9px] uppercase font-black tracking-widest">
+              Stock: Globally_Verified
+           </div>
+           <button className="flex items-center gap-4 group">
+              <ShoppingCart className="w-5 h-5 group-hover:scale-110 transition-transform" />
+              <span className="text-[10px] font-black opacity-30 group-hover:opacity-100">[{cart}]</span>
+           </button>
         </div>
       </nav>
 
-      {/* Hero Product Section */}
-      <main className="pt-32 px-12 pb-24 grid grid-cols-12 gap-12 min-h-screen items-center">
+      <AnimatePresence mode="wait">
         
-        {/* Left: Huge Vertical Text */}
-        <div className="col-span-12 lg:col-span-2 hidden lg:flex flex-col justify-center border-r-2 border-black/5 h-full">
-           <div className="rotate-[-90deg] whitespace-nowrap text-[8vh] font-black uppercase tracking-tighter opacity-5">
-              NEW_COLLECTION_26
-           </div>
-        </div>
+        {/* CATALOG VIEW */}
+        {view === "catalog" && (
+          <motion.div key="catalog" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-48 pb-32 px-8">
+             <header className="mb-32 flex flex-col md:flex-row justify-between items-end border-b-2 border-black pb-12">
+                <h1 className="text-[12vw] font-black uppercase tracking-tighter leading-[0.8] mix-blend-difference">
+                   PURE. <br /> <span className="text-transparent" style={{ WebkitTextStroke: '1px black' }}>FORM.</span>
+                </h1>
+                <div className="text-right flex flex-col items-end">
+                   <div className="text-2xl font-black mb-4 tracking-tighter italic">OBJ_COL_42</div>
+                   <div className="flex gap-4">
+                      <Search className="w-5 h-5 opacity-20" />
+                      <Filter className="w-5 h-5 opacity-20" />
+                   </div>
+                </div>
+             </header>
 
-        {/* Center: Image Content */}
-        <div className="col-span-12 lg:col-span-5 relative aspect-[3/4] overflow-hidden group">
-           <motion.div 
-             initial={{ scale: 1.1, opacity: 0 }}
-             animate={{ scale: 1, opacity: 1 }}
-             transition={{ duration: 1.2 }}
-             className="w-full h-full"
-           >
-              <Image 
-                src="/templates/tech_noir.png" 
-                alt="Product" 
-                fill 
-                className="object-contain grayscale hover:grayscale-0 transition-all duration-1000" 
-              />
-           </motion.div>
-           <div className="absolute bottom-8 left-8 bg-black text-white p-6 font-mono font-black italic text-xl">
-              OBJ_01
-           </div>
-        </div>
+             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                {PRODUCTS.map((p, i) => (
+                  <motion.div 
+                    key={p.id} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
+                    className="group flex flex-col cursor-pointer"
+                    onClick={() => { setActiveItem(i); setView("object"); }}
+                  >
+                     <div className="relative aspect-[3/4] bg-[#f5f5f5] overflow-hidden mb-8 border border-black/5">
+                        <Image src={p.img} alt={p.name} fill className="object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000" />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" />
+                     </div>
+                     <div className="flex justify-between items-start">
+                        <div>
+                           <span className="text-[10px] uppercase font-black tracking-[0.3em] opacity-30 block mb-2">{p.tag}</span>
+                           <h3 className="text-2xl font-black uppercase tracking-tighter leading-none mb-4">{p.name}</h3>
+                        </div>
+                        <div className="text-xl font-bold italic tracking-tighter opacity-20 group-hover:opacity-100 transition-all">${p.price}</div>
+                     </div>
+                     <button className="flex items-center gap-4 text-[9px] font-black tracking-[0.5em] opacity-20 group-hover:opacity-100 transition-all group-hover:gap-8 border-t border-black/5 pt-6">
+                        ACQUIRE_OBJECT <Plus className="w-4 h-4" />
+                     </button>
+                  </motion.div>
+                ))}
+             </div>
+          </motion.div>
+        )}
 
-        {/* Right: Info & Shop */}
-        <div className="col-span-12 lg:col-span-5 flex flex-col justify-center">
-           <motion.div
-             initial={{ x: 50, opacity: 0 }}
-             animate={{ x: 0, opacity: 1 }}
-           >
-              <span className="text-xs font-mono font-bold opacity-30 mb-6 block uppercase tracking-widest">Minimalist Essentials / v1</span>
-              <h1 className="text-8xl md:text-[10vw] font-black leading-[0.8] uppercase tracking-tighter mb-12">
-                 Pure <br /> <span className="text-transparent" style={{ WebkitTextStroke: '2px black' }}>Form.</span>
-              </h1>
-              <p className="max-w-md text-xl font-light leading-relaxed mb-12 opacity-60">
-                 Removing the excess to reveal the essence of high-performance optics. 
-                 Designed for the modern pioneer.
-              </p>
-              
-              <div className="flex items-center gap-12 mb-12">
-                 <div className="text-4xl font-mono font-bold">$1,250</div>
-                 <button className="flex-grow py-6 bg-black text-white font-black uppercase text-xs tracking-[0.5em] hover:tracking-[0.8em] transition-all">
-                    Inquire
-                 </button>
-              </div>
+        {/* OBJECT DETAIL VIEW */}
+        {view === "object" && (
+          <motion.div key="object" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen">
+             <button onClick={() => setView("catalog")} className="fixed top-12 left-12 z-[60] bg-black text-white p-5 rounded-full hover:scale-110 transition-transform shadow-2xl">
+                <X className="w-6 h-6" />
+             </button>
 
-              <div className="grid grid-cols-2 gap-8 pt-12 border-t border-black/5 opacity-40 font-mono text-[10px] uppercase font-bold">
-                 <div>
-                    Designed in London <br /> Crafted in Italy
-                 </div>
-                 <div>
-                    2-Year Warranty <br /> Secure Delivery
-                 </div>
-              </div>
-           </motion.div>
-        </div>
-      </main>
+             <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen">
+                <div className="lg:col-span-7 relative h-[70vh] lg:h-screen sticky top-0 bg-[#f5f5f5] flex items-center justify-center p-12 lg:p-32">
+                   <motion.div initial={{ scale: 1.1, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1 }} className="relative w-full h-full">
+                      <Image src={PRODUCTS[activeItem].img} alt="Object" fill className="object-contain grayscale" priority />
+                   </motion.div>
+                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[30vh] font-black opacity-[0.02] select-none pointer-events-none italic">
+                      {PRODUCTS[activeItem].name.split('_')[0]}
+                   </div>
+                </div>
 
-      {/* Feature Grid */}
-      <section className="px-12 py-48 bg-black text-white">
-         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-end gap-24">
-            <h2 className="text-6xl md:text-8xl font-black uppercase italic tracking-tighter leading-none">The Vision <br /> Is Clear.</h2>
-            <div className="max-w-md text-right">
-               <div className="text-xs uppercase font-mono font-bold text-white/40 mb-8 block tracking-widest">Tech Stack</div>
-               <p className="text-lg font-light leading-relaxed opacity-60">
-                  Every lens is calibrated via neural feedback loops to ensure 100% optical alignment with human eye patterns.
-               </p>
+                <div className="lg:col-span-5 p-12 lg:p-24 bg-white flex flex-col justify-center space-y-16">
+                   <div className="space-y-8">
+                      <span className="text-[10px] uppercase tracking-[1em] font-black opacity-30 mb-8 block underline decoration-black underline-offset-8">Specifications</span>
+                      <h1 className="text-6xl md:text-8xl font-black uppercase tracking-tighter leading-none text-black">{PRODUCTS[activeItem].name}</h1>
+                      <div className="text-4xl font-black italic tracking-tighter">${PRODUCTS[activeItem].price}</div>
+                   </div>
+
+                   <p className="text-xl font-light italic leading-relaxed opacity-60">
+                      {PRODUCTS[activeItem].desc} Every surface is inspected under polarized light to ensure absolute geometric truth.
+                   </p>
+
+                   <div className="grid grid-cols-2 gap-8 border-y border-black/5 py-12">
+                      {[
+                        { l: "Material", v: "Reinforced_Solid" },
+                        { l: "Origin", v: "Crafted_Kyoto" },
+                        { l: "Series", v: "Neo_Core" },
+                        { l: "Weight", v: "Verified_Net" },
+                      ].map((s, i) => (
+                        <div key={i}>
+                           <div className="text-[10px] font-black opacity-30 uppercase tracking-widest">{s.l}</div>
+                           <div className="text-sm font-black uppercase italic tracking-tighter mt-1">{s.v}</div>
+                        </div>
+                      ))}
+                   </div>
+
+                   <div className="flex gap-6">
+                      <button onClick={() => { setCart(c => c + 1); setView("catalog"); }} className="flex-grow py-8 bg-black text-white font-black uppercase text-xs tracking-[1em] hover:bg-[#111] transition-all">
+                         Acquire_Asset
+                      </button>
+                      <button className="px-12 py-8 border border-black/10 text-[10px] font-black uppercase tracking-[0.5em] hover:bg-black hover:text-white transition-all">
+                         Inquire
+                      </button>
+                   </div>
+                </div>
+             </div>
+          </motion.div>
+        )}
+
+        {/* PROCESS VIEW */}
+        {view === "process" && (
+          <motion.div key="process" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen">
+             <div className="flex justify-between items-end mb-32 border-b-2 border-black pb-12">
+                <h1 className="text-7xl md:text-9xl font-black uppercase tracking-tighter leading-none mix-blend-difference">THE_METHOD</h1>
+                <div className="text-right text-[10px] font-black uppercase tracking-widest opacity-20">Protocol // V_04</div>
+             </div>
+
+             <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center mb-48">
+                <div className="relative aspect-square bg-[#f5f5f5] rounded-full overflow-hidden p-12">
+                   <Image src="https://images.unsplash.com/photo-1544411047-c4915842273b?q=80&w=1000&auto=format&fit=crop" alt="Process" fill className="object-cover opacity-50 grayscale hover:grayscale-0 transition-all duration-[2s]" />
+                </div>
+                <div className="space-y-12">
+                   <span className="text-[10px] uppercase font-black tracking-[1.5em] opacity-30 block">Honesty_in_Void</span>
+                   <p className="text-2xl md:text-3xl font-light italic opacity-60 leading-relaxed uppercase tracking-tight">
+                      We do not design objects. We reduce noise until only the structure remains. Every Neo Object is a testament to the pursuit of structural honesty.
+                   </p>
+                   <div className="space-y-8 pt-12">
+                      {[
+                        { t: "Material Truth", d: "We respect the inherent properties of the elements we use." },
+                        { t: "Geometric Logic", d: "Form is not chosen; it is deduced through mathematical necessity." },
+                      ].map((item, i) => (
+                        <div key={i} className="flex gap-8 group">
+                           <div className="w-16 h-16 rounded-full border border-black flex items-center justify-center font-black italic group-hover:bg-black group-hover:text-white transition-all text-xl">
+                              0{i+1}
+                           </div>
+                           <div>
+                              <h4 className="text-2xl font-black uppercase italic tracking-tighter">{item.t}</h4>
+                              <p className="text-[10px] opacity-30 uppercase tracking-[0.3em] font-black mt-2 leading-relaxed">{item.d}</p>
+                           </div>
+                        </div>
+                      ))}
+                   </div>
+                </div>
+             </div>
+
+             <div className="border-t border-black/5 pt-24 grid grid-cols-2 lg:grid-cols-4 gap-12 text-center grayscale opacity-10">
+                {[1, 2, 3, 4].map(i => (
+                  <div key={i}>
+                     <Search className="w-4 h-4 mx-auto mb-4" />
+                     <div className="text-[8px] font-black uppercase tracking-[0.5em]">Verification_Point_0{i}</div>
+                  </div>
+                ))}
+             </div>
+          </motion.div>
+        )}
+
+      </AnimatePresence>
+
+      {/* Global Status HUD */}
+      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em]">
+         <div className="flex gap-12">
+            <span>Verified Origin</span>
+            <span>Batch_042</span>
+         </div>
+         <div className="flex gap-4 items-end">
+            <div className="text-right leading-tight italic">
+               Neo_Studio <br /> Digital_Artifacts
+            </div>
+            <div className="flex gap-[2px] h-3">
+               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-full bg-black`}></div>)}
             </div>
          </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="p-12 text-center text-[10px] font-mono font-bold uppercase tracking-[1em] opacity-20">
-         End of Object _ 2026
       </footer>
+
+      <style>{`
+        ::-webkit-scrollbar {
+          width: 0px;
+        }
+      `}</style>
     </div>
   );
 }
