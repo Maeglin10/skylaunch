@@ -3,8 +3,29 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowRight, ExternalLink, Monitor, ShoppingBag, Globe, Sparkles } from "lucide-react";
+import { ArrowRight, ExternalLink, Monitor, ShoppingBag, Globe, Sparkles, Lock } from "lucide-react";
 import { AeviaHeader } from "@/components/AeviaHeader";
+
+// ── Themes preview data ────────────────────────────────────────────────────────
+const PREVIEW_THEMES = [
+  { id: "landing",    label: "Landing Page",       category: "Marketing", icon: "🚀", premium: false },
+  { id: "saas",       label: "SaaS Product",        category: "Tech",      icon: "⚡", premium: false },
+  { id: "agency",     label: "Creative Agency",     category: "Agency",    icon: "🎨", premium: false },
+  { id: "ecommerce",  label: "E-commerce Store",    category: "Commerce",  icon: "🛍️", premium: false },
+  { id: "restaurant", label: "Restaurant & Food",   category: "Hospitality",icon: "🍽️", premium: false },
+  { id: "portfolio",  label: "Portfolio",            category: "Personal",  icon: "💼", premium: false },
+  { id: "luxury",     label: "Luxury & Couture",    category: "Premium",   icon: "💎", premium: true },
+  { id: "brutalist",  label: "Brutalist Editorial", category: "Premium",   icon: "◼", premium: true },
+  { id: "aurora",     label: "Aurora & Wellness",   category: "Premium",   icon: "✦", premium: true },
+  { id: "3d-tech",    label: "3D Tech & Web3",      category: "Premium",   icon: "⬡", premium: true },
+  { id: "magazine",   label: "Magazine & Editorial",category: "Premium",   icon: "📰", premium: true },
+  { id: "minimal-pro",label: "Minimal Pro",         category: "Premium",   icon: "—", premium: true },
+];
+
+const CATEGORY_ACCENT: Record<string, string> = {
+  Marketing: "#7c3aed", Tech: "#2563eb", Agency: "#d97706", Commerce: "#dc2626",
+  Hospitality: "#d97706", Personal: "#0891b2", Premium: "#c9a96e",
+};
 
 const templates = [
   {
@@ -201,8 +222,87 @@ export default function ShowcasePage() {
         </div>
       </section>
 
-      {/* Also: AI builder CTA */}
-      <section className="px-6 pb-24">
+      {/* Themes section */}
+      <section className="px-6 pb-10">
+        <div className="mx-auto max-w-6xl">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 ring-1 ring-amber-500/20 text-amber-300 text-xs font-medium mb-4">
+                <Sparkles className="w-3 h-3" />
+                21 thèmes disponibles — gratuits &amp; premium
+              </div>
+              <h2 className="text-3xl font-bold text-white tracking-tight">Choisissez votre thème</h2>
+              <p className="text-zinc-400 text-sm mt-1">Chaque thème est un design system complet. Gratuit ou premium, livré en 7 jours.</p>
+            </div>
+            <Link href="/themes" className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-zinc-700 text-zinc-300 hover:text-white hover:border-zinc-500 text-sm font-medium transition-colors whitespace-nowrap shrink-0">
+              Voir tous les thèmes
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+
+          {/* Free themes */}
+          <div className="mb-3">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-xs font-bold uppercase tracking-widest text-emerald-400">Gratuit</span>
+              <div className="h-px flex-1 bg-zinc-800" />
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+              {PREVIEW_THEMES.filter(t => !t.premium).map((theme) => {
+                const accent = CATEGORY_ACCENT[theme.category] ?? "#7c3aed";
+                return (
+                  <Link key={theme.id} href={`/themes/${theme.id}`}
+                    className="group relative rounded-xl border border-zinc-800 hover:border-zinc-600 transition-all duration-200 hover:-translate-y-0.5 overflow-hidden cursor-pointer"
+                    style={{ background: "linear-gradient(135deg,#0f0f11,#13131a)" }}
+                  >
+                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                      style={{ background: `radial-gradient(ellipse at 50% 0%, ${accent}20 0%, transparent 70%)` }} />
+                    <div className="p-4 flex flex-col gap-2 relative">
+                      <span className="text-2xl">{theme.icon}</span>
+                      <div>
+                        <p className="text-white text-xs font-semibold leading-tight">{theme.label}</p>
+                        <p className="text-zinc-600 text-[10px] mt-0.5" style={{ color: accent }}>{theme.category}</p>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Premium themes */}
+          <div className="mt-6">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "#c9a96e" }}>Premium</span>
+              <div className="h-px flex-1 bg-zinc-800" />
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+              {PREVIEW_THEMES.filter(t => t.premium).map((theme) => (
+                <Link key={theme.id} href={`/themes/${theme.id}`}
+                  className="group relative rounded-xl border border-zinc-800 hover:border-amber-500/30 transition-all duration-200 hover:-translate-y-0.5 overflow-hidden cursor-pointer"
+                  style={{ background: "linear-gradient(135deg,#0f0f0f,#1a1208)" }}
+                >
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                    style={{ background: "radial-gradient(ellipse at 50% 0%, #c9a96e18 0%, transparent 70%)" }} />
+                  <div className="absolute top-2 right-2">
+                    <Lock className="w-3 h-3" style={{ color: "#c9a96e" }} />
+                  </div>
+                  <div className="p-4 flex flex-col gap-2 relative">
+                    <span className="text-2xl">{theme.icon}</span>
+                    <div>
+                      <p className="text-white text-xs font-semibold leading-tight">{theme.label}</p>
+                      <p className="text-[10px] mt-0.5 font-medium" style={{ color: "#c9a96e" }}>Premium</p>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Builder IA CTA */}
+      <section className="px-6 pb-24 pt-8">
         <div className="mx-auto max-w-6xl">
           <div className="rounded-2xl border border-zinc-800 bg-gradient-to-br from-violet-900/20 to-fuchsia-900/10 p-8 flex flex-col sm:flex-row items-center justify-between gap-6">
             <div>
@@ -211,14 +311,11 @@ export default function ShowcasePage() {
                 AeviaLaunch Builder IA
               </div>
               <h3 className="text-white font-bold text-xl mb-1">Vous avez une idée spécifique ?</h3>
-              <p className="text-zinc-400 text-sm">Décrivez votre activité, choisissez parmi 21 templates IA et générez votre contenu en 60 secondes.</p>
+              <p className="text-zinc-400 text-sm">Décrivez votre activité, choisissez parmi 21 thèmes IA et générez votre contenu en 60 secondes.</p>
             </div>
             <div className="flex flex-col sm:flex-row gap-3 shrink-0">
-              <Link
-                href="/themes"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold transition-colors whitespace-nowrap"
-              >
-                Explorer les templates
+              <Link href="/themes" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold transition-colors whitespace-nowrap">
+                Explorer tous les thèmes
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
