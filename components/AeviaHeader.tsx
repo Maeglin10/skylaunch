@@ -4,6 +4,39 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X, Shield, MessageSquare, ChevronDown, ExternalLink, Globe } from "lucide-react";
+import { useLang, LOCALE_META, type Locale } from "@/lib/LangContext";
+
+function LangSwitcher() {
+  const { locale, setLocale } = useLang();
+  const [open, setOpen] = useState(false);
+  const current = LOCALE_META.find(l => l.code === locale) ?? LOCALE_META[0];
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen(v => !v)}
+        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-sm text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+        aria-label="Changer de langue"
+      >
+        <Globe size={14} />
+        <span className="hidden sm:inline">{current.flag} {current.code.toUpperCase()}</span>
+        <span className="sm:hidden">{current.flag}</span>
+        <ChevronDown size={12} className={`transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <div className="absolute right-0 mt-1 w-40 bg-zinc-900 border border-zinc-800 rounded-xl shadow-xl shadow-black/40 overflow-hidden z-50">
+          {LOCALE_META.map(l => (
+            <button key={l.code} onClick={() => { setLocale(l.code as Locale); setOpen(false); }}
+              className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-zinc-800 ${l.code === locale ? "text-white font-semibold" : "text-zinc-400"}`}
+            >
+              <span>{l.flag}</span><span>{l.label}</span>
+              {l.code === locale && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-violet-400" />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function AeviaLogoSvg() {
   return (
@@ -114,9 +147,11 @@ export function AeviaHeader() {
             )}
           </div>
 
+          <LangSwitcher />
+
           <a
             href="https://aevia.vercel.app/contact"
-            className="ml-2 px-4 py-1.5 rounded-full bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold transition-colors"
+            className="ml-1 px-4 py-1.5 rounded-full bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold transition-colors"
           >
             Démarrer un projet
           </a>
