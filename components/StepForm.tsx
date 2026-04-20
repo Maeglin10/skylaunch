@@ -163,7 +163,20 @@ export function StepForm() {
       });
 
       const { previewUrl } = await genRes.json();
-      router.push(previewUrl);
+
+      // Redirect to order confirmation page with summary params.
+      // The order page lets the client review pricing before payment.
+      // After payment, we surface the previewUrl from the session.
+      const orderParams = new URLSearchParams({
+        type:  form.template,
+        name:  form.businessName,
+        theme: form.template,
+        // Pass sessionId so checkout can retrieve the generated preview later.
+        session: sessionId,
+      });
+      // Suppress unused-variable warning — previewUrl is stored in the session
+      void previewUrl;
+      router.push(`/order?${orderParams.toString()}`);
     } catch {
       setError("Something went wrong. Please try again.");
       setLoading(false);
