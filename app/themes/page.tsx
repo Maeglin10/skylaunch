@@ -6,6 +6,70 @@ import Link from "next/link";
 import { motion, useInView, AnimatePresence } from "framer-motion";
 import { ArrowRight, Sparkles, ChevronRight, Search } from "lucide-react";
 import { TEMPLATES_REGISTRY } from "@/lib/templates/registry";
+import { useLang } from "@/lib/LangContext";
+
+const T = {
+  fr: {
+    badge: "Galerie de thèmes",
+    h1a: "Choisissez votre",
+    h1b: "style parfait.",
+    sub: "181 thèmes en 2 collections. Cliquez sur un thème pour voir un aperçu en direct avec du vrai contenu.",
+    stat1: "21 thèmes site builder",
+    stat2: "195 templates impact vault",
+    stat3: "Tous gratuits à prévisualiser",
+    buildBtn: "Créer mon site",
+    backLabel: "AeviaLaunch",
+    totalLabel: "216 thèmes au total",
+  },
+  en: {
+    badge: "Theme Gallery",
+    h1a: "Pick your",
+    h1b: "perfect style.",
+    sub: "181 themes across 2 collections. Click any theme to see a live preview with real content.",
+    stat1: "21 site builder themes",
+    stat2: "195 impact vault templates",
+    stat3: "All free to preview",
+    buildBtn: "Build my site",
+    backLabel: "AeviaLaunch",
+    totalLabel: "216 themes total",
+  },
+  es: {
+    badge: "Galería de temas",
+    h1a: "Elige tu",
+    h1b: "estilo perfecto.",
+    sub: "181 temas en 2 colecciones. Haz clic en cualquier tema para ver una vista previa en vivo.",
+    stat1: "21 temas site builder",
+    stat2: "195 plantillas impact vault",
+    stat3: "Todos gratuitos para previsualizar",
+    buildBtn: "Crear mi sitio",
+    backLabel: "AeviaLaunch",
+    totalLabel: "216 temas en total",
+  },
+  de: {
+    badge: "Theme-Galerie",
+    h1a: "Wähle deinen",
+    h1b: "perfekten Stil.",
+    sub: "181 Themes in 2 Kollektionen. Klicke auf ein Theme für eine Live-Vorschau mit echten Inhalten.",
+    stat1: "21 Site Builder Themes",
+    stat2: "195 Impact Vault Vorlagen",
+    stat3: "Alle kostenlos vorschaubar",
+    buildBtn: "Meine Website erstellen",
+    backLabel: "AeviaLaunch",
+    totalLabel: "216 Themes insgesamt",
+  },
+  pt: {
+    badge: "Galeria de temas",
+    h1a: "Escolha seu",
+    h1b: "estilo perfeito.",
+    sub: "181 temas em 2 coleções. Clique em qualquer tema para ver uma prévia ao vivo com conteúdo real.",
+    stat1: "21 temas site builder",
+    stat2: "195 templates impact vault",
+    stat3: "Todos gratuitos para pré-visualizar",
+    buildBtn: "Criar meu site",
+    backLabel: "AeviaLaunch",
+    totalLabel: "216 temas no total",
+  },
+};
 
 // ── Site-builder themes ──────────────────────────────────────────────────────
 
@@ -31,6 +95,8 @@ const SITE_THEMES = [
   { id: "aurora",       label: "Aurora & Wellness",    desc: "Iridescent aurora gradients, soft glow, botanical wellness",     icon: "✦", category: "Premium",     premium: true },
   { id: "3d-tech",      label: "3D Tech & Web3",       desc: "Holographic grid, glitch text effects, cyber-neon palette",      icon: "⬡", category: "Premium",     premium: true },
   { id: "minimal-pro",  label: "Minimal Pro",          desc: "Architecture-grade negative space, Swiss precision typography",  icon: "—", category: "Premium",     premium: true },
+  { id: "marketplace",  label: "Marketplace",          desc: "Multi-vendor marketplace with listings, search and seller profiles", icon: "🏪", category: "Commerce",    premium: true },
+  { id: "livestream",   label: "Live & Streaming",     desc: "Live events platform with real-time chat, replays and ticketing",  icon: "📡", category: "Events",      premium: true },
 ];
 
 const SITE_CATEGORY_ACCENT: Record<string, string> = {
@@ -257,6 +323,8 @@ function ImpactInner({ t, catColor }: { t: typeof TEMPLATES_REGISTRY[0]; catColo
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 function ThemesGalleryContent() {
+  const { locale } = useLang();
+  const t = T[locale as keyof typeof T] ?? T.fr;
   const searchParams = useSearchParams();
   const typeParam = searchParams.get("type");
   const catParam = searchParams.get("cat");
@@ -303,12 +371,12 @@ function ThemesGalleryContent() {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
-            <span className="hidden sm:inline">AeviaLaunch</span>
+            <span className="hidden sm:inline">{t.backLabel}</span>
           </Link>
           <div className="flex items-center gap-3">
-            <span className="text-zinc-600 text-xs hidden sm:inline">216 themes total</span>
+            <span className="text-zinc-600 text-xs hidden sm:inline">{t.totalLabel}</span>
             <Link href="/configure" className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold transition-colors">
-              Build my site <ArrowRight className="w-3.5 h-3.5" />
+              {t.buildBtn} <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
         </div>
@@ -319,19 +387,19 @@ function ThemesGalleryContent() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="text-center mb-16">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-violet-500/30 bg-violet-500/10 mb-6">
             <Sparkles className="w-3.5 h-3.5 text-violet-400" />
-            <span className="text-xs font-semibold text-violet-300 uppercase tracking-widest">Theme Gallery</span>
+            <span className="text-xs font-semibold text-violet-300 uppercase tracking-widest">{t.badge}</span>
           </div>
           <h1 className="text-4xl sm:text-6xl md:text-7xl font-black text-white mb-5" style={{ letterSpacing: "-0.03em", lineHeight: 1 }}>
-            Pick your<br />
-            <span className="bg-gradient-to-r from-violet-400 via-fuchsia-400 to-pink-400 bg-clip-text text-transparent">perfect style.</span>
+            {t.h1a}<br />
+            <span className="bg-gradient-to-r from-violet-400 via-fuchsia-400 to-pink-400 bg-clip-text text-transparent">{t.h1b}</span>
           </h1>
           <p className="text-zinc-300 text-base sm:text-lg max-w-lg mx-auto leading-relaxed mb-8">
-            181 themes across 2 collections. Click any theme to see a live preview with real content.
+            {t.sub}
           </p>
           <div className="flex flex-wrap items-center justify-center gap-5 text-sm text-zinc-500">
-            <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-violet-400" />21 site builder themes</div>
-            <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-yellow-400" />195 impact vault templates</div>
-            <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-emerald-400" />All free to preview</div>
+            <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-violet-400" />{t.stat1}</div>
+            <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-yellow-400" />{t.stat2}</div>
+            <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-emerald-400" />{t.stat3}</div>
           </div>
         </motion.div>
 
