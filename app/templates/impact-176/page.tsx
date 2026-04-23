@@ -1,106 +1,219 @@
+"use client";
+
 import { motion } from "framer-motion";
+import { useState } from "react";
+import Image from "next/image";
+import { Search, Bell, BarChart2, Users, CreditCard, Settings, ChevronDown, Activity, ArrowUpRight, ArrowDownRight, Zap } from "lucide-react";
 import "../premium.css";
 
-export default function EssentialDashboard() {
+const KPIS = [
+  { title: "Total Revenue", val: "$124,563.00", trend: "+12.5%", pos: true, spark: [20, 30, 25, 40, 35, 50, 60] },
+  { title: "Active Subscribers", val: "8,432", trend: "+5.2%", pos: true, spark: [10, 15, 20, 18, 25, 22, 30] },
+  { title: "Churn Rate", val: "1.2%", trend: "-0.4%", pos: true, spark: [15, 12, 10, 8, 10, 5, 4] },
+];
+
+const ACTIVITY = [
+  { action: "Enterprise Plan Upgrade", user: "Acme Corp", time: "2 min ago", amt: "+$800/mo" },
+  { action: "Failed Payment", user: "Stark Ind.", time: "15 min ago", amt: "$0" },
+  { action: "New Annual Subscription", user: "Wayne Ent.", time: "1 hr ago", amt: "+$12,000" },
+  { action: "Account Cancellation", user: "Oscorp", time: "3 hrs ago", amt: "-$200/mo" }
+];
+
+export default function PremiumDashboard() {
+  const [activeTab, setActiveTab] = useState("Overview");
+
   return (
-    <div className="bg-[#f8f9fa] text-[#212529] min-h-screen font-sans flex">
+    <div className="premium-theme bg-[#0A0A0A] text-[#FAFAFA] min-h-screen font-sans selection:bg-[#6366F1] selection:text-white flex overflow-hidden">
+      
+      {/* GLOW BACKGROUNDS */}
+      <div className="fixed top-[-20%] left-[-10%] w-[50%] h-[50%] bg-[#6366F1] rounded-full mix-blend-screen filter blur-[200px] opacity-20 pointer-events-none" />
+      <div className="fixed bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-[#8B5CF6] rounded-full mix-blend-screen filter blur-[200px] opacity-10 pointer-events-none" />
+
       {/* SIDEBAR */}
-      <aside className="w-64 bg-white border-r border-gray-200 hidden md:flex flex-col h-screen sticky top-0">
-        <div className="p-6 border-b border-gray-200">
-            <div className="font-black text-xl text-indigo-600">MetricFlow<span className="text-gray-300">.</span></div>
+      <aside className="w-72 border-r border-white/10 hidden lg:flex flex-col h-screen sticky top-0 bg-white/[0.02] backdrop-blur-3xl z-20">
+        <div className="p-8 border-b border-white/10">
+            <div className="font-black text-2xl tracking-tighter flex items-center gap-3">
+               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#6366F1] to-[#8B5CF6] flex items-center justify-center shadow-[0_0_20px_rgba(99,102,241,0.5)]">
+                  <Zap className="w-4 h-4 text-white" />
+               </div>
+               MetricFlow
+            </div>
         </div>
-        <nav className="flex-1 p-4 space-y-1">
-            <div className="bg-indigo-50 text-indigo-700 px-4 py-3 rounded-lg font-bold text-sm">Dashboard</div>
-            <div className="text-gray-600 px-4 py-3 rounded-lg font-semibold text-sm hover:bg-gray-50 cursor-pointer">Analytics</div>
-            <div className="text-gray-600 px-4 py-3 rounded-lg font-semibold text-sm hover:bg-gray-50 cursor-pointer">Customers</div>
-            <div className="text-gray-600 px-4 py-3 rounded-lg font-semibold text-sm hover:bg-gray-50 cursor-pointer">Transactions</div>
-            <div className="text-gray-600 px-4 py-3 rounded-lg font-semibold text-sm hover:bg-gray-50 cursor-pointer">Settings</div>
+        
+        <nav className="flex-1 px-4 py-8 space-y-2 overflow-y-auto">
+            <div className="text-[10px] font-black uppercase tracking-widest text-white/40 px-4 mb-4">Main Menu</div>
+            {[
+               { name: "Overview", icon: <BarChart2 className="w-5 h-5" /> },
+               { name: "Audience", icon: <Users className="w-5 h-5" /> },
+               { name: "Billing", icon: <CreditCard className="w-5 h-5" /> },
+               { name: "Settings", icon: <Settings className="w-5 h-5" /> }
+            ].map((item, i) => (
+               <div 
+                  key={i} 
+                  onClick={() => setActiveTab(item.name)}
+                  className={`flex items-center gap-4 px-4 py-3 rounded-xl cursor-pointer transition-all duration-300 ${activeTab === item.name ? 'bg-white/10 text-white shadow-[inset_1px_1px_0_rgba(255,255,255,0.1)] border border-white/5' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
+               >
+                  {item.icon}
+                  <span className="font-semibold text-sm">{item.name}</span>
+                  {activeTab === item.name && (
+                     <motion.div layoutId="indicator" className="w-1.5 h-6 bg-[#6366F1] rounded-full ml-auto shadow-[0_0_10px_rgba(99,102,241,0.8)]" />
+                  )}
+               </div>
+            ))}
         </nav>
-        <div className="p-4 border-t border-gray-200">
-            <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold">JD</div>
-                <div>
-                    <div className="text-sm font-bold">Jane Doe</div>
-                    <div className="text-xs text-gray-500">Admin</div>
+
+        <div className="p-6 border-t border-white/10">
+            <div className="flex items-center gap-4 p-3 rounded-xl bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10 transition-colors">
+                <Image src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=100" alt="Avatar" width={40} height={40} className="rounded-full border border-white/20" />
+                <div className="flex-1">
+                    <div className="text-sm font-bold">John Admin</div>
+                    <div className="text-[10px] text-white/50 uppercase tracking-widest font-black">Pro Plan</div>
                 </div>
+                <ChevronDown className="w-4 h-4 text-white/50" />
             </div>
         </div>
       </aside>
 
-      {/* MAIN CONTENT */}
-      <main className="flex-1">
+      {/* MAIN CONTENT AREA */}
+      <main className="flex-1 flex flex-col h-screen overflow-y-auto relative z-10">
+        
         {/* TOPNAV */}
-        <header className="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-8 sticky top-0 z-10">
-            <div className="font-bold text-lg md:hidden">MetricFlow</div>
-            <div className="hidden md:block">
-                <input type="text" placeholder="Search..." className="bg-gray-100 border-none rounded-lg px-4 py-2 text-sm w-64 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-            </div>
-            <div className="flex items-center gap-4">
-                <button className="relative p-2 text-gray-400 hover:text-gray-600">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-                    <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+        <header className="h-24 px-8 md:px-12 flex items-center justify-between sticky top-0 z-30 bg-[#0A0A0A]/80 backdrop-blur-xl border-b border-white/5">
+            <h1 className="text-2xl font-black tracking-tight">{activeTab}</h1>
+            
+            <div className="flex items-center gap-6">
+                <div className="hidden md:flex items-center gap-3 bg-white/5 border border-white/10 rounded-full px-4 py-2 w-64 focus-within:ring-1 focus-within:ring-[#6366F1] focus-within:bg-white/10 transition-all">
+                   <Search className="w-4 h-4 text-white/50" />
+                   <input type="text" placeholder="Search metrics..." className="bg-transparent border-none outline-none text-sm w-full placeholder:text-white/30" />
+                </div>
+                
+                <button className="relative p-3 bg-white/5 border border-white/10 rounded-full hover:bg-white/10 transition-colors">
+                    <Bell className="w-5 h-5 text-white/80" />
+                    <span className="absolute top-0 right-0 w-3 h-3 bg-[#6366F1] rounded-full border-2 border-[#0A0A0A] shadow-[0_0_10px_rgba(99,102,241,0.8)]" />
                 </button>
             </div>
         </header>
 
         {/* DASHBOARD CONTENT */}
-        <div className="p-8">
-            <div className="flex justify-between items-end mb-8">
-                <div>
-                    <h1 className="text-2xl font-bold mb-1">Overview</h1>
-                    <p className="text-gray-500 text-sm">Welcome back, here's what's happening today.</p>
-                </div>
-                <button className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-indigo-700">Download Report</button>
-            </div>
-
+        <div className="p-8 md:p-12 max-w-[1600px] w-full mx-auto space-y-8">
+            
             {/* KPI CARDS */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                {[
-                    { title: "Total Revenue", val: "$45,231.89", trend: "+20.1% from last month", pos: true },
-                    { title: "Active Users", val: "2,350", trend: "+15% from last month", pos: true },
-                    { title: "Churn Rate", val: "2.4%", trend: "-0.5% from last month", pos: true }
-                ].map((kpi, i) => (
-                    <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                        <div className="text-sm font-semibold text-gray-500 mb-2">{kpi.title}</div>
-                        <div className="text-3xl font-bold mb-2">{kpi.val}</div>
-                        <div className={`text-xs font-semibold ${kpi.pos ? 'text-emerald-600' : 'text-red-600'}`}>{kpi.trend}</div>
-                    </motion.div>
-                ))}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+               {KPIS.map((kpi, i) => (
+                  <motion.div 
+                     key={i} 
+                     initial={{ opacity: 0, y: 20 }} 
+                     animate={{ opacity: 1, y: 0 }} 
+                     transition={{ duration: 0.5, delay: i * 0.1 }}
+                     className="bg-white/5 border border-white/10 rounded-3xl p-6 relative overflow-hidden group hover:bg-white/10 transition-colors cursor-pointer"
+                  >
+                     <div className="flex justify-between items-start mb-6 relative z-10">
+                        <div className="text-sm font-bold text-white/50 uppercase tracking-widest">{kpi.title}</div>
+                        <div className={`flex items-center gap-1 text-xs font-black px-2 py-1 rounded-md ${kpi.pos ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
+                           {kpi.pos ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                           {kpi.trend}
+                        </div>
+                     </div>
+                     <div className="text-4xl font-black tracking-tighter mb-4 relative z-10">{kpi.val}</div>
+                     
+                     {/* Mini Sparkline Chart */}
+                     <div className="w-full h-12 flex items-end gap-1 opacity-50 group-hover:opacity-100 transition-opacity relative z-10">
+                        {kpi.spark.map((h, j) => (
+                           <motion.div 
+                              key={j} 
+                              initial={{ height: 0 }} 
+                              animate={{ height: `${h}%` }} 
+                              transition={{ duration: 1, delay: 0.5 + j * 0.05 }}
+                              className="flex-1 bg-gradient-to-t from-[#6366F1]/20 to-[#6366F1] rounded-t-sm"
+                           />
+                        ))}
+                     </div>
+                     
+                     {/* Hover glow */}
+                     <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-[#6366F1] rounded-full blur-[80px] opacity-0 group-hover:opacity-20 transition-opacity duration-500 pointer-events-none" />
+                  </motion.div>
+               ))}
             </div>
 
-            {/* CHARTS / DATA PLACEHOLDERS */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 bg-white p-6 rounded-xl border border-gray-200 shadow-sm min-h-[400px]">
-                    <h3 className="font-bold mb-6">Revenue Overview</h3>
-                    <div className="w-full h-[300px] flex items-end justify-between gap-2 pb-6 border-b border-gray-100">
-                        {/* Placeholder bar chart */}
-                        {[40, 60, 30, 80, 50, 90, 70].map((h, i) => (
-                            <div key={i} className="w-full bg-indigo-100 rounded-t-sm relative group cursor-pointer" style={{ height: `${h}%` }}>
-                                <div className="absolute bottom-0 w-full bg-indigo-600 rounded-t-sm transition-all duration-500" style={{ height: `${h}%` }}></div>
-                            </div>
+               {/* MAIN CHART AREA */}
+               <motion.div 
+                  initial={{ opacity: 0, y: 20 }} 
+                  animate={{ opacity: 1, y: 0 }} 
+                  transition={{ duration: 0.5, delay: 0.3 }}
+                  className="lg:col-span-2 bg-white/5 border border-white/10 rounded-3xl p-8 relative overflow-hidden"
+               >
+                  <div className="flex justify-between items-center mb-12">
+                     <h3 className="font-bold text-lg">Revenue Growth</h3>
+                     <div className="flex gap-2 bg-white/5 p-1 rounded-xl border border-white/10">
+                        {["1W", "1M", "1Y", "ALL"].map(t => (
+                           <button key={t} className={`px-4 py-1.5 rounded-lg text-xs font-bold ${t === "1Y" ? 'bg-white text-black shadow-md' : 'text-white/50 hover:text-white'}`}>
+                              {t}
+                           </button>
                         ))}
-                    </div>
-                </div>
-                
-                <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                    <h3 className="font-bold mb-6">Recent Activity</h3>
-                    <div className="space-y-6">
-                        {[
-                            { action: "New subscription", user: "Alice M.", time: "2 min ago" },
-                            { action: "Refund requested", user: "Bob T.", time: "1 hr ago" },
-                            { action: "Plan upgraded", user: "Charlie D.", time: "4 hrs ago" },
-                            { action: "Account deleted", user: "Diana Prince", time: "Yesterday" }
-                        ].map((act, i) => (
-                            <div key={i} className="flex items-start gap-4">
-                                <div className="w-8 h-8 rounded-full bg-gray-100 flex-shrink-0"></div>
-                                <div>
-                                    <div className="text-sm font-bold">{act.action}</div>
-                                    <div className="text-xs text-gray-500">{act.user} • {act.time}</div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+                     </div>
+                  </div>
+                  
+                  {/* Abstract Chart Representation */}
+                  <div className="w-full h-[300px] relative border-b border-white/10 flex items-end justify-between px-2">
+                     <div className="absolute inset-0 bg-gradient-to-t from-[#6366F1]/10 to-transparent pointer-events-none" />
+                     {Array.from({ length: 12 }).map((_, i) => {
+                        const h = 30 + Math.random() * 70;
+                        return (
+                           <div key={i} className="relative w-full mx-1 group h-full flex flex-col justify-end">
+                              {/* Grid line */}
+                              <div className="absolute bottom-0 left-1/2 w-[1px] h-full bg-white/5 -translate-x-1/2 pointer-events-none" />
+                              
+                              <motion.div 
+                                 initial={{ height: 0 }} 
+                                 animate={{ height: `${h}%` }} 
+                                 transition={{ duration: 1.5, delay: 0.5 + i * 0.1, ease: "easeOut" }}
+                                 className="w-full bg-[#6366F1] rounded-t-md relative z-10 hover:bg-[#8B5CF6] transition-colors cursor-pointer group-hover:shadow-[0_0_20px_rgba(99,102,241,0.5)]"
+                              >
+                                 {/* Tooltip */}
+                                 <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-white text-black text-[10px] font-black px-3 py-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-xl">
+                                    ${(h * 100).toFixed(0)}
+                                 </div>
+                              </motion.div>
+                           </div>
+                        );
+                     })}
+                  </div>
+               </motion.div>
+
+               {/* ACTIVITY FEED */}
+               <motion.div 
+                  initial={{ opacity: 0, y: 20 }} 
+                  animate={{ opacity: 1, y: 0 }} 
+                  transition={{ duration: 0.5, delay: 0.4 }}
+                  className="bg-white/5 border border-white/10 rounded-3xl p-8"
+               >
+                  <div className="flex justify-between items-center mb-8">
+                     <h3 className="font-bold text-lg">Live Feed</h3>
+                     <Activity className="w-4 h-4 text-[#6366F1]" />
+                  </div>
+
+                  <div className="space-y-6">
+                     {ACTIVITY.map((act, i) => (
+                        <div key={i} className="flex items-start gap-4 p-4 rounded-2xl hover:bg-white/5 transition-colors cursor-pointer group border border-transparent hover:border-white/10">
+                           <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:border-[#6366F1] transition-all">
+                              <span className="w-2 h-2 rounded-full bg-[#6366F1] shadow-[0_0_10px_rgba(99,102,241,1)]" />
+                           </div>
+                           <div className="flex-1">
+                              <div className="text-sm font-bold mb-1">{act.action}</div>
+                              <div className="text-[10px] text-white/50 font-black uppercase tracking-widest">{act.user} • {act.time}</div>
+                           </div>
+                           <div className={`text-xs font-black ${act.amt.startsWith('+') ? 'text-emerald-400' : act.amt === '$0' ? 'text-white/30' : 'text-red-400'}`}>
+                              {act.amt}
+                           </div>
+                        </div>
+                     ))}
+                  </div>
+                  
+                  <button className="w-full mt-8 py-4 rounded-xl border border-white/10 text-xs font-black uppercase tracking-widest text-white/50 hover:text-white hover:bg-white/5 transition-colors">
+                     View All Activity
+                  </button>
+               </motion.div>
             </div>
         </div>
       </main>

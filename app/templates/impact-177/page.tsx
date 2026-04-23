@@ -1,71 +1,190 @@
-import { motion } from "framer-motion";
+"use client";
+
+import { motion, useScroll, useTransform, useSpring } from "framer-motion";
+import { useRef, useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { Play, Pause, FastForward, Rewind, Volume2, Headphones, Radio, Mic2 } from "lucide-react";
 import "../premium.css";
 
-export default function EssentialPodcast() {
+const EPISODES = [
+  { ep: "042", title: "Building in Public with Sarah Drasner", date: "Oct 12, 2026", dur: "45:20" },
+  { ep: "041", title: "The Future of React & Server Components", date: "Oct 05, 2026", dur: "52:14" },
+  { ep: "040", title: "Design Systems at Enterprise Scale", date: "Sep 28, 2026", dur: "38:45" },
+  { ep: "039", title: "Mental Health for Indie Hackers", date: "Sep 21, 2026", dur: "60:02" }
+];
+
+export default function PremiumPodcast() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ target: containerRef });
+  
+  const heroScale = useTransform(scrollYProgress, [0, 0.5], [1, 1.1]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.3], [1, 0.2]);
+
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [activeEp, setActiveEp] = useState<number | null>(null);
+
+  // Fake soundwave heights
+  const [wave, setWave] = useState(Array(30).fill(10));
+
+  useEffect(() => {
+    if (!isPlaying) return;
+    const interval = setInterval(() => {
+      setWave(prev => prev.map(() => 5 + Math.random() * 25));
+    }, 100);
+    return () => clearInterval(interval);
+  }, [isPlaying]);
+
   return (
-    <div className="bg-[#1e1b4b] text-indigo-50 min-h-screen font-sans selection:bg-indigo-500 selection:text-white">
+    <div ref={containerRef} className="premium-theme bg-[#030014] text-[#E2D5F8] min-h-screen font-sans selection:bg-[#7C3AED] selection:text-white pb-32">
+      
       {/* HEADER */}
-      <header className="px-6 py-8 flex justify-between items-center max-w-5xl mx-auto border-b border-indigo-900">
-        <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>
+      <header className="fixed top-0 left-0 w-full z-50 px-6 py-6 flex justify-between items-center mix-blend-difference">
+         <div className="flex items-center gap-4">
+            <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-black">
+               <Mic2 className="w-5 h-5" />
             </div>
-            <div className="font-black text-xl italic tracking-tight">AudioWaves</div>
-        </div>
-        <nav className="flex gap-6 text-sm font-bold uppercase tracking-widest text-indigo-300">
-            <Link href="#" className="hover:text-white transition">Episodes</Link>
-            <Link href="#" className="hover:text-white transition">About</Link>
-        </nav>
+            <div className="font-black text-2xl uppercase tracking-tighter italic text-white">AudioWaves</div>
+         </div>
+         
+         <nav className="hidden md:flex gap-12 text-[10px] uppercase font-black tracking-[0.3em] text-white/50">
+            <Link href="#" className="hover:text-white transition-colors">All Episodes</Link>
+            <Link href="#" className="hover:text-white transition-colors">Hosts</Link>
+            <Link href="#" className="hover:text-white transition-colors">Sponsors</Link>
+         </nav>
       </header>
 
       {/* HERO SECTION */}
-      <section className="px-6 py-20 max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-16">
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="flex-1 w-full max-w-md mx-auto aspect-square rounded-3xl overflow-hidden shadow-2xl shadow-indigo-900/50 border-4 border-indigo-800">
-             <Image src="https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&q=80&w=800" alt="Podcast Cover" fill className="object-cover" />
-        </motion.div>
-        <div className="flex-1 text-center md:text-left">
-            <div className="bg-indigo-900 text-indigo-200 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full inline-block mb-6">New Episode Out Now</div>
-            <h1 className="text-4xl md:text-6xl font-black mb-6 leading-tight">Deep conversations with creators.</h1>
-            <p className="text-lg text-indigo-200 mb-10 leading-relaxed">Join us every week as we deconstruct the habits, routines, and workflows of world-class designers and engineers.</p>
-            <div className="flex flex-wrap gap-4 justify-center md:justify-start">
-                <button className="bg-indigo-500 text-white px-8 py-4 rounded-xl font-bold hover:bg-indigo-400 transition-colors flex items-center gap-2">
-                     <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                     Listen Latest
-                </button>
-                <button className="bg-indigo-900 border border-indigo-700 text-white px-8 py-4 rounded-xl font-bold hover:bg-indigo-800 transition-colors">Subscribe</button>
+      <section className="relative pt-32 pb-20 px-6 max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-16 lg:gap-24 min-h-[90vh]">
+         {/* Background Glow */}
+         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#7C3AED] rounded-full blur-[150px] opacity-20 pointer-events-none" />
+
+         <motion.div style={{ scale: heroScale }} className="flex-1 w-full max-w-lg mx-auto relative group z-10">
+            <div className="relative aspect-square rounded-[3rem] overflow-hidden shadow-[0_0_50px_rgba(124,58,237,0.3)] border border-white/10">
+               <Image src="https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&q=80&w=1200" alt="Podcast Cover" fill className="object-cover group-hover:scale-105 transition-transform duration-700" priority />
+               <div className="absolute inset-0 bg-gradient-to-t from-[#030014] to-transparent opacity-50" />
             </div>
-        </div>
+            
+            {/* Floating Live Badge */}
+            <motion.div 
+               animate={{ y: [0, -10, 0] }} 
+               transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+               className="absolute -top-6 -right-6 bg-white text-black px-6 py-2 rounded-full font-black text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-2xl"
+            >
+               <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" /> New Episode
+            </motion.div>
+         </motion.div>
+         
+         <motion.div style={{ opacity: heroOpacity }} className="flex-1 text-center lg:text-left z-10">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#7C3AED]/30 bg-[#7C3AED]/10 text-[#A78BFA] text-[10px] font-black uppercase tracking-widest mb-8">
+               <Radio className="w-4 h-4" /> Tech & Culture
+            </div>
+            
+            <h1 className="text-6xl md:text-[6vw] font-black tracking-tighter leading-[0.9] text-white mb-8 uppercase drop-shadow-2xl">
+               Deep <br/> Conversations.
+            </h1>
+            
+            <p className="text-xl font-light text-white/60 mb-12 max-w-lg mx-auto lg:mx-0 leading-relaxed">
+               Join us every week as we deconstruct the habits, routines, and workflows of world-class engineers.
+            </p>
+            
+            <div className="flex flex-wrap gap-6 justify-center lg:justify-start">
+               <button 
+                  onClick={() => { setIsPlaying(!isPlaying); setActiveEp(0); }}
+                  className="bg-[#7C3AED] text-white px-10 py-5 rounded-full font-black text-[10px] uppercase tracking-widest flex items-center gap-3 hover:scale-105 transition-transform shadow-[0_0_30px_rgba(124,58,237,0.4)]"
+               >
+                  {isPlaying && activeEp === 0 ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current" />}
+                  Listen to Latest
+               </button>
+               <button className="bg-transparent border border-white/20 text-white px-10 py-5 rounded-full font-black text-[10px] uppercase tracking-widest hover:bg-white hover:text-black transition-colors">
+                  Subscribe
+               </button>
+            </div>
+         </motion.div>
       </section>
 
       {/* EPISODES LIST */}
-      <section className="bg-indigo-950 py-24 px-6 border-t border-indigo-900">
-        <div className="max-w-4xl mx-auto">
-            <h2 className="text-3xl font-bold mb-12">Recent Episodes</h2>
-            <div className="space-y-6">
-                {[
-                    { ep: "042", title: "Building in Public with Sarah Drasner", date: "Oct 12, 2026", dur: "45 min" },
-                    { ep: "041", title: "The Future of React & Next.js", date: "Oct 05, 2026", dur: "52 min" },
-                    { ep: "040", title: "Design Systems at Scale", date: "Sep 28, 2026", dur: "38 min" },
-                    { ep: "039", title: "Mental Health for Indie Hackers", date: "Sep 21, 2026", dur: "60 min" }
-                ].map((ep, i) => (
-                    <div key={i} className="bg-indigo-900/50 p-6 rounded-2xl border border-indigo-800 hover:bg-indigo-800/50 flex flex-col sm:flex-row gap-6 sm:items-center cursor-pointer transition-colors group">
-                        <div className="w-16 h-16 bg-indigo-950 rounded-xl flex items-center justify-center font-black text-xl text-indigo-400 shrink-0">
-                            {ep.ep}
-                        </div>
-                        <div className="flex-1">
-                            <h3 className="text-xl font-bold mb-2 group-hover:text-indigo-300 transition-colors">{ep.title}</h3>
-                            <div className="text-sm font-semibold text-indigo-400">{ep.date} • {ep.dur}</div>
-                        </div>
-                        <div className="w-12 h-12 rounded-full border border-indigo-500 text-indigo-500 flex items-center justify-center group-hover:bg-indigo-500 group-hover:text-white transition-all shrink-0">
-                             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                        </div>
-                    </div>
-                ))}
+      <section className="py-24 px-6 max-w-5xl mx-auto relative z-20">
+         <div className="flex items-center justify-between mb-16 border-b border-white/10 pb-6">
+            <h2 className="text-3xl font-black uppercase tracking-tighter text-white">Recent Episodes</h2>
+            <div className="text-[10px] font-black uppercase tracking-widest text-[#A78BFA] flex items-center gap-2">
+               <Headphones className="w-4 h-4" /> 100k+ Listeners
             </div>
-        </div>
+         </div>
+         
+         <div className="space-y-4">
+            {EPISODES.map((ep, i) => (
+               <motion.div 
+                  key={i}
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: i * 0.1 }}
+                  onClick={() => {
+                     if (activeEp === i) {
+                        setIsPlaying(!isPlaying);
+                     } else {
+                        setActiveEp(i);
+                        setIsPlaying(true);
+                     }
+                  }}
+                  className={`p-6 md:p-8 rounded-[2rem] border transition-all duration-300 cursor-pointer group flex flex-col md:flex-row items-start md:items-center gap-6 ${activeEp === i ? 'bg-[#7C3AED]/20 border-[#7C3AED]/50' : 'bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/20'}`}
+               >
+                  <div className={`w-16 h-16 rounded-full flex items-center justify-center shrink-0 transition-colors ${activeEp === i ? 'bg-[#7C3AED] text-white shadow-[0_0_20px_rgba(124,58,237,0.5)]' : 'bg-white/10 text-white group-hover:bg-white group-hover:text-black'}`}>
+                     {activeEp === i && isPlaying ? <Pause className="w-6 h-6 fill-current" /> : <Play className="w-6 h-6 fill-current ml-1" />}
+                  </div>
+                  
+                  <div className="flex-1">
+                     <div className="flex items-center gap-3 mb-2">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-[#A78BFA] bg-[#7C3AED]/20 px-3 py-1 rounded-full">EP {ep.ep}</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-white/40">{ep.date}</span>
+                     </div>
+                     <h3 className={`text-2xl font-black tracking-tight transition-colors ${activeEp === i ? 'text-white' : 'text-white/80 group-hover:text-white'}`}>{ep.title}</h3>
+                  </div>
+                  
+                  <div className="text-[10px] font-black uppercase tracking-widest text-white/30 hidden md:block">{ep.dur}</div>
+               </motion.div>
+            ))}
+         </div>
       </section>
+
+      {/* STICKY AUDIO PLAYER */}
+      <motion.div 
+         initial={{ y: "100%" }}
+         animate={{ y: activeEp !== null ? "0%" : "100%" }}
+         transition={{ type: "spring", damping: 25, stiffness: 200 }}
+         className="fixed bottom-6 left-6 right-6 md:left-1/2 md:right-auto md:-translate-x-1/2 md:w-[800px] z-50 bg-[#1A1525]/90 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 shadow-2xl flex flex-col gap-4"
+      >
+         <div className="flex items-center gap-6">
+            <div className="w-16 h-16 rounded-2xl bg-[#7C3AED] shrink-0 overflow-hidden relative">
+               <Image src="https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&q=80&w=200" alt="Thumbnail" fill className="object-cover" />
+            </div>
+            
+            <div className="flex-1 overflow-hidden">
+               <div className="text-[10px] font-black uppercase tracking-widest text-[#A78BFA] mb-1">Now Playing</div>
+               <div className="text-white font-bold truncate">{activeEp !== null ? EPISODES[activeEp].title : ""}</div>
+            </div>
+
+            <div className="flex items-center gap-4">
+               <button className="text-white/50 hover:text-white transition-colors hidden md:block"><Rewind className="w-5 h-5 fill-current" /></button>
+               <button 
+                  onClick={() => setIsPlaying(!isPlaying)}
+                  className="w-12 h-12 rounded-full bg-white text-black flex items-center justify-center hover:scale-110 transition-transform shadow-lg"
+               >
+                  {isPlaying ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current ml-1" />}
+               </button>
+               <button className="text-white/50 hover:text-white transition-colors hidden md:block"><FastForward className="w-5 h-5 fill-current" /></button>
+            </div>
+         </div>
+
+         {/* Visualizer */}
+         <div className="w-full h-8 flex items-end justify-center gap-[2px] md:gap-1">
+            {wave.map((h, i) => (
+               <div key={i} className="w-1 md:w-2 bg-[#7C3AED] rounded-t-sm transition-all duration-100 ease-out" style={{ height: isPlaying ? `${h}px` : '4px', opacity: isPlaying ? 0.8 : 0.2 }} />
+            ))}
+         </div>
+      </motion.div>
+
     </div>
   );
 }
