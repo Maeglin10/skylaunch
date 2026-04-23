@@ -1,74 +1,205 @@
-import { motion } from "framer-motion";
-import Image from "next/image";
+"use client";
+
+import { motion, useScroll, useTransform, useMotionValue, useSpring } from "framer-motion";
+import { useRef, useEffect } from "react";
 import Link from "next/link";
+import { ArrowRight, ShieldCheck, Zap, Globe, ChevronRight, BarChart3, CreditCard } from "lucide-react";
 import "../premium.css";
 
+const FEATURES = [
+  { icon: <Globe />, title: "Global Transfers", desc: "Send money across 150+ countries instantly with zero hidden fees and real-time exchange rates." },
+  { icon: <BarChart3 />, title: "Smart Wealth", desc: "Automated portfolio balancing and AI-driven insights to grow your wealth passively." },
+  { icon: <ShieldCheck />, title: "Bank-Grade Security", desc: "Multi-party computation (MPC) and biometric authentication keeping your assets locked down." }
+];
+
 export default function PremiumFintech() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ target: containerRef });
+  
+  const yDash = useTransform(scrollYProgress, [0, 0.5], [100, 0]);
+  const opacityDash = useTransform(scrollYProgress, [0, 0.3], [0, 1]);
+
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const springX = useSpring(mouseX, { stiffness: 50, damping: 20 });
+  const springY = useSpring(mouseY, { stiffness: 50, damping: 20 });
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      mouseX.set(e.clientX - window.innerWidth / 2);
+      mouseY.set(e.clientY - window.innerHeight / 2);
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, [mouseX, mouseY]);
+
   return (
-    <div className="bg-[#030712] text-white min-h-screen font-sans selection:bg-blue-600 selection:text-white">
-      {/* ORB BACKGROUND */}
-      <div className="fixed top-[-20%] left-[-10%] w-[50vw] h-[50vw] bg-blue-600/20 blur-[150px] rounded-full mix-blend-screen pointer-events-none"></div>
-      <div className="fixed bottom-[-20%] right-[-10%] w-[50vw] h-[50vw] bg-emerald-600/20 blur-[150px] rounded-full mix-blend-screen pointer-events-none"></div>
+    <div ref={containerRef} className="premium-theme bg-[#030712] text-white min-h-screen font-sans selection:bg-[#3B82F6] selection:text-white overflow-hidden relative">
+      
+      {/* 3D ORB BACKGROUND */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
+        <motion.div 
+           style={{ x: springX, y: springY }}
+           className="absolute top-[10%] left-[20%] w-[40vw] h-[40vw] bg-[#3B82F6] rounded-full mix-blend-screen filter blur-[150px] opacity-30" 
+        />
+        <motion.div 
+           style={{ x: useTransform(springX, v => -v), y: useTransform(springY, v => -v) }}
+           className="absolute bottom-[10%] right-[10%] w-[50vw] h-[50vw] bg-[#10B981] rounded-full mix-blend-screen filter blur-[150px] opacity-20" 
+        />
+      </div>
 
       {/* HEADER */}
-      <header className="px-6 py-6 border-b border-white/5 bg-[#030712]/50 backdrop-blur-xl sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-            <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-white shadow-[0_0_15px_rgba(37,99,235,0.5)]">V</div>
-                <div className="font-bold text-xl tracking-tight">Vault</div>
+      <header className="fixed top-0 left-0 w-full px-6 md:px-12 py-6 flex justify-between items-center z-50 bg-[#030712]/50 backdrop-blur-2xl border-b border-white/5">
+        <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-[#3B82F6] to-[#10B981] rounded-xl flex items-center justify-center font-black text-xl shadow-[0_0_20px_rgba(59,130,246,0.5)]">
+               V
             </div>
-            <nav className="hidden md:flex items-center space-x-8 text-sm font-semibold text-gray-400">
-                <Link href="#" className="hover:text-white transition">Product</Link>
-                <Link href="#" className="hover:text-white transition">Company</Link>
-                <Link href="#" className="hover:text-white transition">Resources</Link>
-            </nav>
-            <div className="flex gap-4 items-center">
-                <Link href="#" className="text-sm font-semibold text-gray-300 hover:text-white">Sign In</Link>
-                <button className="bg-white text-black px-5 py-2 rounded-lg font-bold text-sm shadow-lg hover:shadow-white/20 transition-all">Get Started</button>
-            </div>
+            <span className="font-black tracking-tight text-2xl">Vault.</span>
+        </div>
+        
+        <nav className="hidden md:flex items-center gap-10 text-xs font-bold uppercase tracking-widest text-white/50">
+            <Link href="#" className="hover:text-white transition-colors">Products</Link>
+            <Link href="#" className="hover:text-white transition-colors">Business</Link>
+            <Link href="#" className="hover:text-white transition-colors">Company</Link>
+        </nav>
+        
+        <div className="flex items-center gap-6">
+            <Link href="#" className="text-xs font-bold uppercase tracking-widest text-white/50 hover:text-white transition-colors hidden md:block">Log In</Link>
+            <button className="bg-white text-black px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:scale-105 transition-transform shadow-[0_0_20px_rgba(255,255,255,0.2)]">
+               Get Started
+            </button>
         </div>
       </header>
 
-      {/* HERO SECTION */}
-      <section className="px-6 py-24 md:py-32 text-center max-w-5xl mx-auto relative z-10">
-        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8 }}>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-900/30 border border-blue-500/30 text-blue-400 text-xs font-bold uppercase tracking-widest mb-8">
-                <span className="w-2 h-2 rounded-full bg-blue-500 animate-ping"></span> Vault 2.0 is Here
-            </div>
-            <h1 className="text-5xl md:text-7xl font-bold tracking-tighter mb-8 leading-[1.1]">
-                Banking for the <br/>
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">Next Generation.</span>
-            </h1>
-            <p className="text-xl text-gray-400 mb-12 max-w-2xl mx-auto font-light leading-relaxed">
-                Seamless global transfers, intelligent wealth management, and crystal-clear analytics. Your financial life, simplified.
-            </p>
-            <div className="flex flex-col sm:flex-row justify-center gap-4">
-                <button className="bg-blue-600 text-white px-8 py-4 rounded-xl font-bold hover:bg-blue-500 transition shadow-[0_0_20px_rgba(37,99,235,0.4)] hover:shadow-[0_0_30px_rgba(37,99,235,0.6)]">Open Free Account</button>
-                <button className="bg-white/5 border border-white/10 text-white px-8 py-4 rounded-xl font-bold hover:bg-white/10 transition">See How it Works</button>
-            </div>
-        </motion.div>
+      <main className="relative z-10">
+        {/* HERO SECTION */}
+        <section className="pt-48 pb-32 px-6 max-w-5xl mx-auto text-center">
+            <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}>
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#3B82F6]/10 border border-[#3B82F6]/30 text-[#3B82F6] text-[10px] font-black uppercase tracking-[0.3em] mb-12 shadow-[0_0_20px_rgba(59,130,246,0.2)]">
+                    <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse shadow-[0_0_10px_rgba(16,185,129,1)]" /> Vault 2.0 is Here
+                </div>
+                
+                <h1 className="text-6xl md:text-[7vw] font-black tracking-tighter mb-8 leading-[0.9] drop-shadow-2xl">
+                    Banking for the <br/>
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#3B82F6] to-[#10B981]">Next Generation.</span>
+                </h1>
+                
+                <p className="text-xl md:text-2xl text-white/50 max-w-2xl mx-auto font-light leading-relaxed mb-12">
+                    Seamless global transfers, intelligent wealth management, and crystal-clear analytics. Your financial life, elevated.
+                </p>
+                
+                <div className="flex flex-col sm:flex-row justify-center gap-6">
+                    <button className="bg-gradient-to-r from-[#3B82F6] to-[#10B981] text-white px-10 py-5 rounded-xl font-black text-xs uppercase tracking-[0.2em] hover:scale-105 transition-transform shadow-[0_0_40px_rgba(59,130,246,0.4)] flex items-center justify-center gap-3">
+                       Open Free Account <ArrowRight className="w-4 h-4" />
+                    </button>
+                    <button className="bg-white/5 backdrop-blur-xl border border-white/10 text-white px-10 py-5 rounded-xl font-black text-xs uppercase tracking-[0.2em] hover:bg-white/10 transition-colors flex items-center justify-center gap-3">
+                       See How it Works <ChevronRight className="w-4 h-4" />
+                    </button>
+                </div>
+            </motion.div>
+        </section>
 
-        {/* DASHBOARD MOCKUP */}
-        <motion.div initial={{ opacity: 0, y: 100 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4, duration: 1 }} className="mt-24 relative max-w-4xl mx-auto">
-            <div className="absolute inset-0 bg-blue-600/20 blur-[100px] rounded-full"></div>
-            <div className="relative bg-[#0a0f1c] border border-white/10 rounded-2xl shadow-2xl overflow-hidden p-6 text-left">
-                {/* Mock UI */}
-                <div className="flex justify-between items-center mb-8 pb-6 border-b border-white/5">
-                    <div>
-                        <div className="text-sm font-semibold text-gray-500 mb-1">Total Balance</div>
-                        <div className="text-4xl font-bold text-white">$124,532.00</div>
-                    </div>
-                    <div className="text-emerald-400 font-bold bg-emerald-400/10 px-3 py-1 rounded-full text-sm">+2.4% Today</div>
+        {/* GLASSMORPHIC DASHBOARD MOCKUP */}
+        <section className="px-6 pb-48 max-w-[1400px] mx-auto">
+            <motion.div 
+               style={{ y: yDash, opacity: opacityDash }}
+               className="relative rounded-[3rem] bg-[#0A0F1C]/80 backdrop-blur-3xl border border-white/10 shadow-[0_40px_100px_rgba(59,130,246,0.2)] p-4 md:p-8 overflow-hidden group"
+            >
+                {/* Glow ring on hover */}
+                <div className="absolute inset-0 bg-gradient-to-br from-[#3B82F6]/20 via-transparent to-[#10B981]/20 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none" />
+                
+                <div className="flex flex-col lg:flex-row gap-8 relative z-10">
+                   
+                   {/* Left Panel */}
+                   <div className="flex-1 space-y-8">
+                      {/* Balance Card */}
+                      <div className="bg-white/5 border border-white/5 rounded-3xl p-8 hover:bg-white/10 transition-colors">
+                         <div className="flex justify-between items-start mb-12">
+                            <div className="text-[10px] font-black uppercase tracking-[0.3em] text-white/50">Total Balance</div>
+                            <div className="flex items-center gap-2 bg-[#10B981]/10 text-[#10B981] px-3 py-1.5 rounded-lg text-xs font-bold">
+                               +2.4% <ArrowRight className="w-3 h-3 -rotate-45" />
+                            </div>
+                         </div>
+                         <div className="text-6xl font-black tracking-tighter mb-2">$124,532.00</div>
+                         <div className="text-sm font-medium text-white/30">+ $2,430.50 this month</div>
+                      </div>
+
+                      {/* Recent Activity */}
+                      <div className="bg-white/5 border border-white/5 rounded-3xl p-8">
+                         <div className="text-[10px] font-black uppercase tracking-[0.3em] text-white/50 mb-8">Recent Activity</div>
+                         <div className="space-y-6">
+                            {[
+                               { name: "Apple Store", cat: "Electronics", amt: "-$2,499.00", icon: <CreditCard className="w-5 h-5 text-white/50" /> },
+                               { name: "Salary Deposit", cat: "Income", amt: "+$8,500.00", icon: <Zap className="w-5 h-5 text-[#10B981]" />, pos: true },
+                               { name: "Uber Eats", cat: "Food", amt: "-$45.20", icon: <CreditCard className="w-5 h-5 text-white/50" /> }
+                            ].map((act, i) => (
+                               <div key={i} className="flex items-center gap-4">
+                                  <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center shrink-0">
+                                     {act.icon}
+                                  </div>
+                                  <div className="flex-1">
+                                     <div className="font-bold">{act.name}</div>
+                                     <div className="text-xs text-white/30">{act.cat}</div>
+                                  </div>
+                                  <div className={`font-black ${act.pos ? 'text-[#10B981]' : 'text-white'}`}>{act.amt}</div>
+                               </div>
+                            ))}
+                         </div>
+                      </div>
+                   </div>
+
+                   {/* Right Panel (Chart) */}
+                   <div className="lg:w-[40%] bg-white/5 border border-white/5 rounded-3xl p-8 flex flex-col hover:bg-white/10 transition-colors relative overflow-hidden">
+                      <div className="text-[10px] font-black uppercase tracking-[0.3em] text-white/50 mb-12 relative z-10">Cashflow Analytics</div>
+                      
+                      <div className="flex-1 flex items-end gap-2 relative z-10">
+                         {[20, 30, 45, 35, 60, 50, 75, 65, 80, 70, 90, 85, 100].map((h, i) => (
+                             <motion.div 
+                                key={i} 
+                                initial={{ height: 0 }}
+                                whileInView={{ height: `${h}%` }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 1, delay: 0.5 + (i * 0.05), ease: "easeOut" }}
+                                className="w-full bg-gradient-to-t from-[#3B82F6] to-[#10B981] rounded-t-sm opacity-80 hover:opacity-100 transition-opacity cursor-pointer relative group"
+                             >
+                                <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-white text-black text-[10px] font-black px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity">
+                                   ${h * 100}
+                                </div>
+                             </motion.div>
+                         ))}
+                      </div>
+
+                      {/* Chart Glow */}
+                      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-1/2 bg-[#3B82F6] blur-[80px] opacity-20 pointer-events-none" />
+                   </div>
                 </div>
-                <div className="h-48 flex items-end justify-between gap-2">
-                    {/* Simulated chart */}
-                    {[20, 30, 45, 35, 60, 50, 75, 65, 80, 70, 90, 85, 100].map((h, i) => (
-                        <div key={i} className="w-full bg-gradient-to-t from-blue-600 to-emerald-400 rounded-t-sm" style={{ height: `${h}%`, opacity: 0.5 + (i * 0.05) }}></div>
-                    ))}
-                </div>
+            </motion.div>
+        </section>
+
+        {/* FEATURES GRID */}
+        <section className="py-32 px-6 max-w-7xl mx-auto border-t border-white/5">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+               {FEATURES.map((feat, i) => (
+                  <motion.div 
+                     key={i}
+                     initial={{ opacity: 0, y: 30 }}
+                     whileInView={{ opacity: 1, y: 0 }}
+                     viewport={{ once: true }}
+                     transition={{ duration: 0.6, delay: i * 0.1 }}
+                     className="bg-white/5 border border-white/5 p-10 rounded-[2rem] hover:bg-white/10 transition-colors"
+                  >
+                     <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#3B82F6]/20 to-[#10B981]/20 text-[#3B82F6] flex items-center justify-center mb-8 border border-[#3B82F6]/30 shadow-[inset_0_0_20px_rgba(59,130,246,0.2)]">
+                        {feat.icon}
+                     </div>
+                     <h3 className="text-2xl font-black mb-4">{feat.title}</h3>
+                     <p className="text-white/50 leading-relaxed font-light">{feat.desc}</p>
+                  </motion.div>
+               ))}
             </div>
-        </motion.div>
-      </section>
+        </section>
+
+      </main>
     </div>
   );
 }
