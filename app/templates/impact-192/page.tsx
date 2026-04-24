@@ -1,25 +1,25 @@
 "use client";
 
-import { motion, useScroll, useTransform, useMotionValue, useSpring } from "framer-motion";
-import { useRef, useEffect } from "react";
+import { motion, useScroll, useTransform, useSpring, useMotionValue } from "framer-motion";
+import { useRef, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Search, ShoppingBag } from "lucide-react";
+import { ShoppingBag, Activity, Zap, Layers, Menu, Search, Compass, Shield } from "lucide-react";
 import "../premium.css";
 
 const NOTES = [
-  { name: "Top Notes", desc: "Bergamot, Pink Pepper, Elemi" },
-  { name: "Heart Notes", desc: "Damascus Rose, Smoked Tea, Iris" },
-  { name: "Base Notes", desc: "Amber, Vetiver, Vanilla Absolute" }
+  { icon: <Compass className="w-8 h-8" />, title: "TOP_PINK_PEPPER", cat: "Inceptive", value: "Verified", img: "https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=1500" },
+  { icon: <Activity className="w-8 h-8" />, title: "HEART_ROSE_V3", cat: "Core", value: "Active", img: "https://images.unsplash.com/photo-1512201066735-90d569030018?auto=format&fit=crop&q=80&w=1500" },
+  { icon: <Shield className="w-8 h-8" />, title: "BASE_AMBER_SYNC", cat: "Residual", value: "Locked", img: "https://images.unsplash.com/photo-1615484477778-ca3b77940c25?auto=format&fit=crop&q=80&w=1500" },
 ];
 
-export default function PremiumFragrance() {
+export default function AuraeFragranceSPA() {
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: containerRef });
   
-  const heroImgY = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
-
+  const yHero = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
+  const heroScale = useTransform(scrollYProgress, [0, 0.5], [1, 1.1]);
+  
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
   const springX = useSpring(mouseX, { stiffness: 40, damping: 20 });
@@ -35,109 +35,176 @@ export default function PremiumFragrance() {
   }, [mouseX, mouseY]);
 
   return (
-    <div ref={containerRef} className="premium-theme bg-[#0A0908] text-[#F2EDD9] min-h-screen font-serif selection:bg-[#D4AF37] selection:text-[#0A0908] overflow-hidden">
+    <div ref={containerRef} className="premium-theme bg-[#0A0908] text-[#F2EDD9] min-h-screen font-serif selection:bg-[#D4AF37] selection:text-[#0A0908] overflow-hidden relative uppercase">
       
-      {/* AMBER GLOW BACKGROUND */}
+      {/* FRAGRANCE GRID & NOISE */}
       <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(212,175,55,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(212,175,55,0.03)_1px,transparent_1px)] bg-[size:10rem_10rem] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_70%,transparent_100%)]" />
         <motion.div 
            style={{ x: springX, y: springY }}
-           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] bg-[#D4AF37] opacity-[0.05] blur-[150px] rounded-full mix-blend-screen" 
+           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70vw] h-[70vw] bg-[#D4AF37] opacity-[0.02] blur-[150px] rounded-full mix-blend-screen" 
         />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.15] mix-blend-soft-light" />
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.1] mix-blend-screen" />
       </div>
 
       {/* HEADER */}
-      <header className="fixed top-0 w-full px-6 md:px-12 py-8 flex justify-between items-center z-50 mix-blend-difference text-white pointer-events-none">
-        <nav className="hidden md:flex gap-12 font-sans font-bold text-[9px] tracking-[0.4em] uppercase pointer-events-auto">
-            <Link href="#" className="hover:text-[#D4AF37] transition-colors">Collections</Link>
-            <Link href="#" className="hover:text-[#D4AF37] transition-colors">La Maison</Link>
-        </nav>
-        
-        <Link href="/" className="text-4xl font-light tracking-[0.2em] uppercase mx-auto md:mx-0 text-center pointer-events-auto">
-            Aurae
+      <header className="fixed top-0 left-0 w-full px-6 md:px-12 py-10 flex justify-between items-center z-50 bg-[#0A0908]/50 backdrop-blur-3xl border-b border-white/5">
+        <Link href="/" className="font-black text-2xl tracking-[0.3em] text-white flex items-center gap-4 italic uppercase">
+           AURAE<span className="text-[#D4AF37]">_PARFUMS</span>
         </Link>
         
-        <div className="hidden md:flex gap-8 font-sans font-bold text-[9px] tracking-[0.4em] uppercase items-center pointer-events-auto">
-            <button className="hover:text-[#D4AF37] transition-colors"><Search className="w-4 h-4" /></button>
-            <button className="hover:text-[#D4AF37] transition-colors flex items-center gap-2"><ShoppingBag className="w-4 h-4" /> (0)</button>
+        <nav className="hidden lg:flex gap-16 font-sans font-black text-[10px] uppercase tracking-[0.6em] text-white/30">
+            <Link href="#" className="hover:text-[#D4AF37] transition-colors group">
+               Collections<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-[#D4AF37] italic">.</span>
+            </Link>
+            <Link href="#" className="hover:text-[#D4AF37] transition-colors group">
+               Maison<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-[#D4AF37] italic">.</span>
+            </Link>
+            <Link href="#" className="hover:text-[#D4AF37] transition-colors group">
+               Archive<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-[#D4AF37] italic">.</span>
+            </Link>
+        </nav>
+        
+        <div className="flex items-center gap-10">
+           <button className="bg-[#D4AF37] text-black px-12 py-4 font-sans font-black text-[10px] uppercase tracking-[0.4em] hover:bg-white transition-all shadow-[0_0_40px_rgba(212,175,55,0.2)]">
+              Shop_Essence
+           </button>
+           <Menu className="w-6 h-6 text-[#D4AF37] cursor-pointer" />
         </div>
       </header>
 
-      {/* LUXURY HERO */}
-      <section className="relative min-h-[120vh] flex flex-col justify-start items-center text-center pt-32 md:pt-48 pb-32">
-        
-        {/* Animated Bottle Container */}
-        <motion.div 
-           initial={{ opacity: 0, scale: 0.9, y: 50 }} 
-           animate={{ opacity: 1, scale: 1, y: 0 }} 
-           transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }} 
-           style={{ opacity: heroOpacity }}
-           className="relative z-10 w-full max-w-[320px] md:max-w-[400px] aspect-[2/3] mx-auto mb-16 border border-[#D4AF37]/20 p-4 rounded-t-[15rem] overflow-hidden group shadow-[0_0_100px_rgba(212,175,55,0.1)]"
-        >
-            <motion.div style={{ y: heroImgY }} className="absolute inset-[-10%]">
-                <Image src="https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=1500" alt="Perfume Bottle" fill className="object-cover group-hover:scale-105 transition-transform duration-[3s]" priority />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0A0908] via-transparent to-transparent" />
+      {/* HERO SECTION */}
+      <section className="relative h-screen flex flex-col justify-center items-center px-6 text-center z-10 pt-20 overflow-hidden text-center">
+         <motion.div style={{ scale: heroScale, y: yHero }} className="absolute inset-0 z-0">
+            <Image src="https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=2500" alt="Fragrance" fill className="object-cover opacity-20 grayscale contrast-125" priority />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0A0908] via-transparent to-[#0A0908]/40" />
+         </motion.div>
+         
+         <div className="relative z-10 max-w-7xl w-full">
+            <motion.div 
+               initial={{ opacity: 0, scale: 0.95 }}
+               animate={{ opacity: 1, scale: 1 }}
+               transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
+            >
+               <div className="inline-flex items-center gap-4 font-sans font-black text-[10px] uppercase tracking-[1em] text-[#D4AF37] mb-16 border-l-2 border-[#D4AF37] pl-10 italic font-mono text-center">
+                  Olfactory_Capture // 0192_Alpha
+               </div>
+               
+               <h1 className="text-7xl md:text-[14vw] font-black italic uppercase leading-[0.75] tracking-tighter mb-20 text-white">
+                  ESSENCE.<br/>
+                  <span className="text-transparent" style={{ WebkitTextStroke: "2px rgba(255,255,255,0.6)" }}>EXTRAIT.</span>
+               </h1>
+               
+               <p className="text-xl md:text-3xl font-light italic text-white/30 max-w-3xl mx-auto mb-24 leading-relaxed uppercase tracking-widest text-center">
+                  Structural allocation for aesthetic intent. Architecting the future of fragrance with tectonic precision.
+               </p>
+               
+               <div className="flex flex-col md:flex-row gap-16 justify-center items-center font-mono text-white text-center">
+                  <div className="flex items-center gap-8 group cursor-pointer">
+                     <div className="w-20 h-px bg-[#D4AF37]/30 group-hover:w-32 transition-all" />
+                     <span className="text-[10px] font-black uppercase tracking-[0.8em]">Explore_Archive</span>
+                  </div>
+                  <div className="hidden md:block w-px h-16 bg-white/5" />
+                  <div className="font-black text-[9px] uppercase tracking-[0.6em] text-white/10 italic text-center">
+                     Established // 2026 // Paris
+                  </div>
+               </div>
             </motion.div>
-            
-            {/* Inner Glow line */}
-            <div className="absolute inset-4 rounded-t-[14rem] border border-[#D4AF37]/30 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none" />
-        </motion.div>
-        
-        <motion.div 
-           initial={{ opacity: 0, y: 30 }} 
-           animate={{ opacity: 1, y: 0 }} 
-           transition={{ delay: 0.8, duration: 1 }} 
-           className="relative z-10 max-w-2xl px-6"
-        >
-            <h1 className="text-6xl md:text-[8vw] font-light italic tracking-tight leading-none mb-8 text-[#D4AF37] drop-shadow-lg">
-               L'Essence.
-            </h1>
-            <p className="font-sans text-[10px] uppercase tracking-[0.4em] text-[#A39E8C] max-w-md mx-auto leading-loose mb-12">
-                The new signature autumn collection. An intoxicating blend capturing the warmth of twilight.
-            </p>
-            <button className="font-sans font-bold text-[10px] uppercase tracking-[0.4em] border border-[#D4AF37]/40 px-12 py-5 hover:bg-[#D4AF37] hover:text-[#0A0908] transition-all duration-500 shadow-[0_0_30px_rgba(212,175,55,0.1)]">
-               Discover Now
-            </button>
-        </motion.div>
-        
-        {/* Floating elements */}
-        <div className="absolute bottom-12 left-12 font-sans font-bold text-[8px] uppercase tracking-[0.5em] text-[#D4AF37]/40 [writing-mode:vertical-lr] hidden md:block">
-           Extrait de Parfum
-        </div>
-      </section>
-
-      {/* OLFACTORY PYRAMID */}
-      <section className="py-32 px-6 max-w-5xl mx-auto relative z-10 border-t border-[#D4AF37]/10">
-         <div className="text-center mb-24">
-            <h2 className="text-4xl md:text-5xl font-light italic mb-6">Olfactory Pyramid</h2>
-            <div className="w-12 h-px bg-[#D4AF37]/50 mx-auto" />
          </div>
 
-         <div className="space-y-16">
-            {NOTES.map((note, i) => (
-               <motion.div 
-                  key={i}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.8, delay: i * 0.2 }}
-                  className="flex flex-col md:flex-row justify-between items-center text-center md:text-left gap-4 md:gap-12 border-b border-[#D4AF37]/10 pb-8"
-               >
-                  <div className="font-sans font-bold text-[10px] uppercase tracking-[0.4em] text-[#D4AF37] shrink-0 w-32">
-                     {note.name}
-                  </div>
-                  <div className="text-xl md:text-2xl font-light tracking-wide text-[#F2EDD9]/80">
-                     {note.desc}
-                  </div>
-               </motion.div>
+         {/* Decorative Side HUD */}
+         <div className="absolute right-12 bottom-12 flex flex-col items-end gap-4 font-sans font-black text-[8px] uppercase tracking-[1em] text-[#D4AF37]/20 hidden md:flex italic font-mono text-center">
+            <span>SYNC_STATUS: ACTIVE</span>
+            <div className="flex gap-1 h-12 items-end">
+               {[1, 2, 3, 4, 5].map(i => <motion.div key={i} animate={{ height: ['20%', '100%', '40%'] }} transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }} className="w-[1px] bg-[#D4AF37]" />)}
+            </div>
+         </div>
+      </section>
+
+      {/* NOTES GRID */}
+      <section className="py-48 px-6 md:px-12 max-w-[1800px] mx-auto relative z-10 bg-[#0A0908]">
+         <div className="flex flex-col md:flex-row justify-between items-end mb-40 border-b border-white/10 pb-20 gap-16 font-sans">
+            <div>
+               <span className="text-[10px] font-black uppercase tracking-[2em] text-[#D4AF37] mb-8 block italic font-mono">Fragrance_Manifest</span>
+               <h2 className="text-6xl md:text-[10vw] font-black italic uppercase tracking-tighter text-white leading-none">The <span className="text-[#D4AF37]/20">Pyramid_</span></h2>
+            </div>
+            <div className="flex gap-16 text-[10px] font-black uppercase tracking-[0.6em] text-white/20 italic font-mono">
+               <span>Records: [03]</span>
+               <span>Status: [Verified]</span>
+            </div>
+         </div>
+
+         <div className="grid grid-cols-1 md:grid-cols-3 gap-16 font-sans">
+            {NOTES.map((p, i) => (
+                <motion.div 
+                   key={i} 
+                   initial={{ opacity: 0, y: 80 }}
+                   whileInView={{ opacity: 1, y: 0 }}
+                   viewport={{ once: true, margin: "-100px" }}
+                   transition={{ duration: 1.2, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
+                   className="group relative h-[85vh] bg-[#1A1A1A] border border-white/5 overflow-hidden cursor-pointer hover:border-[#D4AF37]/30 transition-all shadow-2xl"
+                >
+                    <Image src={p.img} alt={p.title} fill className="object-cover opacity-30 grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-1000" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0A0908] via-transparent to-transparent opacity-95" />
+                    <div className="absolute inset-0 bg-white/5 group-hover:bg-transparent transition-colors duration-700" />
+                    
+                    <div className="absolute inset-16 flex flex-col justify-between z-10 font-mono text-white">
+                        <div className="flex justify-between items-start">
+                           <div className="p-5 bg-white/5 border border-white/10 rounded-none group-hover:bg-[#D4AF37] group-hover:text-black transition-all shadow-xl">
+                              {p.icon}
+                           </div>
+                           <div className="text-[10px] font-black uppercase tracking-[0.8em] text-[#D4AF37] italic font-mono">Ref_0x{i+192}</div>
+                        </div>
+                        
+                        <div>
+                           <span className="text-[10px] uppercase tracking-[0.8em] text-[#D4AF37] mb-8 block italic font-black">{p.cat} // Verified</span>
+                           <h3 className="text-5xl md:text-6xl font-black italic uppercase tracking-tighter mb-16 text-white group-hover:tracking-widest transition-all leading-[0.8]">{p.title}</h3>
+                           <div className="flex items-center gap-8 text-[10px] font-black uppercase tracking-[0.6em] opacity-0 group-hover:opacity-100 transition-all translate-y-10 group-hover:translate-y-0 text-white">
+                              View_Notes <ArrowRight className="w-6 h-6" />
+                           </div>
+                        </div>
+                    </div>
+                </motion.div>
             ))}
          </div>
       </section>
 
       {/* FOOTER */}
-      <footer className="py-24 text-center border-t border-[#D4AF37]/10 relative z-10 mt-24">
-         <div className="text-[10vw] font-light tracking-widest uppercase mb-12 opacity-[0.03]">AURAE</div>
-         <p className="font-sans text-[8px] uppercase tracking-[0.4em] text-[#A39E8C]">Paris • London • New York</p>
+      <footer className="py-48 px-6 md:px-12 border-t border-white/5 relative z-10 bg-[#0A0908]">
+         <div className="max-w-[1800px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-40 font-sans text-center md:text-left">
+            <div className="max-w-2xl">
+               <div className="text-[#D4AF37] mb-16 flex items-center gap-6 font-black text-2xl italic uppercase tracking-widest font-mono justify-center md:justify-start">
+                  <Activity className="w-10 h-10" /> Parfums_Logs
+               </div>
+               <p className="text-4xl md:text-6xl font-light italic leading-[0.9] text-white/20 uppercase tracking-tighter mb-20">
+                  WE TREAT SCENTS AS ARCHITECTURE. EVERY NOTE A FUNCTION.
+               </p>
+               <div className="flex gap-20 font-black text-[10px] uppercase tracking-[0.8em] text-[#D4AF37]/40 italic font-mono justify-center md:justify-start">
+                  <span>Berlin</span>
+                  <span>London</span>
+                  <span>NYC</span>
+               </div>
+            </div>
+            <div className="flex flex-col justify-between items-end text-right font-mono text-white text-center">
+               <div className="w-full">
+                  <h4 className="text-[12vw] font-black italic uppercase tracking-tighter opacity-[0.02] leading-none mb-20 text-white">AURAE</h4>
+                  <nav className="flex flex-col gap-10 font-black text-[10px] uppercase tracking-[0.8em] text-white/10">
+                     <Link href="#" className="hover:text-[#D4AF37] transition-colors group">
+                        Instagram<span className="text-[#D4AF37]/0 group-hover:text-[#D4AF37] transition-all">_</span>
+                     </Link>
+                     <Link href="#" className="hover:text-[#D4AF37] transition-colors group">
+                        Collection<span className="text-[#D4AF37]/0 group-hover:text-[#D4AF37] transition-all">_</span>
+                     </Link>
+                     <Link href="#" className="hover:text-[#D4AF37] transition-colors group">
+                        Legal<span className="text-[#D4AF37]/0 group-hover:text-[#D4AF37] transition-all">_</span>
+                     </Link>
+                  </nav>
+               </div>
+               <div className="font-black text-[9px] uppercase tracking-[1.5em] text-white/5 mt-32 italic text-center">
+                  &copy; 2026 // AURAE_PARFUMS_GROUP&trade;
+               </div>
+            </div>
+         </div>
       </footer>
     </div>
   );

@@ -1,127 +1,211 @@
 "use client";
 
-import { motion, useScroll, useTransform, useSpring } from "framer-motion";
-import { useRef } from "react";
+import { motion, useScroll, useTransform, useSpring, useMotionValue } from "framer-motion";
+import { useRef, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Ticket, Disc, Sparkles } from "lucide-react";
+import { Ticket, Activity, Zap, Layers, Menu, Search, ArrowRight, Compass, Shield } from "lucide-react";
 import "../premium.css";
 
-const LINEUP = [
-  "Daft System", "Neon Cult", "Acid Rain", "Voidwalker", 
-  "Synthetic Soul", "Laser Beam", "Bass Drop", "Cyber Punk"
+const ARTISTS = [
+  { icon: <Zap className="w-8 h-8" />, title: "DAFT_SYSTEM_V2", cat: "Headliner", value: "Verified", img: "https://images.unsplash.com/photo-1540039155732-68473678c96e?auto=format&fit=crop&q=80&w=1500" },
+  { icon: <Activity className="w-8 h-8" />, title: "NEON_CULT_SYNC", cat: "Support", value: "Active", img: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&q=80&w=1500" },
+  { icon: <Layers className="w-8 h-8" />, title: "VOIDWALKER_CORE", cat: "Support", value: "Locked", img: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80&w=1500" },
 ];
 
-export default function PremiumFestival() {
+export default function FestivalSPA() {
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: containerRef });
   
-  const heroScale = useTransform(scrollYProgress, [0, 1], [1, 1.2]);
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.4], [1, 0]);
+  const yHero = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
+  const heroScale = useTransform(scrollYProgress, [0, 0.5], [1, 1.1]);
   
-  const springScroll = useSpring(scrollYProgress, { stiffness: 100, damping: 30 });
-  const xMarquee1 = useTransform(springScroll, [0, 1], ["0%", "-50%"]);
-  const xMarquee2 = useTransform(springScroll, [0, 1], ["-50%", "0%"]);
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const springX = useSpring(mouseX, { stiffness: 40, damping: 20 });
+  const springY = useSpring(mouseY, { stiffness: 40, damping: 20 });
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      mouseX.set(e.clientX - window.innerWidth / 2);
+      mouseY.set(e.clientY - window.innerHeight / 2);
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, [mouseX, mouseY]);
 
   return (
     <div ref={containerRef} className="premium-theme bg-[#090014] text-white min-h-screen font-sans selection:bg-[#00F3FF] selection:text-black overflow-hidden relative">
       
-      {/* VIBRANT NEON GLOWS */}
+      {/* FESTIVAL GRID & NOISE */}
       <div className="fixed inset-0 z-0 pointer-events-none">
-         <motion.div 
-            animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }} 
-            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-[-10%] left-[-10%] w-[60vw] h-[60vw] bg-[#9D00FF] blur-[150px] rounded-full mix-blend-screen" 
-         />
-         <motion.div 
-            animate={{ scale: [1, 1.3, 1], opacity: [0.2, 0.4, 0.2] }} 
-            transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-            className="absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vw] bg-[#00F3FF] blur-[150px] rounded-full mix-blend-screen" 
-         />
-         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.15] mix-blend-overlay" />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,243,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,243,255,0.03)_1px,transparent_1px)] bg-[size:5rem_5rem] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_70%,transparent_100%)]" />
+        <motion.div 
+           style={{ x: springX, y: springY }}
+           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70vw] h-[70vw] bg-[#00F3FF] opacity-[0.05] blur-[150px] rounded-full mix-blend-screen" 
+        />
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.1] mix-blend-screen" />
       </div>
 
       {/* HEADER */}
-      <header className="fixed top-0 left-0 w-full px-6 md:px-12 py-6 flex justify-between items-center z-50 mix-blend-difference border-b border-white/5">
-        <Link href="/" className="text-3xl md:text-4xl font-black uppercase tracking-tighter italic text-[#00F3FF] drop-shadow-[0_0_10px_rgba(0,243,255,0.5)]">
-           ECHO<span className="text-[#9D00FF]">STATE</span>
+      <header className="fixed top-0 left-0 w-full px-6 md:px-12 py-10 flex justify-between items-center z-50 bg-[#090014]/50 backdrop-blur-3xl border-b border-white/5">
+        <Link href="/" className="font-black text-2xl tracking-[0.3em] text-white flex items-center gap-4 italic uppercase">
+           ECHO<span className="text-[#00F3FF]">STATE</span>
         </Link>
-        <button className="bg-[#00F3FF] text-black px-8 py-4 font-black uppercase tracking-[0.2em] text-[10px] skew-x-[-15deg] hover:bg-white hover:scale-105 transition-all shadow-[0_0_20px_rgba(0,243,255,0.4)] hover:shadow-[0_0_40px_rgba(0,243,255,0.8)]">
-            <span className="block skew-x-[15deg] flex items-center gap-2"><Ticket className="w-4 h-4" /> Get Tickets</span>
-        </button>
+        
+        <nav className="hidden lg:flex gap-16 font-black text-[10px] uppercase tracking-[0.6em] text-white/30">
+            <Link href="#" className="hover:text-[#00F3FF] transition-colors group">
+               Lineup<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-[#00F3FF] italic">.</span>
+            </Link>
+            <Link href="#" className="hover:text-[#00F3FF] transition-colors group">
+               Experience<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-[#00F3FF] italic">.</span>
+            </Link>
+            <Link href="#" className="hover:text-[#00F3FF] transition-colors group">
+               Archive<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-[#00F3FF] italic">.</span>
+            </Link>
+        </nav>
+        
+        <div className="flex items-center gap-10">
+           <button className="bg-[#00F3FF] text-black px-12 py-4 font-black text-[10px] uppercase tracking-[0.4em] hover:bg-white transition-all shadow-[0_0_40px_rgba(0,243,255,0.4)]">
+              Get_Pass
+           </button>
+           <Menu className="w-6 h-6 text-[#00F3FF] cursor-pointer" />
+        </div>
       </header>
 
       {/* HERO SECTION */}
-      <section className="relative h-screen flex flex-col justify-center items-center px-6 overflow-hidden">
-        <motion.div style={{ scale: heroScale, opacity: heroOpacity }} className="absolute inset-0 z-0">
-             <Image src="https://images.unsplash.com/photo-1540039155732-68473678c96e?auto=format&fit=crop&q=80&w=2500" alt="Festival Crowd" fill className="object-cover opacity-60 mix-blend-screen grayscale-[50%] contrast-125" priority />
-             <div className="absolute inset-0 bg-gradient-to-t from-[#090014] via-[#090014]/50 to-transparent" />
-        </motion.div>
-        
-        <div className="relative z-10 text-center w-full max-w-5xl pt-20">
+      <section className="relative h-screen flex flex-col justify-center items-center px-6 text-center z-10 pt-20 overflow-hidden text-center">
+         <motion.div style={{ scale: heroScale, y: yHero }} className="absolute inset-0 z-0">
+            <Image src="https://images.unsplash.com/photo-1540039155732-68473678c96e?auto=format&fit=crop&q=80&w=2500" alt="Festival" fill className="object-cover opacity-20 grayscale contrast-125" priority />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#090014] via-transparent to-[#090014]/40" />
+         </motion.div>
+         
+         <div className="relative z-10 max-w-7xl w-full">
             <motion.div 
-               initial={{ opacity: 0, y: 30 }} 
-               animate={{ opacity: 1, y: 0 }} 
-               transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+               initial={{ opacity: 0, scale: 0.95 }}
+               animate={{ opacity: 1, scale: 1 }}
+               transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
             >
-               <div className="inline-flex items-center gap-3 font-black uppercase tracking-[0.3em] text-[10px] mb-8 bg-white/5 backdrop-blur-md border border-white/10 px-6 py-2 rounded-full text-[#00F3FF] shadow-[0_0_20px_rgba(0,243,255,0.2)]">
-                   <Sparkles className="w-4 h-4" /> Edition V
+               <div className="inline-flex items-center gap-4 font-black text-[10px] uppercase tracking-[1em] text-[#00F3FF] mb-16 border-l-2 border-[#00F3FF] pl-10 italic font-mono text-center">
+                  Frequency_Capture // 0193_Alpha
                </div>
                
-               <h1 className="text-[12vw] md:text-[9vw] font-black uppercase leading-[0.85] tracking-tighter mb-12 drop-shadow-2xl">
-                   The <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00F3FF] to-[#9D00FF]">Frequencies</span><br/>
-                   <span className="italic">Unite Us.</span>
+               <h1 className="text-7xl md:text-[14vw] font-black italic uppercase leading-[0.75] tracking-tighter mb-20 text-white">
+                  UNITE.<br/>
+                  <span className="text-transparent" style={{ WebkitTextStroke: "2px rgba(255,255,255,0.6)" }}>RESONATE.</span>
                </h1>
                
-               <div className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-12 font-black uppercase tracking-[0.3em] text-[10px] md:text-xs">
-                   <div className="flex items-center gap-3">
-                      <span className="w-3 h-3 rounded-full bg-[#00F3FF] animate-pulse shadow-[0_0_10px_rgba(0,243,255,1)]" /> 
-                      Aug 14-16, 2026
-                   </div>
-                   <div className="hidden md:block w-px h-8 bg-white/20" />
-                   <div className="flex items-center gap-3">
-                      <span className="w-3 h-3 rounded-full bg-[#9D00FF] shadow-[0_0_10px_rgba(157,0,255,1)]" /> 
-                      Ibiza, Spain
-                   </div>
+               <p className="text-xl md:text-3xl font-light italic text-white/30 max-w-3xl mx-auto mb-24 leading-relaxed uppercase tracking-widest text-center">
+                  Structural allocation for frequency intent. Architecting the future of festival with tectonic precision.
+               </p>
+               
+               <div className="flex flex-col md:flex-row gap-16 justify-center items-center font-mono text-white text-center">
+                  <div className="flex items-center gap-8 group cursor-pointer">
+                     <div className="w-20 h-px bg-[#00F3FF]/30 group-hover:w-32 transition-all" />
+                     <span className="text-[10px] font-black uppercase tracking-[0.8em]">Explore_Lineup</span>
+                  </div>
+                  <div className="hidden md:block w-px h-16 bg-white/5" />
+                  <div className="font-black text-[9px] uppercase tracking-[0.6em] text-white/10 italic text-center text-center">
+                     Ibiza // August 2026 // Hybrid
+                  </div>
                </div>
             </motion.div>
-        </div>
-      </section>
-
-      {/* KINETIC TYPOGRAPHY LINEUP */}
-      <section className="py-32 relative z-10 overflow-hidden bg-[#090014]">
-         <div className="text-center mb-16">
-            <h2 className="font-black text-sm uppercase tracking-[0.5em] text-[#00F3FF] flex items-center justify-center gap-4">
-               <Disc className="w-5 h-5 animate-spin-slow" /> Phase 1 Lineup
-            </h2>
          </div>
-         
-         <div className="space-y-6 rotate-[-2deg] scale-105">
-            <motion.div style={{ x: xMarquee1 }} className="flex whitespace-nowrap gap-8 text-[8vw] font-black uppercase tracking-tighter italic">
-               {[...LINEUP, ...LINEUP].map((artist, i) => (
-                  <span key={i} className="text-transparent" style={{ WebkitTextStroke: "2px rgba(255,255,255,0.8)" }}>{artist} <span className="text-[#9D00FF]">/</span></span>
-               ))}
-            </motion.div>
-            
-            <motion.div style={{ x: xMarquee2 }} className="flex whitespace-nowrap gap-8 text-[8vw] font-black uppercase tracking-tighter">
-               {[...LINEUP, ...LINEUP].reverse().map((artist, i) => (
-                  <span key={i} className={i % 2 === 0 ? "text-[#00F3FF]" : "text-white"}>{artist} <span className="text-white/20">•</span></span>
-               ))}
-            </motion.div>
+
+         {/* Decorative Side HUD */}
+         <div className="absolute right-12 bottom-12 flex flex-col items-end gap-4 font-black text-[8px] uppercase tracking-[1em] text-[#00F3FF]/20 hidden md:flex italic font-mono text-center">
+            <span>SYNC_STATUS: ACTIVE</span>
+            <div className="flex gap-1 h-12 items-end">
+               {[1, 2, 3, 4, 5].map(i => <motion.div key={i} animate={{ height: ['20%', '100%', '40%'] }} transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }} className="w-[1px] bg-[#00F3FF]" />)}
+            </div>
          </div>
       </section>
 
-      {/* TICKET CTA */}
-      <section className="py-32 px-6 relative z-10">
-         <div className="max-w-4xl mx-auto bg-gradient-to-br from-[#9D00FF]/20 to-[#00F3FF]/20 border border-white/10 rounded-[3rem] p-12 md:p-24 text-center backdrop-blur-xl shadow-[0_0_100px_rgba(157,0,255,0.2)]">
-            <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tighter mb-8">Secure Your <br/><span className="italic text-[#00F3FF]">Pass</span></h2>
-            <p className="font-bold text-xs uppercase tracking-[0.3em] text-white/50 mb-12">Tier 1 Tickets almost sold out.</p>
-            <button className="bg-white text-black px-12 py-5 font-black uppercase tracking-[0.3em] text-xs skew-x-[-15deg] hover:bg-[#00F3FF] hover:scale-110 transition-all shadow-2xl">
-               <span className="block skew-x-[15deg]">Buy Now</span>
-            </button>
+      {/* LINEUP GRID */}
+      <section className="py-48 px-6 md:px-12 max-w-[1800px] mx-auto relative z-10 bg-[#090014]">
+         <div className="flex flex-col md:flex-row justify-between items-end mb-40 border-b border-white/10 pb-20 gap-16 font-sans">
+            <div>
+               <span className="text-[10px] font-black uppercase tracking-[2em] text-[#00F3FF] mb-8 block italic font-mono">Festival_Manifest</span>
+               <h2 className="text-6xl md:text-[10vw] font-black italic uppercase tracking-tighter text-white leading-none">The <span className="text-[#00F3FF]/20">Artists_</span></h2>
+            </div>
+            <div className="flex gap-16 text-[10px] font-black uppercase tracking-[0.6em] text-white/20 italic font-mono">
+               <span>Records: [03]</span>
+               <span>Status: [Verified]</span>
+            </div>
+         </div>
+
+         <div className="grid grid-cols-1 md:grid-cols-3 gap-16 font-sans">
+            {ARTISTS.map((p, i) => (
+                <motion.div 
+                   key={i} 
+                   initial={{ opacity: 0, y: 80 }}
+                   whileInView={{ opacity: 1, y: 0 }}
+                   viewport={{ once: true, margin: "-100px" }}
+                   transition={{ duration: 1.2, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
+                   className="group relative h-[85vh] bg-[#1A1A1A] border border-white/5 overflow-hidden cursor-pointer hover:border-[#00F3FF]/30 transition-all shadow-2xl"
+                >
+                    <Image src={p.img} alt={p.title} fill className="object-cover opacity-30 grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-1000" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#090014] via-transparent to-transparent opacity-95" />
+                    <div className="absolute inset-0 bg-white/5 group-hover:bg-transparent transition-colors duration-700" />
+                    
+                    <div className="absolute inset-16 flex flex-col justify-between z-10 font-mono text-white">
+                        <div className="flex justify-between items-start">
+                           <div className="p-5 bg-white/5 border border-white/10 rounded-none group-hover:bg-[#00F3FF] group-hover:text-black transition-all shadow-xl">
+                              {p.icon}
+                           </div>
+                           <div className="text-[10px] font-black uppercase tracking-[0.8em] text-[#00F3FF] italic font-mono">Ref_0x{i+193}</div>
+                        </div>
+                        
+                        <div>
+                           <span className="text-[10px] uppercase tracking-[0.8em] text-[#00F3FF] mb-8 block italic font-black">{p.cat} // Verified</span>
+                           <h3 className="text-5xl md:text-6xl font-black italic uppercase tracking-tighter mb-16 text-white group-hover:tracking-widest transition-all leading-[0.8]">{p.title}</h3>
+                           <div className="flex items-center gap-8 text-[10px] font-black uppercase tracking-[0.6em] opacity-0 group-hover:opacity-100 transition-all translate-y-10 group-hover:translate-y-0 text-white">
+                              View_Artist <ArrowRight className="w-6 h-6" />
+                           </div>
+                        </div>
+                    </div>
+                </motion.div>
+            ))}
          </div>
       </section>
 
+      {/* FOOTER */}
+      <footer className="py-48 px-6 md:px-12 border-t border-white/5 relative z-10 bg-[#090014]">
+         <div className="max-w-[1800px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-40 font-sans text-center md:text-left">
+            <div className="max-w-2xl">
+               <div className="text-[#00F3FF] mb-16 flex items-center gap-6 font-black text-2xl italic uppercase tracking-widest font-mono justify-center md:justify-start">
+                  <Activity className="w-10 h-10" /> Echostate_Logs
+               </div>
+               <p className="text-4xl md:text-6xl font-light italic leading-[0.9] text-white/20 uppercase tracking-tighter mb-20">
+                  WE TREAT FESTIVALS AS ARCHITECTURE. EVERY BEAT A FUNCTION.
+               </p>
+               <div className="flex gap-20 font-black text-[10px] uppercase tracking-[0.8em] text-[#00F3FF]/40 italic font-mono justify-center md:justify-start">
+                  <span>Berlin</span>
+                  <span>London</span>
+                  <span>NYC</span>
+               </div>
+            </div>
+            <div className="flex flex-col justify-between items-end text-right font-mono text-white text-center">
+               <div className="w-full">
+                  <h4 className="text-[12vw] font-black italic uppercase tracking-tighter opacity-[0.02] leading-none mb-20 text-white">ECHO</h4>
+                  <nav className="flex flex-col gap-10 font-black text-[10px] uppercase tracking-[0.8em] text-white/10">
+                     <Link href="#" className="hover:text-[#00F3FF] transition-colors group">
+                        Instagram<span className="text-[#00F3FF]/0 group-hover:text-[#00F3FF] transition-all">_</span>
+                     </Link>
+                     <Link href="#" className="hover:text-[#00F3FF] transition-colors group">
+                        Tickets<span className="text-[#00F3FF]/0 group-hover:text-[#00F3FF] transition-all">_</span>
+                     </Link>
+                     <Link href="#" className="hover:text-[#00F3FF] transition-colors group">
+                        Legal<span className="text-[#00F3FF]/0 group-hover:text-[#00F3FF] transition-all">_</span>
+                     </Link>
+                  </nav>
+               </div>
+               <div className="font-black text-[9px] uppercase tracking-[1.5em] text-white/5 mt-32 italic text-center">
+                  &copy; 2026 // ECHOSTATE_FESTIVAL_GROUP&trade;
+               </div>
+            </div>
+         </div>
+      </footer>
     </div>
   );
 }
