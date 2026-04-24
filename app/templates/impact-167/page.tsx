@@ -1,161 +1,208 @@
 "use client";
 
-import { motion, useScroll, useTransform, useMotionValue, useSpring } from "framer-motion";
-import { useRef, useState } from "react";
+import { motion, useScroll, useTransform, useSpring, useMotionValue } from "framer-motion";
+import { useRef, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { MapPin, Maximize2, Bath, Bed, Search, ArrowRight, ChevronRight } from "lucide-react";
+import { Search, ArrowRight, Activity, Zap, Shield, Menu, Layers, MapPin, Coffee, Utensils } from "lucide-react";
 import "../premium.css";
 
 const PROPERTIES = [
-  { price: "12,500,000", addr: "The Glass House, Kyoto", spec: "4 Bed · 5 Bath · 8,200 sqft", img: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80&w=1200", tag: "Exclusive" },
-  { price: "8,250,000", addr: "Cliffside Villa, Amalfi", spec: "5 Bed · 6 Bath · 6,100 sqft", img: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=1200", tag: "New" },
-  { price: "18,900,000", addr: "Sky Penthouse, NY", spec: "3 Bed · 4 Bath · 5,500 sqft", img: "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&q=80&w=1200", tag: "Signature" },
+  { price: "12,500,000", addr: "The Glass House, Kyoto", spec: "4 Bed · 5 Bath · 8,200 sqft", img: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80&w=1500", tag: "Exclusive" },
+  { price: "8,250,000", addr: "Cliffside Villa, Amalfi", spec: "5 Bed · 6 Bath · 6,100 sqft", img: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=1500", tag: "New" },
+  { price: "18,900,000", addr: "Sky Penthouse, NY", spec: "3 Bed · 4 Bath · 5,500 sqft", img: "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&q=80&w=1500", tag: "Signature" },
 ];
 
-function TiltCard({ children, className }: { children: React.ReactNode, className?: string }) {
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  const rotateX = useSpring(useTransform(y, [-0.5, 0.5], [10, -10]), { stiffness: 150, damping: 20 });
-  const rotateY = useSpring(useTransform(x, [-0.5, 0.5], [-10, 10]), { stiffness: 150, damping: 20 });
-
-  return (
-    <motion.div
-      style={{ rotateX, rotateY, transformPerspective: 1000 }}
-      onMouseMove={(e) => {
-        const rect = e.currentTarget.getBoundingClientRect();
-        x.set((e.clientX - rect.left) / rect.width - 0.5);
-        y.set((e.clientY - rect.top) / rect.height - 0.5);
-      }}
-      onMouseLeave={() => { x.set(0); y.set(0); }}
-      className={`relative transform-gpu ${className}`}
-    >
-      {children}
-    </motion.div>
-  );
-}
-
-export default function PremiumRealEstate() {
+export default function LuxeRealEstateSPA() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: containerRef, offset: ["start start", "end end"] });
+  const { scrollYProgress } = useScroll({ target: containerRef });
   
-  const heroScale = useTransform(scrollYProgress, [0, 0.3], [1, 1.1]);
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.3], [1, 0]);
-  const heroY = useTransform(scrollYProgress, [0, 0.3], [0, 100]);
+  const yHero = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
+  const heroScale = useTransform(scrollYProgress, [0, 0.5], [1, 1.1]);
+  
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const springX = useSpring(mouseX, { stiffness: 40, damping: 20 });
+  const springY = useSpring(mouseY, { stiffness: 40, damping: 20 });
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      mouseX.set(e.clientX - window.innerWidth / 2);
+      mouseY.set(e.clientY - window.innerHeight / 2);
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, [mouseX, mouseY]);
 
   return (
-    <div ref={containerRef} className="premium-theme bg-[#f8f9fa] text-[#1a1a1a] min-h-screen font-sans selection:bg-[#c9a84c] selection:text-white">
+    <div ref={containerRef} className="premium-theme bg-[#f8f9fa] text-[#1a1a1a] min-h-screen font-sans selection:bg-[#c9a84c] selection:text-white overflow-hidden relative">
       
-      {/* HEADER */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-6 md:px-12 md:py-8 flex justify-between items-center bg-white/40 backdrop-blur-xl border-b border-[#1a1a1a]/5 transition-all">
-        <Link href="/" className="text-xl md:text-2xl font-black tracking-tighter uppercase">Luxe<span className="text-[#c9a84c]">.</span></Link>
-        <div className="hidden md:flex gap-12 text-[10px] uppercase tracking-[0.3em] font-bold">
-           <Link href="#" className="hover:text-[#c9a84c] transition-colors">Portfolio</Link>
-           <Link href="#" className="hover:text-[#c9a84c] transition-colors">Off-Market</Link>
-           <Link href="#" className="hover:text-[#c9a84c] transition-colors">Journal</Link>
-        </div>
-        <button className="bg-[#1a1a1a] text-white px-6 py-3 rounded-full text-[10px] uppercase tracking-widest font-bold hover:bg-[#c9a84c] transition-colors">Private Client</button>
-      </nav>
+      {/* LUXURY GLOW & NOISE */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(201,168,76,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(201,168,76,0.03)_1px,transparent_1px)] bg-[size:6rem_6rem] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_70%,transparent_100%)]" />
+        <motion.div 
+           style={{ x: springX, y: springY }}
+           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vw] bg-[#c9a84c] opacity-[0.03] blur-[150px] rounded-full mix-blend-multiply" 
+        />
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.05] mix-blend-multiply" />
+      </div>
 
-      {/* HERO PARALLAX */}
-      <section className="relative h-screen flex items-center justify-center overflow-hidden bg-[#1a1a1a]">
-         <motion.div style={{ scale: heroScale }} className="absolute inset-0">
-            <Image src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80&w=2500" alt="Hero Architecture" fill className="object-cover opacity-60 mix-blend-luminosity" priority />
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#1a1a1a]/40 to-[#1a1a1a]" />
+      {/* HEADER */}
+      <header className="fixed top-0 left-0 w-full px-6 md:px-12 py-10 flex justify-between items-center z-50 bg-white/40 backdrop-blur-3xl border-b border-[#1a1a1a]/5">
+        <Link href="/" className="font-black text-2xl tracking-tighter text-[#1a1a1a] flex items-center gap-4 italic uppercase">
+           LUXE<span className="text-[#c9a84c]">.</span>
+        </Link>
+        
+        <nav className="hidden lg:flex gap-16 font-black text-[10px] uppercase tracking-[0.6em] text-[#1a1a1a]/30">
+            <Link href="#" className="hover:text-[#c9a84c] transition-colors group">
+               Portfolio<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-[#c9a84c] italic">.</span>
+            </Link>
+            <Link href="#" className="hover:text-[#c9a84c] transition-colors group">
+               Off-Market<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-[#c9a84c] italic">.</span>
+            </Link>
+            <Link href="#" className="hover:text-[#c9a84c] transition-colors group">
+               Journal<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-[#c9a84c] italic">.</span>
+            </Link>
+        </nav>
+        
+        <div className="flex items-center gap-10">
+           <button className="bg-[#1a1a1a] text-white px-12 py-4 font-black text-[10px] uppercase tracking-[0.4em] hover:bg-[#c9a84c] transition-all shadow-[0_0_40px_rgba(201,168,76,0.1)]">
+              Private_Client
+           </button>
+           <Menu className="w-6 h-6 text-[#c9a84c] cursor-pointer" />
+        </div>
+      </header>
+
+      {/* HERO SECTION */}
+      <section className="relative h-screen flex flex-col justify-center items-center px-6 text-center z-10 pt-20 overflow-hidden">
+         <motion.div style={{ scale: heroScale, y: yHero }} className="absolute inset-0 z-0">
+            <Image src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80&w=2500" alt="Architecture" fill className="object-cover opacity-20 grayscale contrast-125" priority />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#f8f9fa] via-transparent to-[#f8f9fa]/40" />
          </motion.div>
          
-         <motion.div style={{ opacity: heroOpacity, y: heroY }} className="relative z-10 w-full max-w-6xl px-6 text-center">
-            <span className="text-[#c9a84c] text-[10px] uppercase font-bold tracking-[0.5em] mb-8 block">Curated Architecture</span>
-            <h1 className="text-6xl md:text-[8vw] font-black tracking-tighter text-white leading-[0.85] mb-12 uppercase drop-shadow-2xl">
-               Beyond <br /> <span className="text-transparent" style={{ WebkitTextStroke: "1px white" }}>Boundaries.</span>
-            </h1>
-            
-            {/* Search Glass */}
-            <div className="max-w-3xl mx-auto bg-white/10 backdrop-blur-2xl p-2 rounded-2xl border border-white/20 shadow-2xl flex flex-col md:flex-row gap-2">
-               <div className="flex-1 flex items-center px-6 gap-4">
-                  <Search className="w-5 h-5 text-white/50" />
-                  <input type="text" placeholder="Location, Property ID, or Architect..." className="bg-transparent border-none text-white outline-none w-full placeholder:text-white/50 font-light" />
+         <div className="relative z-10 max-w-7xl w-full">
+            <motion.div 
+               initial={{ opacity: 0, y: 100 }}
+               animate={{ opacity: 1, y: 0 }}
+               transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+            >
+               <div className="inline-flex items-center gap-4 font-black text-[10px] uppercase tracking-[1.2em] text-[#c9a84c] mb-16 border-l-2 border-[#c9a84c] pl-10 italic font-mono">
+                  Visual_Archive // 0167_Alpha
                </div>
-               <button className="bg-[#c9a84c] text-white px-8 py-4 rounded-xl font-bold uppercase tracking-widest text-[10px] hover:bg-white hover:text-black transition-colors">
-                  Explore
-               </button>
-            </div>
-         </motion.div>
-         
-         {/* Scroll Indicator */}
-         <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 text-white/50">
-            <span className="text-[8px] uppercase tracking-[0.4em] font-bold">Scroll</span>
-            <div className="w-[1px] h-12 bg-white/20 overflow-hidden">
-               <motion.div animate={{ y: [-50, 50] }} transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }} className="w-full h-full bg-[#c9a84c]" />
+               
+               <h1 className="text-7xl md:text-[14vw] font-black italic uppercase leading-[0.75] tracking-tighter mb-20 text-[#1a1a1a]">
+                  BEYOND<br/>
+                  <span className="text-transparent" style={{ WebkitTextStroke: "2px #1a1a1a" }}>BOUNDARIES.</span>
+               </h1>
+               
+               <p className="text-xl md:text-3xl font-light italic text-[#1a1a1a]/40 max-w-3xl mx-auto mb-24 leading-relaxed uppercase tracking-widest">
+                  Structural allocation for aesthetic intent. Architecting the future of living with tectonic precision.
+               </p>
+               
+               <div className="flex flex-col md:flex-row gap-16 justify-center items-center font-mono">
+                  <div className="flex items-center gap-8 group cursor-pointer">
+                     <div className="w-20 h-px bg-[#c9a84c]/30 group-hover:w-32 transition-all" />
+                     <span className="text-[10px] font-black uppercase tracking-[0.8em] text-[#c9a84c]">Explore_Collection</span>
+                  </div>
+                  <div className="hidden md:block w-px h-16 bg-[#1a1a1a]/5" />
+                  <div className="font-black text-[9px] uppercase tracking-[0.6em] text-[#1a1a1a]/10 italic">
+                     Paris // Milan // NYC
+                  </div>
+               </div>
+            </motion.div>
+         </div>
+
+         {/* Decorative Side HUD */}
+         <div className="absolute right-12 bottom-12 flex flex-col items-end gap-4 font-black text-[8px] uppercase tracking-[1em] text-[#c9a84c]/20 hidden md:flex italic font-mono">
+            <span>SYNC_STATUS: ACTIVE</span>
+            <div className="flex gap-1 h-12 items-end">
+               {[1, 2, 3, 4, 5].map(i => <motion.div key={i} animate={{ height: ['20%', '100%', '40%'] }} transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }} className="w-[1px] bg-[#c9a84c]" />)}
             </div>
          </div>
       </section>
 
-      {/* HORIZONTAL MARQUEE */}
-      <div className="py-8 bg-[#1a1a1a] border-y border-white/10 overflow-hidden flex whitespace-nowrap">
-         <motion.div animate={{ x: ["0%", "-50%"] }} transition={{ duration: 20, repeat: Infinity, ease: "linear" }} className="flex gap-16 text-white/20 text-4xl font-black uppercase tracking-tighter italic">
-            <span>Global Presence</span> <span>•</span> <span>Bespoke Service</span> <span>•</span> <span>Discreet Transactions</span> <span>•</span>
-            <span>Global Presence</span> <span>•</span> <span>Bespoke Service</span> <span>•</span> <span>Discreet Transactions</span> <span>•</span>
-         </motion.div>
-      </div>
-
-      {/* PROPERTIES GRID (TILT CARDS) */}
-      <section className="py-32 px-6 max-w-7xl mx-auto">
-         <div className="flex flex-col md:flex-row justify-between items-end mb-24 gap-8">
+      {/* PROPERTIES GRID */}
+      <section className="py-48 px-6 md:px-12 max-w-[1800px] mx-auto relative z-10 bg-[#f8f9fa]">
+         <div className="flex flex-col md:flex-row justify-between items-end mb-40 border-b border-[#1a1a1a]/10 pb-20 gap-16">
             <div>
-               <h2 className="text-5xl md:text-7xl font-black tracking-tighter uppercase mb-6">The Collection.</h2>
-               <p className="text-gray-500 font-light text-xl max-w-md">Access to the world's most exceptional private residences.</p>
+               <span className="text-[10px] font-black uppercase tracking-[2em] text-[#c9a84c] mb-8 block italic font-mono">Visual_Manifest</span>
+               <h2 className="text-6xl md:text-[10vw] font-black italic uppercase tracking-tighter text-[#1a1a1a] leading-none">The <span className="text-[#c9a84c]/20">Collection_</span></h2>
             </div>
-            <button className="flex items-center gap-4 text-[10px] uppercase font-bold tracking-[0.3em] hover:text-[#c9a84c] transition-colors pb-4 border-b border-black">
-               View Complete Portfolio <ArrowRight className="w-4 h-4" />
-            </button>
+            <div className="flex gap-16 text-[10px] font-black uppercase tracking-[0.6em] text-[#1a1a1a]/20 italic font-mono">
+               <span>Records: [03]</span>
+               <span>Status: [Verified]</span>
+            </div>
          </div>
 
-         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-            {PROPERTIES.map((prop, i) => (
-               <motion.div 
-                  key={i} 
-                  initial={{ opacity: 0, y: 50 }} 
-                  whileInView={{ opacity: 1, y: 0 }} 
-                  viewport={{ once: true, margin: "-100px" }}
-                  transition={{ duration: 0.8, delay: i * 0.15 }}
-               >
-                  <TiltCard className="group cursor-pointer">
-                     <div className="relative aspect-[3/4] rounded-3xl overflow-hidden mb-8 shadow-2xl">
-                        <Image src={prop.img} alt={prop.addr} fill className="object-cover group-hover:scale-105 transition-transform duration-[2s] ease-out" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/0 to-black/0 opacity-60 group-hover:opacity-80 transition-opacity" />
-                        
-                        <div className="absolute top-6 left-6 bg-white/20 backdrop-blur-md text-white px-4 py-2 rounded-full text-[9px] uppercase tracking-widest font-bold">
-                           {prop.tag}
+         <div className="grid grid-cols-1 md:grid-cols-3 gap-16">
+            {PROPERTIES.map((p, i) => (
+                <motion.div 
+                   key={i} 
+                   initial={{ opacity: 0, y: 80 }}
+                   whileInView={{ opacity: 1, y: 0 }}
+                   viewport={{ once: true, margin: "-100px" }}
+                   transition={{ duration: 1.2, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
+                   className="group relative h-[85vh] bg-stone-50 border border-[#1a1a1a]/5 overflow-hidden cursor-pointer hover:border-[#c9a84c]/30 transition-all shadow-sm"
+                >
+                    <Image src={p.img} alt={p.addr} fill className="object-cover opacity-60 grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-1000" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#f8f9fa] via-transparent to-transparent opacity-90" />
+                    <div className="absolute inset-0 bg-[#c9a84c]/5 group-hover:bg-transparent transition-colors duration-700" />
+                    
+                    <div className="absolute inset-16 flex flex-col justify-between z-10 font-mono text-[#1a1a1a]">
+                        <div className="flex justify-between items-start">
+                           <div className="p-5 bg-white/40 backdrop-blur-xl border border-[#1a1a1a]/5 rounded-none group-hover:bg-[#c9a84c] group-hover:text-white transition-all shadow-sm">
+                              <Layers className="w-6 h-6" />
+                           </div>
+                           <div className="text-[10px] font-black uppercase tracking-[0.8em] text-[#c9a84c] italic font-mono">Ref_0x{i+167}</div>
                         </div>
                         
-                        <div className="absolute bottom-0 left-0 w-full p-8 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                           <div className="flex justify-between items-end">
-                              <div className="text-3xl font-black text-white tracking-tighter">${prop.price}</div>
-                              <div className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                                 <ArrowRight className="w-4 h-4 -rotate-45" />
-                              </div>
+                        <div>
+                           <span className="text-[10px] uppercase tracking-[0.8em] text-[#c9a84c] mb-8 block italic font-black">{p.tag} // Verified</span>
+                           <h3 className="text-5xl md:text-6xl font-black italic uppercase tracking-tighter mb-16 text-[#1a1a1a] group-hover:tracking-widest transition-all leading-[0.8]">{p.addr}</h3>
+                           <div className="flex items-center gap-8 text-[10px] font-black uppercase tracking-[0.6em] opacity-0 group-hover:opacity-100 transition-all translate-y-10 group-hover:translate-y-0 text-[#1a1a1a]">
+                              View_Property <ArrowRight className="w-6 h-6" />
                            </div>
                         </div>
-                     </div>
-                     <div className="px-2">
-                        <h3 className="text-xl font-bold tracking-tight mb-2 uppercase">{prop.addr}</h3>
-                        <p className="text-gray-500 text-sm font-bold tracking-widest uppercase text-[10px] flex items-center gap-3">
-                           <span className="w-1 h-1 rounded-full bg-[#c9a84c]" /> {prop.spec}
-                        </p>
-                     </div>
-                  </TiltCard>
-               </motion.div>
+                    </div>
+                </motion.div>
             ))}
          </div>
       </section>
 
       {/* FOOTER */}
-      <footer className="bg-[#1a1a1a] text-white pt-32 pb-12 px-6 rounded-t-[4rem]">
-         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-end border-b border-white/10 pb-12 mb-12">
-            <h2 className="text-[12vw] md:text-[8vw] font-black uppercase tracking-tighter leading-none text-white/10 hover:text-white transition-colors cursor-pointer">Luxe.</h2>
-            <div className="text-[10px] uppercase tracking-widest font-bold text-white/50 text-right">
-               Global Headquarters <br /> 432 Park Ave, NY
+      <footer className="py-48 px-6 md:px-12 border-t border-[#1a1a1a]/5 relative z-10 bg-[#f8f9fa]">
+         <div className="max-w-[1800px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-40">
+            <div className="max-w-2xl">
+               <div className="text-[#c9a84c] mb-16 flex items-center gap-6 font-black text-2xl italic uppercase tracking-widest font-mono">
+                  <Activity className="w-10 h-10" /> Luxe_Archives
+               </div>
+               <p className="text-4xl md:text-6xl font-light italic leading-[0.9] text-[#1a1a1a]/20 uppercase tracking-tighter mb-20">
+                  WE TREAT ARCHITECTURE AS ART. EVERY RESIDENCE A FUNCTION.
+               </p>
+               <div className="flex gap-20 font-black text-[10px] uppercase tracking-[0.8em] text-[#c9a84c]/40 italic font-mono">
+                  <span>Paris</span>
+                  <span>London</span>
+                  <span>NYC</span>
+               </div>
+            </div>
+            <div className="flex flex-col justify-between items-end text-right font-mono">
+               <div className="w-full">
+                  <h4 className="text-[12vw] font-black italic uppercase tracking-tighter text-[#1a1a1a] opacity-[0.02] leading-none mb-20">LUXE</h4>
+                  <nav className="flex flex-col gap-10 font-black text-[10px] uppercase tracking-[0.8em] text-[#1a1a1a]/10">
+                     <Link href="#" className="hover:text-[#c9a84c] transition-colors group">
+                        Instagram<span className="text-[#c9a84c]/0 group-hover:text-[#c9a84c] transition-all">_</span>
+                     </Link>
+                     <Link href="#" className="hover:text-[#c9a84c] transition-colors group">
+                        Archives<span className="text-[#c9a84c]/0 group-hover:text-[#c9a84c] transition-all">_</span>
+                     </Link>
+                     <Link href="#" className="hover:text-[#c9a84c] transition-colors group">
+                        Legal<span className="text-[#c9a84c]/0 group-hover:text-[#c9a84c] transition-all">_</span>
+                     </Link>
+                  </nav>
+               </div>
+               <div className="font-black text-[9px] uppercase tracking-[1.5em] text-[#1a1a1a]/5 mt-32 italic">
+                  &copy; 2026 // LUXE_REAL_ESTATE&trade;
+               </div>
             </div>
          </div>
       </footer>
