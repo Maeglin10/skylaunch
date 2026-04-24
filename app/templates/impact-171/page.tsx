@@ -1,149 +1,211 @@
 "use client";
 
-import { motion, useScroll, useTransform, useSpring } from "framer-motion";
-import { useRef, useState } from "react";
+import { motion, useScroll, useTransform, useSpring, useMotionValue } from "framer-motion";
+import { useRef, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Phone, Calendar, HeartPulse, Brain, Baby, Activity, Shield, ArrowRight } from "lucide-react";
+import { HeartPulse, Brain, Baby, Activity, Shield, Calendar, Phone, Menu, Search, ArrowRight, Layers } from "lucide-react";
 import "../premium.css";
 
 const SERVICES = [
-  { icon: <HeartPulse className="w-8 h-8" />, title: "Cardiology", desc: "Advanced diagnostics, interventional procedures, and cardiac rehabilitation." },
-  { icon: <Brain className="w-8 h-8" />, title: "Neurology", desc: "Expert treatment for brain, spinal cord, and complex nervous system disorders." },
-  { icon: <Baby className="w-8 h-8" />, title: "Pediatrics", desc: "Comprehensive, compassionate healthcare for infants and adolescents." },
-  { icon: <Activity className="w-8 h-8" />, title: "Orthopedics", desc: "Specialized sports medicine and reconstructive surgical care." },
+  { icon: <HeartPulse className="w-8 h-8" />, title: "CARDIOLOGY_SYNC", cat: "Cardiac", value: "Verified", img: "https://images.unsplash.com/photo-1551076805-e1869033e561?auto=format&fit=crop&q=80&w=1500" },
+  { icon: <Brain className="w-8 h-8" />, title: "NEURAL_LINK", cat: "Neurology", value: "Active", img: "https://images.unsplash.com/photo-1559757175-5700dde675bc?auto=format&fit=crop&q=80&w=1500" },
+  { icon: <Activity className="w-8 h-8" />, title: "KINETIC_CARE", cat: "Orthopedics", value: "Locked", img: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=1500" },
 ];
 
-export default function PremiumMedical() {
+export default function NovaMedicalSPA() {
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: containerRef });
   
-  const heroY = useTransform(scrollYProgress, [0, 0.5], ["0%", "30%"]);
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.3], [1, 0]);
-  const scaleImage = useTransform(scrollYProgress, [0, 1], [1, 1.2]);
+  const yHero = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
+  const heroScale = useTransform(scrollYProgress, [0, 0.5], [1, 1.1]);
+  
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const springX = useSpring(mouseX, { stiffness: 40, damping: 20 });
+  const springY = useSpring(mouseY, { stiffness: 40, damping: 20 });
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      mouseX.set(e.clientX - window.innerWidth / 2);
+      mouseY.set(e.clientY - window.innerHeight / 2);
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, [mouseX, mouseY]);
 
   return (
-    <div ref={containerRef} className="premium-theme bg-[#FAFAFA] text-[#1e293b] min-h-screen font-sans selection:bg-[#059669] selection:text-white">
+    <div ref={containerRef} className="premium-theme bg-[#FAFAFA] text-[#0f172a] min-h-screen font-sans selection:bg-[#059669] selection:text-white overflow-hidden relative">
       
-      {/* TOP EMERGENCY BAR */}
-      <div className="bg-[#059669] text-white px-6 py-3 flex justify-between items-center text-[10px] uppercase tracking-widest font-bold">
-         <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" /> Emergency Response: (555) 911-0000
-         </div>
-         <div className="hidden md:block">
-            Global Health Standards Certified 2026
-         </div>
+      {/* MEDICAL GRID & NOISE */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(5,150,105,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(5,150,105,0.03)_1px,transparent_1px)] bg-[size:6rem_6rem] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_70%,transparent_100%)]" />
+        <motion.div 
+           style={{ x: springX, y: springY }}
+           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70vw] h-[70vw] bg-[#059669] opacity-[0.02] blur-[150px] rounded-full mix-blend-multiply" 
+        />
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.05] mix-blend-multiply" />
       </div>
 
       {/* HEADER */}
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-[#059669]/10 px-6 md:px-12 py-6 flex justify-between items-center">
-         <Link href="/" className="flex items-center gap-4 group">
-            <div className="w-10 h-10 bg-[#059669]/10 text-[#059669] rounded-xl flex items-center justify-center font-black text-xl group-hover:bg-[#059669] group-hover:text-white transition-colors duration-500">
-               +
-            </div>
-            <span className="font-black text-2xl tracking-tighter text-[#0f172a]">NOVA.</span>
-         </Link>
-
-         <nav className="hidden md:flex gap-8 text-[10px] uppercase font-bold tracking-[0.2em] text-[#64748b]">
-            <Link href="#" className="hover:text-[#059669] transition-colors">Specialties</Link>
-            <Link href="#" className="hover:text-[#059669] transition-colors">Our Specialists</Link>
-            <Link href="#" className="hover:text-[#059669] transition-colors">Patient Portal</Link>
-         </nav>
-
-         <button className="bg-[#0f172a] text-white px-6 py-3 rounded-xl text-[10px] uppercase font-bold tracking-widest hover:bg-[#059669] hover:shadow-[0_0_30px_rgba(5,150,105,0.3)] transition-all flex items-center gap-3">
-            <Calendar className="w-4 h-4" /> Book Consultation
-         </button>
+      <header className="fixed top-0 left-0 w-full px-6 md:px-12 py-10 flex justify-between items-center z-50 bg-[#FAFAFA]/30 backdrop-blur-3xl border-b border-[#059669]/5">
+        <Link href="/" className="font-black text-2xl tracking-tighter text-[#0f172a] flex items-center gap-4 italic uppercase">
+           NOVA<span className="text-[#059669]">_MEDICAL</span>
+        </Link>
+        
+        <nav className="hidden lg:flex gap-16 font-black text-[10px] uppercase tracking-[0.6em] text-[#0f172a]/30">
+            <Link href="#" className="hover:text-[#059669] transition-colors group">
+               Specialties<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-[#059669] italic">.</span>
+            </Link>
+            <Link href="#" className="hover:text-[#059669] transition-colors group">
+               Portal<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-[#059669] italic">.</span>
+            </Link>
+            <Link href="#" className="hover:text-[#059669] transition-colors group">
+               Research<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-[#059669] italic">.</span>
+            </Link>
+        </nav>
+        
+        <div className="flex items-center gap-10">
+           <button className="bg-[#0f172a] text-white px-12 py-4 font-black text-[10px] uppercase tracking-[0.4em] hover:bg-[#059669] transition-all">
+              Book_Consultation
+           </button>
+           <Menu className="w-6 h-6 text-[#059669] cursor-pointer" />
+        </div>
       </header>
 
-      {/* HERO SECTION WITH PARALLAX */}
-      <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-[#0f172a]">
-         <motion.div style={{ y: heroY, scale: scaleImage }} className="absolute inset-0">
-            <Image src="https://images.unsplash.com/photo-1551076805-e1869033e561?auto=format&fit=crop&q=80&w=2500" alt="Medical Facility" fill className="object-cover opacity-40 mix-blend-luminosity" priority />
-            <div className="absolute inset-0 bg-gradient-to-r from-[#0f172a] via-[#0f172a]/80 to-transparent" />
+      {/* HERO SECTION */}
+      <section className="relative h-screen flex flex-col justify-center items-center px-6 text-center z-10 pt-20 overflow-hidden">
+         <motion.div style={{ scale: heroScale, y: yHero }} className="absolute inset-0 z-0">
+            <Image src="https://images.unsplash.com/photo-1551076805-e1869033e561?auto=format&fit=crop&q=80&w=2500" alt="Medical" fill className="object-cover opacity-20 grayscale contrast-125" priority />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#FAFAFA] via-transparent to-[#FAFAFA]/40" />
          </motion.div>
-
-         <div className="relative z-10 w-full max-w-[1600px] mx-auto px-6 md:px-12 flex flex-col md:flex-row items-center">
-            <motion.div style={{ opacity: heroOpacity }} className="w-full md:w-1/2 pt-20 pb-32">
-               <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-[#059669]/20 text-[#059669] text-[10px] font-bold uppercase tracking-widest mb-8 backdrop-blur-md border border-[#059669]/30">
-                  <Shield className="w-4 h-4" /> Leading Medical Institute
+         
+         <div className="relative z-10 max-w-7xl w-full">
+            <motion.div 
+               initial={{ opacity: 0, y: 100 }}
+               animate={{ opacity: 1, y: 0 }}
+               transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+            >
+               <div className="inline-flex items-center gap-4 font-black text-[10px] uppercase tracking-[1em] text-[#059669] mb-16 border-l-2 border-[#059669] pl-10 italic font-mono">
+                  Medical_Sync // 0171_Alpha
                </div>
-               <h1 className="text-5xl md:text-[6vw] font-black text-white leading-[0.9] tracking-tighter mb-8">
-                  Redefining <br/> Human <span className="text-[#059669]">Care.</span>
+               
+               <h1 className="text-7xl md:text-[14vw] font-black italic uppercase leading-[0.75] tracking-tighter mb-20 text-[#0f172a]">
+                  PURE.<br/>
+                  <span className="text-transparent" style={{ WebkitTextStroke: "2px #0f172a" }}>CARE.</span>
                </h1>
-               <p className="text-[#94a3b8] text-lg md:text-xl font-light max-w-lg leading-relaxed mb-12">
-                  Precision medicine meets compassionate healing. We utilize next-generation diagnostics to elevate your baseline of health.
+               
+               <p className="text-xl md:text-3xl font-light italic text-[#0f172a]/40 max-w-3xl mx-auto mb-24 leading-relaxed uppercase tracking-widest">
+                  Structural allocation for clinical intent. Architecting the future of health with tectonic precision.
                </p>
                
-               <div className="flex flex-col sm:flex-row gap-4">
-                  <button className="bg-[#059669] text-white px-8 py-5 rounded-2xl text-[10px] uppercase font-bold tracking-widest hover:bg-white hover:text-[#059669] transition-colors flex items-center justify-center gap-3">
-                     Explore Specialties <ArrowRight className="w-4 h-4" />
-                  </button>
-                  <button className="bg-white/10 backdrop-blur-md text-white border border-white/20 px-8 py-5 rounded-2xl text-[10px] uppercase font-bold tracking-widest hover:bg-white hover:text-[#0f172a] transition-colors flex items-center justify-center gap-3">
-                     <Phone className="w-4 h-4" /> Immediate Assistance
-                  </button>
+               <div className="flex flex-col md:flex-row gap-16 justify-center items-center font-mono">
+                  <div className="flex items-center gap-8 group cursor-pointer">
+                     <div className="w-20 h-px bg-[#059669]/30 group-hover:w-32 transition-all" />
+                     <span className="text-[10px] font-black uppercase tracking-[0.8em] text-[#059669]">Explore_Specialties</span>
+                  </div>
+                  <div className="hidden md:block w-px h-16 bg-[#0f172a]/5" />
+                  <div className="font-black text-[9px] uppercase tracking-[0.6em] text-[#0f172a]/10 italic">
+                     Global // Health // Standards
+                  </div>
                </div>
             </motion.div>
          </div>
-      </section>
 
-      {/* METRICS STRIP */}
-      <div className="relative z-20 bg-white border-b border-gray-100 py-12 px-6 md:px-12">
-         <div className="max-w-[1600px] mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 divide-x divide-gray-100">
-            {[
-               { v: "24/7", l: "Emergency Care" },
-               { v: "150+", l: "Specialist Doctors" },
-               { v: "99%", l: "Patient Satisfaction" },
-               { v: "12", l: "Excellence Centers" },
-            ].map((m, i) => (
-               <div key={i} className="text-center px-4">
-                  <div className="text-3xl md:text-5xl font-black text-[#0f172a] tracking-tighter mb-2">{m.v}</div>
-                  <div className="text-[10px] font-bold uppercase tracking-widest text-[#64748b]">{m.l}</div>
-               </div>
-            ))}
-         </div>
-      </div>
-
-      {/* SERVICES INTERACTIVE GRID */}
-      <section className="py-32 px-6 md:px-12 max-w-[1600px] mx-auto">
-         <div className="flex flex-col md:flex-row justify-between items-end mb-20 gap-8">
-            <div className="max-w-2xl">
-               <h2 className="text-4xl md:text-6xl font-black text-[#0f172a] tracking-tighter mb-6">Centers of <br/> Clinical Excellence.</h2>
-               <p className="text-[#64748b] text-lg font-light leading-relaxed">
-                  Our specialized institutes bring together world-class medical expertise, pioneering research, and state-of-the-art technology.
-               </p>
+         {/* Decorative Side HUD */}
+         <div className="absolute right-12 bottom-12 flex flex-col items-end gap-4 font-black text-[8px] uppercase tracking-[1em] text-[#059669]/20 hidden md:flex italic font-mono">
+            <span>SYNC_STATUS: ACTIVE</span>
+            <div className="flex gap-1 h-12 items-end">
+               {[1, 2, 3, 4, 5].map(i => <motion.div key={i} animate={{ height: ['20%', '100%', '40%'] }} transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }} className="w-[1px] bg-[#059669]" />)}
             </div>
-            <button className="text-[10px] font-bold uppercase tracking-widest text-[#059669] hover:text-[#0f172a] transition-colors pb-2 border-b border-[#059669]">
-               View All Departments
-            </button>
+         </div>
+      </section>
+
+      {/* SERVICES GRID */}
+      <section className="py-48 px-6 md:px-12 max-w-[1800px] mx-auto relative z-10 bg-[#FAFAFA]">
+         <div className="flex flex-col md:flex-row justify-between items-end mb-40 border-b border-[#0f172a]/10 pb-20 gap-16">
+            <div>
+               <span className="text-[10px] font-black uppercase tracking-[2em] text-[#059669] mb-8 block italic font-mono">Clinical_Manifest</span>
+               <h2 className="text-6xl md:text-[10vw] font-black italic uppercase tracking-tighter text-[#0f172a] leading-none">The <span className="text-[#059669]/20">Centers_</span></h2>
+            </div>
+            <div className="flex gap-16 text-[10px] font-black uppercase tracking-[0.6em] text-[#0f172a]/20 italic font-mono">
+               <span>Records: [03]</span>
+               <span>Status: [Verified]</span>
+            </div>
          </div>
 
-         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {SERVICES.map((s, i) => (
-               <motion.div 
-                  key={i}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-100px" }}
-                  transition={{ duration: 0.6, delay: i * 0.1 }}
-                  className="group bg-white border border-gray-200 rounded-[2rem] p-10 hover:border-[#059669] hover:shadow-2xl hover:shadow-[#059669]/10 transition-all duration-500 cursor-pointer overflow-hidden relative"
-               >
-                  <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-[#059669]/10 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-                  
-                  <div className="w-16 h-16 rounded-2xl bg-gray-50 flex items-center justify-center text-[#059669] mb-8 group-hover:scale-110 group-hover:bg-[#059669] group-hover:text-white transition-all duration-500">
-                     {s.icon}
-                  </div>
-                  
-                  <h3 className="text-2xl font-black text-[#0f172a] tracking-tight mb-4">{s.title}</h3>
-                  <p className="text-[#64748b] leading-relaxed mb-8">{s.desc}</p>
-                  
-                  <div className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest text-[#059669] group-hover:translate-x-2 transition-transform duration-500">
-                     Discover Department <ArrowRight className="w-4 h-4" />
-                  </div>
-               </motion.div>
+         <div className="grid grid-cols-1 md:grid-cols-3 gap-16">
+            {SERVICES.map((p, i) => (
+                <motion.div 
+                   key={i} 
+                   initial={{ opacity: 0, y: 80 }}
+                   whileInView={{ opacity: 1, y: 0 }}
+                   viewport={{ once: true, margin: "-100px" }}
+                   transition={{ duration: 1.2, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
+                   className="group relative h-[85vh] bg-stone-50 border border-[#0f172a]/5 overflow-hidden cursor-pointer hover:border-[#059669]/30 transition-all shadow-sm"
+                >
+                    <Image src={p.img} alt={p.title} fill className="object-cover opacity-60 grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-1000" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#FAFAFA] via-transparent to-transparent opacity-90" />
+                    <div className="absolute inset-0 bg-[#059669]/5 group-hover:bg-transparent transition-colors duration-700" />
+                    
+                    <div className="absolute inset-16 flex flex-col justify-between z-10 font-mono text-[#0f172a]">
+                        <div className="flex justify-between items-start">
+                           <div className="p-5 bg-white/40 backdrop-blur-xl border border-[#0f172a]/5 rounded-none group-hover:bg-[#059669] group-hover:text-white transition-all shadow-sm">
+                              {p.icon}
+                           </div>
+                           <div className="text-[10px] font-black uppercase tracking-[0.8em] text-[#059669] italic font-mono">Ref_0x{i+171}</div>
+                        </div>
+                        
+                        <div>
+                           <span className="text-[10px] uppercase tracking-[0.8em] text-[#059669] mb-8 block italic font-black">{p.cat} // Verified</span>
+                           <h3 className="text-5xl md:text-6xl font-black italic uppercase tracking-tighter mb-16 text-[#0f172a] group-hover:tracking-widest transition-all leading-[0.8]">{p.title}</h3>
+                           <div className="flex items-center gap-8 text-[10px] font-black uppercase tracking-[0.6em] opacity-0 group-hover:opacity-100 transition-all translate-y-10 group-hover:translate-y-0 text-[#0f172a]">
+                              Learn_More <ArrowRight className="w-6 h-6" />
+                           </div>
+                        </div>
+                    </div>
+                </motion.div>
             ))}
          </div>
       </section>
 
+      {/* FOOTER */}
+      <footer className="py-48 px-6 md:px-12 border-t border-[#0f172a]/5 relative z-10 bg-[#FAFAFA]">
+         <div className="max-w-[1800px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-40">
+            <div className="max-w-2xl">
+               <div className="text-[#059669] mb-16 flex items-center gap-6 font-black text-2xl italic uppercase tracking-widest font-mono">
+                  <Activity className="w-10 h-10" /> Nova_Logs
+               </div>
+               <p className="text-4xl md:text-6xl font-light italic leading-[0.9] text-[#0f172a]/20 uppercase tracking-tighter mb-20">
+                  WE TREAT CARE AS ARCHITECTURE. EVERY CLINIC A FUNCTION.
+               </p>
+               <div className="flex gap-20 font-black text-[10px] uppercase tracking-[0.8em] text-[#059669]/40 italic font-mono">
+                  <span>Berlin</span>
+                  <span>London</span>
+                  <span>NYC</span>
+               </div>
+            </div>
+            <div className="flex flex-col justify-between items-end text-right font-mono">
+               <div className="w-full">
+                  <h4 className="text-[12vw] font-black italic uppercase tracking-tighter text-[#0f172a] opacity-[0.02] leading-none mb-20">NOVA</h4>
+                  <nav className="flex flex-col gap-10 font-black text-[10px] uppercase tracking-[0.8em] text-[#0f172a]/10">
+                     <Link href="#" className="hover:text-[#059669] transition-colors group">
+                        Portal<span className="text-[#059669]/0 group-hover:text-[#059669] transition-all">_</span>
+                     </Link>
+                     <Link href="#" className="hover:text-[#059669] transition-colors group">
+                        Directory<span className="text-[#059669]/0 group-hover:text-[#059669] transition-all">_</span>
+                     </Link>
+                     <Link href="#" className="hover:text-[#059669] transition-colors group">
+                        Legal<span className="text-[#059669]/0 group-hover:text-[#059669] transition-all">_</span>
+                     </Link>
+                  </nav>
+               </div>
+               <div className="font-black text-[9px] uppercase tracking-[1.5em] text-[#0f172a]/5 mt-32 italic">
+                  &copy; 2026 // NOVA_MEDICAL_INSTITUTE&trade;
+               </div>
+            </div>
+         </div>
+      </footer>
     </div>
   );
 }
