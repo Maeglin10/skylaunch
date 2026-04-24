@@ -1,233 +1,213 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { motion, useScroll, useTransform, useSpring, useMotionValue } from "framer-motion";
+import { useRef, useEffect, useState } from "react";
 import Image from "next/image";
-import { X, Menu, Search, Award, Zap, Activity, Globe, Shield, Command, Plus, ArrowUpRight, Maximize2, MoveRight, Layers, Box, Compass, Sparkles, MoveVertical, Target, Radio, CheckCircle2, Cpu, Terminal } from "lucide-react";
+import Link from "next/link";
+import { Terminal, Cpu, Zap, Shield, Activity, Menu, Search, ArrowRight, Layers } from "lucide-react";
 import "../premium.css";
 
 const POSTS = [
-  { id: 1, title: "DEATH_OF_INTERFACE", cat: "Philosophy", value: "Verified", img: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=1000&auto=format&fit=crop" },
-  { id: 2, title: "GENESIS_CHIP", cat: "Hardware", value: "Active", img: "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1000&auto=format&fit=crop" },
-  { id: 3, title: "COLD_COMPUTE", cat: "Intelligence", value: "Locked", img: "https://images.unsplash.com/photo-1620712943543-bcc4628c9757?q=80&w=1000&auto=format&fit=crop" },
+  { id: 1, title: "DEATH_OF_INTERFACE", cat: "Philosophy", value: "Verified", img: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&q=80&w=1500" },
+  { id: 2, title: "GENESIS_CHIP", cat: "Hardware", value: "Active", img: "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=1500" },
+  { id: 3, title: "COLD_COMPUTE", cat: "Intelligence", value: "Locked", img: "https://images.unsplash.com/photo-1620712943543-bcc4628c9757?auto=format&fit=crop&q=80&w=1500" },
 ];
 
 export default function ProtoLogBrutalistSPA() {
-  const [view, setView] = useState<"proto" | "post" | "logic">("proto");
-  const [activeItem, setActiveItem] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ target: containerRef });
+  
+  const yHero = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
+  const heroScale = useTransform(scrollYProgress, [0, 0.5], [1, 1.1]);
+  
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const springX = useSpring(mouseX, { stiffness: 40, damping: 20 });
+  const springY = useSpring(mouseY, { stiffness: 40, damping: 20 });
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      mouseX.set(e.clientX - window.innerWidth / 2);
+      mouseY.set(e.clientY - window.innerHeight / 2);
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, [mouseX, mouseY]);
 
   return (
-    <div className="premium-theme bg-white text-black min-h-screen selection:bg-black selection:text-white font-mono overflow-x-hidden">
+    <div ref={containerRef} className="premium-theme bg-white text-black min-h-screen font-mono selection:bg-black selection:text-white overflow-hidden relative">
       
-      {/* Background HUD Layers */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[45vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase font-mono">
-           PROTO
-        </div>
-        <div className="absolute inset-x-0 top-0 bottom-0 left-1/2 -translate-x-1/2 w-[1px] bg-black/5 font-mono" />
-        <div className="absolute inset-0 bg-white/40 backdrop-blur-[2px] font-mono" />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.05] mix-blend-multiply font-mono" />
-        <div className="absolute inset-x-0 bottom-0 h-1/2 bg-[radial-gradient(circle_at_center,_transparent_0%,_#ffffff_100%)] opacity-80 font-mono" />
+      {/* BRUTALIST GRID & NOISE */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.05)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_70%,transparent_100%)]" />
+        <motion.div 
+           style={{ x: springX, y: springY }}
+           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vw] bg-black opacity-[0.02] blur-[150px] rounded-full mix-blend-multiply" 
+        />
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.1] mix-blend-multiply" />
       </div>
 
-      {/* Editorial HUD Nav */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-center bg-transparent backdrop-blur-3xl border-b border-black/10 font-mono text-black">
-        <div className="flex gap-12 items-center text-black font-mono">
-           <button onClick={() => setView("proto")} className="text-xl font-black italic tracking-tighter hover:text-stone-800 transition-colors flex items-center gap-4 text-black uppercase font-mono">
-              PROTO_LOG&trade;
-           </button>
-           <div className="hidden lg:flex gap-8 text-[10px] font-black uppercase tracking-widest opacity-20 italic font-mono font-mono">
-              Status: Post_Sync_Active
-              <span className="text-black font-mono">Ref: 0x158</span>
-           </div>
-        </div>
-        <div className="hidden md:flex gap-12 text-[10px] font-black uppercase tracking-[0.4em] opacity-30 font-mono font-mono">
-           <button onClick={() => setView("proto")} className={`hover:opacity-100 transition-opacity ${view === 'proto' ? 'text-black opacity-100 underline decoration-black underline-offset-8 italic' : ''}`}>THE_PROTO</button>
-           <button onClick={() => setView("logic")} className={`hover:opacity-100 transition-opacity ${view === 'logic' ? 'text-black opacity-100 underline decoration-black underline-offset-8 italic' : ''}`}>THE_LOGIC</button>
-        </div>
-        <div className="flex items-center gap-8 text-black font-mono">
-           <Search className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer font-mono" />
-           <Menu className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer font-mono" />
-        </div>
-      </nav>
-
-      <AnimatePresence mode="wait">
+      {/* HEADER */}
+      <header className="fixed top-0 left-0 w-full px-6 md:px-12 py-10 flex justify-between items-center z-50 bg-white/50 backdrop-blur-3xl border-b-2 border-black">
+        <Link href="/" className="font-black text-2xl tracking-tighter text-black flex items-center gap-4 italic uppercase">
+           PROTO<span className="bg-black text-white px-2 py-1">LOG</span>
+        </Link>
         
-        {/* THE PROTO VIEW (LANDING) */}
-        {view === "proto" && (
-          <motion.div key="proto" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-48 pb-32 px-12 max-w-[1800px] mx-auto min-h-screen flex flex-col justify-center relative z-10 font-mono">
-             <header className="mb-24 border-b border-black/20 pb-12 flex flex-col md:flex-row justify-between items-end gap-12 text-black font-mono">
-                <div className="font-mono">
-                   <span className="text-[10px] uppercase font-black tracking-[1em] opacity-40 mb-4 block underline decoration-black/10 underline-offset-8 italic font-mono text-black font-mono">Visual_Capture // Series_158</span>
-                   <h1 className="text-7xl md:text-[12vw] font-black italic uppercase tracking-tighter leading-[0.75] font-mono italic">PURE. <br/> <span className="text-transparent font-mono" style={{ WebkitTextStroke: "2px rgba(0,0,0,0.6)" }}>LOGS.</span></h1>
-                </div>
-                <div className="text-right flex flex-col items-end font-mono">
-                   <div className="text-3xl font-black mb-4 tracking-tighter uppercase opacity-10 italic font-mono text-stone-600 font-mono font-mono">Dynamic_Sync</div>
-                   <div className="w-64 h-[2px] bg-black/5 rounded-none overflow-hidden font-mono">
-                      <motion.div animate={{ width: ['20%', '90%', '40%', '75%'] }} transition={{ duration: 4, repeat: Infinity }} className="h-full bg-black/80 font-mono" />
-                   </div>
-                </div>
-             </header>
+        <nav className="hidden lg:flex gap-12 font-black text-[10px] uppercase tracking-[0.4em] text-black/30">
+            <Link href="#" className="hover:text-black transition-colors group">
+               Terminal<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-black italic">_</span>
+            </Link>
+            <Link href="#" className="hover:text-black transition-colors group">
+               Hardware<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-black italic">_</span>
+            </Link>
+            <Link href="#" className="hover:text-black transition-colors group">
+               Philosophy<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-black italic">_</span>
+            </Link>
+        </nav>
+        
+        <div className="flex items-center gap-10">
+           <div className="hidden md:flex flex-col items-end opacity-20">
+              <span className="text-[9px] font-black uppercase tracking-widest italic">Core_Sync: 100%</span>
+              <span className="text-[10px] font-black uppercase tracking-widest italic">Node_Ref_158</span>
+           </div>
+           <button className="bg-black text-white px-12 py-4 font-black text-[10px] uppercase tracking-[0.4em] hover:bg-stone-800 transition-all shadow-2xl">
+              Access_Logs
+           </button>
+        </div>
+      </header>
 
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-black font-mono">
-                {POSTS.map((p, i) => (
-                  <motion.div 
-                    key={p.id} initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                    className="group relative h-[60vh] rounded-none overflow-hidden border border-black/10 hover:border-black/40 transition-all cursor-pointer shadow-2xl bg-white/5 font-mono"
-                    onClick={() => { setActiveItem(i); setView("post"); }}
-                  >
-                     <Image src={p.img} alt={p.title} fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[2s] group-hover:scale-110 opacity-60 group-hover:opacity-100 font-mono" />
-                     <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 to-transparent font-mono" />
-                     <div className="absolute inset-0 bg-stone-500/10 group-hover:bg-transparent transition-colors duration-1000 font-mono" />
-                     
-                     <div className="absolute inset-10 flex flex-col justify-between font-mono">
-                        <div className="flex justify-between items-start text-white font-mono">
-                           <div className="p-4 bg-white/10 border border-white/20 rounded-none opacity-0 group-hover:opacity-100 transition-opacity font-mono font-mono font-mono font-mono">
-                              <Terminal className="w-5 h-5 text-black font-mono font-mono font-mono font-mono" />
-                           </div>
-                           <div className="text-[10px] font-black uppercase tracking-widest opacity-20 italic font-mono font-mono font-mono">POST_0x{i+158}</div>
-                        </div>
-                        <div className="text-white font-mono">
-                           <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-2 block italic text-stone-300 font-mono font-mono font-mono font-mono font-mono">{p.cat} // {p.value}</span>
-                           <h3 className="text-5xl font-black italic uppercase tracking-tighter leading-none transition-all group-hover:tracking-widest font-mono font-mono font-mono font-mono">{p.title}</h3>
-                        </div>
-                     </div>
-                  </motion.div>
-                ))}
-             </div>
-          </motion.div>
-        )}
-
-        {/* THE POST VIEW (DETAIL) */}
-        {view === "post" && (
-          <motion.div key="post" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen font-mono">
-             <button onClick={() => setView("proto")} className="fixed top-12 left-12 z-[60] bg-black text-white p-5 rounded-none hover:scale-110 transition-transform shadow-2xl font-mono font-mono">
-                <X className="w-6 h-6 font-mono font-mono font-mono" />
-             </button>
-
-             <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen pt-24 lg:pt-0 font-mono font-mono">
-                <div className="lg:col-span-12 relative flex items-center justify-center p-8 md:p-32 overflow-hidden h-screen bg-white font-mono font-mono font-mono font-mono">
-                   <div className="absolute inset-0 opacity-10 font-mono font-mono font-mono">
-                      <Image src={POSTS[activeItem].img} alt="Background" fill className="object-cover grayscale font-mono font-mono font-mono font-mono font-mono" />
-                   </div>
-                   <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[40vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase text-black font-mono font-mono font-mono font-mono">
-                      CORE
-                   </div>
-                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#ffffff_100%)] font-mono font-mono font-mono" />
-                   
-                   <div className="max-w-[1500px] w-full grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10 font-mono text-black font-mono font-mono font-mono font-mono">
-                      <motion.div initial={{ scale: 1.1, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1 }} className="relative aspect-square w-full rounded-none overflow-hidden border border-black/20 group bg-neutral-900 shadow-2xl font-mono font-mono font-mono font-mono">
-                         <Image src={POSTS[activeItem].img} alt="Spec" fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[3s] opacity-80 font-mono font-mono font-mono font-mono" priority />
-                         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60 font-mono font-mono font-mono font-mono font-mono" />
-                         <div className="absolute top-12 left-12 p-4 bg-black/60 backdrop-blur-3xl rounded-none border-2 border-white/10 z-20 font-mono font-mono font-mono font-mono">
-                            <Layers className="w-6 h-6 text-white animate-pulse font-mono font-mono font-mono font-mono" />
-                         </div>
-                      </motion.div>
-
-                      <div className="flex flex-col justify-center space-y-12 text-black font-mono font-mono font-mono font-mono font-mono">
-                         <div className="space-y-6 font-mono font-mono font-mono font-mono font-mono font-mono">
-                            <span className="text-[10px] uppercase tracking-[1em] font-black opacity-30 mb-8 block underline decoration-black decoration-4 underline-offset-8 italic font-mono text-black font-mono font-mono font-mono font-mono font-mono font-mono">Metric_Sync // {POSTS[activeItem].cat}</span>
-                            <h1 className="text-7xl md:text-[8vw] font-black italic uppercase tracking-tighter leading-none text-black font-mono font-mono font-mono font-mono font-mono">{POSTS[activeItem].title}</h1>
-                            <div className="text-4xl font-black italic tracking-tighter opacity-10 italic text-black font-mono font-mono font-mono font-mono">Ref: {POSTS[activeItem].value}</div>
-                         </div>
-
-                         <p className="text-3xl font-light italic leading-relaxed uppercase tracking-tight opacity-40 text-black leading-relaxed font-mono font-mono font-mono font-mono font-mono">
-                            Structural allocation for mission {POSTS[activeItem].title}. System integrity at 100%. Thermal load nominal at 32C. Every coordinate synchronized.
-                         </p>
-
-                         <div className="grid grid-cols-2 gap-12 py-12 border-y border-black/10 font-mono text-black/60 text-black font-mono font-mono font-mono font-mono font-mono">
-                            {[
-                              { icon: <Cpu className="w-5 h-5" />, l: "Logic", v: "Phase_Shift" },
-                              { icon: <Zap className="w-5 h-5" />, l: "Sync", v: "Active" },
-                              { icon: <Shield className="w-5 h-5" />, l: "Security", v: "High_Impact" },
-                              { icon: <Activity className="w-5 h-5" />, l: "Status", v: "Verified" },
-                            ].map((s, i) => (
-                              <div key={i} className="flex gap-6 items-center font-mono font-mono font-mono font-mono font-mono">
-                                 <div className="opacity-20 text-black font-mono font-mono font-mono font-mono font-mono">{s.icon}</div>
-                                 <div className="text-left font-mono font-mono font-mono font-mono font-mono">
-                                    <div className="text-[10px] font-black opacity-30 uppercase tracking-widest mb-1 italic text-black font-mono font-mono font-mono font-mono font-mono font-mono font-mono">{s.l}</div>
-                                    <div className="text-sm font-black uppercase italic tracking-tighter text-black font-mono font-mono font-mono font-mono font-mono font-mono font-mono">{s.v}</div>
-                                 </div>
-                              </div>
-                            ))}
-                         </div>
-
-                         <div className="flex gap-6 pt-8 font-mono font-mono font-mono font-mono font-mono font-mono font-mono">
-                            <button onClick={() => setView("proto")} className="flex-grow py-8 bg-black text-white font-black uppercase text-xs tracking-[1em] hover:bg-stone-800 transition-all shadow-2xl font-mono font-mono font-mono font-mono font-mono font-mono font-mono">
-                               Return_to_Proto
-                            </button>
-                            <button className="px-12 py-8 border border-black/10 text-[10px] font-black uppercase tracking-[0.5em] hover:scale-105 transition-all text-black font-mono font-mono font-mono font-mono font-mono font-mono font-mono">
-                               PDF_Spec
-                            </button>
-                         </div>
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
-        {/* THE LOGIC VIEW (INFO) */}
-        {view === "logic" && (
-          <motion.div key="logic" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen flex flex-col justify-center font-mono font-mono font-mono font-mono">
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center text-black font-mono font-mono font-mono font-mono font-mono font-mono font-mono">
-                <div className="space-y-16 text-black font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono">
-                   <span className="text-[10px] uppercase font-black tracking-[1.5em] opacity-30 block underline decoration-black decoration-2 underline-offset-8 italic font-mono text-black font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono">The_Logic_Protocol</span>
-                   <h2 className="text-7xl md:text-[10vw] font-black italic tracking-tighter leading-none text-black uppercase font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono">The <br/> Truth.</h2>
-                   <p className="text-3xl md:text-4xl font-light italic opacity-60 leading-relaxed uppercase tracking-tight text-black font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono">
-                      We treat architecture as code. Every structure is a function of its environmental variables and tectonic intent. 100% precision. Zero noise.
-                   </p>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t border-black/10 font-mono text-black font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono">
-                      {[
-                        { icon: <Sparkles className="w-6 h-6" />, t: "Adaptive Flow", v: "Dynamic Load Sync" },
-                        { icon: <Plus className="w-6 h-6" />, t: "Structural Sync", v: "Deep_Material_ID" },
-                      ].map((item, i) => (
-                        <div key={i} className="flex gap-8 group font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono">
-                           <div className="w-16 h-16 rounded-none border border-black flex items-center justify-center text-black group-hover:bg-black group-hover:text-white transition-all shadow-xl font-mono font-mono font-mono font-mono font-mono font-mono font-mono">
-                              {item.icon}
-                           </div>
-                           <div className="text-left text-black font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono">
-                              <h4 className="text-2xl font-black uppercase italic tracking-tighter text-black leading-none mb-2 font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono">{item.t}</h4>
-                              <p className="text-[10px] opacity-30 uppercase tracking-[0.3em] font-black leading-relaxed text-black/40 text-black font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono">{item.v}</p>
-                           </div>
-                        </div>
-                      ))}
-                   </div>
-                </div>
-                <div className="relative aspect-square bg-black/5 rounded-none p-12 overflow-hidden border border-black/10 group shadow-2xl font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono">
-                   <Image src="https://images.unsplash.com/photo-1541829070764-84a7d30dee62?q=80&w=1000&auto=format&fit=crop" alt="The Archive" fill className="object-cover opacity-20 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-[3s] font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80 font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono" />
-                   <div className="absolute inset-x-0 bottom-12 flex justify-center font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono">
-                      <div className="px-12 py-6 bg-black text-white text-[10px] font-black uppercase tracking-widest italic animate-bounce cursor-pointer hover:bg-stone-800 transition-all rounded-none font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono">
-                         Establish_Handshake
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
-      </AnimatePresence>
-
-      {/* Global Status HUD */}
-      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em] italic text-black leading-none font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono">
-         <div className="flex gap-12 text-black font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono">
-            <span>Proto_Log_OS_Alpha</span>
-            <span>Uptime: 99.9%</span>
+      {/* HERO SECTION */}
+      <section className="relative h-screen flex flex-col justify-center items-center px-6 text-center z-10 pt-20 overflow-hidden">
+         <motion.div style={{ scale: heroScale, y: yHero }} className="absolute inset-0 z-0">
+            <Image src="https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&q=80&w=2500" alt="Tech" fill className="object-cover opacity-10 grayscale contrast-150" priority />
+            <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-white/40" />
+         </motion.div>
+         
+         <div className="relative z-10 max-w-7xl w-full">
+            <motion.div 
+               initial={{ opacity: 0, y: 100 }}
+               animate={{ opacity: 1, y: 0 }}
+               transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+            >
+               <div className="inline-flex items-center gap-4 font-black text-[10px] uppercase tracking-[1.2em] text-black/40 mb-16 border-l-4 border-black pl-10 italic">
+                  Visual_Capture // 0158_Alpha
+               </div>
+               
+               <h1 className="text-7xl md:text-[14vw] font-black italic uppercase leading-[0.75] tracking-tighter mb-20 text-black">
+                  PURE.<br/>
+                  <span className="text-transparent" style={{ WebkitTextStroke: "2px #000" }}>LOGS.</span>
+               </h1>
+               
+               <p className="text-xl md:text-3xl font-light italic text-black/40 max-w-3xl mx-auto mb-24 leading-relaxed uppercase tracking-tighter">
+                  We treat architecture as code. Every structure is a function of its environmental variables and tectonic intent. Zero noise.
+               </p>
+               
+               <div className="flex flex-col md:flex-row gap-16 justify-center items-center">
+                  <div className="flex items-center gap-8 group cursor-pointer">
+                     <div className="w-20 h-px bg-black/10 group-hover:w-32 transition-all" />
+                     <span className="text-[10px] font-black uppercase tracking-[1em] text-black">Read_Manifesto</span>
+                  </div>
+                  <div className="hidden md:block w-px h-16 bg-black/5" />
+                  <div className="font-black text-[9px] uppercase tracking-[0.8em] text-black/10 italic">
+                     Established // Berlin // Tokyo
+                  </div>
+               </div>
+            </motion.div>
          </div>
-         <div className="flex gap-4 items-end text-black font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono">
-            <div className="text-right leading-tight italic font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono">
-               Archival_Control <br /> v4.0.158
+
+         {/* Decorative Side HUD */}
+         <div className="absolute left-12 bottom-12 flex flex-col items-start gap-4 font-black text-[8px] uppercase tracking-[1em] text-black/10 hidden md:flex italic">
+            <span>METRIC_STATUS: ACTIVE</span>
+            <div className="flex gap-2 w-48 h-[2px] bg-black/5 overflow-hidden">
+               <motion.div animate={{ x: ['-100%', '100%'] }} transition={{ duration: 3, repeat: Infinity, ease: "linear" }} className="w-1/2 h-full bg-black/40" />
             </div>
-            <div className="flex gap-[4px] h-4 font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono">
-               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-full bg-black opacity-${i*20} font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono font-mono`}></div>)}
+         </div>
+      </section>
+
+      {/* POSTS GRID */}
+      <section className="py-48 px-6 md:px-12 max-w-[1800px] mx-auto relative z-10 bg-white">
+         <div className="flex flex-col md:flex-row justify-between items-end mb-40 border-b-4 border-black pb-20 gap-16">
+            <div>
+               <span className="text-[10px] font-black uppercase tracking-[2.5em] text-black mb-8 block italic">Protocol_Manifest</span>
+               <h2 className="text-6xl md:text-[12vw] font-black italic uppercase tracking-tighter text-black leading-none">The <span className="text-black/10">Proto_</span></h2>
+            </div>
+            <div className="flex gap-16 text-[10px] font-black uppercase tracking-[1em] text-black/20 italic">
+               <span>Records: [03]</span>
+               <span>Status: [Active]</span>
+            </div>
+         </div>
+
+         <div className="grid grid-cols-1 md:grid-cols-3 gap-16">
+            {POSTS.map((p, i) => (
+                <motion.div 
+                   key={i} 
+                   initial={{ opacity: 0, y: 80 }}
+                   whileInView={{ opacity: 1, y: 0 }}
+                   viewport={{ once: true, margin: "-100px" }}
+                   transition={{ duration: 1, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
+                   className="group relative h-[85vh] bg-stone-50 border-2 border-black overflow-hidden cursor-pointer hover:bg-black transition-all shadow-2xl"
+                >
+                    <Image src={p.img} alt={p.title} fill className="object-cover opacity-20 grayscale group-hover:grayscale-0 group-hover:scale-110 group-hover:opacity-10 transition-all duration-1000" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-95 group-hover:opacity-40 transition-opacity" />
+                    
+                    <div className="absolute inset-16 flex flex-col justify-between z-10">
+                        <div className="flex justify-between items-start">
+                           <div className="p-6 bg-black text-white rounded-none group-hover:bg-white group-hover:text-black transition-all">
+                              <Terminal className="w-8 h-8" />
+                           </div>
+                           <div className="text-[10px] font-black uppercase tracking-[1em] text-black/20 group-hover:text-white/20 italic">Post_0x{i+158}</div>
+                        </div>
+                        
+                        <div>
+                           <span className="text-[10px] uppercase tracking-[1em] text-black mb-10 block italic font-black group-hover:text-white transition-colors">{p.cat} // {p.value}</span>
+                           <h3 className="text-5xl md:text-6xl font-black italic uppercase tracking-tighter mb-20 text-black group-hover:text-white transition-colors leading-[0.85]">{p.title}</h3>
+                           <div className="flex items-center gap-10 text-[10px] font-black uppercase tracking-[1em] opacity-0 group-hover:opacity-100 transition-all translate-y-10 group-hover:translate-y-0 text-white">
+                              Execute_Handshake <ArrowRight className="w-8 h-8" />
+                           </div>
+                        </div>
+                    </div>
+                </motion.div>
+            ))}
+         </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="py-60 px-6 md:px-12 border-t-4 border-black relative z-10 bg-white">
+         <div className="max-w-[1800px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-40">
+            <div className="max-w-2xl">
+               <div className="text-black mb-20 flex items-center gap-8 font-black text-3xl italic uppercase tracking-[0.4em]">
+                  <Cpu className="w-12 h-12" /> Protocol_v4.0.158
+               </div>
+               <p className="text-5xl md:text-8xl font-black italic leading-[0.8] text-black/10 uppercase tracking-tighter mb-24">
+                  STRUCTURAL REASONING IS A FUNCTION OF ENVIRONMENTAL VARIABLES.
+               </p>
+               <div className="flex gap-24 font-black text-[10px] uppercase tracking-[1.5em] text-black/30 italic">
+                  <span>Berlin</span>
+                  <span>New York</span>
+                  <span>Tokyo</span>
+               </div>
+            </div>
+            <div className="flex flex-col justify-between items-end text-right font-mono">
+               <div className="w-full">
+                  <h4 className="text-[15vw] font-black italic uppercase tracking-tighter text-black opacity-[0.03] leading-none mb-24">PROTO</h4>
+                  <nav className="flex flex-col gap-12 font-black text-[10px] uppercase tracking-[1.2em] text-black/20">
+                     <Link href="#" className="hover:text-black transition-colors group">
+                        Instagram<span className="text-black/0 group-hover:text-black transition-all">_</span>
+                     </Link>
+                     <Link href="#" className="hover:text-black transition-colors group">
+                        Archives<span className="text-black/0 group-hover:text-black transition-all">_</span>
+                     </Link>
+                     <Link href="#" className="hover:text-black transition-colors group">
+                        Terminal<span className="text-black/0 group-hover:text-black transition-all">_</span>
+                     </Link>
+                  </nav>
+               </div>
+               <div className="font-black text-[9px] uppercase tracking-[2.5em] text-black/5 mt-48 italic">
+                  &copy; 2026 // PROTO_LOG_OS&trade;
+               </div>
             </div>
          </div>
       </footer>
-
-      <style jsx global>{`
-        ::-webkit-scrollbar { width: 0px; }
-      `}</style>
     </div>
   );
 }
