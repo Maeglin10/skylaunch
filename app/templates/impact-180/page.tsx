@@ -1,132 +1,209 @@
 "use client";
 
-import { motion, useScroll, useTransform, useMotionValue, useSpring } from "framer-motion";
-import { useRef, useState } from "react";
+import { motion, useScroll, useTransform, useSpring, useMotionValue } from "framer-motion";
+import { useRef, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Scissors, ArrowRight, Clock, MapPin, Phone } from "lucide-react";
+import { Scissors, Clock, MapPin, Phone, Menu, Search, ArrowRight, Layers, Activity, Zap } from "lucide-react";
 import "../premium.css";
 
 const SERVICES = [
-  { name: "The Executive Cut", price: "55", time: "45 Min", desc: "Precision haircut, neck shave, wash & styling." },
-  { name: "Hot Towel Shave", price: "40", time: "30 Min", desc: "Straight razor shave with essential oils and hot towels." },
-  { name: "Beard Sculpting", price: "30", time: "20 Min", desc: "Detailed shaping, line-up, and beard oil treatment." },
-  { name: "The Full Service", price: "85", time: "75 Min", desc: "Complete haircut, hot towel shave, and scalp massage." }
+  { icon: <Scissors className="w-8 h-8" />, title: "EXECUTIVE_CUT", cat: "Precision", value: "Verified", img: "https://images.unsplash.com/photo-1593702275687-f8b402bf1fb5?auto=format&fit=crop&q=80&w=1500" },
+  { icon: <Activity className="w-8 h-8" />, title: "HOT_TOWEL_SHAVE", cat: "Traditional", value: "Active", img: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&q=80&w=1500" },
+  { icon: <Zap className="w-8 h-8" />, title: "SCULPT_DESIGN", cat: "Modern", value: "Locked", img: "https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&q=80&w=1500" },
 ];
 
-export default function PremiumBarber() {
+export default function ShearsBarberSPA() {
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: containerRef });
   
-  const imgScale = useTransform(scrollYProgress, [0, 1], [1, 1.2]);
-  const textY = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
+  const yHero = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
+  const heroScale = useTransform(scrollYProgress, [0, 0.5], [1, 1.1]);
+  
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const springX = useSpring(mouseX, { stiffness: 40, damping: 20 });
+  const springY = useSpring(mouseY, { stiffness: 40, damping: 20 });
 
-  const [hoveredService, setHoveredService] = useState<number | null>(null);
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      mouseX.set(e.clientX - window.innerWidth / 2);
+      mouseY.set(e.clientY - window.innerHeight / 2);
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, [mouseX, mouseY]);
 
   return (
-    <div ref={containerRef} className="premium-theme bg-[#0A0A0A] text-[#E5E5E5] min-h-screen font-serif selection:bg-[#C0A080] selection:text-[#0A0A0A] overflow-hidden">
+    <div ref={containerRef} className="premium-theme bg-[#0A0A0A] text-[#E5E5E5] min-h-screen font-serif selection:bg-[#C0A080] selection:text-[#0A0A0A] overflow-hidden relative">
       
+      {/* BARBER GRID & NOISE */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(192,160,128,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(192,160,128,0.03)_1px,transparent_1px)] bg-[size:10rem_10rem] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_70%,transparent_100%)]" />
+        <motion.div 
+           style={{ x: springX, y: springY }}
+           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70vw] h-[70vw] bg-[#C0A080] opacity-[0.02] blur-[150px] rounded-full mix-blend-screen" 
+        />
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.1] mix-blend-screen" />
+      </div>
+
       {/* HEADER */}
-      <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-8 md:px-12 py-8 mix-blend-difference pointer-events-none">
-         <div className="flex items-center gap-4 pointer-events-auto">
-            <div className="w-10 h-10 border border-[#C0A080] flex items-center justify-center rounded-full">
-               <Scissors className="w-4 h-4 text-[#C0A080]" />
-            </div>
-            <Link href="/" className="font-black text-2xl tracking-[0.2em] uppercase italic">Shears.</Link>
-         </div>
-         
-         <button className="bg-transparent border border-white/20 px-8 py-3 font-sans font-bold text-[10px] uppercase tracking-[0.3em] hover:bg-white hover:text-black transition-colors pointer-events-auto backdrop-blur-md hidden md:block">
-            Reserve Chair
-         </button>
+      <header className="fixed top-0 left-0 w-full px-6 md:px-12 py-10 flex justify-between items-center z-50 bg-[#0A0A0A]/50 backdrop-blur-3xl border-b border-white/5">
+        <Link href="/" className="font-black text-2xl tracking-[0.3em] text-white flex items-center gap-4 italic uppercase">
+           SHEARS<span className="text-[#C0A080]">_HERITAGE</span>
+        </Link>
+        
+        <nav className="hidden lg:flex gap-16 font-sans font-black text-[10px] uppercase tracking-[0.6em] text-white/30">
+            <Link href="#" className="hover:text-[#C0A080] transition-colors group">
+               Services<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-[#C0A080] italic">.</span>
+            </Link>
+            <Link href="#" className="hover:text-[#C0A080] transition-colors group">
+               Archive<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-[#C0A080] italic">.</span>
+            </Link>
+            <Link href="#" className="hover:text-[#C0A080] transition-colors group">
+               Journal<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-[#C0A080] italic">.</span>
+            </Link>
+        </nav>
+        
+        <div className="flex items-center gap-10">
+           <button className="bg-[#C0A080] text-black px-12 py-4 font-sans font-black text-[10px] uppercase tracking-[0.4em] hover:bg-white transition-all shadow-[0_0_40px_rgba(192,160,128,0.2)]">
+              Reserve_Chair
+           </button>
+           <Menu className="w-6 h-6 text-[#C0A080] cursor-pointer" />
+        </div>
       </header>
 
-      {/* SPLIT LAYOUT HERO */}
-      <main className="min-h-screen flex flex-col lg:flex-row relative z-10">
+      {/* HERO SECTION */}
+      <section className="relative h-screen flex flex-col justify-center items-center px-6 text-center z-10 pt-20 overflow-hidden">
+         <motion.div style={{ scale: heroScale, y: yHero }} className="absolute inset-0 z-0">
+            <Image src="https://images.unsplash.com/photo-1593702275687-f8b402bf1fb5?auto=format&fit=crop&q=80&w=2500" alt="Barber" fill className="object-cover opacity-20 grayscale contrast-125" priority />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-transparent to-[#0A0A0A]/40" />
+         </motion.div>
          
-         {/* LEFT TEXT CONTENT */}
-         <div className="lg:w-1/2 flex flex-col justify-center px-8 py-32 lg:p-24 relative z-20 bg-[#0A0A0A]">
-            <motion.div style={{ y: textY }}>
-               <div className="font-sans text-[10px] font-black uppercase tracking-[0.4em] text-[#C0A080] mb-8 flex items-center gap-4">
-                  <span className="w-12 h-[1px] bg-[#C0A080]" /> Est. 2026
+         <div className="relative z-10 max-w-7xl w-full">
+            <motion.div 
+               initial={{ opacity: 0, scale: 0.95 }}
+               animate={{ opacity: 1, scale: 1 }}
+               transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
+            >
+               <div className="inline-flex items-center gap-4 font-sans font-black text-[10px] uppercase tracking-[1.2em] text-[#C0A080] mb-16 border-l-2 border-[#C0A080] pl-10 italic font-mono">
+                  Grooming_Archive // 0180_Alpha
                </div>
                
-               <h1 className="text-6xl md:text-[7vw] lg:text-[6vw] font-black leading-[0.85] tracking-tighter mb-12 uppercase italic text-white drop-shadow-2xl">
-                  Classic <span className="text-transparent" style={{ WebkitTextStroke: "1px rgba(255,255,255,0.5)" }}>Cuts.</span> <br />
-                  <span className="not-italic font-normal">Modern Feel.</span>
+               <h1 className="text-7xl md:text-[14vw] font-black italic uppercase leading-[0.75] tracking-tighter mb-20 text-white">
+                  PRECISION.<br/>
+                  <span className="text-transparent" style={{ WebkitTextStroke: "2px rgba(255,255,255,0.6)" }}>HERITAGE.</span>
                </h1>
                
-               <p className="text-xl font-light text-white/50 mb-16 max-w-md leading-relaxed">
-                  Premium grooming services for the modern gentleman. Precision, style, and our signature hot towel finish.
+               <p className="text-xl md:text-3xl font-light italic text-white/30 max-w-3xl mx-auto mb-24 leading-relaxed uppercase tracking-widest">
+                  Structural allocation for grooming intent. Architecting the future of style with tectonic precision.
                </p>
-
-               {/* SERVICES ACCORDION/HOVER */}
-               <div className="space-y-4 mb-16 relative">
-                  {SERVICES.map((srv, i) => (
-                     <div 
-                        key={i} 
-                        onMouseEnter={() => setHoveredService(i)}
-                        onMouseLeave={() => setHoveredService(null)}
-                        className={`group border-b border-white/10 pb-6 cursor-pointer transition-all duration-500 ${hoveredService === i ? 'pl-4 border-[#C0A080]' : ''}`}
-                     >
-                        <div className="flex justify-between items-end mb-2">
-                           <h3 className={`text-2xl font-black uppercase tracking-tighter transition-colors duration-500 ${hoveredService === i ? 'text-[#C0A080]' : 'text-white'}`}>
-                              {srv.name}
-                           </h3>
-                           <div className="font-sans text-xl font-light">${srv.price}</div>
-                        </div>
-                        <div className={`overflow-hidden transition-all duration-500 ${hoveredService === i ? 'max-h-24 opacity-100' : 'max-h-0 opacity-0'}`}>
-                           <p className="font-sans text-sm font-medium text-white/50 pt-2 flex items-center gap-4">
-                              <span className="flex items-center gap-1 text-[#C0A080]"><Clock className="w-3 h-3" /> {srv.time}</span>
-                              {srv.desc}
-                           </p>
-                        </div>
-                     </div>
-                  ))}
+               
+               <div className="flex flex-col md:flex-row gap-16 justify-center items-center font-sans font-mono">
+                  <div className="flex items-center gap-8 group cursor-pointer">
+                     <div className="w-20 h-px bg-[#C0A080]/30 group-hover:w-32 transition-all" />
+                     <span className="text-[10px] font-black uppercase tracking-[0.8em] text-white">Explore_Services</span>
+                  </div>
+                  <div className="hidden md:block w-px h-16 bg-white/5" />
+                  <div className="font-black text-[9px] uppercase tracking-[0.6em] text-white/10 italic">
+                     Established // 2026 // NYC
+                  </div>
                </div>
-
-               <button className="w-full bg-[#C0A080] text-[#0A0A0A] py-6 font-sans font-black text-xs uppercase tracking-[0.3em] hover:bg-white transition-colors flex items-center justify-center gap-4">
-                  Book Your Appointment <ArrowRight className="w-4 h-4" />
-               </button>
             </motion.div>
          </div>
-         
-         {/* RIGHT IMAGE PANEL */}
-         <div className="lg:w-1/2 relative min-h-[500px] lg:h-screen lg:sticky top-0 overflow-hidden border-l border-white/10">
-            <motion.div style={{ scale: imgScale }} className="absolute inset-0 w-full h-full">
-               <Image src="https://images.unsplash.com/photo-1593702275687-f8b402bf1fb5?auto=format&fit=crop&q=80&w=2500" alt="Barber" fill className="object-cover grayscale brightness-75 contrast-125" priority />
-            </motion.div>
-            <div className="absolute inset-0 bg-gradient-to-r from-[#0A0A0A] via-transparent to-transparent opacity-80" />
-            
-            {/* Hover Reveal Details */}
-            <div className="absolute bottom-12 right-12 text-right pointer-events-none">
-               <motion.div 
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: hoveredService !== null ? 1 : 0, x: hoveredService !== null ? 0 : 20 }}
-                  transition={{ duration: 0.5 }}
-                  className="bg-[#0A0A0A]/80 backdrop-blur-xl p-6 border border-[#C0A080]/30"
-               >
-                  {hoveredService !== null && (
-                     <>
-                        <div className="font-sans text-[10px] font-black uppercase tracking-[0.3em] text-[#C0A080] mb-2">Selected</div>
-                        <div className="text-3xl font-black uppercase italic tracking-tighter mb-1">{SERVICES[hoveredService].name}</div>
-                        <div className="font-sans font-light text-white/50">{SERVICES[hoveredService].time} Session</div>
-                     </>
-                  )}
-               </motion.div>
+
+         {/* Decorative Side HUD */}
+         <div className="absolute right-12 bottom-12 flex flex-col items-end gap-4 font-sans font-black text-[8px] uppercase tracking-[1em] text-[#C0A080]/20 hidden md:flex italic">
+            <span>SYNC_STATUS: ACTIVE</span>
+            <div className="flex gap-1 h-12 items-end">
+               {[1, 2, 3, 4, 5].map(i => <motion.div key={i} animate={{ height: ['20%', '100%', '40%'] }} transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }} className="w-[1px] bg-[#C0A080]" />)}
             </div>
          </div>
-      </main>
+      </section>
 
-      {/* FOOTER INFO */}
-      <footer className="relative z-20 bg-[#0A0A0A] border-t border-white/10 py-12 px-8 lg:px-12 flex flex-col md:flex-row justify-between items-center gap-8 font-sans text-xs font-bold uppercase tracking-widest text-white/50">
-         <div className="flex items-center gap-3">
-            <MapPin className="w-4 h-4 text-[#C0A080]" /> 123 Heritage Ave, NY
+      {/* SERVICES GRID */}
+      <section className="py-48 px-6 md:px-12 max-w-[1800px] mx-auto relative z-10 bg-[#0A0A0A]">
+         <div className="flex flex-col md:flex-row justify-between items-end mb-40 border-b border-white/10 pb-20 gap-16 font-sans">
+            <div>
+               <span className="text-[10px] font-black uppercase tracking-[2em] text-[#C0A080] mb-8 block italic font-mono">Grooming_Manifest</span>
+               <h2 className="text-6xl md:text-[10vw] font-black italic uppercase tracking-tighter text-white leading-none">The <span className="text-[#C0A080]/20">Legacy_</span></h2>
+            </div>
+            <div className="flex gap-16 text-[10px] font-black uppercase tracking-[0.6em] text-white/20 italic font-mono">
+               <span>Records: [03]</span>
+               <span>Status: [Verified]</span>
+            </div>
          </div>
-         <div className="flex items-center gap-3">
-            <Clock className="w-4 h-4 text-[#C0A080]" /> Tue-Sun: 9AM - 8PM
+
+         <div className="grid grid-cols-1 md:grid-cols-3 gap-16 font-sans">
+            {SERVICES.map((p, i) => (
+                <motion.div 
+                   key={i} 
+                   initial={{ opacity: 0, y: 80 }}
+                   whileInView={{ opacity: 1, y: 0 }}
+                   viewport={{ once: true, margin: "-100px" }}
+                   transition={{ duration: 1.2, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
+                   className="group relative h-[85vh] bg-[#1A1A1A] border border-white/5 overflow-hidden cursor-pointer hover:border-[#C0A080]/30 transition-all shadow-2xl"
+                >
+                    <Image src={p.img} alt={p.title} fill className="object-cover opacity-30 grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-1000" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-transparent to-transparent opacity-95" />
+                    <div className="absolute inset-0 bg-white/5 group-hover:bg-transparent transition-colors duration-700" />
+                    
+                    <div className="absolute inset-16 flex flex-col justify-between z-10 font-mono text-white">
+                        <div className="flex justify-between items-start">
+                           <div className="p-5 bg-white/5 border border-white/10 rounded-none group-hover:bg-[#C0A080] group-hover:text-[#0A0A0A] transition-all shadow-xl">
+                              {p.icon}
+                           </div>
+                           <div className="text-[10px] font-black uppercase tracking-[0.8em] text-[#C0A080] italic font-mono">Ref_0x{i+180}</div>
+                        </div>
+                        
+                        <div>
+                           <span className="text-[10px] uppercase tracking-[0.8em] text-[#C0A080] mb-8 block italic font-black">{p.cat} // Verified</span>
+                           <h3 className="text-5xl md:text-6xl font-black italic uppercase tracking-tighter mb-16 text-white group-hover:tracking-widest transition-all leading-[0.8]">{p.title}</h3>
+                           <div className="flex items-center gap-8 text-[10px] font-black uppercase tracking-[0.6em] opacity-0 group-hover:opacity-100 transition-all translate-y-10 group-hover:translate-y-0 text-white">
+                              Details <ArrowRight className="w-6 h-6" />
+                           </div>
+                        </div>
+                    </div>
+                </motion.div>
+            ))}
          </div>
-         <div className="flex items-center gap-3">
-            <Phone className="w-4 h-4 text-[#C0A080]" /> (555) 019-8372
+      </section>
+
+      {/* FOOTER */}
+      <footer className="py-48 px-6 md:px-12 border-t border-white/5 relative z-10 bg-[#0A0A0A]">
+         <div className="max-w-[1800px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-40 font-sans">
+            <div className="max-w-2xl">
+               <div className="text-[#C0A080] mb-16 flex items-center gap-6 font-black text-2xl italic uppercase tracking-widest font-mono">
+                  <Activity className="w-10 h-10" /> Shears_Logs
+               </div>
+               <p className="text-4xl md:text-6xl font-light italic leading-[0.9] text-white/20 uppercase tracking-tighter mb-20">
+                  WE TREAT CUTS AS ARCHITECTURE. EVERY CHAIR A FUNCTION.
+               </p>
+               <div className="flex gap-20 font-black text-[10px] uppercase tracking-[0.8em] text-[#C0A080]/40 italic font-mono">
+                  <span>Berlin</span>
+                  <span>London</span>
+                  <span>NYC</span>
+               </div>
+            </div>
+            <div className="flex flex-col justify-between items-end text-right font-mono">
+               <div className="w-full">
+                  <h4 className="text-[12vw] font-black italic uppercase tracking-tighter text-white opacity-[0.02] leading-none mb-20">SHEARS</h4>
+                  <nav className="flex flex-col gap-10 font-black text-[10px] uppercase tracking-[0.8em] text-white/10">
+                     <Link href="#" className="hover:text-[#C0A080] transition-colors group">
+                        Instagram<span className="text-[#C0A080]/0 group-hover:text-[#C0A080] transition-all">_</span>
+                     </Link>
+                     <Link href="#" className="hover:text-[#C0A080] transition-colors group">
+                        Booking<span className="text-[#C0A080]/0 group-hover:text-[#C0A080] transition-all">_</span>
+                     </Link>
+                     <Link href="#" className="hover:text-[#C0A080] transition-colors group">
+                        Legal<span className="text-[#C0A080]/0 group-hover:text-[#C0A080] transition-all">_</span>
+                     </Link>
+                  </nav>
+               </div>
+               <div className="font-black text-[9px] uppercase tracking-[1.5em] text-white/5 mt-32 italic">
+                  &copy; 2026 // SHEARS_HERITAGE_BARBER&trade;
+               </div>
+            </div>
          </div>
       </footer>
     </div>

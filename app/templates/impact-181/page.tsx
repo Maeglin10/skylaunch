@@ -1,22 +1,24 @@
 "use client";
 
-import { motion, useScroll, useTransform, useMotionValue, useSpring } from "framer-motion";
-import { useRef, useEffect } from "react";
+import { motion, useScroll, useTransform, useSpring, useMotionValue } from "framer-motion";
+import { useRef, useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Hexagon, Activity, Shield, Coins } from "lucide-react";
+import { Hexagon, Activity, Shield, Coins, Menu, Search, ArrowRight, Layers, Zap } from "lucide-react";
 import "../premium.css";
 
-const STATS = [
-  { val: "$4.2B", lbl: "Total Value Locked", icon: <Coins /> },
-  { val: "$840M", lbl: "24h Volume", icon: <Activity /> },
-  { val: "124K", lbl: "Active Traders", icon: <Shield /> }
+const PROTOCOLS = [
+  { icon: <Coins className="w-8 h-8" />, title: "LIQUID_SYNX", cat: "Aggregator", value: "Verified", img: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?auto=format&fit=crop&q=80&w=1500" },
+  { icon: <Shield className="w-8 h-8" />, title: "SECURE_VAULT", cat: "Custodian", value: "Active", img: "https://images.unsplash.com/photo-1639322537228-f710d846310a?auto=format&fit=crop&q=80&w=1500" },
+  { icon: <Activity className="w-8 h-8" />, title: "ORACLE_FLOW", cat: "Infrastructure", value: "Locked", img: "https://images.unsplash.com/photo-1642104704074-907c0698bcd9?auto=format&fit=crop&q=80&w=1500" },
 ];
 
-export default function PremiumWeb3() {
+export default function NexusFiSPA() {
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: containerRef });
   
-  const yStats = useTransform(scrollYProgress, [0, 1], ["0%", "-50%"]);
+  const yHero = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
+  const heroScale = useTransform(scrollYProgress, [0, 0.5], [1, 1.1]);
   
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -33,102 +35,176 @@ export default function PremiumWeb3() {
   }, [mouseX, mouseY]);
 
   return (
-    <div ref={containerRef} className="premium-theme bg-[#030303] text-white min-h-screen font-sans overflow-hidden selection:bg-[#8B5CF6] selection:text-white">
+    <div ref={containerRef} className="premium-theme bg-[#030303] text-white min-h-screen font-sans selection:bg-[#8B5CF6] selection:text-white overflow-hidden relative">
       
-      {/* REACTIVE GLOWING ORBS */}
+      {/* PROTOCOL GRID & NOISE */}
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-overlay"></div>
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(139,92,246,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(139,92,246,0.03)_1px,transparent_1px)] bg-[size:5rem_5rem] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_70%,transparent_100%)]" />
         <motion.div 
            style={{ x: springX, y: springY }}
-           className="absolute top-[20%] left-[20%] w-[40vw] h-[40vw] rounded-full bg-[#8B5CF6] mix-blend-screen filter blur-[150px] opacity-20" 
+           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70vw] h-[70vw] bg-[#8B5CF6] opacity-[0.05] blur-[150px] rounded-full mix-blend-screen" 
         />
-        <motion.div 
-           style={{ x: useTransform(springX, v => -v), y: useTransform(springY, v => -v) }}
-           className="absolute bottom-[20%] right-[20%] w-[50vw] h-[50vw] rounded-full bg-[#3B82F6] mix-blend-screen filter blur-[150px] opacity-20" 
-        />
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.1] mix-blend-screen" />
       </div>
 
-      <header className="relative z-50 px-6 md:px-12 py-8 flex justify-between items-center w-full">
-        <div className="text-2xl font-black tracking-tighter flex items-center gap-2">
-           <Hexagon className="w-8 h-8 text-[#8B5CF6] animate-[spin_10s_linear_infinite]" />
-           NEXUS<span className="text-[#8B5CF6]">.fi</span>
-        </div>
-        <nav className="hidden md:flex items-center gap-10 text-[10px] font-black uppercase tracking-[0.3em] text-white/50 bg-white/5 backdrop-blur-xl border border-white/10 px-8 py-4 rounded-full shadow-[0_0_30px_rgba(139,92,246,0.1)]">
-            <Link href="#" className="hover:text-white transition-colors">Protocol</Link>
-            <Link href="#" className="hover:text-white transition-colors">Ecosystem</Link>
-            <Link href="#" className="hover:text-white transition-colors">Governance</Link>
+      {/* HEADER */}
+      <header className="fixed top-0 left-0 w-full px-6 md:px-12 py-10 flex justify-between items-center z-50 bg-[#030303]/50 backdrop-blur-3xl border-b border-white/5">
+        <Link href="/" className="font-black text-2xl tracking-[0.3em] text-white flex items-center gap-4 italic uppercase">
+           NEXUS<span className="text-[#8B5CF6]">.FI</span>
+        </Link>
+        
+        <nav className="hidden lg:flex gap-16 font-black text-[10px] uppercase tracking-[0.6em] text-white/30">
+            <Link href="#" className="hover:text-[#8B5CF6] transition-colors group">
+               Protocol<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-[#8B5CF6] italic">.</span>
+            </Link>
+            <Link href="#" className="hover:text-[#8B5CF6] transition-colors group">
+               Ecosystem<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-[#8B5CF6] italic">.</span>
+            </Link>
+            <Link href="#" className="hover:text-[#8B5CF6] transition-colors group">
+               Governance<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-[#8B5CF6] italic">.</span>
+            </Link>
         </nav>
-        <button className="bg-white text-black px-8 py-3 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-[#8B5CF6] hover:text-white hover:scale-105 transition-all shadow-[0_0_20px_rgba(255,255,255,0.2)]">
-           Launch App
-        </button>
+        
+        <div className="flex items-center gap-10">
+           <button className="bg-white text-black px-12 py-4 font-black text-[10px] uppercase tracking-[0.4em] hover:bg-[#8B5CF6] hover:text-white transition-all shadow-[0_0_40px_rgba(139,92,246,0.2)]">
+              Launch_App
+           </button>
+           <Menu className="w-6 h-6 text-[#8B5CF6] cursor-pointer" />
+        </div>
       </header>
 
-      <main className="relative z-10">
-        {/* HERO */}
-        <section className="min-h-[85vh] flex flex-col items-center justify-center text-center px-6">
-            <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }} className="max-w-[1200px] w-full">
-                
-                <div className="inline-flex items-center gap-3 bg-white/5 backdrop-blur-xl px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.3em] text-[#8B5CF6] mb-12 border border-[#8B5CF6]/30 shadow-[0_0_20px_rgba(139,92,246,0.2)]">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_10px_rgba(52,211,153,1)]"></span> Mainnet V2 is Live
-                </div>
-                
-                <h1 className="text-6xl md:text-[8vw] font-black mb-8 leading-[0.85] tracking-tighter mix-blend-overlay text-white drop-shadow-2xl uppercase">
-                    Decentralized <br/>
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#8B5CF6] to-[#3B82F6]" style={{ WebkitTextStroke: "1px rgba(255,255,255,0.2)" }}>Liquidity Matrix.</span>
-                </h1>
-                
-                <p className="text-xl md:text-3xl text-white/50 max-w-3xl mx-auto mb-16 font-light leading-relaxed">
-                    The next-generation AMM providing institutional-grade liquidity, zero-slippage execution, and seamless cross-chain composability.
-                </p>
-                
-                <div className="flex flex-col sm:flex-row gap-6 justify-center">
-                    <button className="bg-gradient-to-r from-[#8B5CF6] to-[#3B82F6] text-white px-12 py-5 rounded-full font-black uppercase tracking-[0.2em] text-xs hover:scale-105 transition-transform shadow-[0_0_40px_rgba(139,92,246,0.5)] flex items-center justify-center gap-3">
-                       Start Trading <ArrowRight className="w-4 h-4" />
-                    </button>
-                    <button className="bg-white/5 backdrop-blur-xl border border-white/10 text-white px-12 py-5 rounded-full font-black uppercase tracking-[0.2em] text-xs hover:bg-white hover:text-black transition-colors flex items-center justify-center gap-3">
-                       Read Whitepaper
-                    </button>
-                </div>
+      {/* HERO SECTION */}
+      <section className="relative h-screen flex flex-col justify-center items-center px-6 text-center z-10 pt-20 overflow-hidden">
+         <motion.div style={{ scale: heroScale, y: yHero }} className="absolute inset-0 z-0">
+            <div className="absolute inset-0 bg-gradient-to-t from-[#030303] via-transparent to-[#030303]/40" />
+         </motion.div>
+         
+         <div className="relative z-10 max-w-7xl w-full">
+            <motion.div 
+               initial={{ opacity: 0, y: 100 }}
+               animate={{ opacity: 1, y: 0 }}
+               transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+            >
+               <div className="inline-flex items-center gap-4 font-black text-[10px] uppercase tracking-[1em] text-[#8B5CF6] mb-16 border-l-2 border-[#8B5CF6] pl-10 italic font-mono">
+                  Network_Capture // 0181_Alpha
+               </div>
+               
+               <h1 className="text-7xl md:text-[14vw] font-black italic uppercase leading-[0.75] tracking-tighter mb-20 text-white">
+                  MATRIX.<br/>
+                  <span className="text-transparent" style={{ WebkitTextStroke: "2px rgba(255,255,255,0.6)" }}>LIQUIDITY.</span>
+               </h1>
+               
+               <p className="text-xl md:text-3xl font-light italic text-white/30 max-w-3xl mx-auto mb-24 leading-relaxed uppercase tracking-widest">
+                  Structural allocation for protocol intent. Architecting the future of finance with tectonic precision.
+               </p>
+               
+               <div className="flex flex-col md:flex-row gap-16 justify-center items-center font-mono">
+                  <div className="flex items-center gap-8 group cursor-pointer">
+                     <div className="w-20 h-px bg-[#8B5CF6]/30 group-hover:w-32 transition-all" />
+                     <span className="text-[10px] font-black uppercase tracking-[0.8em] text-white">Connect_Wallet</span>
+                  </div>
+                  <div className="hidden md:block w-px h-16 bg-white/5" />
+                  <div className="font-black text-[9px] uppercase tracking-[0.6em] text-white/10 italic">
+                     $4.2B TVL // 124K Traders // Nexus Protocol
+                  </div>
+               </div>
             </motion.div>
-        </section>
+         </div>
 
-        {/* PARALLAX STATS */}
-        <section className="py-32 px-6 max-w-[1600px] mx-auto overflow-hidden">
-            <motion.div style={{ y: yStats }} className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {STATS.map((stat, i) => (
-                    <motion.div 
-                       key={i} 
-                       initial={{ opacity: 0, y: 50 }} 
-                       whileInView={{ opacity: 1, y: 0 }} 
-                       viewport={{ once: true, margin: "-100px" }} 
-                       transition={{ duration: 0.8, delay: i * 0.2 }} 
-                       className="bg-white/5 backdrop-blur-xl p-12 rounded-[3rem] border border-white/10 relative group hover:border-[#8B5CF6]/50 transition-colors duration-500 cursor-pointer overflow-hidden"
-                    >
-                        <div className="absolute inset-0 bg-gradient-to-br from-[#8B5CF6]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-                        
-                        <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center text-[#8B5CF6] mb-8 border border-white/5 group-hover:scale-110 group-hover:bg-[#8B5CF6] group-hover:text-white transition-all duration-500 shadow-[0_0_20px_rgba(139,92,246,0)] group-hover:shadow-[0_0_30px_rgba(139,92,246,0.5)]">
-                           {stat.icon}
+         {/* Decorative Side HUD */}
+         <div className="absolute right-12 bottom-12 flex flex-col items-end gap-4 font-black text-[8px] uppercase tracking-[1em] text-[#8B5CF6]/20 hidden md:flex italic font-mono">
+            <span>SYNC_STATUS: ACTIVE</span>
+            <div className="flex gap-1 h-12 items-end">
+               {[1, 2, 3, 4, 5].map(i => <motion.div key={i} animate={{ height: ['20%', '100%', '40%'] }} transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }} className="w-[1px] bg-[#8B5CF6]" />)}
+            </div>
+         </div>
+      </section>
+
+      {/* PROTOCOL GRID */}
+      <section className="py-48 px-6 md:px-12 max-w-[1800px] mx-auto relative z-10 bg-[#030303]">
+         <div className="flex flex-col md:flex-row justify-between items-end mb-40 border-b border-white/10 pb-20 gap-16">
+            <div>
+               <span className="text-[10px] font-black uppercase tracking-[2em] text-[#8B5CF6] mb-8 block italic font-mono">Protocol_Manifest</span>
+               <h2 className="text-6xl md:text-[10vw] font-black italic uppercase tracking-tighter text-white leading-none">The <span className="text-[#8B5CF6]/20">Ecosystem_</span></h2>
+            </div>
+            <div className="flex gap-16 text-[10px] font-black uppercase tracking-[0.6em] text-white/20 italic font-mono">
+               <span>Records: [03]</span>
+               <span>Status: [Verified]</span>
+            </div>
+         </div>
+
+         <div className="grid grid-cols-1 md:grid-cols-3 gap-16">
+            {PROTOCOLS.map((p, i) => (
+                <motion.div 
+                   key={i} 
+                   initial={{ opacity: 0, y: 80 }}
+                   whileInView={{ opacity: 1, y: 0 }}
+                   viewport={{ once: true, margin: "-100px" }}
+                   transition={{ duration: 1.2, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
+                   className="group relative h-[85vh] bg-[#1A1A1A] border border-white/5 overflow-hidden cursor-pointer hover:border-[#8B5CF6]/30 transition-all shadow-2xl"
+                >
+                    <Image src={p.img} alt={p.title} fill className="object-cover opacity-30 grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-1000" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#030303] via-transparent to-transparent opacity-95" />
+                    <div className="absolute inset-0 bg-white/5 group-hover:bg-transparent transition-colors duration-700" />
+                    
+                    <div className="absolute inset-16 flex flex-col justify-between z-10 font-mono text-white">
+                        <div className="flex justify-between items-start">
+                           <div className="p-5 bg-white/5 border border-white/10 rounded-none group-hover:bg-[#8B5CF6] group-hover:text-white transition-all shadow-xl">
+                              {p.icon}
+                           </div>
+                           <div className="text-[10px] font-black uppercase tracking-[0.8em] text-[#8B5CF6] italic font-mono">Ref_0x{i+181}</div>
                         </div>
                         
-                        <div className="text-6xl lg:text-[5vw] font-black tracking-tighter mb-4 text-transparent bg-clip-text bg-gradient-to-br from-white to-white/30 group-hover:from-white group-hover:to-white transition-all duration-500">
-                           {stat.val}
+                        <div>
+                           <span className="text-[10px] uppercase tracking-[0.8em] text-[#8B5CF6] mb-8 block italic font-black">{p.cat} // Verified</span>
+                           <h3 className="text-5xl md:text-6xl font-black italic uppercase tracking-tighter mb-16 text-white group-hover:tracking-widest transition-all leading-[0.8]">{p.title}</h3>
+                           <div className="flex items-center gap-8 text-[10px] font-black uppercase tracking-[0.6em] opacity-0 group-hover:opacity-100 transition-all translate-y-10 group-hover:translate-y-0 text-white">
+                              Details <ArrowRight className="w-6 h-6" />
+                           </div>
                         </div>
-                        <div className="text-[10px] uppercase tracking-[0.3em] font-black text-[#8B5CF6]">{stat.lbl}</div>
-                    </motion.div>
-                ))}
-            </motion.div>
-        </section>
-        
-        {/* NETWORK VISUALIZATION */}
-        <section className="py-32 relative overflow-hidden border-t border-white/5">
-           <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_110%)] pointer-events-none" />
-           <div className="text-center relative z-10 px-6">
-              <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter mb-8">Secured by Mathematics.</h2>
-              <p className="text-white/50 max-w-xl mx-auto font-light text-lg">Fully audited smart contracts. Bug bounties up to $1,000,000. Immutable logic deployed across 12 chains.</p>
-           </div>
-        </section>
+                    </div>
+                </motion.div>
+            ))}
+         </div>
+      </section>
 
-      </main>
+      {/* FOOTER */}
+      <footer className="py-48 px-6 md:px-12 border-t border-white/5 relative z-10 bg-[#030303]">
+         <div className="max-w-[1800px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-40">
+            <div className="max-w-2xl">
+               <div className="text-[#8B5CF6] mb-16 flex items-center gap-6 font-black text-2xl italic uppercase tracking-widest font-mono">
+                  <Activity className="w-10 h-10" /> Nexus_Logs
+               </div>
+               <p className="text-4xl md:text-6xl font-light italic leading-[0.9] text-white/20 uppercase tracking-tighter mb-20">
+                  WE TREAT PROTOCOLS AS ARCHITECTURE. EVERY BYTE A FUNCTION.
+               </p>
+               <div className="flex gap-20 font-black text-[10px] uppercase tracking-[0.8em] text-[#8B5CF6]/40 italic font-mono">
+                  <span>Berlin</span>
+                  <span>London</span>
+                  <span>NYC</span>
+               </div>
+            </div>
+            <div className="flex flex-col justify-between items-end text-right font-mono">
+               <div className="w-full">
+                  <h4 className="text-[12vw] font-black italic uppercase tracking-tighter text-white opacity-[0.02] leading-none mb-20">NEXUS</h4>
+                  <nav className="flex flex-col gap-10 font-black text-[10px] uppercase tracking-[0.8em] text-white/10">
+                     <Link href="#" className="hover:text-[#8B5CF6] transition-colors group">
+                        Instagram<span className="text-[#8B5CF6]/0 group-hover:text-[#8B5CF6] transition-all">_</span>
+                     </Link>
+                     <Link href="#" className="hover:text-[#8B5CF6] transition-colors group">
+                        Ecosystem<span className="text-[#8B5CF6]/0 group-hover:text-[#8B5CF6] transition-all">_</span>
+                     </Link>
+                     <Link href="#" className="hover:text-[#8B5CF6] transition-colors group">
+                        Legal<span className="text-[#8B5CF6]/0 group-hover:text-[#8B5CF6] transition-all">_</span>
+                     </Link>
+                  </nav>
+               </div>
+               <div className="font-black text-[9px] uppercase tracking-[1.5em] text-white/5 mt-32 italic">
+                  &copy; 2026 // NEXUS_FINANCE_GROUP&trade;
+               </div>
+            </div>
+         </div>
+      </footer>
     </div>
   );
 }
