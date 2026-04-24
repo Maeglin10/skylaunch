@@ -1,198 +1,266 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { motion, useScroll, useTransform, useInView, AnimatePresence } from "framer-motion";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { ArrowRight, ChevronLeft, Menu, Search, X, Volume2, Share2 } from "lucide-react";
+import { BookOpen, ChevronDown, Menu, X, ArrowRight, ArrowUpRight, Clock, Tag } from "lucide-react";
 import "../premium.css";
 
-const STORIES = [
-  { 
-    id: 1, 
-    title: "The Gilded Age", 
-    subtitle: "A Study of Gold and Silk",
-    img: "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?q=80&w=1000&auto=format&fit=crop",
-    content: "In the heart of the modern metropolis, a new wave of craftsmanship is emerging. This series explores the intersection of brutalist architecture and the softness of ancient silk weaving techniques."
-  },
-  { 
-    id: 2, 
-    title: "Desert Silence", 
-    subtitle: "Minimalist Landscapes",
-    img: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=1000&auto=format&fit=crop",
-    content: "The void is not empty. It is a canvas for light. We traveled to the salt flats to capture the essence of pure, unadulterated color in the absence of form."
-  },
-  { 
-    id: 3, 
-    title: "Neural Rift", 
-    subtitle: "Merging Tech & Flesh",
-    img: "https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=1000&auto=format&fit=crop",
-    content: "As digital interfaces become invisible, our physical presence becomes a deliberate choice. A photographic essay on the final frontier of human individuality."
-  }
+const ARTICLES = [
+  { title: "The Architecture of Modern Attention", cat: "Culture", date: "Apr 18", read: "8 min", img: "https://images.unsplash.com/photo-1504711434969-e33886168f5c?q=80&w=1200&auto=format&fit=crop", featured: true },
+  { title: "How Silence Became a Luxury Good", cat: "Society", date: "Apr 15", read: "6 min", img: "https://images.unsplash.com/photo-1516979187457-637abb4f9353?q=80&w=1200&auto=format&fit=crop", featured: false },
+  { title: "The Return of the Printed Word", cat: "Media", date: "Apr 12", read: "10 min", img: "https://images.unsplash.com/photo-1457369804613-52c61a468e7d?q=80&w=1200&auto=format&fit=crop", featured: false },
+  { title: "Notes on Craft in an Age of Generation", cat: "Tech", date: "Apr 8", read: "12 min", img: "https://images.unsplash.com/photo-1495020689067-958852a7765e?q=80&w=1200&auto=format&fit=crop", featured: false },
+  { title: "Who Owns the Story Now?", cat: "Media", date: "Apr 2", read: "7 min", img: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=1200&auto=format&fit=crop", featured: false },
 ];
 
+const CATEGORIES = ["All", "Culture", "Society", "Media", "Tech", "Philosophy"];
+
+const STATS = [
+  { value: 2400000, suffix: "", label: "Monthly readers" },
+  { value: 380, suffix: "+", label: "Published essays" },
+  { value: 6, suffix: " years", label: "In circulation" },
+  { value: 47, suffix: "", label: "Countries reached" },
+];
+
+const TESTIMONIALS = [
+  { name: "Margot Leclaire", role: "Editor-in-Chief, Le Monde", quote: "The finest long-form journalism publishing today. Each piece is a small monument.", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop" },
+  { name: "James Harrington", role: "Cultural Critic, The Guardian", quote: "They publish what others are afraid to commission. That courage is increasingly rare.", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop" },
+  { name: "Yuki Tanaka", role: "Media Researcher, MIT", quote: "A masterclass in editorial independence. No clickbait — only ideas that matter.", avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=200&auto=format&fit=crop" },
+];
+
+const FAQ = [
+  { q: "How do you select your contributors?", a: "We accept pitches from any writer globally. Our editorial team evaluates solely on the quality and originality of the argument, regardless of the writer's credentials or platform." },
+  { q: "Is there a paywall?", a: "We offer 5 free articles per month. An annual subscription gives unlimited access to our entire archive plus exclusive subscriber-only essays each week." },
+  { q: "How can I contribute?", a: "Send a 200-word pitch to pitches@editorial.io. We respond to every submission within 14 days. If accepted, we work with you through editing to publication." },
+  { q: "Do you accept advertising?", a: "We accept a small number of contextually relevant sponsors per month. All sponsorships are clearly labeled and never influence editorial decisions." },
+];
+
+function Reveal({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-60px" });
+  return (
+    <motion.div ref={ref} initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.7, delay, ease: [0.25, 0.1, 0.25, 1] }} className={className}>
+      {children}
+    </motion.div>
+  );
+}
+
+function Counter({ target, suffix = "", label }: { target: number; suffix?: string; label: string }) {
+  const [count, setCount] = useState(0);
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true });
+  useEffect(() => {
+    if (!inView) return;
+    const steps = 60;
+    let cur = 0;
+    const inc = target / steps;
+    const t = setInterval(() => {
+      cur += inc;
+      if (cur >= target) { setCount(target); clearInterval(t); }
+      else setCount(Math.floor(cur));
+    }, 2000 / steps);
+    return () => clearInterval(t);
+  }, [inView, target]);
+  return (
+    <div ref={ref} className="text-center">
+      <div className="text-3xl font-black text-[#1a1a1a] mb-1">{count >= 1000000 ? `${(count / 1000000).toFixed(1)}M` : count.toLocaleString()}{suffix}</div>
+      <div className="text-sm text-[#6b7280]">{label}</div>
+    </div>
+  );
+}
+
 export default function EditorialSPA() {
-  const [view, setView] = useState<"front" | "story" | "archive">("front");
-  const [activeStory, setActiveStory] = useState(0);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [activeCategory, setActiveCategory] = useState("All");
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [activeT, setActiveT] = useState(0);
+  const { scrollY } = useScroll();
+  const heroY = useTransform(scrollY, [0, 500], [0, 120]);
+
+  useEffect(() => {
+    const t = setInterval(() => setActiveT(p => (p + 1) % TESTIMONIALS.length), 5500);
+    return () => clearInterval(t);
+  }, []);
+
+  const filtered = activeCategory === "All" ? ARTICLES : ARTICLES.filter(a => a.cat === activeCategory);
 
   return (
-    <div className="premium-theme bg-[#fdfdfd] text-[#1a1a1a] min-h-screen overflow-x-hidden selection:bg-black selection:text-white font-serif">
-      
-      {/* HUD Navigation */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-center mix-blend-difference invert uppercase text-[10px] font-black tracking-[0.5em]">
-        <button onClick={() => setView("front")} className="text-xl font-bold tracking-widest italic">Editorial&reg;</button>
-        <div className="hidden md:flex gap-12">
-           <button onClick={() => setView("front")} className={`hover:opacity-40 transition-opacity ${view === 'front' ? 'border-b border-black' : ''}`}>Issue_04</button>
-           <button onClick={() => setView("archive")} className={`hover:opacity-40 transition-opacity ${view === 'archive' ? 'border-b border-black' : ''}`}>Archive</button>
+    <div className="min-h-screen bg-[#fafaf8] text-[#1a1a1a] overflow-x-hidden">
+      {/* Nav */}
+      <motion.nav initial={{ y: -80 }} animate={{ y: 0 }} transition={{ duration: 0.6 }} className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-12 py-5 bg-[#fafaf8]/95 backdrop-blur-md border-b border-black/5">
+        <div className="flex items-center gap-2 font-serif">
+          <BookOpen className="w-4 h-4" />
+          <span className="font-bold text-lg tracking-tight">The Editorial</span>
         </div>
-        <div className="flex gap-8 items-center">
-           <Search className="w-4 h-4 cursor-pointer hover:opacity-40" />
-           <Menu className="w-4 h-4 cursor-pointer hover:opacity-40" />
+        <div className="hidden md:flex items-center gap-10 text-sm text-[#6b7280]">
+          {["Culture", "Society", "Media", "Tech", "Archive"].map(item => (
+            <a key={item} href="#" className="hover:text-[#1a1a1a] transition-colors">{item}</a>
+          ))}
         </div>
-      </nav>
+        <div className="hidden md:flex items-center gap-4">
+          <a href="#" className="text-sm text-[#6b7280] hover:text-[#1a1a1a] transition-colors">Sign in</a>
+          <motion.button whileHover={{ scale: 1.02 }} className="px-5 py-2 bg-[#1a1a1a] text-white text-sm font-medium rounded-lg hover:bg-black transition-colors">Subscribe</motion.button>
+        </div>
+        <button className="md:hidden" onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}</button>
+      </motion.nav>
 
-      <AnimatePresence mode="wait">
-        
-        {/* FRONT PAGE VIEW */}
-        {view === "front" && (
-          <motion.div key="front" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10">
-             <main className="flex flex-col lg:flex-row min-h-screen">
-                {/* Left Side: Pinned Context */}
-                <div className="w-full lg:w-1/2 h-[60vh] lg:h-screen lg:sticky lg:top-0 bg-[#f4f4f4] flex flex-col justify-center p-12 lg:p-24 border-r border-black/5">
-                   <motion.div initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}>
-                      <span className="text-[10px] uppercase tracking-[0.6em] opacity-40 mb-8 block font-black font-sans">Volume Four / Series One</span>
-                      <h1 className="text-7xl md:text-[8vw] italic leading-[0.8] tracking-tighter mb-12">
-                         Asymmetric <br /> 
-                         <span className="not-italic font-black text-[#111]">Balance.</span>
-                      </h1>
-                      <p className="max-w-md text-sm leading-relaxed opacity-60 mb-12 uppercase tracking-wide font-sans">
-                         A study in structural negative space and conceptual narratives. We define the aesthetic of the next decade.
-                      </p>
-                      <button onClick={() => setView("archive")} className="flex items-center gap-6 group">
-                         <div className="px-10 py-5 border border-black uppercase text-[10px] tracking-[0.5em] font-black group-hover:bg-black group-hover:text-white transition-all font-sans">Explore Stories</div>
-                         <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform" />
-                      </button>
-                   </motion.div>
-                </div>
-
-                {/* Right Side: Scrollable Stories */}
-                <div className="w-full lg:w-1/2 p-4 lg:p-24 space-y-32">
-                   {STORIES.map((story, i) => (
-                     <motion.div 
-                       key={story.id} initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: 1 }}
-                       onClick={() => { setActiveStory(i); setView("story"); }}
-                       className="group cursor-pointer"
-                     >
-                        <div className="relative aspect-[3/4] bg-[#eee] overflow-hidden mb-8 shadow-2xl">
-                           <Image src={story.img} alt={story.title} fill className="object-cover transition-transform duration-1000 group-hover:scale-110" />
-                        </div>
-                        <div className="flex justify-between items-end border-b border-black/10 pb-6">
-                           <div>
-                              <h2 className="text-3xl md:text-4xl italic mb-2 tracking-tight">{story.title}</h2>
-                              <p className="text-[10px] uppercase tracking-[0.3em] opacity-40 font-black font-sans">{story.subtitle}</p>
-                           </div>
-                           <div className="text-[10px] font-black opacity-10 font-sans tracking-widest">REF_{2026 + i}</div>
-                        </div>
-                     </motion.div>
-                   ))}
-                </div>
-             </main>
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="fixed inset-0 z-40 bg-[#fafaf8] flex flex-col items-center justify-center gap-8 text-2xl font-serif">
+            {["Culture", "Society", "Media", "Tech", "Archive"].map(item => <a key={item} href="#" onClick={() => setMenuOpen(false)}>{item}</a>)}
           </motion.div>
         )}
-
-        {/* STORY VIEW */}
-        {view === "story" && (
-          <motion.div key="story" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 pt-32 lg:pt-0">
-             <button onClick={() => setView("front")} className="fixed top-12 left-12 z-[60] p-4 bg-white/80 backdrop-blur-md rounded-full border border-black/5 hover:bg-black hover:text-white transition-all shadow-xl">
-               <ChevronLeft className="w-5 h-5" />
-             </button>
-
-             <main className="flex flex-col lg:flex-row min-h-screen">
-                <div className="w-full lg:w-1/2 h-screen lg:sticky lg:top-0">
-                   <Image src={STORIES[activeStory].img} alt="Hero" fill className="object-cover" priority />
-                   <div className="absolute inset-0 bg-black/10" />
-                </div>
-                <div className="w-full lg:w-1/2 p-12 lg:p-32 bg-white">
-                   <span className="text-[10px] uppercase tracking-[0.5em] opacity-30 mb-8 block font-black font-sans">Article / {STORIES[activeStory].subtitle}</span>
-                   <h1 className="text-6xl md:text-8xl italic tracking-tighter leading-[0.9] mb-12">{STORIES[activeStory].title}</h1>
-                   
-                   <div className="flex gap-12 mb-16 border-y border-black/5 py-8">
-                      <div className="flex items-center gap-3 opacity-40 hover:opacity-100 cursor-pointer transition-opacity">
-                         <Volume2 className="w-4 h-4" /> <span className="text-[10px] font-black font-sans tracking-widest uppercase">Listen</span>
-                      </div>
-                      <div className="flex items-center gap-3 opacity-40 hover:opacity-100 cursor-pointer transition-opacity">
-                         <Share2 className="w-4 h-4" /> <span className="text-[10px] font-black font-sans tracking-widest uppercase">Share</span>
-                      </div>
-                   </div>
-
-                   <p className="text-2xl leading-relaxed mb-12 italic opacity-80">
-                      {STORIES[activeStory].content}
-                   </p>
-                   
-                   <div className="space-y-12 text-lg leading-relaxed opacity-60 font-sans">
-                      <p>
-                         The collection represents a philosophical shift in how we perceive luxury. No longer tied to excess, the new premium is found in the deliberate reduction of noise. Every seam, every shadow, and every silence is curated to enhance the central narrative of the wearer.
-                      </p>
-                      <p>
-                         Captured in the salt flats of Boliva, the 'Desert Silence' series represents the peak of this reduction. The harsh light strips away the illusions of form, leaving only the raw essence of our textile innovation.
-                      </p>
-                   </div>
-
-                   <div className="mt-24 pt-12 border-t border-black/10 flex justify-between items-center group cursor-pointer" onClick={() => setActiveStory((activeStory + 1) % STORIES.length)}>
-                      <div>
-                         <span className="text-[10px] uppercase tracking-widest opacity-30 font-black font-sans">Next Story</span>
-                         <div className="text-2xl italic tracking-tight">{STORIES[(activeStory + 1) % STORIES.length].title}</div>
-                      </div>
-                      <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
-                   </div>
-                </div>
-             </main>
-          </motion.div>
-        )}
-
-        {/* ARCHIVE VIEW */}
-        {view === "archive" && (
-          <motion.div key="archive" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen font-sans">
-             <div className="flex justify-between items-end mb-24">
-                <h1 className="text-8xl font-black italic tracking-tighter leading-none font-serif text-[#111]">Archive.</h1>
-                <div className="text-[10px] uppercase font-black tracking-[0.4em] opacity-30">Series // 2018—2026</div>
-             </div>
-
-             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {[...Array(8)].map((_, i) => (
-                  <motion.div 
-                    key={i} initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ delay: (i % 4) * 0.1 }}
-                    className="relative aspect-square glass overflow-hidden group border border-black/5"
-                  >
-                     <Image src={`https://images.unsplash.com/photo-${1500000000000 + i * 123456}?q=80&w=600&auto=format&fit=crop`} alt="Archive" fill className="object-cover grayscale opacity-40 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700" />
-                     <div className="absolute inset-0 p-8 flex flex-col justify-end">
-                        <div className="text-[10px] font-black uppercase tracking-widest mb-1 opacity-0 group-hover:opacity-100 transition-opacity">Issue_0{i+1}</div>
-                        <div className="text-lg italic font-serif opacity-0 group-hover:opacity-100 transition-opacity">Visual Synthesis</div>
-                     </div>
-                  </motion.div>
-                ))}
-             </div>
-          </motion.div>
-        )}
-
       </AnimatePresence>
 
-      <footer className="relative z-10 p-12 border-t border-black/5 flex flex-col md:flex-row justify-between items-center gap-12 font-sans text-[10px] uppercase tracking-[0.4em] font-black opacity-30">
-         <div>&copy; 2026 Editorial.studio</div>
-         <div className="flex gap-12">
-            <span className="hover:opacity-100 cursor-pointer">Instagram</span>
-            <span className="hover:opacity-100 cursor-pointer">Twitter</span>
-            <span className="hover:opacity-100 cursor-pointer">Terminal</span>
-         </div>
-         <div>London / Paris / NYC</div>
-      </footer>
+      {/* Hero */}
+      <div className="relative overflow-hidden pt-24">
+        <motion.div style={{ y: heroY }} className="absolute inset-0 top-0">
+          <Image src="https://images.unsplash.com/photo-1504711434969-e33886168f5c?q=80&w=2000&auto=format&fit=crop" alt="Editorial" fill className="object-cover opacity-8" unoptimized />
+        </motion.div>
+        <div className="relative z-10 max-w-5xl mx-auto px-6 md:px-12 py-24 md:py-36">
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="text-sm text-[#6b7280] uppercase tracking-widest mb-6">
+            Independent. Unsponsored. Unfiltered.
+          </motion.p>
+          <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.1 }} className="text-6xl md:text-8xl font-black leading-none mb-8 font-serif">
+            Ideas that
+            <br />
+            <em className="not-italic bg-gradient-to-r from-[#1a1a1a] to-[#6b7280] bg-clip-text text-transparent">deserve</em>
+            <br />
+            your time
+          </motion.h1>
+          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.25 }} className="text-xl text-[#6b7280] max-w-xl mb-10 leading-relaxed">
+            Long-form essays, reported features, and criticism for readers who still believe in the paragraph.
+          </motion.p>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="flex gap-4">
+            <motion.a href="#" whileHover={{ scale: 1.02 }} className="px-8 py-4 bg-[#1a1a1a] text-white font-bold rounded-xl flex items-center gap-2 hover:bg-black transition-colors">
+              Start reading <ArrowRight className="w-4 h-4" />
+            </motion.a>
+            <motion.a href="#" whileHover={{ scale: 1.02 }} className="px-8 py-4 border border-black/10 text-[#1a1a1a] font-bold rounded-xl hover:bg-black/5 transition-colors">
+              Our mission
+            </motion.a>
+          </motion.div>
+        </div>
+      </div>
 
-      <style>{`
-        .glass {
-          background: rgba(255, 255, 255, 0.5);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
-        }
-      `}</style>
+      {/* Stats */}
+      <section className="py-16 px-6 border-y border-black/5 bg-white">
+        <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
+          {STATS.map((s, i) => <Reveal key={s.label} delay={i * 0.1}><Counter target={s.value} suffix={s.suffix} label={s.label} /></Reveal>)}
+        </div>
+      </section>
+
+      {/* Articles */}
+      <section className="py-24 px-6 md:px-12 max-w-7xl mx-auto">
+        <Reveal className="flex items-center justify-between mb-10 flex-wrap gap-4">
+          <h2 className="text-3xl font-black font-serif">Latest essays</h2>
+          <div className="flex gap-2 flex-wrap">
+            {CATEGORIES.map(cat => (
+              <button key={cat} onClick={() => setActiveCategory(cat)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${activeCategory === cat ? "bg-[#1a1a1a] text-white" : "bg-black/5 text-[#6b7280] hover:bg-black/10"}`}>
+                {cat}
+              </button>
+            ))}
+          </div>
+        </Reveal>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filtered.map((article, i) => (
+            <Reveal key={article.title} delay={i * 0.07} className={article.featured ? "md:col-span-2 lg:col-span-2" : ""}>
+              <motion.a href="#" whileHover={{ y: -4 }} className="group block">
+                <div className={`relative overflow-hidden rounded-2xl mb-4 ${article.featured ? "h-64 md:h-80" : "h-52"}`}>
+                  <Image src={article.img} alt={article.title} fill className="object-cover transition-transform duration-700 group-hover:scale-105" unoptimized />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                  <span className="absolute top-4 left-4 px-3 py-1 bg-white/90 text-xs font-bold rounded-full text-[#1a1a1a]">{article.cat}</span>
+                </div>
+                <div className="flex items-center gap-3 text-xs text-[#9ca3af] mb-2">
+                  <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{article.read}</span>
+                  <span>·</span>
+                  <span>{article.date}</span>
+                </div>
+                <h3 className={`font-black font-serif leading-tight group-hover:underline ${article.featured ? "text-2xl" : "text-lg"}`}>{article.title}</h3>
+                <div className="mt-3 flex items-center gap-1 text-sm text-[#6b7280] group-hover:text-[#1a1a1a] transition-colors">
+                  Read essay <ArrowUpRight className="w-4 h-4" />
+                </div>
+              </motion.a>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="py-24 px-6 bg-[#1a1a1a] text-white">
+        <div className="max-w-3xl mx-auto text-center">
+          <Reveal><h2 className="text-4xl font-black font-serif mb-16">What readers say</h2></Reveal>
+          <AnimatePresence mode="wait">
+            <motion.div key={activeT} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={{ duration: 0.5 }}>
+              <p className="text-xl text-white/80 italic leading-relaxed mb-8 font-serif">"{TESTIMONIALS[activeT].quote}"</p>
+              <div className="flex items-center justify-center gap-3">
+                <Image src={TESTIMONIALS[activeT].avatar} alt={TESTIMONIALS[activeT].name} width={44} height={44} className="rounded-full object-cover" unoptimized />
+                <div className="text-left">
+                  <p className="font-bold text-sm">{TESTIMONIALS[activeT].name}</p>
+                  <p className="text-white/50 text-xs">{TESTIMONIALS[activeT].role}</p>
+                </div>
+              </div>
+            </motion.div>
+          </AnimatePresence>
+          <div className="flex justify-center gap-2 mt-8">
+            {TESTIMONIALS.map((_, i) => <button key={i} onClick={() => setActiveT(i)} className={`w-2 h-2 rounded-full transition-colors ${i === activeT ? "bg-white" : "bg-white/20"}`} />)}
+          </div>
+        </div>
+      </section>
+
+      {/* Newsletter */}
+      <section className="py-24 px-6 bg-white">
+        <Reveal className="max-w-xl mx-auto text-center">
+          <h2 className="text-4xl font-black font-serif mb-4">Weekly dispatch</h2>
+          <p className="text-[#6b7280] mb-8">One essay, every Sunday. No noise. Unsubscribe any time.</p>
+          <div className="flex gap-3 max-w-md mx-auto">
+            <input type="email" placeholder="your@email.com" className="flex-1 px-5 py-3 border border-black/10 rounded-xl text-sm focus:outline-none focus:border-black/30 bg-[#fafaf8]" />
+            <motion.button whileHover={{ scale: 1.02 }} className="px-6 py-3 bg-[#1a1a1a] text-white font-bold text-sm rounded-xl hover:bg-black transition-colors whitespace-nowrap">Subscribe</motion.button>
+          </div>
+        </Reveal>
+      </section>
+
+      {/* FAQ */}
+      <section className="py-24 px-6 max-w-3xl mx-auto">
+        <Reveal className="mb-12"><h2 className="text-3xl font-black font-serif">Questions</h2></Reveal>
+        <div className="space-y-4">
+          {FAQ.map((f, i) => (
+            <Reveal key={i} delay={i * 0.05}>
+              <div className="border-b border-black/10 pb-4">
+                <button onClick={() => setOpenFaq(openFaq === i ? null : i)} className="w-full flex items-center justify-between py-2 text-left">
+                  <span className="font-semibold text-[#1a1a1a]">{f.q}</span>
+                  <motion.div animate={{ rotate: openFaq === i ? 180 : 0 }}><ChevronDown className="w-5 h-5 text-[#9ca3af] shrink-0" /></motion.div>
+                </button>
+                <AnimatePresence>
+                  {openFaq === i && (
+                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}>
+                      <p className="pt-2 text-[#6b7280] text-sm leading-relaxed">{f.a}</p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="py-24 px-6 bg-[#1a1a1a]">
+        <Reveal className="max-w-3xl mx-auto text-center text-white">
+          <h2 className="text-5xl font-black font-serif mb-6">Join 2.4M readers who think</h2>
+          <p className="text-white/60 text-lg mb-10">Full access to our archive, weekly digest, and exclusive subscriber essays.</p>
+          <motion.button whileHover={{ scale: 1.04 }} className="px-10 py-5 bg-white text-black font-black text-lg rounded-2xl hover:bg-white/90 transition-colors flex items-center gap-2 mx-auto">
+            Subscribe — €7/month <ArrowRight className="w-5 h-5" />
+          </motion.button>
+        </Reveal>
+      </section>
+
+      <footer className="py-12 px-6 max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-[#9ca3af] border-t border-black/5">
+        <div className="flex items-center gap-2 font-bold text-[#1a1a1a] font-serif"><BookOpen className="w-4 h-4" />The Editorial</div>
+        <p>© 2026 The Editorial. Independent journalism.</p>
+        <div className="flex gap-6">{["About", "Privacy", "Contact", "Archive"].map(l => <a key={l} href="#" className="hover:text-[#1a1a1a] transition-colors">{l}</a>)}</div>
+      </footer>
     </div>
   );
 }
