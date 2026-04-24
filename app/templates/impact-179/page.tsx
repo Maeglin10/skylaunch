@@ -1,168 +1,211 @@
 "use client";
 
-import { motion, useScroll, useTransform, animate } from "framer-motion";
+import { motion, useScroll, useTransform, useSpring, useMotionValue } from "framer-motion";
 import { useRef, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Heart, Globe2, BookOpen, ArrowUpRight, ArrowRight } from "lucide-react";
+import { Heart, Globe2, BookOpen, ArrowRight, Menu, Search, Activity, Zap, Layers } from "lucide-react";
 import "../premium.css";
 
-function AnimatedCounter({ from, to, duration, suffix = "" }: { from: number, to: number, duration: number, suffix?: string }) {
-  const nodeRef = useRef<HTMLDivElement>(null);
-  
-  useEffect(() => {
-    const node = nodeRef.current;
-    if (!node) return;
+const INITIATIVES = [
+  { icon: <BookOpen className="w-8 h-8" />, title: "PROJECT_NAIROBI", cat: "Education", value: "Verified", img: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&q=80&w=1500" },
+  { icon: <Globe2 className="w-8 h-8" />, title: "GIRLS_FUND_SC", cat: "Scholarship", value: "Active", img: "https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&q=80&w=1500" },
+  { icon: <Heart className="w-8 h-8" />, title: "HEALTH_LINK", cat: "Infrastructure", value: "Locked", img: "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&q=80&w=1500" },
+];
 
-    const controls = animate(from, to, {
-      duration,
-      ease: "easeOut",
-      onUpdate(value) {
-         if (node) {
-            node.textContent = value.toFixed(0) + suffix;
-         }
-      },
-    });
-
-    return () => controls.stop();
-  }, [from, to, duration, suffix]);
-
-  return <span ref={nodeRef} />;
-}
-
-export default function PremiumNonprofit() {
+export default function HopeFoundationSPA() {
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: containerRef });
   
-  const heroScale = useTransform(scrollYProgress, [0, 0.5], [1, 1.2]);
-  const imgY = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
+  const yHero = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
+  const heroScale = useTransform(scrollYProgress, [0, 0.5], [1, 1.1]);
+  
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const springX = useSpring(mouseX, { stiffness: 40, damping: 20 });
+  const springY = useSpring(mouseY, { stiffness: 40, damping: 20 });
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      mouseX.set(e.clientX - window.innerWidth / 2);
+      mouseY.set(e.clientY - window.innerHeight / 2);
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, [mouseX, mouseY]);
 
   return (
-    <div ref={containerRef} className="premium-theme bg-[#FAF9F6] text-[#1C2E2A] min-h-screen font-serif selection:bg-[#2A5C4A] selection:text-white">
+    <div ref={containerRef} className="premium-theme bg-[#FAF9F6] text-[#1C2E2A] min-h-screen font-serif selection:bg-[#2A5C4A] selection:text-white overflow-hidden relative">
       
+      {/* EARTH GRID & NOISE */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(42,92,74,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(42,92,74,0.03)_1px,transparent_1px)] bg-[size:6rem_6rem] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_70%,transparent_100%)]" />
+        <motion.div 
+           style={{ x: springX, y: springY }}
+           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70vw] h-[70vw] bg-[#2A5C4A] opacity-[0.02] blur-[150px] rounded-full mix-blend-multiply" 
+        />
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.05] mix-blend-multiply" />
+      </div>
+
       {/* HEADER */}
-      <header className="fixed top-0 left-0 w-full z-50 px-6 py-6 flex justify-between items-center transition-all bg-[#FAF9F6]/80 backdrop-blur-xl border-b border-[#1C2E2A]/5">
-         <div className="font-black text-2xl tracking-tighter text-[#2A5C4A] flex items-center gap-2">
-            <Heart className="w-5 h-5 fill-current" />
-            HopeFoundation.
-         </div>
-         
-         <nav className="hidden md:flex gap-12 font-sans text-[10px] uppercase font-bold tracking-[0.2em] text-[#1C2E2A]/60">
-            <Link href="#" className="hover:text-[#2A5C4A] transition-colors">Our Mission</Link>
-            <Link href="#" className="hover:text-[#2A5C4A] transition-colors">Initiatives</Link>
-            <Link href="#" className="hover:text-[#2A5C4A] transition-colors">Stories</Link>
-         </nav>
-         
-         <button className="bg-[#2A5C4A] text-[#FAF9F6] px-8 py-4 rounded-full font-sans font-black text-[10px] uppercase tracking-[0.2em] hover:bg-[#1C2E2A] transition-all shadow-[0_10px_30px_rgba(42,92,74,0.3)] hover:shadow-[0_10px_30px_rgba(28,46,42,0.5)]">
-            Donate Now
-         </button>
+      <header className="fixed top-0 left-0 w-full px-6 md:px-12 py-10 flex justify-between items-center z-50 bg-[#FAF9F6]/30 backdrop-blur-3xl border-b border-[#2A5C4A]/5">
+        <Link href="/" className="font-black text-2xl tracking-tighter text-[#2A5C4A] flex items-center gap-4 italic uppercase">
+           HOPE<span className="text-[#2A5C4A]/30">_FOUNDATION</span>
+        </Link>
+        
+        <nav className="hidden lg:flex gap-16 font-sans font-black text-[10px] uppercase tracking-[0.6em] text-[#1C2E2A]/30">
+            <Link href="#" className="hover:text-[#2A5C4A] transition-colors group">
+               Mission<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-[#2A5C4A] italic">.</span>
+            </Link>
+            <Link href="#" className="hover:text-[#2A5C4A] transition-colors group">
+               Initiatives<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-[#2A5C4A] italic">.</span>
+            </Link>
+            <Link href="#" className="hover:text-[#2A5C4A] transition-colors group">
+               Reports<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-[#2A5C4A] italic">.</span>
+            </Link>
+        </nav>
+        
+        <div className="flex items-center gap-10">
+           <button className="bg-[#2A5C4A] text-white px-12 py-4 font-sans font-black text-[10px] uppercase tracking-[0.4em] hover:bg-[#1C2E2A] transition-all">
+              Donate_Now
+           </button>
+           <Menu className="w-6 h-6 text-[#2A5C4A] cursor-pointer" />
+        </div>
       </header>
 
-      {/* BIG HERO IMAGE */}
-      <section className="pt-32 pb-16 px-6 max-w-[1800px] mx-auto w-full flex-1 flex flex-col justify-center">
-         <div className="relative w-full h-[70vh] md:h-[80vh] rounded-[3rem] overflow-hidden flex items-end p-8 md:p-16 text-white shadow-2xl">
-            <motion.div style={{ scale: heroScale, y: imgY }} className="absolute inset-0">
-               <Image src="https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&q=80&w=2500" alt="Charity" fill className="object-cover" priority />
-            </motion.div>
-            <div className="absolute inset-0 bg-gradient-to-t from-[#1C2E2A] via-[#1C2E2A]/40 to-transparent" />
-            
+      {/* HERO SECTION */}
+      <section className="relative h-screen flex flex-col justify-center items-center px-6 text-center z-10 pt-20 overflow-hidden">
+         <motion.div style={{ scale: heroScale, y: yHero }} className="absolute inset-0 z-0">
+            <Image src="https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&q=80&w=2500" alt="Foundation" fill className="object-cover opacity-20 grayscale contrast-125" priority />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#FAF9F6] via-transparent to-[#FAF9F6]/40" />
+         </motion.div>
+         
+         <div className="relative z-10 max-w-7xl w-full">
             <motion.div 
-               initial={{ opacity: 0, y: 30 }} 
-               animate={{ opacity: 1, y: 0 }} 
-               transition={{ duration: 1, delay: 0.2 }}
-               className="relative z-10 max-w-4xl"
+               initial={{ opacity: 0, y: 100 }}
+               animate={{ opacity: 1, y: 0 }}
+               transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
             >
-               <div className="font-sans text-[10px] font-black uppercase tracking-[0.4em] text-white/70 mb-6 flex items-center gap-3">
-                  <span className="w-8 h-[1px] bg-white/50" /> Empowering the next generation
+               <div className="inline-flex items-center gap-4 font-sans font-black text-[10px] uppercase tracking-[1em] text-[#2A5C4A] mb-16 border-l-2 border-[#2A5C4A] pl-10 italic">
+                  Hope_Sync // 0179_Alpha
                </div>
-               <h1 className="text-5xl md:text-[7vw] font-light tracking-tighter mb-8 leading-[0.9]">
-                  Education <span className="font-black italic">changes</span> <br/> everything.
+               
+               <h1 className="text-7xl md:text-[14vw] font-black italic uppercase leading-[0.75] tracking-tighter mb-20 text-[#2A5C4A]">
+                  EDUCATION.<br/>
+                  <span className="text-transparent" style={{ WebkitTextStroke: "2px #2A5C4A" }}>EVERYTHING.</span>
                </h1>
-               <p className="text-lg md:text-2xl font-sans font-light mb-12 max-w-2xl text-white/80 leading-relaxed">
-                  We believe every child deserves access to quality education. Join us in building schools and opportunities in underserved communities globally.
+               
+               <p className="text-xl md:text-3xl font-light italic text-[#1C2E2A]/40 max-w-3xl mx-auto mb-24 leading-relaxed uppercase tracking-widest">
+                  Structural allocation for social intent. Architecting the future of human capital with tectonic precision.
                </p>
                
-               <div className="flex flex-col sm:flex-row gap-6 font-sans">
-                  <button className="bg-white text-[#2A5C4A] px-10 py-5 rounded-full font-black text-xs uppercase tracking-[0.2em] hover:bg-[#FAF9F6] transition-colors flex items-center justify-center gap-3">
-                     Give Monthly <ArrowRight className="w-4 h-4" />
-                  </button>
-                  <button className="bg-white/10 backdrop-blur-md border border-white/30 text-white px-10 py-5 rounded-full font-black text-xs uppercase tracking-[0.2em] hover:bg-white hover:text-[#1C2E2A] transition-colors flex items-center justify-center">
-                     Learn Our Approach
-                  </button>
+               <div className="flex flex-col md:flex-row gap-16 justify-center items-center font-sans font-mono text-[#1C2E2A]">
+                  <div className="flex items-center gap-8 group cursor-pointer">
+                     <div className="w-20 h-px bg-[#2A5C4A]/30 group-hover:w-32 transition-all" />
+                     <span className="text-[10px] font-black uppercase tracking-[0.8em]">Explore_Initiatives</span>
+                  </div>
+                  <div className="hidden md:block w-px h-16 bg-[#1C2E2A]/5" />
+                  <div className="font-black text-[9px] uppercase tracking-[0.6em] text-[#1C2E2A]/10 italic text-center">
+                     50+ Schools // 12k+ Children // 15 Countries
+                  </div>
                </div>
             </motion.div>
+         </div>
+
+         {/* Decorative Side HUD */}
+         <div className="absolute right-12 bottom-12 flex flex-col items-end gap-4 font-sans font-black text-[8px] uppercase tracking-[1em] text-[#2A5C4A]/20 hidden md:flex italic">
+            <span>SYNC_STATUS: ACTIVE</span>
+            <div className="flex gap-1 h-12 items-end">
+               {[1, 2, 3, 4, 5].map(i => <motion.div key={i} animate={{ height: ['20%', '100%', '40%'] }} transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }} className="w-[1px] bg-[#2A5C4A]" />)}
+            </div>
          </div>
       </section>
 
-      {/* STATS STRIP (ANIMATED) */}
-      <section className="py-24 px-6 relative z-20">
-         <div className="max-w-[1600px] mx-auto grid grid-cols-2 md:grid-cols-4 gap-12 text-center divide-x divide-[#1C2E2A]/10">
-            {[
-               { num: 50, suffix: "+", text: "Schools Built", icon: <BookOpen className="w-6 h-6 mx-auto mb-4 text-[#2A5C4A]/50" /> },
-               { num: 12000, suffix: "+", text: "Children Reached", icon: <Heart className="w-6 h-6 mx-auto mb-4 text-[#2A5C4A]/50" /> },
-               { num: 15, suffix: "", text: "Countries", icon: <Globe2 className="w-6 h-6 mx-auto mb-4 text-[#2A5C4A]/50" /> },
-               { num: 98, suffix: "%", text: "Direct Fund Allocation", icon: <div className="w-6 h-6 mx-auto mb-4 text-[#2A5C4A]/50 font-sans font-black">$</div> }
-            ].map((stat, i) => (
-               <motion.div 
-                  key={i}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-50px" }}
-                  transition={{ duration: 0.5, delay: i * 0.1 }}
-               >
-                  {stat.icon}
-                  <div className="text-5xl md:text-7xl font-black text-[#2A5C4A] mb-4 tracking-tighter font-sans">
-                     <AnimatedCounter from={0} to={stat.num} duration={2} suffix={stat.suffix} />
-                  </div>
-                  <div className="text-[10px] font-sans font-black text-[#1C2E2A]/50 uppercase tracking-[0.2em] max-w-[150px] mx-auto leading-relaxed">
-                     {stat.text}
-                  </div>
-               </motion.div>
+      {/* INITIATIVES GRID */}
+      <section className="py-48 px-6 md:px-12 max-w-[1800px] mx-auto relative z-10 bg-[#FAF9F6]">
+         <div className="flex flex-col md:flex-row justify-between items-end mb-40 border-b border-[#1C2E2A]/10 pb-20 gap-16 font-sans">
+            <div>
+               <span className="text-[10px] font-black uppercase tracking-[2em] text-[#2A5C4A] mb-8 block italic font-mono">Mission_Manifest</span>
+               <h2 className="text-6xl md:text-[10vw] font-black italic uppercase tracking-tighter text-[#2A5C4A] leading-none">The <span className="text-[#2A5C4A]/20">Impact_</span></h2>
+            </div>
+            <div className="flex gap-16 text-[10px] font-black uppercase tracking-[0.6em] text-[#1C2E2A]/20 italic font-mono">
+               <span>Records: [03]</span>
+               <span>Status: [Verified]</span>
+            </div>
+         </div>
+
+         <div className="grid grid-cols-1 md:grid-cols-3 gap-16 font-sans">
+            {INITIATIVES.map((p, i) => (
+                <motion.div 
+                   key={i} 
+                   initial={{ opacity: 0, y: 80 }}
+                   whileInView={{ opacity: 1, y: 0 }}
+                   viewport={{ once: true, margin: "-100px" }}
+                   transition={{ duration: 1.2, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
+                   className="group relative h-[85vh] bg-stone-50 border border-[#1C2E2A]/5 overflow-hidden cursor-pointer hover:border-[#2A5C4A]/30 transition-all shadow-2xl"
+                >
+                    <Image src={p.img} alt={p.title} fill className="object-cover opacity-30 grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-1000" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#FAF9F6] via-transparent to-transparent opacity-95" />
+                    <div className="absolute inset-0 bg-white/5 group-hover:bg-transparent transition-colors duration-700" />
+                    
+                    <div className="absolute inset-16 flex flex-col justify-between z-10 font-mono text-[#1C2E2A]">
+                        <div className="flex justify-between items-start">
+                           <div className="p-5 bg-white/5 border border-[#1C2E2A]/10 rounded-none group-hover:bg-[#2A5C4A] group-hover:text-white transition-all shadow-xl">
+                              {p.icon}
+                           </div>
+                           <div className="text-[10px] font-black uppercase tracking-[0.8em] text-[#2A5C4A] italic font-mono">Ref_0x{i+179}</div>
+                        </div>
+                        
+                        <div>
+                           <span className="text-[10px] uppercase tracking-[0.8em] text-[#2A5C4A] mb-8 block italic font-black">{p.cat} // Verified</span>
+                           <h3 className="text-5xl md:text-6xl font-black italic uppercase tracking-tighter mb-16 text-[#2A5C4A] group-hover:tracking-widest transition-all leading-[0.8]">{p.title}</h3>
+                           <div className="flex items-center gap-8 text-[10px] font-black uppercase tracking-[0.6em] opacity-0 group-hover:opacity-100 transition-all translate-y-10 group-hover:translate-y-0 text-[#1C2E2A]">
+                              Report <ArrowRight className="w-6 h-6" />
+                           </div>
+                        </div>
+                    </div>
+                </motion.div>
             ))}
          </div>
       </section>
 
-      {/* INITIATIVES SECTION */}
-      <section className="py-32 px-6 bg-[#2A5C4A] text-white rounded-t-[4rem]">
-         <div className="max-w-[1600px] mx-auto">
-            <div className="flex flex-col md:flex-row justify-between items-end mb-24 gap-12">
-               <h2 className="text-5xl md:text-7xl font-light tracking-tighter leading-none">
-                  Current <br/> <span className="font-black italic">Initiatives.</span>
-               </h2>
-               <p className="max-w-md font-sans text-white/70 leading-relaxed font-medium">
-                  We focus our resources where they create the largest ripple effect. Explore our active projects and see the impact of your contribution.
+      {/* FOOTER */}
+      <footer className="py-48 px-6 md:px-12 border-t border-[#1C2E2A]/5 relative z-10 bg-[#FAF9F6]">
+         <div className="max-w-[1800px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-40 font-sans">
+            <div className="max-w-2xl">
+               <div className="text-[#2A5C4A] mb-16 flex items-center gap-6 font-black text-2xl italic uppercase tracking-widest font-mono">
+                  <Activity className="w-10 h-10" /> Hope_Logs
+               </div>
+               <p className="text-4xl md:text-6xl font-light italic leading-[0.9] text-[#1C2E2A]/20 uppercase tracking-tighter mb-20">
+                  WE TREAT HOPE AS ARCHITECTURE. EVERY DOLLAR A FUNCTION.
                </p>
+               <div className="flex gap-20 font-black text-[10px] uppercase tracking-[0.8em] text-[#2A5C4A]/40 italic font-mono">
+                  <span>Berlin</span>
+                  <span>London</span>
+                  <span>NYC</span>
+               </div>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-               {[
-                  { img: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&q=80&w=1200", title: "Project: Nairobi Library", desc: "Constructing a modern learning center with digital resources for 2,000 students." },
-                  { img: "https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&q=80&w=1200", title: "Girls Education Fund", desc: "Providing scholarships, uniforms, and safe transportation for young women in rural areas." }
-               ].map((init, i) => (
-                  <motion.div 
-                     key={i}
-                     initial={{ opacity: 0, y: 30 }}
-                     whileInView={{ opacity: 1, y: 0 }}
-                     viewport={{ once: true, margin: "-100px" }}
-                     transition={{ duration: 0.6, delay: i * 0.2 }}
-                     className="group cursor-pointer"
-                  >
-                     <div className="relative aspect-[4/3] rounded-[2rem] overflow-hidden mb-8 border border-white/10">
-                        <Image src={init.img} alt={init.title} fill className="object-cover group-hover:scale-105 transition-transform duration-700" />
-                        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors duration-500" />
-                        
-                        <div className="absolute top-6 right-6 w-12 h-12 bg-white text-[#2A5C4A] rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-500">
-                           <ArrowUpRight className="w-5 h-5" />
-                        </div>
-                     </div>
-                     <h3 className="text-3xl font-black tracking-tighter mb-4">{init.title}</h3>
-                     <p className="font-sans text-white/60 text-lg leading-relaxed">{init.desc}</p>
-                  </motion.div>
-               ))}
+            <div className="flex flex-col justify-between items-end text-right font-mono text-[#1C2E2A]">
+               <div className="w-full">
+                  <h4 className="text-[12vw] font-black italic uppercase tracking-tighter opacity-[0.02] leading-none mb-20">HOPE</h4>
+                  <nav className="flex flex-col gap-10 font-black text-[10px] uppercase tracking-[0.8em] text-[#1C2E2A]/10">
+                     <Link href="#" className="hover:text-[#2A5C4A] transition-colors group">
+                        Instagram<span className="text-[#2A5C4A]/0 group-hover:text-[#2A5C4A] transition-all">_</span>
+                     </Link>
+                     <Link href="#" className="hover:text-[#2A5C4A] transition-colors group">
+                        Reports<span className="text-[#2A5C4A]/0 group-hover:text-[#2A5C4A] transition-all">_</span>
+                     </Link>
+                     <Link href="#" className="hover:text-[#2A5C4A] transition-colors group">
+                        Legal<span className="text-[#2A5C4A]/0 group-hover:text-[#2A5C4A] transition-all">_</span>
+                     </Link>
+                  </nav>
+               </div>
+               <div className="font-black text-[9px] uppercase tracking-[1.5em] text-[#1C2E2A]/5 mt-32 italic">
+                  &copy; 2026 // HOPE_FOUNDATION_GLOBAL&trade;
+               </div>
             </div>
          </div>
-      </section>
-
+      </footer>
     </div>
   );
 }
