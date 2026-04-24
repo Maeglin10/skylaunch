@@ -1,108 +1,168 @@
 "use client";
 
-import { motion, useScroll, useTransform } from "framer-motion";
-import { useRef } from "react";
+import { motion, useScroll, useTransform, useSpring, useMotionValue } from "framer-motion";
+import { useRef, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
+import { Layers, Activity, Zap, ArrowRight, Menu, Search, Compass, Shield } from "lucide-react";
 import "../premium.css";
 
 const PROJECTS = [
-  { title: "The Vertex", loc: "Oslo, Norway", cat: "Cultural", img: "https://images.unsplash.com/photo-1511818966892-d7d671e672a2?auto=format&fit=crop&q=80&w=1500" },
-  { title: "Lumina Pavilion", loc: "Tokyo, Japan", cat: "Commercial", img: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=1500" },
-  { title: "Nordic Museum", loc: "Stockholm, Sweden", cat: "Civic", img: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1500" },
-  { title: "Aura Skyscraper", loc: "Dubai, UAE", cat: "Residential", img: "https://images.unsplash.com/photo-1577495508048-b635879837f1?auto=format&fit=crop&q=80&w=1500" }
+  { icon: <Layers className="w-8 h-8" />, title: "VERTEX_CORE", cat: "Cultural", value: "Verified", img: "https://images.unsplash.com/photo-1511818966892-d7d671e672a2?auto=format&fit=crop&q=80&w=1500" },
+  { icon: <Activity className="w-8 h-8" />, title: "LUMINA_PAV", cat: "Commercial", value: "Active", img: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=1500" },
+  { icon: <Shield className="w-8 h-8" />, title: "AURA_SK_V4", cat: "Civic", value: "Locked", img: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1500" },
 ];
 
-export default function PremiumArchitecture() {
+export default function ArchitecturaSPA() {
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: containerRef });
   
-  const heroImgY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
-  const headerOpacity = useTransform(scrollYProgress, [0, 0.1], [1, 0]);
+  const yHero = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
+  const heroScale = useTransform(scrollYProgress, [0, 0.5], [1, 1.1]);
+  
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const springX = useSpring(mouseX, { stiffness: 40, damping: 20 });
+  const springY = useSpring(mouseY, { stiffness: 40, damping: 20 });
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      mouseX.set(e.clientX - window.innerWidth / 2);
+      mouseY.set(e.clientY - window.innerHeight / 2);
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, [mouseX, mouseY]);
 
   return (
-    <div ref={containerRef} className="premium-theme bg-[#E5E5E5] text-[#111] min-h-screen font-sans selection:bg-[#111] selection:text-[#E5E5E5] uppercase overflow-hidden">
+    <div ref={containerRef} className="premium-theme bg-[#E5E5E5] text-[#111] min-h-screen font-sans selection:bg-[#111] selection:text-[#E5E5E5] overflow-hidden relative uppercase">
       
+      {/* ARCHI GRID & NOISE */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(17,17,17,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(17,17,17,0.03)_1px,transparent_1px)] bg-[size:10rem_10rem] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_70%,transparent_100%)]" />
+        <motion.div 
+           style={{ x: springX, y: springY }}
+           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70vw] h-[70vw] bg-[#111] opacity-[0.02] blur-[150px] rounded-full mix-blend-multiply" 
+        />
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.05] mix-blend-multiply" />
+      </div>
+
       {/* HEADER */}
-      <motion.header style={{ opacity: headerOpacity }} className="fixed top-0 left-0 w-full px-8 py-8 flex justify-between items-center z-50 mix-blend-difference text-white pointer-events-none">
-        <div className="font-black tracking-tighter text-3xl pointer-events-auto">
-           ARCHI<span className="opacity-40">TECTURA</span>
-        </div>
-        <nav className="flex gap-12 font-bold text-[10px] tracking-[0.3em] pointer-events-auto">
-            <Link href="#" className="hover:opacity-50 transition-opacity">Projects</Link>
-            <Link href="#" className="hover:opacity-50 transition-opacity">Studio</Link>
-            <Link href="#" className="hover:opacity-50 transition-opacity">Contact</Link>
+      <header className="fixed top-0 left-0 w-full px-6 md:px-12 py-10 flex justify-between items-center z-50 bg-[#E5E5E5]/50 backdrop-blur-3xl border-b border-black/5">
+        <Link href="/" className="font-black text-2xl tracking-[0.3em] text-[#111] flex items-center gap-4 italic uppercase">
+           ARCHI<span className="text-black/30">TECTURA</span>
+        </Link>
+        
+        <nav className="hidden lg:flex gap-16 font-black text-[10px] uppercase tracking-[0.6em] text-black/30">
+            <Link href="#" className="hover:text-black transition-colors group">
+               Projects<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-black italic">.</span>
+            </Link>
+            <Link href="#" className="hover:text-black transition-colors group">
+               Studio<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-black italic">.</span>
+            </Link>
+            <Link href="#" className="hover:text-black transition-colors group">
+               Contact<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-black italic">.</span>
+            </Link>
         </nav>
-      </motion.header>
+        
+        <div className="flex items-center gap-10">
+           <button className="bg-black text-white px-12 py-4 font-black text-[10px] uppercase tracking-[0.4em] hover:bg-white hover:text-black transition-all shadow-[0_0_40px_rgba(0,0,0,0.1)]">
+              Studio_Access
+           </button>
+           <Menu className="w-6 h-6 text-black cursor-pointer" />
+        </div>
+      </header>
 
       {/* HERO SECTION */}
-      <section className="relative h-screen flex flex-col justify-end p-4 md:p-8">
-         <motion.div 
-            initial={{ height: "0%" }} 
-            animate={{ height: "100%" }} 
-            transition={{ duration: 1.5, ease: [0.76, 0, 0.24, 1] }} 
-            className="absolute inset-4 md:inset-8 bg-[#111] z-0 overflow-hidden"
-         >
-             <motion.div style={{ y: heroImgY }} className="absolute inset-[-10%]">
-                <Image src="https://images.unsplash.com/photo-1600607686527-6fb886090705?auto=format&fit=crop&q=80&w=2500" alt="Architecture" fill className="object-cover opacity-60 mix-blend-luminosity" priority />
-             </motion.div>
+      <section className="relative h-screen flex flex-col justify-center items-center px-6 text-center z-10 pt-20 overflow-hidden">
+         <motion.div style={{ scale: heroScale, y: yHero }} className="absolute inset-0 z-0">
+            <Image src="https://images.unsplash.com/photo-1600607686527-6fb886090705?auto=format&fit=crop&q=80&w=2500" alt="Architecture" fill className="object-cover opacity-20 grayscale contrast-125" priority />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#E5E5E5] via-transparent to-[#E5E5E5]/40" />
          </motion.div>
          
-         <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-end p-8 md:p-12 text-[#E5E5E5] pointer-events-none">
-             <motion.h1 
-                initial={{ opacity: 0, y: 50 }} 
-                animate={{ opacity: 1, y: 0 }} 
-                transition={{ delay: 1, duration: 1 }} 
-                className="text-[12vw] md:text-[10vw] font-black leading-[0.8] tracking-tighter mix-blend-overlay drop-shadow-2xl mb-8 md:mb-0"
-             >
-                Space &<br/><span className="text-transparent" style={{ WebkitTextStroke: "2px #E5E5E5" }}>Structure.</span>
-             </motion.h1>
-             
-             <motion.div 
-                initial={{ opacity: 0 }} 
-                animate={{ opacity: 1 }} 
-                transition={{ delay: 1.5 }} 
-                className="text-[10px] font-bold tracking-[0.4em] max-w-xs md:text-right opacity-70 leading-loose"
-             >
-                 Award-winning architectural design studio based in Copenhagen. Redefining modern brutalism.
-             </motion.div>
+         <div className="relative z-10 max-w-7xl w-full">
+            <motion.div 
+               initial={{ opacity: 0, y: 100 }}
+               animate={{ opacity: 1, y: 0 }}
+               transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+            >
+               <div className="inline-flex items-center gap-4 font-black text-[10px] uppercase tracking-[1em] text-black mb-16 border-l-2 border-black pl-10 italic font-mono">
+                  Visual_Capture // 0186_Alpha
+               </div>
+               
+               <h1 className="text-7xl md:text-[14vw] font-black italic uppercase leading-[0.75] tracking-tighter mb-20 text-black">
+                  SPACE.<br/>
+                  <span className="text-transparent" style={{ WebkitTextStroke: "2px #111" }}>STRUCTURE.</span>
+               </h1>
+               
+               <p className="text-xl md:text-3xl font-light italic text-black/40 max-w-3xl mx-auto mb-24 leading-relaxed uppercase tracking-widest text-center">
+                  Structural allocation for aesthetic intent. Architecting the future of space with tectonic precision.
+               </p>
+               
+               <div className="flex flex-col md:flex-row gap-16 justify-center items-center font-mono text-black">
+                  <div className="flex items-center gap-8 group cursor-pointer">
+                     <div className="w-20 h-px bg-black/30 group-hover:w-32 transition-all" />
+                     <span className="text-[10px] font-black uppercase tracking-[0.8em]">Explore_Gallery</span>
+                  </div>
+                  <div className="hidden md:block w-px h-16 bg-black/5" />
+                  <div className="font-black text-[9px] uppercase tracking-[0.6em] text-black/10 italic">
+                     Established // 2026 // Copenhagen
+                  </div>
+               </div>
+            </motion.div>
+         </div>
+
+         {/* Decorative Side HUD */}
+         <div className="absolute right-12 bottom-12 flex flex-col items-end gap-4 font-black text-[8px] uppercase tracking-[1em] text-black/20 hidden md:flex italic font-mono">
+            <span>SYNC_STATUS: ACTIVE</span>
+            <div className="flex gap-1 h-12 items-end">
+               {[1, 2, 3, 4, 5].map(i => <motion.div key={i} animate={{ height: ['20%', '100%', '40%'] }} transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }} className="w-[1px] bg-black" />)}
+            </div>
          </div>
       </section>
 
-      {/* PROJECT GRID */}
-      <section className="px-4 md:px-8 py-32 bg-[#111]">
-         <div className="flex justify-between items-end mb-24 px-4 md:px-8">
-            <h2 className="text-4xl md:text-6xl font-black tracking-tighter text-[#E5E5E5]">Selected Works</h2>
-            <div className="hidden md:block text-[10px] font-bold tracking-[0.4em] text-[#E5E5E5]/50">2022 — 2026</div>
+      {/* PROJECTS GRID */}
+      <section className="py-48 px-6 md:px-12 max-w-[1800px] mx-auto relative z-10 bg-[#E5E5E5]">
+         <div className="flex flex-col md:flex-row justify-between items-end mb-40 border-b border-black/10 pb-20 gap-16">
+            <div>
+               <span className="text-[10px] font-black uppercase tracking-[2em] text-black mb-8 block italic font-mono">Architecture_Manifest</span>
+               <h2 className="text-6xl md:text-[10vw] font-black italic uppercase tracking-tighter text-black leading-none">The <span className="text-black/20">Archive_</span></h2>
+            </div>
+            <div className="flex gap-16 text-[10px] font-black uppercase tracking-[0.6em] text-black/20 italic font-mono">
+               <span>Records: [03]</span>
+               <span>Status: [Verified]</span>
+            </div>
          </div>
 
-         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
-            {PROJECTS.map((proj, i) => (
+         <div className="grid grid-cols-1 md:grid-cols-3 gap-16">
+            {PROJECTS.map((p, i) => (
                 <motion.div 
                    key={i} 
-                   initial={{ opacity: 0, y: 50 }}
+                   initial={{ opacity: 0, y: 80 }}
                    whileInView={{ opacity: 1, y: 0 }}
                    viewport={{ once: true, margin: "-100px" }}
-                   transition={{ duration: 0.8, delay: i * 0.1 }}
-                   className="group relative aspect-[4/5] md:aspect-[3/4] bg-[#1A1A1A] overflow-hidden cursor-pointer flex flex-col justify-between p-8 md:p-12"
+                   transition={{ duration: 1.2, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
+                   className="group relative h-[85vh] bg-stone-50 border border-black/5 overflow-hidden cursor-pointer hover:border-black/30 transition-all shadow-2xl"
                 >
-                    <div className="absolute inset-0 z-0">
-                        <Image src={proj.img} alt={proj.title} fill className="object-cover opacity-40 group-hover:opacity-80 transition-all duration-[1.5s] ease-[0.16,1,0.3,1] grayscale group-hover:grayscale-0 group-hover:scale-110 transform" />
-                    </div>
+                    <Image src={p.img} alt={p.title} fill className="object-cover opacity-30 grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-1000" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#E5E5E5] via-transparent to-transparent opacity-95" />
+                    <div className="absolute inset-0 bg-white/5 group-hover:bg-transparent transition-colors duration-700" />
                     
-                    <div className="relative z-10 flex justify-between items-start text-[#E5E5E5]">
-                        <div className="font-black text-[10px] tracking-[0.4em] opacity-50 group-hover:opacity-100 transition-opacity duration-500">0{i+1}</div>
-                        <div className="font-bold text-[10px] tracking-[0.3em] opacity-0 -translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 flex items-center gap-2">
-                           View Project <ArrowUpRight className="w-4 h-4" />
+                    <div className="absolute inset-16 flex flex-col justify-between z-10 font-mono text-black">
+                        <div className="flex justify-between items-start">
+                           <div className="p-5 bg-white/5 border border-black/10 rounded-none group-hover:bg-black group-hover:text-white transition-all shadow-xl">
+                              {p.icon}
+                           </div>
+                           <div className="text-[10px] font-black uppercase tracking-[0.8em] text-black italic font-mono">Ref_0x{i+186}</div>
                         </div>
-                    </div>
-                    
-                    <div className="relative z-10 text-[#E5E5E5]">
-                        <div className="font-bold text-[10px] tracking-[0.4em] opacity-50 mb-4 flex gap-4">
-                           <span>{proj.cat}</span> <span className="opacity-30">/</span> <span>{proj.loc}</span>
+                        
+                        <div>
+                           <span className="text-[10px] uppercase tracking-[0.8em] text-black mb-8 block italic font-black">{p.cat} // Verified</span>
+                           <h3 className="text-5xl md:text-6xl font-black italic uppercase tracking-tighter mb-16 text-black group-hover:tracking-widest transition-all leading-[0.8]">{p.title}</h3>
+                           <div className="flex items-center gap-8 text-[10px] font-black uppercase tracking-[0.6em] opacity-0 group-hover:opacity-100 transition-all translate-y-10 group-hover:translate-y-0 text-black">
+                              View_Project <ArrowRight className="w-6 h-6" />
+                           </div>
                         </div>
-                        <h3 className="text-4xl md:text-5xl font-black tracking-tighter leading-none">{proj.title}</h3>
                     </div>
                 </motion.div>
             ))}
@@ -110,12 +170,40 @@ export default function PremiumArchitecture() {
       </section>
 
       {/* FOOTER */}
-      <footer className="bg-[#E5E5E5] text-[#111] py-32 px-8 flex flex-col items-center justify-center text-center">
-         <h2 className="text-[12vw] font-black tracking-tighter leading-none mb-12">ARCHI<span className="opacity-20">TECTURA</span></h2>
-         <div className="flex gap-12 font-bold text-[10px] tracking-[0.4em] opacity-50">
-            <Link href="#" className="hover:opacity-100 transition-opacity">Instagram</Link>
-            <Link href="#" className="hover:opacity-100 transition-opacity">LinkedIn</Link>
-            <Link href="#" className="hover:opacity-100 transition-opacity">Behance</Link>
+      <footer className="py-48 px-6 md:px-12 border-t border-black/5 relative z-10 bg-[#E5E5E5]">
+         <div className="max-w-[1800px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-40 font-sans">
+            <div className="max-w-2xl">
+               <div className="text-black mb-16 flex items-center gap-6 font-black text-2xl italic uppercase tracking-widest font-mono">
+                  <Activity className="w-10 h-10" /> Archi_Logs
+               </div>
+               <p className="text-4xl md:text-6xl font-light italic leading-[0.9] text-black/20 uppercase tracking-tighter mb-20">
+                  WE TREAT SPACE AS ARCHITECTURE. EVERY STRUCTURE A FUNCTION.
+               </p>
+               <div className="flex gap-20 font-black text-[10px] uppercase tracking-[0.8em] text-black/40 italic font-mono">
+                  <span>Berlin</span>
+                  <span>London</span>
+                  <span>NYC</span>
+               </div>
+            </div>
+            <div className="flex flex-col justify-between items-end text-right font-mono text-black">
+               <div className="w-full">
+                  <h4 className="text-[12vw] font-black italic uppercase tracking-tighter opacity-[0.02] leading-none mb-20 text-black">ARCHI</h4>
+                  <nav className="flex flex-col gap-10 font-black text-[10px] uppercase tracking-[0.8em] text-black/10">
+                     <Link href="#" className="hover:text-black transition-colors group">
+                        Instagram<span className="text-black/0 group-hover:text-black transition-all">_</span>
+                     </Link>
+                     <Link href="#" className="hover:text-black transition-colors group">
+                        LinkedIn<span className="text-black/0 group-hover:text-black transition-all">_</span>
+                     </Link>
+                     <Link href="#" className="hover:text-black transition-colors group">
+                        Legal<span className="text-black/0 group-hover:text-black transition-all">_</span>
+                     </Link>
+                  </nav>
+               </div>
+               <div className="font-black text-[9px] uppercase tracking-[1.5em] text-black/5 mt-32 italic">
+                  &copy; 2026 // ARCHITECTURA_STUDIO_NYC&trade;
+               </div>
+            </div>
          </div>
       </footer>
     </div>

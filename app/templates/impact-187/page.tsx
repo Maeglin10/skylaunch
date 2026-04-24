@@ -1,28 +1,29 @@
 "use client";
 
-import { motion, useScroll, useTransform, useMotionValue, useSpring } from "framer-motion";
-import { useRef, useEffect } from "react";
+import { motion, useScroll, useTransform, useSpring, useMotionValue } from "framer-motion";
+import { useRef, useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, ShieldCheck, Zap, Globe, ChevronRight, BarChart3, CreditCard } from "lucide-react";
+import { ShieldCheck, Zap, Globe, BarChart3, CreditCard, Menu, Search, ArrowRight, Activity, Layers } from "lucide-react";
 import "../premium.css";
 
 const FEATURES = [
-  { icon: <Globe />, title: "Global Transfers", desc: "Send money across 150+ countries instantly with zero hidden fees and real-time exchange rates." },
-  { icon: <BarChart3 />, title: "Smart Wealth", desc: "Automated portfolio balancing and AI-driven insights to grow your wealth passively." },
-  { icon: <ShieldCheck />, title: "Bank-Grade Security", desc: "Multi-party computation (MPC) and biometric authentication keeping your assets locked down." }
+  { icon: <Globe className="w-8 h-8" />, title: "GLOBAL_FLOW", cat: "Transfers", value: "Verified", img: "https://images.unsplash.com/photo-1551288049-bbbda50d2874?auto=format&fit=crop&q=80&w=1500" },
+  { icon: <BarChart3 className="w-8 h-8" />, title: "SMART_WEALTH", cat: "Assets", value: "Active", img: "https://images.unsplash.com/photo-1611974717482-443b7190e386?auto=format&fit=crop&q=80&w=1500" },
+  { icon: <ShieldCheck className="w-8 h-8" />, title: "SECURE_MPC", cat: "Security", value: "Locked", img: "https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&q=80&w=1500" },
 ];
 
-export default function PremiumFintech() {
+export default function VaultFiSPA() {
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: containerRef });
   
-  const yDash = useTransform(scrollYProgress, [0, 0.5], [100, 0]);
-  const opacityDash = useTransform(scrollYProgress, [0, 0.3], [0, 1]);
-
+  const yHero = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
+  const heroScale = useTransform(scrollYProgress, [0, 0.5], [1, 1.1]);
+  
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
-  const springX = useSpring(mouseX, { stiffness: 50, damping: 20 });
-  const springY = useSpring(mouseY, { stiffness: 50, damping: 20 });
+  const springX = useSpring(mouseX, { stiffness: 40, damping: 20 });
+  const springY = useSpring(mouseY, { stiffness: 40, damping: 20 });
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -36,170 +37,174 @@ export default function PremiumFintech() {
   return (
     <div ref={containerRef} className="premium-theme bg-[#030712] text-white min-h-screen font-sans selection:bg-[#3B82F6] selection:text-white overflow-hidden relative">
       
-      {/* 3D ORB BACKGROUND */}
+      {/* FINTECH GRID & NOISE */}
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.03)_1px,transparent_1px)] bg-[size:5rem_5rem] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_70%,transparent_100%)]" />
         <motion.div 
            style={{ x: springX, y: springY }}
-           className="absolute top-[10%] left-[20%] w-[40vw] h-[40vw] bg-[#3B82F6] rounded-full mix-blend-screen filter blur-[150px] opacity-30" 
+           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70vw] h-[70vw] bg-[#3B82F6] opacity-[0.05] blur-[150px] rounded-full mix-blend-screen" 
         />
-        <motion.div 
-           style={{ x: useTransform(springX, v => -v), y: useTransform(springY, v => -v) }}
-           className="absolute bottom-[10%] right-[10%] w-[50vw] h-[50vw] bg-[#10B981] rounded-full mix-blend-screen filter blur-[150px] opacity-20" 
-        />
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.1] mix-blend-screen" />
       </div>
 
       {/* HEADER */}
-      <header className="fixed top-0 left-0 w-full px-6 md:px-12 py-6 flex justify-between items-center z-50 bg-[#030712]/50 backdrop-blur-2xl border-b border-white/5">
-        <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-[#3B82F6] to-[#10B981] rounded-xl flex items-center justify-center font-black text-xl shadow-[0_0_20px_rgba(59,130,246,0.5)]">
-               V
-            </div>
-            <span className="font-black tracking-tight text-2xl">Vault.</span>
-        </div>
+      <header className="fixed top-0 left-0 w-full px-6 md:px-12 py-10 flex justify-between items-center z-50 bg-[#030712]/50 backdrop-blur-3xl border-b border-white/5">
+        <Link href="/" className="font-black text-2xl tracking-[0.3em] text-white flex items-center gap-4 italic uppercase">
+           VAULT<span className="text-[#3B82F6]">.FI</span>
+        </Link>
         
-        <nav className="hidden md:flex items-center gap-10 text-xs font-bold uppercase tracking-widest text-white/50">
-            <Link href="#" className="hover:text-white transition-colors">Products</Link>
-            <Link href="#" className="hover:text-white transition-colors">Business</Link>
-            <Link href="#" className="hover:text-white transition-colors">Company</Link>
+        <nav className="hidden lg:flex gap-16 font-black text-[10px] uppercase tracking-[0.6em] text-white/30">
+            <Link href="#" className="hover:text-[#3B82F6] transition-colors group">
+               Products<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-[#3B82F6] italic">.</span>
+            </Link>
+            <Link href="#" className="hover:text-[#3B82F6] transition-colors group">
+               Wealth<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-[#3B82F6] italic">.</span>
+            </Link>
+            <Link href="#" className="hover:text-[#3B82F6] transition-colors group">
+               Cards<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-[#3B82F6] italic">.</span>
+            </Link>
         </nav>
         
-        <div className="flex items-center gap-6">
-            <Link href="#" className="text-xs font-bold uppercase tracking-widest text-white/50 hover:text-white transition-colors hidden md:block">Log In</Link>
-            <button className="bg-white text-black px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:scale-105 transition-transform shadow-[0_0_20px_rgba(255,255,255,0.2)]">
-               Get Started
-            </button>
+        <div className="flex items-center gap-10">
+           <button className="bg-white text-black px-12 py-4 font-black text-[10px] uppercase tracking-[0.4em] hover:bg-[#3B82F6] hover:text-white transition-all shadow-[0_0_40px_rgba(59,130,246,0.2)]">
+              Open_Account
+           </button>
+           <Menu className="w-6 h-6 text-[#3B82F6] cursor-pointer" />
         </div>
       </header>
 
-      <main className="relative z-10">
-        {/* HERO SECTION */}
-        <section className="pt-48 pb-32 px-6 max-w-5xl mx-auto text-center">
-            <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}>
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#3B82F6]/10 border border-[#3B82F6]/30 text-[#3B82F6] text-[10px] font-black uppercase tracking-[0.3em] mb-12 shadow-[0_0_20px_rgba(59,130,246,0.2)]">
-                    <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse shadow-[0_0_10px_rgba(16,185,129,1)]" /> Vault 2.0 is Here
-                </div>
-                
-                <h1 className="text-6xl md:text-[7vw] font-black tracking-tighter mb-8 leading-[0.9] drop-shadow-2xl">
-                    Banking for the <br/>
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#3B82F6] to-[#10B981]">Next Generation.</span>
-                </h1>
-                
-                <p className="text-xl md:text-2xl text-white/50 max-w-2xl mx-auto font-light leading-relaxed mb-12">
-                    Seamless global transfers, intelligent wealth management, and crystal-clear analytics. Your financial life, elevated.
-                </p>
-                
-                <div className="flex flex-col sm:flex-row justify-center gap-6">
-                    <button className="bg-gradient-to-r from-[#3B82F6] to-[#10B981] text-white px-10 py-5 rounded-xl font-black text-xs uppercase tracking-[0.2em] hover:scale-105 transition-transform shadow-[0_0_40px_rgba(59,130,246,0.4)] flex items-center justify-center gap-3">
-                       Open Free Account <ArrowRight className="w-4 h-4" />
-                    </button>
-                    <button className="bg-white/5 backdrop-blur-xl border border-white/10 text-white px-10 py-5 rounded-xl font-black text-xs uppercase tracking-[0.2em] hover:bg-white/10 transition-colors flex items-center justify-center gap-3">
-                       See How it Works <ChevronRight className="w-4 h-4" />
-                    </button>
-                </div>
-            </motion.div>
-        </section>
-
-        {/* GLASSMORPHIC DASHBOARD MOCKUP */}
-        <section className="px-6 pb-48 max-w-[1400px] mx-auto">
+      {/* HERO SECTION */}
+      <section className="relative h-screen flex flex-col justify-center items-center px-6 text-center z-10 pt-20 overflow-hidden">
+         <motion.div style={{ scale: heroScale, y: yHero }} className="absolute inset-0 z-0">
+            <div className="absolute inset-0 bg-gradient-to-t from-[#030712] via-transparent to-[#030712]/40" />
+         </motion.div>
+         
+         <div className="relative z-10 max-w-7xl w-full">
             <motion.div 
-               style={{ y: yDash, opacity: opacityDash }}
-               className="relative rounded-[3rem] bg-[#0A0F1C]/80 backdrop-blur-3xl border border-white/10 shadow-[0_40px_100px_rgba(59,130,246,0.2)] p-4 md:p-8 overflow-hidden group"
+               initial={{ opacity: 0, y: 100 }}
+               animate={{ opacity: 1, y: 0 }}
+               transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
             >
-                {/* Glow ring on hover */}
-                <div className="absolute inset-0 bg-gradient-to-br from-[#3B82F6]/20 via-transparent to-[#10B981]/20 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none" />
-                
-                <div className="flex flex-col lg:flex-row gap-8 relative z-10">
-                   
-                   {/* Left Panel */}
-                   <div className="flex-1 space-y-8">
-                      {/* Balance Card */}
-                      <div className="bg-white/5 border border-white/5 rounded-3xl p-8 hover:bg-white/10 transition-colors">
-                         <div className="flex justify-between items-start mb-12">
-                            <div className="text-[10px] font-black uppercase tracking-[0.3em] text-white/50">Total Balance</div>
-                            <div className="flex items-center gap-2 bg-[#10B981]/10 text-[#10B981] px-3 py-1.5 rounded-lg text-xs font-bold">
-                               +2.4% <ArrowRight className="w-3 h-3 -rotate-45" />
-                            </div>
-                         </div>
-                         <div className="text-6xl font-black tracking-tighter mb-2">$124,532.00</div>
-                         <div className="text-sm font-medium text-white/30">+ $2,430.50 this month</div>
-                      </div>
-
-                      {/* Recent Activity */}
-                      <div className="bg-white/5 border border-white/5 rounded-3xl p-8">
-                         <div className="text-[10px] font-black uppercase tracking-[0.3em] text-white/50 mb-8">Recent Activity</div>
-                         <div className="space-y-6">
-                            {[
-                               { name: "Apple Store", cat: "Electronics", amt: "-$2,499.00", icon: <CreditCard className="w-5 h-5 text-white/50" /> },
-                               { name: "Salary Deposit", cat: "Income", amt: "+$8,500.00", icon: <Zap className="w-5 h-5 text-[#10B981]" />, pos: true },
-                               { name: "Uber Eats", cat: "Food", amt: "-$45.20", icon: <CreditCard className="w-5 h-5 text-white/50" /> }
-                            ].map((act, i) => (
-                               <div key={i} className="flex items-center gap-4">
-                                  <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center shrink-0">
-                                     {act.icon}
-                                  </div>
-                                  <div className="flex-1">
-                                     <div className="font-bold">{act.name}</div>
-                                     <div className="text-xs text-white/30">{act.cat}</div>
-                                  </div>
-                                  <div className={`font-black ${act.pos ? 'text-[#10B981]' : 'text-white'}`}>{act.amt}</div>
-                               </div>
-                            ))}
-                         </div>
-                      </div>
-                   </div>
-
-                   {/* Right Panel (Chart) */}
-                   <div className="lg:w-[40%] bg-white/5 border border-white/5 rounded-3xl p-8 flex flex-col hover:bg-white/10 transition-colors relative overflow-hidden">
-                      <div className="text-[10px] font-black uppercase tracking-[0.3em] text-white/50 mb-12 relative z-10">Cashflow Analytics</div>
-                      
-                      <div className="flex-1 flex items-end gap-2 relative z-10">
-                         {[20, 30, 45, 35, 60, 50, 75, 65, 80, 70, 90, 85, 100].map((h, i) => (
-                             <motion.div 
-                                key={i} 
-                                initial={{ height: 0 }}
-                                whileInView={{ height: `${h}%` }}
-                                viewport={{ once: true }}
-                                transition={{ duration: 1, delay: 0.5 + (i * 0.05), ease: "easeOut" }}
-                                className="w-full bg-gradient-to-t from-[#3B82F6] to-[#10B981] rounded-t-sm opacity-80 hover:opacity-100 transition-opacity cursor-pointer relative group"
-                             >
-                                <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-white text-black text-[10px] font-black px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity">
-                                   ${h * 100}
-                                </div>
-                             </motion.div>
-                         ))}
-                      </div>
-
-                      {/* Chart Glow */}
-                      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-1/2 bg-[#3B82F6] blur-[80px] opacity-20 pointer-events-none" />
-                   </div>
-                </div>
+               <div className="inline-flex items-center gap-4 font-black text-[10px] uppercase tracking-[1em] text-[#3B82F6] mb-16 border-l-2 border-[#3B82F6] pl-10 italic font-mono">
+                  Network_Capture // 0187_Alpha
+               </div>
+               
+               <h1 className="text-7xl md:text-[14vw] font-black italic uppercase leading-[0.75] tracking-tighter mb-20 text-white">
+                  VAULT.<br/>
+                  <span className="text-transparent" style={{ WebkitTextStroke: "2px rgba(255,255,255,0.6)" }}>CAPITAL.</span>
+               </h1>
+               
+               <p className="text-xl md:text-3xl font-light italic text-white/30 max-w-3xl mx-auto mb-24 leading-relaxed uppercase tracking-widest text-center">
+                  Structural allocation for capital intent. Architecting the future of finance with tectonic precision.
+               </p>
+               
+               <div className="flex flex-col md:flex-row gap-16 justify-center items-center font-mono text-white">
+                  <div className="flex items-center gap-8 group cursor-pointer">
+                     <div className="w-20 h-px bg-[#3B82F6]/30 group-hover:w-32 transition-all" />
+                     <span className="text-[10px] font-black uppercase tracking-[0.8em]">Start_Investing</span>
+                  </div>
+                  <div className="hidden md:block w-px h-16 bg-white/5" />
+                  <div className="font-black text-[9px] uppercase tracking-[0.6em] text-white/10 italic">
+                     $12.4B AUM // 840K Users // Global Nodes
+                  </div>
+               </div>
             </motion.div>
-        </section>
+         </div>
 
-        {/* FEATURES GRID */}
-        <section className="py-32 px-6 max-w-7xl mx-auto border-t border-white/5">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-               {FEATURES.map((feat, i) => (
-                  <motion.div 
-                     key={i}
-                     initial={{ opacity: 0, y: 30 }}
-                     whileInView={{ opacity: 1, y: 0 }}
-                     viewport={{ once: true }}
-                     transition={{ duration: 0.6, delay: i * 0.1 }}
-                     className="bg-white/5 border border-white/5 p-10 rounded-[2rem] hover:bg-white/10 transition-colors"
-                  >
-                     <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#3B82F6]/20 to-[#10B981]/20 text-[#3B82F6] flex items-center justify-center mb-8 border border-[#3B82F6]/30 shadow-[inset_0_0_20px_rgba(59,130,246,0.2)]">
-                        {feat.icon}
-                     </div>
-                     <h3 className="text-2xl font-black mb-4">{feat.title}</h3>
-                     <p className="text-white/50 leading-relaxed font-light">{feat.desc}</p>
-                  </motion.div>
-               ))}
+         {/* Decorative Side HUD */}
+         <div className="absolute right-12 bottom-12 flex flex-col items-end gap-4 font-black text-[8px] uppercase tracking-[1em] text-[#3B82F6]/20 hidden md:flex italic font-mono">
+            <span>SYNC_STATUS: ACTIVE</span>
+            <div className="flex gap-1 h-12 items-end">
+               {[1, 2, 3, 4, 5].map(i => <motion.div key={i} animate={{ height: ['20%', '100%', '40%'] }} transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }} className="w-[1px] bg-[#3B82F6]" />)}
             </div>
-        </section>
+         </div>
+      </section>
 
-      </main>
+      {/* FEATURES GRID */}
+      <section className="py-48 px-6 md:px-12 max-w-[1800px] mx-auto relative z-10 bg-[#030712]">
+         <div className="flex flex-col md:flex-row justify-between items-end mb-40 border-b border-white/10 pb-20 gap-16">
+            <div>
+               <span className="text-[10px] font-black uppercase tracking-[2em] text-[#3B82F6] mb-8 block italic font-mono">Vault_Manifest</span>
+               <h2 className="text-6xl md:text-[10vw] font-black italic uppercase tracking-tighter text-white leading-none">The <span className="text-[#3B82F6]/20">Wealth_</span></h2>
+            </div>
+            <div className="flex gap-16 text-[10px] font-black uppercase tracking-[0.6em] text-white/20 italic font-mono">
+               <span>Records: [03]</span>
+               <span>Status: [Verified]</span>
+            </div>
+         </div>
+
+         <div className="grid grid-cols-1 md:grid-cols-3 gap-16">
+            {FEATURES.map((p, i) => (
+                <motion.div 
+                   key={i} 
+                   initial={{ opacity: 0, y: 80 }}
+                   whileInView={{ opacity: 1, y: 0 }}
+                   viewport={{ once: true, margin: "-100px" }}
+                   transition={{ duration: 1.2, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
+                   className="group relative h-[85vh] bg-[#1A1A1A] border border-white/5 overflow-hidden cursor-pointer hover:border-[#3B82F6]/30 transition-all shadow-2xl"
+                >
+                    <Image src={p.img} alt={p.title} fill className="object-cover opacity-30 grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-1000" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#030712] via-transparent to-transparent opacity-95" />
+                    <div className="absolute inset-0 bg-white/5 group-hover:bg-transparent transition-colors duration-700" />
+                    
+                    <div className="absolute inset-16 flex flex-col justify-between z-10 font-mono text-white">
+                        <div className="flex justify-between items-start">
+                           <div className="p-5 bg-white/5 border border-white/10 rounded-none group-hover:bg-[#3B82F6] group-hover:text-white transition-all shadow-xl">
+                              {p.icon}
+                           </div>
+                           <div className="text-[10px] font-black uppercase tracking-[0.8em] text-[#3B82F6] italic font-mono">Ref_0x{i+187}</div>
+                        </div>
+                        
+                        <div>
+                           <span className="text-[10px] uppercase tracking-[0.8em] text-[#3B82F6] mb-8 block italic font-black">{p.cat} // Verified</span>
+                           <h3 className="text-5xl md:text-6xl font-black italic uppercase tracking-tighter mb-16 text-white group-hover:tracking-widest transition-all leading-[0.8]">{p.title}</h3>
+                           <div className="flex items-center gap-8 text-[10px] font-black uppercase tracking-[0.6em] opacity-0 group-hover:opacity-100 transition-all translate-y-10 group-hover:translate-y-0 text-white">
+                              Details <ArrowRight className="w-6 h-6" />
+                           </div>
+                        </div>
+                    </div>
+                </motion.div>
+            ))}
+         </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="py-48 px-6 md:px-12 border-t border-white/5 relative z-10 bg-[#030712]">
+         <div className="max-w-[1800px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-40">
+            <div className="max-w-2xl">
+               <div className="text-[#3B82F6] mb-16 flex items-center gap-6 font-black text-2xl italic uppercase tracking-widest font-mono">
+                  <Activity className="w-10 h-10" /> Vault_Logs
+               </div>
+               <p className="text-4xl md:text-6xl font-light italic leading-[0.9] text-white/20 uppercase tracking-tighter mb-20">
+                  WE TREAT CAPITAL AS ARCHITECTURE. EVERY BYTE A FUNCTION.
+               </p>
+               <div className="flex gap-20 font-black text-[10px] uppercase tracking-[0.8em] text-[#3B82F6]/40 italic font-mono">
+                  <span>Berlin</span>
+                  <span>London</span>
+                  <span>NYC</span>
+               </div>
+            </div>
+            <div className="flex flex-col justify-between items-end text-right font-mono text-white">
+               <div className="w-full">
+                  <h4 className="text-[12vw] font-black italic uppercase tracking-tighter opacity-[0.02] leading-none mb-20 text-white">VAULT</h4>
+                  <nav className="flex flex-col gap-10 font-black text-[10px] uppercase tracking-[0.8em] text-white/10">
+                     <Link href="#" className="hover:text-[#3B82F6] transition-colors group">
+                        Instagram<span className="text-[#3B82F6]/0 group-hover:text-[#3B82F6] transition-all">_</span>
+                     </Link>
+                     <Link href="#" className="hover:text-[#3B82F6] transition-colors group">
+                        Terminal<span className="text-[#3B82F6]/0 group-hover:text-[#3B82F6] transition-all">_</span>
+                     </Link>
+                     <Link href="#" className="hover:text-[#3B82F6] transition-colors group">
+                        Legal<span className="text-[#3B82F6]/0 group-hover:text-[#3B82F6] transition-all">_</span>
+                     </Link>
+                  </nav>
+               </div>
+               <div className="font-black text-[9px] uppercase tracking-[1.5em] text-white/5 mt-32 italic">
+                  &copy; 2026 // VAULT_FINANCE_GROUP&trade;
+               </div>
+            </div>
+         </div>
+      </footer>
     </div>
   );
 }
