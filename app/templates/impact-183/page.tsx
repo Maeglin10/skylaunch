@@ -1,150 +1,210 @@
 "use client";
 
-import { motion, useScroll, useTransform, animate } from "framer-motion";
+import { motion, useScroll, useTransform, useSpring, useMotionValue } from "framer-motion";
 import { useRef, useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { Sparkles, Terminal, Activity, Zap, ChevronRight, TerminalSquare } from "lucide-react";
+import { Sparkles, Terminal, Activity, Zap, Layers, Menu, Search, ArrowRight, TerminalSquare } from "lucide-react";
 import "../premium.css";
 
-const TERMINAL_LINES = [
-  "Initializing Cognix Kernel v4.2.0...",
-  "Loading neural pathways [||||||||||] 100%",
-  "Connecting to distributed node clusters...",
-  "Connection established. Latency: 12ms",
-  "> Analyzing structural integrity of data streams...",
-  "> Anomalies detected: 0",
-  "> Optimizing inference parameters...",
-  "System ready. Awaiting input."
+const MODELS = [
+  { icon: <Zap className="w-8 h-8" />, title: "COGNIX_ALPHA", cat: "Agentic", value: "Verified", img: "https://images.unsplash.com/photo-1620712943543-bcc4628c7007?auto=format&fit=crop&q=80&w=1500" },
+  { icon: <Activity className="w-8 h-8" />, title: "NEURAL_SYNC", cat: "Inference", value: "Active", img: "https://images.unsplash.com/photo-1531746790731-6c087fecd05a?auto=format&fit=crop&q=80&w=1500" },
+  { icon: <Layers className="w-8 h-8" />, title: "FLOW_CORE_V4", cat: "Workflow", value: "Locked", img: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&q=80&w=1500" },
 ];
 
-export default function PremiumAISaaS() {
+export default function CognixFiSPA() {
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: containerRef });
   
-  const yBg = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
-  const opacityHeader = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
-
-  const [lines, setLines] = useState<string[]>([]);
-  const [cursorBlink, setCursorBlink] = useState(true);
+  const yHero = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
+  const heroScale = useTransform(scrollYProgress, [0, 0.5], [1, 1.1]);
+  
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const springX = useSpring(mouseX, { stiffness: 40, damping: 20 });
+  const springY = useSpring(mouseY, { stiffness: 40, damping: 20 });
 
   useEffect(() => {
-    let currentLine = 0;
-    const interval = setInterval(() => {
-      if (currentLine < TERMINAL_LINES.length) {
-        setLines(prev => [...prev, TERMINAL_LINES[currentLine]]);
-        currentLine++;
-      } else {
-        clearInterval(interval);
-      }
-    }, 800);
-
-    const cursorInterval = setInterval(() => setCursorBlink(p => !p), 500);
-
-    return () => {
-      clearInterval(interval);
-      clearInterval(cursorInterval);
+    const handleMouseMove = (e: MouseEvent) => {
+      mouseX.set(e.clientX - window.innerWidth / 2);
+      mouseY.set(e.clientY - window.innerHeight / 2);
     };
-  }, []);
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, [mouseX, mouseY]);
 
   return (
-    <div ref={containerRef} className="premium-theme bg-[#050505] text-[#FAFAFA] min-h-screen font-sans selection:bg-[#3B82F6] selection:text-white overflow-hidden relative">
+    <div ref={containerRef} className="premium-theme bg-[#050505] text-[#FAFAFA] min-h-screen font-sans selection:bg-[#6366F1] selection:text-white overflow-hidden relative">
       
-      {/* ANIMATED GRID OVERLAY */}
+      {/* AI GRID & NOISE */}
       <div className="fixed inset-0 z-0 pointer-events-none">
-         <motion.div style={{ y: yBg }} className="absolute inset-0">
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_40%,#000_70%,transparent_110%)]" />
-         </motion.div>
-         {/* GLOWS */}
-         <div className="absolute top-[-20%] left-[20%] w-[50vw] h-[50vw] bg-indigo-500 rounded-full mix-blend-screen filter blur-[200px] opacity-10" />
-         <div className="absolute top-[20%] right-[-10%] w-[40vw] h-[40vw] bg-fuchsia-500 rounded-full mix-blend-screen filter blur-[200px] opacity-10" />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(99,102,241,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(99,102,241,0.03)_1px,transparent_1px)] bg-[size:5rem_5rem] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_70%,transparent_100%)]" />
+        <motion.div 
+           style={{ x: springX, y: springY }}
+           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70vw] h-[70vw] bg-[#6366F1] opacity-[0.05] blur-[150px] rounded-full mix-blend-screen" 
+        />
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.1] mix-blend-screen" />
       </div>
 
       {/* HEADER */}
-      <header className="fixed top-0 left-0 w-full z-50 px-6 py-6 flex justify-between items-center bg-[#050505]/50 backdrop-blur-xl border-b border-white/5">
-        <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-fuchsia-500 flex items-center justify-center shadow-[0_0_20px_rgba(99,102,241,0.5)]">
-                <Sparkles className="w-4 h-4 text-white" />
-            </div>
-            <span className="font-black tracking-tight text-xl">Cognix.ai</span>
-        </div>
+      <header className="fixed top-0 left-0 w-full px-6 md:px-12 py-10 flex justify-between items-center z-50 bg-[#050505]/50 backdrop-blur-3xl border-b border-white/5">
+        <Link href="/" className="font-black text-2xl tracking-[0.3em] text-white flex items-center gap-4 italic uppercase">
+           COGNIX<span className="text-[#6366F1]">.AI</span>
+        </Link>
         
-        <nav className="hidden md:flex items-center gap-8 text-xs font-bold uppercase tracking-widest text-white/50">
-            <Link href="#" className="hover:text-white transition-colors">Platform</Link>
-            <Link href="#" className="hover:text-white transition-colors">Models</Link>
-            <Link href="#" className="hover:text-white transition-colors">API</Link>
+        <nav className="hidden lg:flex gap-16 font-black text-[10px] uppercase tracking-[0.6em] text-white/30">
+            <Link href="#" className="hover:text-[#6366F1] transition-colors group">
+               Platform<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-[#6366F1] italic">.</span>
+            </Link>
+            <Link href="#" className="hover:text-[#6366F1] transition-colors group">
+               Models<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-[#6366F1] italic">.</span>
+            </Link>
+            <Link href="#" className="hover:text-[#6366F1] transition-colors group">
+               API_Access<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-[#6366F1] italic">.</span>
+            </Link>
         </nav>
         
-        <button className="bg-white text-black px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-widest shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:scale-105 transition-transform flex items-center gap-2">
-           <TerminalSquare className="w-4 h-4" /> Console
-        </button>
+        <div className="flex items-center gap-10">
+           <button className="bg-white text-black px-12 py-4 font-black text-[10px] uppercase tracking-[0.4em] hover:bg-[#6366F1] hover:text-white transition-all shadow-[0_0_40px_rgba(99,102,241,0.2)]">
+              Console_Login
+           </button>
+           <Menu className="w-6 h-6 text-[#6366F1] cursor-pointer" />
+        </div>
       </header>
 
       {/* HERO SECTION */}
-      <main className="relative z-10 px-6 pt-32 pb-24 md:pt-48 max-w-[1400px] mx-auto flex flex-col items-center text-center">
-        
-        <motion.div style={{ opacity: opacityHeader }} className="w-full max-w-4xl mx-auto">
-            <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 backdrop-blur-md px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400 mb-12 shadow-[0_0_20px_rgba(99,102,241,0.2)]">
-                <span className="w-2 h-2 rounded-full bg-fuchsia-500 animate-pulse" /> Introducing Cognix-7B
-            </div>
-            
-            <h1 className="text-5xl md:text-7xl lg:text-[6vw] font-black tracking-tighter mb-8 leading-[0.9]">
-                Intelligence that <br/>
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-fuchsia-400 to-rose-400" style={{ WebkitTextStroke: "1px rgba(255,255,255,0.1)" }}>
-                   adapts to you.
-                </span>
-            </h1>
-            
-            <p className="text-lg md:text-2xl text-white/50 font-light max-w-2xl mx-auto mb-12 leading-relaxed">
-                Deploy autonomous agents, interpret complex data streams, and automate workflows with our blazing-fast inference API.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <button className="bg-white text-black px-8 py-4 rounded-full text-xs font-black uppercase tracking-[0.2em] hover:scale-105 transition-transform shadow-[0_0_30px_rgba(255,255,255,0.2)] flex items-center justify-center gap-2">
-                   <Zap className="w-4 h-4" /> Start Building
-                </button>
-                <button className="bg-white/5 border border-white/10 text-white px-8 py-4 rounded-full text-xs font-black uppercase tracking-[0.2em] hover:bg-white/10 transition-colors flex items-center justify-center gap-2">
-                   Read Documentation <ChevronRight className="w-4 h-4" />
-                </button>
-            </div>
-        </motion.div>
-        
-        {/* TERMINAL MOCKUP */}
-        <motion.div 
-           initial={{ opacity: 0, y: 50 }} 
-           animate={{ opacity: 1, y: 0 }} 
-           transition={{ delay: 0.5, duration: 1 }} 
-           className="mt-24 w-full max-w-5xl relative group"
-        >
-            <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 via-fuchsia-500 to-rose-500 rounded-[2rem] blur-[20px] opacity-30 group-hover:opacity-50 transition-opacity duration-1000" />
-            
-            <div className="relative bg-[#0A0A0A]/90 backdrop-blur-2xl border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden flex flex-col h-[400px] md:h-[500px]">
-                {/* Window Header */}
-                <div className="h-12 bg-white/5 border-b border-white/5 flex items-center px-6 gap-2 shrink-0">
-                    <div className="w-3 h-3 rounded-full bg-red-500/50" />
-                    <div className="w-3 h-3 rounded-full bg-yellow-500/50" />
-                    <div className="w-3 h-3 rounded-full bg-green-500/50" />
-                    <div className="ml-4 font-mono text-xs text-white/30 flex items-center gap-2">
-                       <Terminal className="w-4 h-4" /> cognix-cli
-                    </div>
-                </div>
-                
-                {/* Terminal Content */}
-                <div className="flex-1 p-6 md:p-8 font-mono text-sm md:text-base text-white/80 overflow-y-auto text-left flex flex-col gap-2">
-                    {lines.map((line, i) => (
-                       <div key={i} className={`${line.startsWith('>') ? 'text-indigo-400 font-bold' : 'text-white/60'}`}>
-                          {line}
-                       </div>
-                    ))}
-                    {lines.length === TERMINAL_LINES.length && (
-                       <div className="flex items-center text-fuchsia-400 font-bold">
-                          $ <span className={`ml-2 w-2 h-5 bg-fuchsia-400 ${cursorBlink ? 'opacity-100' : 'opacity-0'}`} />
-                       </div>
-                    )}
-                </div>
-            </div>
-        </motion.div>
+      <section className="relative h-screen flex flex-col justify-center items-center px-6 text-center z-10 pt-20 overflow-hidden">
+         <motion.div style={{ scale: heroScale, y: yHero }} className="absolute inset-0 z-0">
+            <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-[#050505]/40" />
+         </motion.div>
+         
+         <div className="relative z-10 max-w-7xl w-full">
+            <motion.div 
+               initial={{ opacity: 0, scale: 0.95 }}
+               animate={{ opacity: 1, scale: 1 }}
+               transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
+            >
+               <div className="inline-flex items-center gap-4 font-black text-[10px] uppercase tracking-[1em] text-[#6366F1] mb-16 border-l-2 border-[#6366F1] pl-10 italic font-mono">
+                  Neural_Capture // 0183_Alpha
+               </div>
+               
+               <h1 className="text-7xl md:text-[14vw] font-black italic uppercase leading-[0.75] tracking-tighter mb-20 text-white">
+                  ADAPT.<br/>
+                  <span className="text-transparent" style={{ WebkitTextStroke: "2px rgba(255,255,255,0.6)" }}>INTELLIGENCE.</span>
+               </h1>
+               
+               <p className="text-xl md:text-3xl font-light italic text-white/30 max-w-3xl mx-auto mb-24 leading-relaxed uppercase tracking-widest">
+                  Structural allocation for neural intent. Architecting the future of cognition with tectonic precision.
+               </p>
+               
+               <div className="flex flex-col md:flex-row gap-16 justify-center items-center font-mono">
+                  <div className="flex items-center gap-8 group cursor-pointer">
+                     <div className="w-20 h-px bg-[#6366F1]/30 group-hover:w-32 transition-all" />
+                     <span className="text-[10px] font-black uppercase tracking-[0.8em] text-white">Start_Building</span>
+                  </div>
+                  <div className="hidden md:block w-px h-16 bg-white/5" />
+                  <div className="font-black text-[9px] uppercase tracking-[0.6em] text-white/10 italic text-center">
+                     Inference Optimized // Real-time // Enterprise
+                  </div>
+               </div>
+            </motion.div>
+         </div>
 
-      </main>
+         {/* Decorative Side HUD */}
+         <div className="absolute right-12 bottom-12 flex flex-col items-end gap-4 font-black text-[8px] uppercase tracking-[1em] text-[#6366F1]/20 hidden md:flex italic font-mono">
+            <span>SYNC_STATUS: ACTIVE</span>
+            <div className="flex gap-1 h-12 items-end">
+               {[1, 2, 3, 4, 5].map(i => <motion.div key={i} animate={{ height: ['20%', '100%', '40%'] }} transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }} className="w-[1px] bg-[#6366F1]" />)}
+            </div>
+         </div>
+      </section>
+
+      {/* MODELS GRID */}
+      <section className="py-48 px-6 md:px-12 max-w-[1800px] mx-auto relative z-10 bg-[#050505]">
+         <div className="flex flex-col md:flex-row justify-between items-end mb-40 border-b border-white/10 pb-20 gap-16">
+            <div>
+               <span className="text-[10px] font-black uppercase tracking-[2em] text-[#6366F1] mb-8 block italic font-mono">Cognix_Manifest</span>
+               <h2 className="text-6xl md:text-[10vw] font-black italic uppercase tracking-tighter text-white leading-none">The <span className="text-[#6366F1]/20">Models_</span></h2>
+            </div>
+            <div className="flex gap-16 text-[10px] font-black uppercase tracking-[0.6em] text-white/20 italic font-mono">
+               <span>Records: [03]</span>
+               <span>Status: [Verified]</span>
+            </div>
+         </div>
+
+         <div className="grid grid-cols-1 md:grid-cols-3 gap-16">
+            {MODELS.map((p, i) => (
+                <motion.div 
+                   key={i} 
+                   initial={{ opacity: 0, y: 80 }}
+                   whileInView={{ opacity: 1, y: 0 }}
+                   viewport={{ once: true, margin: "-100px" }}
+                   transition={{ duration: 1.2, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
+                   className="group relative h-[85vh] bg-[#1A1A1A] border border-white/5 overflow-hidden cursor-pointer hover:border-[#6366F1]/30 transition-all shadow-2xl"
+                >
+                    <Image src={p.img} alt={p.title} fill className="object-cover opacity-30 grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-1000" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent opacity-95" />
+                    <div className="absolute inset-0 bg-white/5 group-hover:bg-transparent transition-colors duration-700" />
+                    
+                    <div className="absolute inset-16 flex flex-col justify-between z-10 font-mono text-white">
+                        <div className="flex justify-between items-start">
+                           <div className="p-5 bg-white/5 border border-white/10 rounded-none group-hover:bg-[#6366F1] group-hover:text-white transition-all shadow-xl">
+                              {p.icon}
+                           </div>
+                           <div className="text-[10px] font-black uppercase tracking-[0.8em] text-[#6366F1] italic font-mono">Ref_0x{i+183}</div>
+                        </div>
+                        
+                        <div>
+                           <span className="text-[10px] uppercase tracking-[0.8em] text-[#6366F1] mb-8 block italic font-black">{p.cat} // Verified</span>
+                           <h3 className="text-5xl md:text-6xl font-black italic uppercase tracking-tighter mb-16 text-white group-hover:tracking-widest transition-all leading-[0.8]">{p.title}</h3>
+                           <div className="flex items-center gap-8 text-[10px] font-black uppercase tracking-[0.6em] opacity-0 group-hover:opacity-100 transition-all translate-y-10 group-hover:translate-y-0 text-white">
+                              Documentation <ArrowRight className="w-6 h-6" />
+                           </div>
+                        </div>
+                    </div>
+                </motion.div>
+            ))}
+         </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="py-48 px-6 md:px-12 border-t border-white/5 relative z-10 bg-[#050505]">
+         <div className="max-w-[1800px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-40">
+            <div className="max-w-2xl">
+               <div className="text-[#6366F1] mb-16 flex items-center gap-6 font-black text-2xl italic uppercase tracking-widest font-mono">
+                  <Activity className="w-10 h-10" /> Cognix_Logs
+               </div>
+               <p className="text-4xl md:text-6xl font-light italic leading-[0.9] text-white/20 uppercase tracking-tighter mb-20">
+                  WE TREAT INTELLIGENCE AS ARCHITECTURE. EVERY PARAMETER A FUNCTION.
+               </p>
+               <div className="flex gap-20 font-black text-[10px] uppercase tracking-[0.8em] text-[#6366F1]/40 italic font-mono">
+                  <span>Berlin</span>
+                  <span>London</span>
+                  <span>NYC</span>
+               </div>
+            </div>
+            <div className="flex flex-col justify-between items-end text-right font-mono text-white">
+               <div className="w-full">
+                  <h4 className="text-[12vw] font-black italic uppercase tracking-tighter opacity-[0.02] leading-none mb-20 text-white">COGNIX</h4>
+                  <nav className="flex flex-col gap-10 font-black text-[10px] uppercase tracking-[0.8em] text-white/10">
+                     <Link href="#" className="hover:text-[#6366F1] transition-colors group">
+                        Instagram<span className="text-[#6366F1]/0 group-hover:text-[#6366F1] transition-all">_</span>
+                     </Link>
+                     <Link href="#" className="hover:text-[#6366F1] transition-colors group">
+                        Console<span className="text-[#6366F1]/0 group-hover:text-[#6366F1] transition-all">_</span>
+                     </Link>
+                     <Link href="#" className="hover:text-[#6366F1] transition-colors group">
+                        Legal<span className="text-[#6366F1]/0 group-hover:text-[#6366F1] transition-all">_</span>
+                     </Link>
+                  </nav>
+               </div>
+               <div className="font-black text-[9px] uppercase tracking-[1.5em] text-white/5 mt-32 italic">
+                  &copy; 2026 // COGNIX_INTELLIGENCE_SYSTEMS&trade;
+               </div>
+            </div>
+         </div>
+      </footer>
     </div>
   );
 }
