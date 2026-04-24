@@ -1,127 +1,211 @@
 "use client";
 
-import { motion, useScroll, useTransform } from "framer-motion";
-import { useRef } from "react";
+import { motion, useScroll, useTransform, useSpring, useMotionValue } from "framer-motion";
+import { useRef, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, MoveRight } from "lucide-react";
+import { Compass, Wind, Coffee, Menu, Search, ArrowRight, Layers, Activity, Zap } from "lucide-react";
 import "../premium.css";
 
 const PROJECTS = [
-  { title: "The Alpine Retreat", cat: "Residential", loc: "Swiss Alps", img: "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&q=80&w=1500" },
-  { title: "Maison V", cat: "Commercial", loc: "Milan", img: "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&q=80&w=1500" },
-  { title: "Gallery 04", cat: "Cultural", loc: "Paris", img: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&q=80&w=1500" }
+  { icon: <Compass className="w-8 h-8" />, title: "ALPINE_RE_V2", cat: "Residential", value: "Verified", img: "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&q=80&w=1500" },
+  { icon: <Wind className="w-8 h-8" />, title: "MAISON_V_SYNC", cat: "Commercial", value: "Active", img: "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&q=80&w=1500" },
+  { icon: <Layers className="w-8 h-8" />, title: "GALLERY_04_CORE", cat: "Cultural", value: "Locked", img: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&q=80&w=1500" },
 ];
 
-export default function PremiumInterior() {
+export default function VelaInteriorSPA() {
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: containerRef });
   
-  const heroScale = useTransform(scrollYProgress, [0, 1], [1, 1.1]);
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.4], [1, 0]);
+  const yHero = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
+  const heroScale = useTransform(scrollYProgress, [0, 0.5], [1, 1.1]);
+  
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const springX = useSpring(mouseX, { stiffness: 40, damping: 20 });
+  const springY = useSpring(mouseY, { stiffness: 40, damping: 20 });
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      mouseX.set(e.clientX - window.innerWidth / 2);
+      mouseY.set(e.clientY - window.innerHeight / 2);
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, [mouseX, mouseY]);
 
   return (
-    <div ref={containerRef} className="premium-theme bg-[#EAE8E3] text-[#2C2C2A] min-h-screen font-serif selection:bg-[#BCAAA4] selection:text-white">
+    <div ref={containerRef} className="premium-theme bg-[#EAE8E3] text-[#2C2C2A] min-h-screen font-serif selection:bg-[#BCAAA4] selection:text-white overflow-hidden relative uppercase">
       
-      {/* NOISE TEXTURE OVERLAY */}
-      <div className="fixed inset-0 z-0 pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.15] mix-blend-color-burn" />
+      {/* INTERIOR GRID & NOISE */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(44,44,42,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(44,44,42,0.03)_1px,transparent_1px)] bg-[size:10rem_10rem] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_70%,transparent_100%)]" />
+        <motion.div 
+           style={{ x: springX, y: springY }}
+           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70vw] h-[70vw] bg-[#BCAAA4] opacity-[0.02] blur-[150px] rounded-full mix-blend-multiply" 
+        />
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.05] mix-blend-multiply" />
+      </div>
 
       {/* HEADER */}
-      <header className="fixed top-0 left-0 w-full px-8 py-8 flex justify-between items-center z-50 mix-blend-difference text-[#EAE8E3] pointer-events-none">
-        <Link href="/" className="text-3xl font-normal tracking-[0.2em] uppercase pointer-events-auto">Vela.</Link>
-        <nav className="hidden md:flex gap-16 font-sans font-bold text-[10px] tracking-[0.3em] uppercase pointer-events-auto">
-            <Link href="#" className="hover:opacity-50 transition-opacity">Projects</Link>
-            <Link href="#" className="hover:opacity-50 transition-opacity">Studio</Link>
-            <Link href="#" className="hover:opacity-50 transition-opacity">Journal</Link>
+      <header className="fixed top-0 left-0 w-full px-6 md:px-12 py-10 flex justify-between items-center z-50 bg-[#EAE8E3]/50 backdrop-blur-3xl border-b border-[#2C2C2A]/5">
+        <Link href="/" className="font-black text-2xl tracking-[0.3em] text-[#2C2C2A] flex items-center gap-4 italic uppercase">
+           VELA<span className="text-[#2C2C2A]/30">_STUDIO</span>
+        </Link>
+        
+        <nav className="hidden lg:flex gap-16 font-sans font-black text-[10px] uppercase tracking-[0.6em] text-[#2C2C2A]/30">
+            <Link href="#" className="hover:text-[#2C2C2A] transition-colors group">
+               Journal<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-[#2C2C2A] italic">.</span>
+            </Link>
+            <Link href="#" className="hover:text-[#2C2C2A] transition-colors group">
+               Archive<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-[#2C2C2A] italic">.</span>
+            </Link>
+            <Link href="#" className="hover:text-[#2C2C2A] transition-colors group">
+               Contact<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-[#2C2C2A] italic">.</span>
+            </Link>
         </nav>
-        <button className="font-sans font-bold text-[10px] tracking-[0.3em] uppercase border-b border-current pb-1 hover:opacity-50 transition-opacity pointer-events-auto">
-            Inquire
-        </button>
+        
+        <div className="flex items-center gap-10">
+           <button className="bg-[#2C2C2A] text-white px-12 py-4 font-sans font-black text-[10px] uppercase tracking-[0.4em] hover:bg-[#BCAAA4] transition-all shadow-[0_0_40px_rgba(188,170,164,0.2)]">
+              Inquire_Now
+           </button>
+           <Menu className="w-6 h-6 text-[#2C2C2A] cursor-pointer" />
+        </div>
       </header>
 
-      {/* SPLIT HERO SECTION */}
-      <section className="relative h-screen flex flex-col lg:flex-row overflow-hidden border-b border-[#2C2C2A]/10">
+      {/* HERO SECTION */}
+      <section className="relative h-screen flex flex-col justify-center items-center px-6 text-center z-10 pt-20 overflow-hidden text-center">
+         <motion.div style={{ scale: heroScale, y: yHero }} className="absolute inset-0 z-0">
+            <Image src="https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&q=80&w=2500" alt="Interior" fill className="object-cover opacity-20 grayscale contrast-125" priority />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#EAE8E3] via-transparent to-[#EAE8E3]/40" />
+         </motion.div>
          
-         {/* Text Side */}
-         <div className="flex-1 flex flex-col justify-center px-8 lg:px-24 pt-32 lg:pt-0 relative z-10 bg-[#EAE8E3]">
-            <motion.div style={{ opacity: heroOpacity }} className="max-w-2xl">
-               <div className="font-sans font-bold text-[10px] tracking-[0.4em] uppercase text-[#BCAAA4] mb-12 flex items-center gap-4">
-                  <span className="w-12 h-px bg-[#BCAAA4]" /> Est. 2018
+         <div className="relative z-10 max-w-7xl w-full">
+            <motion.div 
+               initial={{ opacity: 0, y: 100 }}
+               animate={{ opacity: 1, y: 0 }}
+               transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+            >
+               <div className="inline-flex items-center gap-4 font-sans font-black text-[10px] uppercase tracking-[1em] text-[#BCAAA4] mb-16 border-l-2 border-[#BCAAA4] pl-10 italic font-mono">
+                  Space_Capture // 0191_Alpha
                </div>
                
-               <h1 className="text-6xl md:text-[7vw] font-light leading-[0.9] mb-12 tracking-tighter">
-                  Curating<br/><span className="italic">quiet spaces.</span>
+               <h1 className="text-7xl md:text-[14vw] font-black italic uppercase leading-[0.75] tracking-tighter mb-20 text-[#2C2C2A]">
+                  QUIET.<br/>
+                  <span className="text-transparent" style={{ WebkitTextStroke: "2px #2C2C2A" }}>SPACES.</span>
                </h1>
                
-               <p className="font-sans text-sm tracking-[0.2em] max-w-sm mb-16 uppercase leading-[2] text-[#2C2C2A]/60">
-                   A multi-disciplinary interior architecture studio based in Milan, focusing on raw materials, natural light, and brutalist elegance.
+               <p className="text-xl md:text-3xl font-light italic text-[#2C2C2A]/40 max-w-3xl mx-auto mb-24 leading-relaxed uppercase tracking-widest text-center">
+                  Structural allocation for aesthetic intent. Architecting the future of interiors with tectonic precision.
                </p>
                
-               <Link href="#" className="inline-flex items-center gap-6 font-sans font-bold text-[10px] tracking-[0.3em] uppercase border-b-2 border-[#2C2C2A] pb-2 hover:gap-10 hover:text-[#BCAAA4] hover:border-[#BCAAA4] transition-all group">
-                   View Portfolio <MoveRight className="w-4 h-4 transition-transform group-hover:translate-x-2" />
-               </Link>
+               <div className="flex flex-col md:flex-row gap-16 justify-center items-center font-sans font-mono text-[#2C2C2A] text-center">
+                  <div className="flex items-center gap-8 group cursor-pointer">
+                     <div className="w-20 h-px bg-[#BCAAA4]/30 group-hover:w-32 transition-all" />
+                     <span className="text-[10px] font-black uppercase tracking-[0.8em]">Explore_Archive</span>
+                  </div>
+                  <div className="hidden md:block w-px h-16 bg-[#2C2C2A]/5" />
+                  <div className="font-black text-[9px] uppercase tracking-[0.6em] text-[#2C2C2A]/10 italic text-center">
+                     Established // 2026 // Milan
+                  </div>
+               </div>
             </motion.div>
          </div>
-         
-         {/* Image Parallax Side */}
-         <div className="flex-1 relative min-h-[50vh] lg:min-h-screen overflow-hidden">
-            <motion.div style={{ scale: heroScale }} className="absolute inset-0">
-               <Image src="https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&q=80&w=2000" alt="Interior Architecture" fill className="object-cover" priority />
-            </motion.div>
+
+         {/* Decorative Side HUD */}
+         <div className="absolute right-12 bottom-12 flex flex-col items-end gap-4 font-sans font-black text-[8px] uppercase tracking-[1em] text-[#BCAAA4]/20 hidden md:flex italic font-mono">
+            <span>SYNC_STATUS: ACTIVE</span>
+            <div className="flex gap-1 h-12 items-end">
+               {[1, 2, 3, 4, 5].map(i => <motion.div key={i} animate={{ height: ['20%', '100%', '40%'] }} transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }} className="w-[1px] bg-[#BCAAA4]" />)}
+            </div>
          </div>
-         
       </section>
 
-      {/* SELECTED WORKS MASONRY */}
-      <section className="py-32 px-8 max-w-[1800px] mx-auto relative z-10">
-         <div className="flex justify-between items-end mb-24 lg:mb-32">
-            <h2 className="text-4xl md:text-5xl font-light tracking-tight">Selected Works</h2>
-            <Link href="#" className="hidden md:flex font-sans font-bold text-[10px] tracking-[0.3em] uppercase underline underline-offset-8 hover:text-[#BCAAA4] transition-colors">
-               All Projects
-            </Link>
+      {/* PROJECTS GRID */}
+      <section className="py-48 px-6 md:px-12 max-w-[1800px] mx-auto relative z-10 bg-[#EAE8E3]">
+         <div className="flex flex-col md:flex-row justify-between items-end mb-40 border-b border-[#2C2C2A]/10 pb-20 gap-16 font-sans">
+            <div>
+               <span className="text-[10px] font-black uppercase tracking-[2em] text-[#BCAAA4] mb-8 block italic font-mono">Interior_Manifest</span>
+               <h2 className="text-6xl md:text-[10vw] font-black italic uppercase tracking-tighter text-[#2C2C2A] leading-none">The <span className="text-[#BCAAA4]/20">Works_</span></h2>
+            </div>
+            <div className="flex gap-16 text-[10px] font-black uppercase tracking-[0.6em] text-[#2C2C2A]/20 italic font-mono">
+               <span>Records: [03]</span>
+               <span>Status: [Verified]</span>
+            </div>
          </div>
 
-         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-24 lg:gap-x-24 lg:gap-y-48">
-            {PROJECTS.map((proj, i) => (
-               <motion.div 
-                  key={i} 
-                  initial={{ opacity: 0, y: 50 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-100px" }}
-                  transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-                  className={`group cursor-pointer ${i === 1 ? 'md:mt-48' : ''}`}
-               >
-                  <div className="relative aspect-[4/5] overflow-hidden bg-[#DCD8D0] mb-8">
-                     <Image src={proj.img} alt={proj.title} fill className="object-cover group-hover:scale-105 transition-transform duration-[2s] ease-[0.16,1,0.3,1]" />
-                     <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-                  </div>
-                  
-                  <div className="flex justify-between items-start">
-                     <div>
-                        <h3 className="text-3xl font-normal group-hover:italic transition-all duration-500 mb-2">{proj.title}</h3>
-                        <div className="font-sans font-bold text-[10px] tracking-[0.2em] uppercase text-[#2C2C2A]/50">
-                           {proj.loc}
+         <div className="grid grid-cols-1 md:grid-cols-3 gap-16 font-sans">
+            {PROJECTS.map((p, i) => (
+                <motion.div 
+                   key={i} 
+                   initial={{ opacity: 0, y: 80 }}
+                   whileInView={{ opacity: 1, y: 0 }}
+                   viewport={{ once: true, margin: "-100px" }}
+                   transition={{ duration: 1.2, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
+                   className="group relative h-[85vh] bg-stone-50 border border-[#2C2C2A]/5 overflow-hidden cursor-pointer hover:border-[#BCAAA4]/30 transition-all shadow-2xl"
+                >
+                    <Image src={p.img} alt={p.title} fill className="object-cover opacity-30 grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-1000" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#EAE8E3] via-transparent to-transparent opacity-95" />
+                    <div className="absolute inset-0 bg-white/5 group-hover:bg-transparent transition-colors duration-700" />
+                    
+                    <div className="absolute inset-16 flex flex-col justify-between z-10 font-mono text-[#2C2C2A]">
+                        <div className="flex justify-between items-start">
+                           <div className="p-5 bg-white/5 border border-[#2C2C2A]/10 rounded-none group-hover:bg-[#2C2C2A] group-hover:text-white transition-all shadow-xl">
+                              {p.icon}
+                           </div>
+                           <div className="text-[10px] font-black uppercase tracking-[0.8em] text-[#BCAAA4] italic font-mono">Ref_0x{i+191}</div>
                         </div>
-                     </div>
-                     <div className="font-sans font-bold text-[10px] tracking-[0.3em] uppercase text-[#BCAAA4] border border-[#BCAAA4]/30 px-3 py-1 rounded-full">
-                        {proj.cat}
-                     </div>
-                  </div>
-               </motion.div>
+                        
+                        <div>
+                           <span className="text-[10px] uppercase tracking-[0.8em] text-[#BCAAA4] mb-8 block italic font-black">{p.cat} // Verified</span>
+                           <h3 className="text-5xl md:text-6xl font-black italic uppercase tracking-tighter mb-16 text-[#2C2C2A] group-hover:tracking-widest transition-all leading-[0.8]">{p.title}</h3>
+                           <div className="flex items-center gap-8 text-[10px] font-black uppercase tracking-[0.6em] opacity-0 group-hover:opacity-100 transition-all translate-y-10 group-hover:translate-y-0 text-[#2C2C2A]">
+                              Details <ArrowRight className="w-6 h-6" />
+                           </div>
+                        </div>
+                    </div>
+                </motion.div>
             ))}
          </div>
       </section>
 
-      {/* STUDIO PHILOSOPHY */}
-      <section className="py-32 px-8 bg-[#2C2C2A] text-[#EAE8E3] relative z-10">
-         <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-3xl md:text-5xl font-light leading-snug tracking-tight mb-16">
-               "We believe in spaces that breathe. Where every texture tells a story and emptiness is treated as an active design element."
-            </h2>
-            <div className="font-sans font-bold text-[10px] tracking-[0.3em] uppercase opacity-50">The Vela Philosophy</div>
+      {/* FOOTER */}
+      <footer className="py-48 px-6 md:px-12 border-t border-[#2C2C2A]/5 relative z-10 bg-[#EAE8E3]">
+         <div className="max-w-[1800px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-40 font-sans">
+            <div className="max-w-2xl">
+               <div className="text-[#2C2C2A] mb-16 flex items-center gap-6 font-black text-2xl italic uppercase tracking-widest font-mono">
+                  <Activity className="w-10 h-10" /> Interior_Logs
+               </div>
+               <p className="text-4xl md:text-6xl font-light italic leading-[0.9] text-[#2C2C2A]/20 uppercase tracking-tighter mb-20">
+                  WE TREAT SPACES AS ARCHITECTURE. EVERY TEXTURE A FUNCTION.
+               </p>
+               <div className="flex gap-20 font-black text-[10px] uppercase tracking-[0.8em] text-[#BCAAA4]/40 italic font-mono text-center">
+                  <span>Berlin</span>
+                  <span>London</span>
+                  <span>NYC</span>
+               </div>
+            </div>
+            <div className="flex flex-col justify-between items-end text-right font-mono text-[#2C2C2A] text-center">
+               <div className="w-full">
+                  <h4 className="text-[12vw] font-black italic uppercase tracking-tighter opacity-[0.02] leading-none mb-20 text-[#2C2C2A]">VELA</h4>
+                  <nav className="flex flex-col gap-10 font-black text-[10px] uppercase tracking-[0.8em] text-[#2C2C2A]/10">
+                     <Link href="#" className="hover:text-[#2C2C2A] transition-colors group">
+                        Instagram<span className="text-[#2C2C2A]/0 group-hover:text-[#2C2C2A] transition-all">_</span>
+                     </Link>
+                     <Link href="#" className="hover:text-[#2C2C2A] transition-colors group">
+                        Inquiries<span className="text-[#2C2C2A]/0 group-hover:text-[#2C2C2A] transition-all">_</span>
+                     </Link>
+                     <Link href="#" className="hover:text-[#2C2C2A] transition-colors group">
+                        Legal<span className="text-[#2C2C2A]/0 group-hover:text-[#2C2C2A] transition-all">_</span>
+                     </Link>
+                  </nav>
+               </div>
+               <div className="font-black text-[9px] uppercase tracking-[1.5em] text-[#2C2C2A]/5 mt-32 italic">
+                  &copy; 2026 // VELA_INTERIOR_STUDIO&trade;
+               </div>
+            </div>
          </div>
-      </section>
-
+      </footer>
     </div>
   );
 }

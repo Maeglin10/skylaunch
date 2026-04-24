@@ -1,29 +1,29 @@
 "use client";
 
-import { motion, useScroll, useTransform, useMotionValue, useSpring } from "framer-motion";
-import { useRef, useEffect } from "react";
+import { motion, useScroll, useTransform, useSpring, useMotionValue } from "framer-motion";
+import { useRef, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Gamepad2, ArrowRight, Play, Terminal } from "lucide-react";
+import { Gamepad2, Activity, Zap, Layers, Menu, Search, ArrowRight, Compass, Shield } from "lucide-react";
 import "../premium.css";
 
 const GAMES = [
-  { title: "Neon Shift", cat: "Action RPG", desc: "Open-world cybernetic rebellion in a dystopian megalopolis.", year: "2026" },
-  { title: "Void Walker", cat: "Survival Horror", desc: "Zero-gravity psychological terror aboard a derelict station.", year: "2025" },
-  { title: "Aether Strike", cat: "Tactical FPS", desc: "Class-based competitive shooter with hyper-fluid movement.", year: "2024" }
+  { icon: <Gamepad2 className="w-8 h-8" />, title: "NEON_SHIFT_V2", cat: "Cyberpunk", value: "Verified", img: "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=1500" },
+  { icon: <Activity className="w-8 h-8" />, title: "VOID_WALKER", cat: "Horror", value: "Active", img: "https://images.unsplash.com/photo-1614728263952-84ea256f9679?auto=format&fit=crop&q=80&w=1500" },
+  { icon: <Zap className="w-8 h-8" />, title: "AETHER_STRIKE", cat: "Tactical", value: "Locked", img: "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&q=80&w=1500" },
 ];
 
-export default function PremiumGamingStudio() {
+export default function GamingStudioSPA() {
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: containerRef });
   
-  const yBg = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
-  const scaleHero = useTransform(scrollYProgress, [0, 0.5], [1, 0.9]);
-
+  const yHero = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
+  const heroScale = useTransform(scrollYProgress, [0, 0.5], [1, 1.1]);
+  
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
-  const springX = useSpring(mouseX, { stiffness: 50, damping: 20 });
-  const springY = useSpring(mouseY, { stiffness: 50, damping: 20 });
+  const springX = useSpring(mouseX, { stiffness: 40, damping: 20 });
+  const springY = useSpring(mouseY, { stiffness: 40, damping: 20 });
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -37,132 +37,175 @@ export default function PremiumGamingStudio() {
   return (
     <div ref={containerRef} className="premium-theme bg-[#050505] text-[#F3F4F6] min-h-screen font-sans selection:bg-[#FF003C] selection:text-white overflow-hidden relative">
       
-      {/* CYBERPUNK GRID & GLOW */}
+      {/* GAMING GRID & NOISE */}
       <div className="fixed inset-0 z-0 pointer-events-none">
-         <motion.div style={{ y: yBg }} className="absolute inset-0">
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,0,60,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,0,60,0.05)_1px,transparent_1px)] bg-[size:3rem_3rem] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_0%,#000_70%,transparent_110%)]" />
-         </motion.div>
-         {/* Mouse reactive glow */}
-         <motion.div 
-            style={{ x: springX, y: springY }}
-            className="absolute top-[20%] left-[20%] w-[40vw] h-[40vw] bg-[#FF003C] rounded-full mix-blend-screen filter blur-[150px] opacity-20" 
-         />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,0,60,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,0,60,0.03)_1px,transparent_1px)] bg-[size:5rem_5rem] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_70%,transparent_100%)]" />
+        <motion.div 
+           style={{ x: springX, y: springY }}
+           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70vw] h-[70vw] bg-[#FF003C] opacity-[0.05] blur-[150px] rounded-full mix-blend-screen" 
+        />
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.1] mix-blend-screen" />
       </div>
 
       {/* HEADER */}
-      <header className="fixed top-0 left-0 w-full px-6 md:px-12 py-6 flex justify-between items-center z-50 bg-[#050505]/50 backdrop-blur-xl border-b border-[#FF003C]/20">
-        <Link href="/" className="font-black text-2xl tracking-[0.2em] text-white flex items-center gap-2">
-           <Gamepad2 className="w-8 h-8 text-[#FF003C]" />
-           NEXUS<span className="text-[#FF003C] animate-pulse">_</span>
+      <header className="fixed top-0 left-0 w-full px-6 md:px-12 py-10 flex justify-between items-center z-50 bg-[#050505]/50 backdrop-blur-3xl border-b border-[#FF003C]/20">
+        <Link href="/" className="font-black text-2xl tracking-[0.3em] text-white flex items-center gap-4 italic uppercase">
+           NEXUS<span className="text-[#FF003C]">_STUDIO</span>
         </Link>
         
-        <nav className="hidden md:flex gap-12 font-black text-[10px] uppercase tracking-[0.3em] text-white/50">
-            <Link href="#" className="hover:text-[#FF003C] transition-colors">Games</Link>
-            <Link href="#" className="hover:text-[#FF003C] transition-colors">Studio</Link>
-            <Link href="#" className="hover:text-[#FF003C] transition-colors">Careers</Link>
+        <nav className="hidden lg:flex gap-16 font-black text-[10px] uppercase tracking-[0.6em] text-white/30">
+            <Link href="#" className="hover:text-[#FF003C] transition-colors group">
+               Games<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-[#FF003C] italic">.</span>
+            </Link>
+            <Link href="#" className="hover:text-[#FF003C] transition-colors group">
+               Engine<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-[#FF003C] italic">.</span>
+            </Link>
+            <Link href="#" className="hover:text-[#FF003C] transition-colors group">
+               Atelier<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-[#FF003C] italic">.</span>
+            </Link>
         </nav>
         
-        <button className="bg-[#FF003C] text-black px-8 py-3 font-black text-[10px] uppercase tracking-[0.2em] skew-x-[-15deg] hover:bg-white hover:scale-105 transition-all shadow-[0_0_20px_rgba(255,0,60,0.4)]">
-            <span className="block skew-x-[15deg] flex items-center gap-2"><Play className="w-3 h-3" /> Play Now</span>
-        </button>
+        <div className="flex items-center gap-10">
+           <button className="bg-[#FF003C] text-black px-12 py-4 font-black text-[10px] uppercase tracking-[0.4em] hover:bg-white transition-all shadow-[0_0_40px_rgba(255,0,60,0.4)]">
+              Play_Now
+           </button>
+           <Menu className="w-6 h-6 text-[#FF003C] cursor-pointer" />
+        </div>
       </header>
 
       {/* HERO SECTION */}
-      <section className="relative h-screen flex flex-col justify-center px-6 md:px-12 z-10 pt-20">
-         <motion.div style={{ scale: scaleHero }} className="absolute inset-4 md:inset-8 z-0 rounded-[2rem] overflow-hidden border border-[#FF003C]/20 shadow-[0_0_50px_rgba(255,0,60,0.1)]">
-            <Image src="https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=2500" alt="Cyberpunk City" fill className="object-cover opacity-40 mix-blend-luminosity grayscale contrast-125" priority />
-            <div className="absolute inset-0 bg-gradient-to-r from-[#050505] via-[#050505]/80 to-transparent" />
-            
-            {/* Scanline overlay */}
-            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay pointer-events-none" />
+      <section className="relative h-screen flex flex-col justify-center items-center px-6 text-center z-10 pt-20 overflow-hidden text-center">
+         <motion.div style={{ scale: heroScale, y: yHero }} className="absolute inset-0 z-0">
+            <Image src="https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=2500" alt="Gaming City" fill className="object-cover opacity-20 grayscale contrast-125" priority />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-[#050505]/40" />
          </motion.div>
          
-         <div className="relative z-10 max-w-4xl px-4 md:px-8">
+         <div className="relative z-10 max-w-7xl w-full">
             <motion.div 
-               initial={{ opacity: 0, x: -50 }}
-               animate={{ opacity: 1, x: 0 }}
-               transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+               initial={{ opacity: 0, scale: 0.95 }}
+               animate={{ opacity: 1, scale: 1 }}
+               transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
             >
-               <div className="flex items-center gap-4 mb-8">
-                   <div className="w-12 h-px bg-[#FF003C]" />
-                   <div className="font-sans font-black text-[10px] uppercase tracking-[0.4em] text-[#FF003C] flex items-center gap-2">
-                      <Terminal className="w-3 h-3" /> Protocol Initiated
-                   </div>
+               <div className="inline-flex items-center gap-4 font-black text-[10px] uppercase tracking-[1em] text-[#FF003C] mb-16 border-l-2 border-[#FF003C] pl-10 italic font-mono">
+                  World_Capture // 0190_Alpha
                </div>
                
-               <h1 className="text-7xl md:text-[8vw] font-black uppercase leading-[0.8] tracking-tighter mb-8 drop-shadow-2xl">
-                   Enter The<br/>
-                   <span className="text-transparent" style={{ WebkitTextStroke: "1px #FFF" }}>
-                       Simulation.
-                   </span>
+               <h1 className="text-7xl md:text-[14vw] font-black italic uppercase leading-[0.75] tracking-tighter mb-20 text-white">
+                  HYPER.<br/>
+                  <span className="text-transparent" style={{ WebkitTextStroke: "2px rgba(255,255,255,0.6)" }}>REALITY.</span>
                </h1>
                
-               <p className="text-lg md:text-xl font-medium text-white/50 max-w-xl mb-12 leading-relaxed uppercase tracking-widest text-[10px] border-l border-[#FF003C]/50 pl-6">
-                   AAA studio developing hyper-realistic immersive experiences for the next generation of hardware.
+               <p className="text-xl md:text-3xl font-light italic text-white/30 max-w-3xl mx-auto mb-24 leading-relaxed uppercase tracking-widest text-center">
+                  Structural allocation for immersive intent. Architecting the future of gaming with tectonic precision.
                </p>
                
-               <div className="flex gap-6">
-                   <button className="border border-[#FF003C] bg-[#FF003C]/10 backdrop-blur-md text-[#FF003C] px-12 py-5 font-black text-[10px] uppercase tracking-[0.3em] skew-x-[-15deg] hover:bg-[#FF003C] hover:text-black transition-all group shadow-[0_0_30px_rgba(255,0,60,0.2)] hover:shadow-[0_0_50px_rgba(255,0,60,0.5)]">
-                       <span className="block skew-x-[15deg] flex items-center gap-3">
-                          Watch Trailer <Play className="w-4 h-4 fill-current" />
-                       </span>
-                   </button>
+               <div className="flex flex-col md:flex-row gap-16 justify-center items-center font-mono text-white text-center">
+                  <div className="flex items-center gap-8 group cursor-pointer">
+                     <div className="w-20 h-px bg-[#FF003C]/30 group-hover:w-32 transition-all" />
+                     <span className="text-[10px] font-black uppercase tracking-[0.8em]">Start_Simulation</span>
+                  </div>
+                  <div className="hidden md:block w-px h-16 bg-white/5" />
+                  <div className="font-black text-[9px] uppercase tracking-[0.6em] text-white/10 italic text-center">
+                     AAA Pipeline // Real-time // Next-Gen
+                  </div>
                </div>
             </motion.div>
          </div>
-         
-         {/* Decorative Side Elements */}
-         <div className="absolute right-12 top-1/2 -translate-y-1/2 flex flex-col gap-4 font-sans font-black text-[8px] uppercase tracking-[0.5em] text-[#FF003C]/30 [writing-mode:vertical-lr] rotate-180 hidden lg:flex">
-            <span>SYS.VER_4.0</span>
-            <span className="w-px h-24 bg-[#FF003C]/30 mx-auto" />
-            <span>ONLINE</span>
+
+         {/* Decorative Side HUD */}
+         <div className="absolute right-12 bottom-12 flex flex-col items-end gap-4 font-black text-[8px] uppercase tracking-[1em] text-[#FF003C]/20 hidden md:flex italic font-mono">
+            <span>SYNC_STATUS: ACTIVE</span>
+            <div className="flex gap-1 h-12 items-end">
+               {[1, 2, 3, 4, 5].map(i => <motion.div key={i} animate={{ height: ['20%', '100%', '40%'] }} transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }} className="w-[1px] bg-[#FF003C]" />)}
+            </div>
          </div>
       </section>
 
       {/* GAMES GRID */}
-      <section className="py-32 px-6 md:px-12 max-w-[1800px] mx-auto relative z-10">
-         <div className="flex items-end justify-between mb-24 border-b border-white/10 pb-8">
-            <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tighter">Current <span className="text-[#FF003C]">Projects</span></h2>
-            <div className="font-sans font-black text-[10px] uppercase tracking-[0.4em] text-white/30 hidden md:block">03 Active Titles</div>
+      <section className="py-48 px-6 md:px-12 max-w-[1800px] mx-auto relative z-10 bg-[#050505]">
+         <div className="flex flex-col md:flex-row justify-between items-end mb-40 border-b border-white/10 pb-20 gap-16">
+            <div>
+               <span className="text-[10px] font-black uppercase tracking-[2em] text-[#FF003C] mb-8 block italic font-mono">Gaming_Manifest</span>
+               <h2 className="text-6xl md:text-[10vw] font-black italic uppercase tracking-tighter text-white leading-none">The <span className="text-[#FF003C]/20">Universes_</span></h2>
+            </div>
+            <div className="flex gap-16 text-[10px] font-black uppercase tracking-[0.6em] text-white/20 italic font-mono">
+               <span>Records: [03]</span>
+               <span>Status: [Verified]</span>
+            </div>
          </div>
 
-         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {GAMES.map((game, i) => (
+         <div className="grid grid-cols-1 md:grid-cols-3 gap-16">
+            {GAMES.map((p, i) => (
                 <motion.div 
                    key={i} 
-                   initial={{ opacity: 0, y: 50 }}
+                   initial={{ opacity: 0, y: 80 }}
                    whileInView={{ opacity: 1, y: 0 }}
                    viewport={{ once: true, margin: "-100px" }}
-                   transition={{ duration: 0.6, delay: i * 0.1 }}
-                   className="group relative bg-white/5 border border-white/10 p-8 md:p-12 overflow-hidden hover:border-[#FF003C]/50 transition-colors cursor-pointer min-h-[400px] flex flex-col justify-end"
+                   transition={{ duration: 1.2, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
+                   className="group relative h-[85vh] bg-[#1A1A1A] border border-white/5 overflow-hidden cursor-pointer hover:border-[#FF003C]/30 transition-all shadow-2xl"
                 >
-                    {/* Hover Glow & Glitch */}
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[#FF003C] to-transparent opacity-0 group-hover:opacity-30 transition-opacity duration-500 blur-2xl" />
+                    <Image src={p.img} alt={p.title} fill className="object-cover opacity-30 grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-1000" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent opacity-95" />
+                    <div className="absolute inset-0 bg-white/5 group-hover:bg-transparent transition-colors duration-700" />
                     
-                    <div className="absolute inset-0 bg-[#FF003C]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                    
-                    <div className="relative z-10">
-                        <div className="flex justify-between items-center mb-6">
-                           <div className="font-sans font-black text-[10px] uppercase tracking-[0.3em] text-[#FF003C] bg-[#FF003C]/10 px-3 py-1 rounded-sm border border-[#FF003C]/20">{game.cat}</div>
-                           <div className="font-sans font-black text-[10px] uppercase tracking-[0.3em] text-white/30">{game.year}</div>
+                    <div className="absolute inset-16 flex flex-col justify-between z-10 font-mono text-white">
+                        <div className="flex justify-between items-start">
+                           <div className="p-5 bg-white/5 border border-white/10 rounded-none group-hover:bg-[#FF003C] group-hover:text-black transition-all shadow-xl">
+                              {p.icon}
+                           </div>
+                           <div className="text-[10px] font-black uppercase tracking-[0.8em] text-[#FF003C] italic font-mono">Ref_0x{i+190}</div>
                         </div>
                         
-                        <h3 className="text-4xl lg:text-5xl font-black uppercase tracking-tighter mb-6 group-hover:text-[#FF003C] transition-colors">{game.title}</h3>
-                        
-                        <p className="text-sm font-medium text-white/50 uppercase tracking-widest mb-12 leading-relaxed">{game.desc}</p>
-                        
-                        <div className="flex items-center gap-4 font-sans font-black text-[10px] uppercase tracking-[0.3em] text-white/70 group-hover:text-white transition-colors">
-                           Explore World <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform" />
+                        <div>
+                           <span className="text-[10px] uppercase tracking-[0.8em] text-[#FF003C] mb-8 block italic font-black">{p.cat} // Verified</span>
+                           <h3 className="text-5xl md:text-6xl font-black italic uppercase tracking-tighter mb-16 text-white group-hover:tracking-widest transition-all leading-[0.8]">{p.title}</h3>
+                           <div className="flex items-center gap-8 text-[10px] font-black uppercase tracking-[0.6em] opacity-0 group-hover:opacity-100 transition-all translate-y-10 group-hover:translate-y-0 text-white">
+                              Details <ArrowRight className="w-6 h-6" />
+                           </div>
                         </div>
-                        
-                        {/* Decorative line */}
-                        <div className="absolute bottom-0 left-0 h-1 w-0 bg-[#FF003C] group-hover:w-full transition-all duration-500 ease-out" />
                     </div>
                 </motion.div>
             ))}
          </div>
       </section>
 
+      {/* FOOTER */}
+      <footer className="py-48 px-6 md:px-12 border-t border-white/5 relative z-10 bg-[#050505]">
+         <div className="max-w-[1800px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-40 font-sans">
+            <div className="max-w-2xl">
+               <div className="text-[#FF003C] mb-16 flex items-center gap-6 font-black text-2xl italic uppercase tracking-widest font-mono">
+                  <Activity className="w-10 h-10" /> Studio_Logs
+               </div>
+               <p className="text-4xl md:text-6xl font-light italic leading-[0.9] text-white/20 uppercase tracking-tighter mb-20">
+                  WE TREAT WORLDS AS ARCHITECTURE. EVERY PIXEL A FUNCTION.
+               </p>
+               <div className="flex gap-20 font-black text-[10px] uppercase tracking-[0.8em] text-[#FF003C]/40 italic font-mono text-center">
+                  <span>Berlin</span>
+                  <span>London</span>
+                  <span>NYC</span>
+               </div>
+            </div>
+            <div className="flex flex-col justify-between items-end text-right font-mono text-white text-center">
+               <div className="w-full">
+                  <h4 className="text-[12vw] font-black italic uppercase tracking-tighter opacity-[0.02] leading-none mb-20 text-white">NEXUS</h4>
+                  <nav className="flex flex-col gap-10 font-black text-[10px] uppercase tracking-[0.8em] text-white/10">
+                     <Link href="#" className="hover:text-[#FF003C] transition-colors group">
+                        Instagram<span className="text-[#FF003C]/0 group-hover:text-[#FF003C] transition-all">_</span>
+                     </Link>
+                     <Link href="#" className="hover:text-[#FF003C] transition-colors group">
+                        Careers<span className="text-[#FF003C]/0 group-hover:text-[#FF003C] transition-all">_</span>
+                     </Link>
+                     <Link href="#" className="hover:text-[#FF003C] transition-colors group">
+                        Legal<span className="text-[#FF003C]/0 group-hover:text-[#FF003C] transition-all">_</span>
+                     </Link>
+                  </nav>
+               </div>
+               <div className="font-black text-[9px] uppercase tracking-[1.5em] text-white/5 mt-32 italic">
+                  &copy; 2026 // NEXUS_GAMING_GROUP&trade;
+               </div>
+            </div>
+         </div>
+      </footer>
     </div>
   );
 }
