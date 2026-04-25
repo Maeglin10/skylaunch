@@ -1,208 +1,277 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { motion, useScroll, useTransform, AnimatePresence, useInView, useMotionValue, useSpring } from "framer-motion";
+import { useRef, useState, useEffect } from "react";
 import Image from "next/image";
-import { Play, X, Menu, Search, Film, Activity, Globe, Zap, Shield, Command, MoveRight, Layers, Maximize2, Pause, Volume2, Share2 } from "lucide-react";
-import "../premium.css";
+import { ArrowRight, Play, X, ChevronDown, Film, Camera, Award, Clock, Eye, Star } from "lucide-react";
 
-const SCENES = [
-  { id: 1, title: "SIREN_CALL", cat: "Feature_Film", img: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=1000&auto=format&fit=crop", desc: "A psychological thriller exploring the depths of the human mind under extreme isolation." },
-  { id: 2, title: "VOID_WALKER", cat: "Cinematography", img: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1000&auto=format&fit=crop", desc: "An orbital journey through the silent debris of a forgotten civilization." },
-  { id: 3, title: "NEBULA_IX", cat: "Visual_Effects", img: "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?q=80&w=1000&auto=format&fit=crop", desc: "Pushing the boundaries of simulated environments and sub-molecular rendering." },
+const FILMS = [
+  { id: 1, title: "PARALLAX", director: "Elias Vorn", year: 2024, runtime: "2h 14m", genre: "Sci-Fi / Drama", awards: "3 Cannes Awards", image: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=1200&q=80", still: "https://images.unsplash.com/photo-1485846234645-a62644f84728?w=800&q=80", color: "#f43f5e", rating: 9.1 },
+  { id: 2, title: "MERIDIAN", director: "Sasha Klein", year: 2023, runtime: "1h 58m", genre: "Thriller / Neo-Noir", awards: "Venice Silver Lion", image: "https://images.unsplash.com/photo-1478720568477-152d9b164e26?w=1200&q=80", still: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=800&q=80", color: "#8b5cf6", rating: 8.7 },
+  { id: 3, title: "SALT OCEAN", director: "Camille Reyes", year: 2023, runtime: "1h 44m", genre: "Documentary", awards: "Sundance Grand Jury", image: "https://images.unsplash.com/photo-1501426026826-31c667bdf23d?w=1200&q=80", still: "https://images.unsplash.com/photo-1440404653325-ab127d49abc1?w=800&q=80", color: "#0ea5e9", rating: 8.4 },
+  { id: 4, title: "AFTERGLOW", director: "Marcus Tan", year: 2022, runtime: "2h 02m", genre: "Romance / Drama", awards: "Palme d'Or", image: "https://images.unsplash.com/photo-1553095066-5014bc7b7f2d?w=1200&q=80", still: "https://images.unsplash.com/photo-1514306191717-452ec28c7814?w=800&q=80", color: "#f59e0b", rating: 9.3 },
 ];
 
+const GALLERY = [
+  "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&q=80",
+  "https://images.unsplash.com/photo-1478720568477-152d9b164e26?w=800&q=80",
+  "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=800&q=80",
+  "https://images.unsplash.com/photo-1485846234645-a62644f84728?w=800&q=80",
+  "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=800&q=80",
+  "https://images.unsplash.com/photo-1440404653325-ab127d49abc1?w=800&q=80",
+];
+
+const STATS = [
+  { label: "Films Distributed", value: 240, suffix: "+" },
+  { label: "Festival Awards", value: 89, suffix: "" },
+  { label: "Countries", value: 47, suffix: "" },
+  { label: "Avg Rating", value: 8.9, suffix: "" },
+];
+
+function Reveal({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-60px" });
+  return (
+    <motion.div ref={ref} initial={{ opacity: 0, y: 40 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.8, delay, ease: [0.22, 1, 0.36, 1] }} className={className}>
+      {children}
+    </motion.div>
+  );
+}
+
+function Counter({ target, suffix = "" }: { target: number; suffix?: string }) {
+  const [count, setCount] = useState(0);
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true });
+  useEffect(() => {
+    if (!inView) return;
+    let n = 0; const step = Math.max(1, Math.ceil(target / 60));
+    const t = setInterval(() => { n += step; if (n >= target) { setCount(target); clearInterval(t); } else setCount(n); }, 24);
+    return () => clearInterval(t);
+  }, [inView, target]);
+  return <span ref={ref}>{count}{suffix}</span>;
+}
+
+function MagneticBtn({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  const ref = useRef<HTMLAnchorElement>(null);
+  const x = useMotionValue(0); const y = useMotionValue(0);
+  const sx = useSpring(x, { stiffness: 200, damping: 20 });
+  const sy = useSpring(y, { stiffness: 200, damping: 20 });
+  return (
+    <motion.a ref={ref} style={{ x: sx, y: sy }} onMouseMove={e => { const r = ref.current!.getBoundingClientRect(); x.set((e.clientX - r.left - r.width / 2) * 0.35); y.set((e.clientY - r.top - r.height / 2) * 0.35); }} onMouseLeave={() => { x.set(0); y.set(0); }} href="#" className={className}>{children}</motion.a>
+  );
+}
+
 export default function CinematicMotionSPA() {
-  const [view, setView] = useState<"scene" | "reel" | "production">("scene");
-  const [activeItem, setActiveItem] = useState(0);
-  const [playing, setPlaying] = useState(false);
+  const [activeFilm, setActiveFilm] = useState(FILMS[0]);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [trailerOpen, setTrailerOpen] = useState(false);
+  const [galleryOpen, setGalleryOpen] = useState<number | null>(null);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const heroRef = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
+  const heroY = useTransform(scrollYProgress, [0, 1], [0, 180]);
+  const heroScale = useTransform(scrollYProgress, [0, 1], [1, 1.1]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.6], [1, 0]);
+
+  const faqs = [
+    { q: "How do you select films for distribution?", a: "We look for singular vision over commercial formula. If a film has something to say and a cinematic language to say it with, we want to talk." },
+    { q: "Do you accept international submissions?", a: "Yes — all submissions are language and territory agnostic. We distribute in 47 countries with localised marketing support." },
+    { q: "What does your distribution deal look like?", a: "Non-exclusive festival runs, theatrical windows, then VOD. We take 20% of net receipts — no upfront fees." },
+    { q: "Can I screen one of your titles?", a: "Educational, festival, and repertory screenings available. Contact us with date, venue, and expected audience size." },
+  ];
 
   return (
-    <div className="premium-theme bg-[#050505] text-[#f8fafc] min-h-screen selection:bg-rose-600 selection:text-white font-mono overflow-x-hidden">
-      
-      {/* Cinematic Frame Bars */}
-      <div className="fixed inset-x-0 top-0 h-8 bg-black z-[100] opacity-80" />
-      <div className="fixed inset-x-0 bottom-0 h-8 bg-black z-[100] opacity-80" />
-
-      {/* Global Header */}
-      <nav className="fixed top-8 left-0 w-full z-50 p-8 md:px-12 md:py-10 flex justify-between items-center bg-transparent mix-blend-difference">
-        <button onClick={() => setView("scene")} className="text-xl font-black italic tracking-tighter hover:text-rose-500 transition-colors flex items-center gap-4">
-           FILM_UNIT&trade;
-        </button>
-        <div className="hidden md:flex gap-12 text-[10px] font-black uppercase tracking-[0.5em] opacity-40">
-           <button onClick={() => setView("scene")} className={`hover:opacity-100 transition-opacity ${view === 'scene' ? 'text-white opacity-100 underline decoration-rose-600 underline-offset-8 italic' : ''}`}>THE_SCENE</button>
-           <button onClick={() => setView("production")} className={`hover:opacity-100 transition-opacity ${view === 'production' ? 'text-white opacity-100 underline decoration-rose-600 underline-offset-8 italic' : ''}`}>THE_PRODUCTION</button>
+    <div className="min-h-screen bg-[#08060e] text-white" style={{ fontFamily: "'Helvetica Neue', sans-serif" }}>
+      {/* Nav */}
+      <nav className="fixed top-0 left-0 right-0 z-50 px-8 py-5 flex items-center justify-between">
+        <div className="absolute inset-0 bg-gradient-to-b from-[#08060e]/80 to-transparent pointer-events-none" />
+        <span className="relative text-sm font-black tracking-[0.2em] uppercase">LUMIÈRE FILMS</span>
+        <div className="relative hidden md:flex gap-8 text-[10px] tracking-[0.2em] uppercase opacity-50">
+          {["Catalogue", "In Cinemas", "Festivals", "About", "Submit"].map(l => (
+            <a key={l} href="#" className="hover:opacity-100 transition-opacity">{l}</a>
+          ))}
         </div>
-        <div className="flex items-center gap-8">
-           <Search className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-           <Menu className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-        </div>
+        <MagneticBtn className="relative hidden md:block px-5 py-2 border border-white/20 text-[10px] tracking-[0.2em] uppercase hover:bg-white/10 transition-colors">
+          Submit Film →
+        </MagneticBtn>
+        <button onClick={() => setMobileOpen(true)} className="relative md:hidden">{[0,1,2].map(i => <span key={i} className="block w-6 h-px bg-white mb-1.5" />)}</button>
       </nav>
 
-      <AnimatePresence mode="wait">
-        
-        {/* THE SCENE VIEW (CAROUSEL) */}
-        {view === "scene" && (
-          <motion.div key="scene" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative h-screen flex flex-col items-center justify-center pt-24">
-             <div className="absolute inset-0 z-0">
-                <motion.div 
-                   key={activeItem}
-                   initial={{ scale: 1.1, filter: 'blur(20px)', opacity: 0 }}
-                   animate={{ scale: 1, filter: 'blur(0px)', opacity: 0.6 }}
-                   transition={{ duration: 2 }}
-                   className="w-full h-full relative"
-                >
-                   <Image src={SCENES[activeItem].img} alt="Background" fill className="object-cover grayscale brightness-50" priority />
-                   <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-[#050505]" />
-                </motion.div>
-                {/* Film Grain */}
-                <div className="absolute inset-0 opacity-[0.05] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
-             </div>
-
-             <div className="relative z-10 max-w-6xl w-full px-12 text-center md:text-left">
-                <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
-                   <span className="text-xs uppercase tracking-[1em] font-black text-rose-500 mb-8 block italic">Project_Archive // Scene_00{activeItem + 1}</span>
-                   <h1 className="text-7xl md:text-[12vw] font-black uppercase italic tracking-tighter leading-[0.85] text-white">
-                      {SCENES[activeItem].title.split('_')[0]} <br /> <span className="text-rose-600">{SCENES[activeItem].title.split('_')[1]}</span>
-                   </h1>
-                   <p className="text-2xl font-light italic leading-relaxed uppercase tracking-tight opacity-40 max-w-2xl mt-12 mb-16 leading-relaxed">
-                      {SCENES[activeItem].desc} An architectural study involving multi-axis tension and structural transparency.
-                   </p>
-                   
-                   <div className="flex flex-col md:flex-row gap-8 items-center">
-                      <button onClick={() => setView("reel")} className="px-16 py-8 bg-white text-black font-black uppercase text-xs tracking-[1em] hover:bg-rose-600 hover:text-white transition-all shadow-2xl flex items-center gap-6">
-                         <Play className="w-4 h-4" /> Watch_Trailer
-                      </button>
-                      <div className="flex gap-12 font-black text-[10px] uppercase tracking-widest opacity-20 italic">
-                         <span>ARRI_ALEXA_65</span>
-                         <span>|</span>
-                         <span>ANAMORPHIC_RED</span>
-                      </div>
-                   </div>
-                </motion.div>
-             </div>
-
-             {/* Bottom Navigation */}
-             <div className="absolute bottom-24 left-12 right-12 z-20 flex justify-between items-end mix-blend-difference">
-                <div className="flex flex-col gap-4">
-                   <div className="text-[60px] font-black italic leading-none text-rose-600">0{activeItem + 1}</div>
-                   <div className="text-[10px] font-black uppercase tracking-[0.5em] opacity-40 italic">of 03</div>
-                </div>
-                <div className="flex gap-12 font-black uppercase text-[10px] tracking-[0.5em] opacity-20 italic">
-                   <button onClick={() => setActiveItem((activeItem - 1 + SCENES.length) % SCENES.length)} className="hover:text-rose-500 transition-colors uppercaseTracking-[1em] uppercase">PREV_SCENE</button>
-                   <button onClick={() => setActiveItem((activeItem + 1) % SCENES.length)} className="hover:text-rose-500 transition-colors uppercaseTracking-[1em] uppercase">NEXT_SCENE</button>
-                </div>
-             </div>
-
-             {/* HUD Element Right */}
-             <div className="fixed top-1/2 -translate-y-1/2 right-12 hidden lg:flex flex-col gap-12 opacity-20 font-black text-[10px] uppercase tracking-[1em] vertical-text italic">
-                CAM_POS: 0x442_F // FOCAL: 35mm
-             </div>
+      {/* Mobile Menu */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ type: "spring", stiffness: 300, damping: 30 }} className="fixed inset-0 z-[100] bg-[#08060e] flex flex-col p-10">
+            <button onClick={() => setMobileOpen(false)} className="self-end mb-12"><X size={24} /></button>
+            {["Catalogue", "In Cinemas", "Festivals", "About", "Submit"].map((l, i) => (
+              <motion.a key={l} href="#" initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.07 }} className="text-4xl font-black mb-6 uppercase tracking-wider hover:opacity-50 transition-opacity" onClick={() => setMobileOpen(false)}>{l}</motion.a>
+            ))}
           </motion.div>
         )}
-
-        {/* THE REEL VIEW (VIDEO GALLERY) */}
-        {view === "reel" && (
-          <motion.div key="reel" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen bg-black">
-             <button onClick={() => setView("scene")} className="fixed top-12 left-12 z-[60] bg-rose-600 text-white p-5 rounded-full hover:scale-110 transition-transform shadow-2xl">
-                <X className="w-6 h-6" />
-             </button>
-
-             <div className="relative w-full h-screen">
-                <Image src={SCENES[activeItem].img} alt="Reel" fill className="object-cover opacity-40 brightness-50" />
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_black_100%)]" />
-                
-                <div className="absolute inset-x-0 bottom-32 px-12 flex flex-col md:flex-row justify-between items-end gap-12">
-                   <div className="max-w-3xl">
-                      <span className="text-xs uppercase tracking-[1em] font-black text-rose-500 mb-6 block italic animate-pulse">Now_Streaming // HD_SYNC</span>
-                      <h2 className="text-6xl md:text-9xl font-black uppercase italic tracking-tighter leading-none text-white">{SCENES[activeItem].title}</h2>
-                   </div>
-                   <div className="flex gap-8 items-center bg-white/5 backdrop-blur-3xl p-8 rounded-[2rem] border border-white/10">
-                      <button onClick={() => setPlaying(!playing)} className="w-20 h-20 rounded-full bg-rose-600 flex items-center justify-center hover:scale-110 transition-transform">
-                         {playing ? <Pause className="w-8 h-8 text-white" /> : <Play className="w-8 h-8 text-white ml-1" />}
-                      </button>
-                      <div className="space-y-2">
-                         <div className="w-48 h-1 bg-white/10 rounded-full overflow-hidden">
-                            <motion.div animate={{ width: playing ? '100%' : '20%' }} transition={{ duration: 10, ease: "linear" }} className="h-full bg-rose-600" />
-                         </div>
-                         <div className="flex justify-between text-[10px] font-black uppercase tracking-widest opacity-40">
-                            <span>00:14:12</span>
-                            <span>05:32:00</span>
-                         </div>
-                      </div>
-                      <Volume2 className="w-6 h-6 opacity-40 hover:opacity-100 cursor-pointer" />
-                      <Share2 className="w-6 h-6 opacity-40 hover:opacity-100 cursor-pointer" />
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
-        {/* THE PRODUCTION VIEW (INFO) */}
-        {view === "production" && (
-          <motion.div key="production" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen flex flex-col justify-center">
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center text-white">
-                <div className="space-y-16">
-                   <span className="text-[10px] uppercase font-black tracking-[1.5em] text-rose-500 opacity-60 block underline decoration-rose-600/20 underline-offset-8 italic">The_Production_Protocol</span>
-                   <h2 className="text-7xl md:text-[10vw] font-black italic tracking-tighter leading-none text-white uppercase">The <br/> Truth.</h2>
-                   <p className="text-3xl md:text-4xl font-light italic opacity-60 leading-relaxed uppercase tracking-tight text-white/60">
-                      We treat cinema as an act of subtraction. We don't add; we reveal the emotional truth of the moment. 100% precision. Zero noise.
-                   </p>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t border-rose-600/20">
-                      {[
-                        { icon: <Film className="w-6 h-6" />, t: "E2E Rendering", v: "Sub-Atomic Accuracy" },
-                        { icon: <Layers className="w-6 h-6" />, t: "Scalability", v: "Deep_Material_ID" },
-                      ].map((item, i) => (
-                        <div key={i} className="flex gap-8 group">
-                           <div className="w-16 h-16 rounded-full border border-rose-600/20 flex items-center justify-center text-rose-500 group-hover:bg-rose-600 group-hover:text-black transition-all shadow-[0_0_30px_rgba(225,29,72,0.1)]">
-                              {item.icon}
-                           </div>
-                           <div className="text-left">
-                              <h4 className="text-2xl font-black uppercase italic tracking-tighter text-white leading-none mb-2">{item.t}</h4>
-                              <p className="text-[10px] opacity-30 uppercase tracking-[0.3em] font-black leading-relaxed text-rose-500">{item.v}</p>
-                           </div>
-                        </div>
-                      ))}
-                   </div>
-                </div>
-                <div className="relative aspect-square bg-[#ddd] rounded-[4rem] p-12 overflow-hidden border border-rose-600/10 group shadow-2xl">
-                   <Image src="https://images.unsplash.com/photo-1541185933-ef5d8ed016c2?q=80&w=1000&auto=format&fit=crop" alt="The Studio" fill className="object-cover opacity-20 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-[2s]" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                   <div className="absolute inset-x-0 bottom-12 flex justify-center">
-                      <div className="px-12 py-6 border border-rose-600 text-rose-500 text-[10px] font-black uppercase tracking-widest italic animate-pulse cursor-pointer hover:bg-rose-600 hover:text-white transition-all">
-                         Establish_Sync
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
       </AnimatePresence>
 
-      {/* Global Status HUD */}
-      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em] italic text-rose-500">
-         <div className="flex gap-12 text-rose-500">
-            <span>Uptime: 99.9%</span>
-            <span>Ref_0x442_F</span>
-         </div>
-         <div className="flex gap-4 items-end text-rose-500">
-            <div className="text-right leading-tight italic">
-               Sequence_Control <br /> v4.0.21
+      {/* Hero */}
+      <section ref={heroRef} className="relative h-screen flex items-end overflow-hidden">
+        <motion.div style={{ y: heroY, scale: heroScale, opacity: heroOpacity }} className="absolute inset-0">
+          <Image src={activeFilm.image} alt={activeFilm.title} fill unoptimized className="object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#08060e] via-[#08060e]/40 to-[#08060e]/20" />
+        </motion.div>
+        <div className="relative z-10 px-8 md:px-16 pb-16 w-full">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+            <div>
+              <p className="text-[10px] tracking-[0.3em] uppercase mb-3 opacity-50">{activeFilm.genre} · {activeFilm.year} · {activeFilm.runtime}</p>
+              <h1 className="text-6xl md:text-9xl font-black leading-none tracking-tight">{activeFilm.title}</h1>
+              <p className="text-sm opacity-40 mt-2">Directed by {activeFilm.director} · {activeFilm.awards}</p>
             </div>
-            <div className="flex gap-[4px] h-4">
-               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-full bg-rose-500 opacity-${i*20}`}></div>)}
+            <div className="flex items-center gap-4">
+              <button onClick={() => setTrailerOpen(true)} className="flex items-center gap-3 px-6 py-3 border border-white/20 text-xs tracking-widest uppercase hover:bg-white/10 transition-colors">
+                <Play size={12} /> Trailer
+              </button>
+              <div className="flex items-center gap-2 text-sm font-bold" style={{ color: activeFilm.color }}>
+                <Star size={14} fill="currentColor" /> {activeFilm.rating}
+              </div>
             </div>
-         </div>
+          </motion.div>
+          {/* Film selectors */}
+          <div className="flex gap-3 mt-8">
+            {FILMS.map((f, i) => (
+              <button key={f.id} onClick={() => setActiveFilm(f)} className="relative overflow-hidden w-16 h-10 transition-all" style={{ outline: f.id === activeFilm.id ? `2px solid ${f.color}` : "2px solid transparent" }}>
+                <Image src={f.still} alt={f.title} fill unoptimized className="object-cover opacity-60" />
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Catalogue */}
+      <section className="py-32 px-6 max-w-7xl mx-auto">
+        <Reveal><h2 className="text-3xl font-black tracking-tight mb-2 uppercase">Catalogue</h2></Reveal>
+        <Reveal delay={0.1}><p className="text-sm opacity-40 mb-16">240+ films from independent voices worldwide.</p></Reveal>
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {FILMS.map((f, i) => (
+            <Reveal key={f.id} delay={i * 0.1}>
+              <motion.div whileHover={{ y: -8 }} onClick={() => setActiveFilm(f)} className="cursor-pointer group">
+                <div className="relative overflow-hidden mb-4" style={{ aspectRatio: "2/3" }}>
+                  <Image src={f.still} alt={f.title} fill unoptimized className="object-cover transition-transform duration-700 group-hover:scale-105" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                    <span className="text-[10px] tracking-widest uppercase border border-white/40 px-3 py-1.5">View Film</span>
+                  </div>
+                  <div className="absolute top-3 left-3 text-[9px] font-bold px-2 py-1 text-white" style={{ background: f.color }}>{f.awards}</div>
+                  <div className="absolute bottom-3 right-3 flex items-center gap-1 text-xs font-bold" style={{ color: f.color }}>
+                    <Star size={10} fill="currentColor" /> {f.rating}
+                  </div>
+                </div>
+                <h3 className="text-base font-black tracking-wide">{f.title}</h3>
+                <div className="flex items-center justify-between mt-1 text-[10px] opacity-40">
+                  <span>{f.director}</span><span>{f.year} · {f.runtime}</span>
+                </div>
+              </motion.div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* Gallery */}
+      <section className="py-8 px-6 max-w-7xl mx-auto">
+        <Reveal><h2 className="text-2xl font-black tracking-tight mb-12 uppercase">Production Stills</h2></Reveal>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+          {GALLERY.map((img, i) => (
+            <Reveal key={i} delay={i * 0.06}>
+              <motion.div whileHover={{ scale: 1.02 }} onClick={() => setGalleryOpen(i)} className="relative overflow-hidden cursor-pointer" style={{ aspectRatio: i % 3 === 0 ? "1/1" : "16/9" }}>
+                <Image src={img} alt={`still ${i}`} fill unoptimized className="object-cover" />
+                <div className="absolute inset-0 bg-black/0 hover:bg-black/30 transition-colors flex items-center justify-center">
+                  <Eye size={20} className="opacity-0 group-hover:opacity-100" />
+                </div>
+              </motion.div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* Stats */}
+      <section className="py-24 px-6 border-t border-white/5 border-b border-white/5">
+        <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-10">
+          {STATS.map((s, i) => (
+            <Reveal key={s.label} delay={i * 0.1} className="text-center">
+              <div className="text-5xl font-black mb-2" style={{ color: FILMS[i % FILMS.length].color }}><Counter target={s.value} suffix={s.suffix} /></div>
+              <div className="text-[10px] tracking-[0.2em] uppercase opacity-30">{s.label}</div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="py-24 bg-[#0e0b16] px-6">
+        <div className="max-w-2xl mx-auto">
+          <Reveal><h2 className="text-2xl font-black tracking-tight uppercase mb-12">Distribution FAQ</h2></Reveal>
+          {faqs.map((f, i) => (
+            <Reveal key={i} delay={i * 0.05}>
+              <div className="border-b border-white/10">
+                <button onClick={() => setOpenFaq(openFaq === i ? null : i)} className="w-full text-left py-5 flex items-center justify-between text-sm font-bold">
+                  {f.q}
+                  <motion.span animate={{ rotate: openFaq === i ? 180 : 0 }}><ChevronDown size={16} /></motion.span>
+                </button>
+                <AnimatePresence>
+                  {openFaq === i && (
+                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+                      <p className="pb-5 text-sm opacity-50 leading-relaxed">{f.a}</p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="py-32 px-6 text-center relative overflow-hidden">
+        <motion.div animate={{ opacity: [0.04, 0.08, 0.04] }} transition={{ duration: 6, repeat: Infinity }} className="absolute inset-0 bg-gradient-radial from-rose-500/20 to-transparent" />
+        <div className="relative z-10">
+          <Reveal><h2 className="text-5xl md:text-8xl font-black tracking-tight mb-4 leading-none uppercase">Your Film.<br /><em className="not-italic" style={{ color: activeFilm.color }}>Our Stage.</em></h2></Reveal>
+          <Reveal delay={0.2}><p className="text-sm opacity-40 mb-10 max-w-md mx-auto">We believe every singular film deserves an audience. Tell us about yours.</p></Reveal>
+          <Reveal delay={0.3}>
+            <MagneticBtn className="inline-flex items-center gap-3 px-10 py-5 font-black text-sm tracking-[0.2em] uppercase text-white" style={{ background: activeFilm.color }}>
+              Submit Your Film <ArrowRight size={16} />
+            </MagneticBtn>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-white/10 py-12 px-8 flex flex-col md:flex-row items-center justify-between gap-6 text-[10px] opacity-30 tracking-wider uppercase">
+        <span>Lumière Films © 2026</span>
+        <div className="flex gap-8">{["Instagram", "Letterboxd", "Vimeo", "Press"].map(l => <a key={l} href="#" className="hover:opacity-100 transition-opacity">{l}</a>)}</div>
       </footer>
 
-      <style>{`
-        ::-webkit-scrollbar { width: 0px; }
-        .vertical-text {
-          writing-mode: vertical-rl;
-          text-orientation: mixed;
-        }
-      `}</style>
+      {/* Trailer Modal */}
+      <AnimatePresence>
+        {trailerOpen && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] bg-black/90 flex items-center justify-center p-6" onClick={() => setTrailerOpen(false)}>
+            <motion.div initial={{ scale: 0.85 }} animate={{ scale: 1 }} exit={{ scale: 0.85 }} onClick={e => e.stopPropagation()} className="w-full max-w-3xl bg-black aspect-video flex items-center justify-center relative border border-white/10">
+              <button onClick={() => setTrailerOpen(false)} className="absolute top-4 right-4"><X size={20} /></button>
+              <Play size={64} className="opacity-20" />
+              <p className="absolute bottom-4 text-xs opacity-30 tracking-widest">TRAILER · {activeFilm.title}</p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Gallery Lightbox */}
+      <AnimatePresence>
+        {galleryOpen !== null && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center p-6" onClick={() => setGalleryOpen(null)}>
+            <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }} onClick={e => e.stopPropagation()} className="relative w-full max-w-4xl" style={{ aspectRatio: "16/9" }}>
+              <Image src={GALLERY[galleryOpen]} alt="still" fill unoptimized className="object-contain" />
+              <button onClick={() => setGalleryOpen(null)} className="absolute top-0 right-0 -mt-10 opacity-60 hover:opacity-100"><X size={20} /></button>
+              <div className="absolute bottom-0 left-0 right-0 flex justify-center gap-2 -mb-8">
+                {GALLERY.map((_, i) => (
+                  <button key={i} onClick={e => { e.stopPropagation(); setGalleryOpen(i); }} className="w-4 h-1 transition-all" style={{ background: i === galleryOpen ? "white" : "rgba(255,255,255,0.2)" }} />
+                ))}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

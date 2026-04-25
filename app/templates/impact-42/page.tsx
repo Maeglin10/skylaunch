@@ -1,233 +1,348 @@
 "use client";
 
-import { motion, AnimatePresence, useMotionValue, useSpring } from "framer-motion";
-import { useState, useEffect } from "react";
+import { motion, useScroll, useTransform, AnimatePresence, useInView, useMotionValue, useSpring } from "framer-motion";
+import { useRef, useState, useEffect } from "react";
 import Image from "next/image";
-import { X, Menu, Box, Layers, Shield, Activity, Plus, Maximize2, MoveRight, Compass, MoveDiagonal2 } from "lucide-react";
-import "../premium.css";
+import { ArrowRight, X, ChevronDown, Cpu, GitBranch, Globe, Shield, Zap, TrendingUp, Activity, Terminal } from "lucide-react";
 
-const PROJECTS = [
-  { id: 1, name: "CLUST_VOID_01", tag: "Structural", img: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1000&auto=format&fit=crop", desc: "A nexus study of overlapping volumes and structural tension." },
-  { id: 2, name: "NEXUS_LEVEL_04", tag: "Interface", img: "https://images.unsplash.com/photo-1549490349-8643362247b5?q=80&w=1000&auto=format&fit=crop", desc: "Fluid, organic interactions inspired by the movement of raw silk." },
-  { id: 3, name: "CORE_PLATE_99", tag: "Compute", img: "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1000&auto=format&fit=crop", desc: "A structural study of photonic processing and thermal inertia." },
-  { id: 4, name: "STRUCT_VOID_05", tag: "Housing", img: "https://images.unsplash.com/photo-1518005020251-582c7eb8365d?q=80&w=1000&auto=format&fit=crop", desc: "Zero-threshold living in volcanic terrain." },
+const NODES = [
+  { id: "n1", name: "NEXUS_ALPHA", region: "EU-WEST", status: "ACTIVE", load: 82, latency: 12, image: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&q=80", color: "#00ff88" },
+  { id: "n2", name: "NEXUS_BETA", region: "US-EAST", status: "ACTIVE", load: 67, latency: 8, image: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=80", color: "#0ea5e9" },
+  { id: "n3", name: "NEXUS_GAMMA", region: "APAC", status: "SYNC", load: 45, latency: 23, image: "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=800&q=80", color: "#f59e0b" },
+  { id: "n4", name: "NEXUS_DELTA", region: "SA-EAST", status: "ACTIVE", load: 91, latency: 31, image: "https://images.unsplash.com/photo-1510915361894-db8b60106cb1?w=800&q=80", color: "#8b5cf6" },
+  { id: "n5", name: "NEXUS_EPSILON", region: "AF-SOUTH", status: "OFFLINE", load: 0, latency: 0, image: "https://images.unsplash.com/photo-1561144257-e32e8a34c834?w=800&q=80", color: "#ef4444" },
+  { id: "n6", name: "NEXUS_ZETA", region: "ME-CENTRAL", status: "ACTIVE", load: 58, latency: 19, image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&q=80", color: "#ec4899" },
 ];
 
+const SERVICES = [
+  { icon: Cpu, title: "Distributed Compute", desc: "Heterogeneous workloads spread intelligently across 1,200+ nodes for zero-downtime processing." },
+  { icon: Shield, title: "Zero-Trust Fabric", desc: "Every inter-node connection cryptographically verified. No implicit trust, ever." },
+  { icon: GitBranch, title: "Consensus Protocol", desc: "Byzantine fault-tolerant consensus with sub-200ms finality across 6 global regions." },
+  { icon: Globe, title: "Geo-Routing", desc: "Traffic auto-routes to the nearest healthy node. Regional failover in under 800ms." },
+  { icon: Activity, title: "Live Telemetry", desc: "Real-time metrics ingested at 50k events/sec. Alerting thresholds configurable per node." },
+  { icon: Zap, title: "Edge Execution", desc: "Wasm modules deployed to edge nodes. Execute at 5ms latency from any major metro area." },
+];
+
+const STATS = [
+  { label: "Active Nodes", value: 1247, suffix: "" },
+  { label: "Uptime SLA", value: 99.97, suffix: "%" },
+  { label: "Req/sec Peak", value: 8400, suffix: "k" },
+  { label: "Regions", value: 6, suffix: "" },
+];
+
+const LOG_LINES = [
+  "[12:41:02] NODE::alpha heartbeat OK — 12ms",
+  "[12:41:03] CONSENSUS achieved — block #8841293",
+  "[12:41:05] FAILOVER detected node epsilon — rerouting",
+  "[12:41:07] GEO-ROUTE update: EU→US-EAST 14ms",
+  "[12:41:09] SYNC delta→gamma — 45k txn batch",
+  "[12:41:11] ALERT: delta load 91% — scaling trigger",
+  "[12:41:13] SPAWN replica::delta_2 — EU-WEST",
+  "[12:41:15] NODE::beta checkpoint stored",
+];
+
+function Reveal({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-60px" });
+  return (
+    <motion.div ref={ref} initial={{ opacity: 0, y: 36 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.7, delay, ease: [0.22, 1, 0.36, 1] }} className={className}>
+      {children}
+    </motion.div>
+  );
+}
+
+function Counter({ target, suffix = "" }: { target: number; suffix?: string }) {
+  const [count, setCount] = useState(0);
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true });
+  useEffect(() => {
+    if (!inView) return;
+    let n = 0; const step = Math.max(1, Math.ceil(target / 60));
+    const t = setInterval(() => { n += step; if (n >= target) { setCount(target); clearInterval(t); } else setCount(n); }, 24);
+    return () => clearInterval(t);
+  }, [inView, target]);
+  return <span ref={ref}>{typeof target === "number" && target < 100 ? count.toFixed(target % 1 !== 0 ? 2 : 0) : count}{suffix}</span>;
+}
+
+function LoadBar({ value, color }: { value: number; color: string }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true });
+  return (
+    <div ref={ref} className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+      <motion.div initial={{ width: 0 }} animate={inView ? { width: `${value}%` } : {}} transition={{ duration: 1.2, ease: "easeOut" }} className="h-full rounded-full" style={{ background: color }} />
+    </div>
+  );
+}
+
+function MagneticBtn({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  const ref = useRef<HTMLAnchorElement>(null);
+  const x = useMotionValue(0); const y = useMotionValue(0);
+  const sx = useSpring(x, { stiffness: 200, damping: 20 });
+  const sy = useSpring(y, { stiffness: 200, damping: 20 });
+  return (
+    <motion.a ref={ref} style={{ x: sx, y: sy }} onMouseMove={e => { const r = ref.current!.getBoundingClientRect(); x.set((e.clientX - r.left - r.width / 2) * 0.35); y.set((e.clientY - r.top - r.height / 2) * 0.35); }} onMouseLeave={() => { x.set(0); y.set(0); }} href="#" className={className}>{children}</motion.a>
+  );
+}
+
 export default function NexusClusterSPA() {
-  const [view, setView] = useState<"cluster" | "node" | "network">("cluster");
-  const [activeItem, setActiveItem] = useState(0);
-  
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-  const smoothX = useSpring(mouseX, { damping: 50, stiffness: 200 });
-  const smoothY = useSpring(mouseY, { damping: 50, stiffness: 200 });
+  const [activeNode, setActiveNode] = useState<typeof NODES[0] | null>(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [logIdx, setLogIdx] = useState(0);
+  const [visibleLogs, setVisibleLogs] = useState<string[]>([LOG_LINES[0]]);
+  const heroRef = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
+  const heroY = useTransform(scrollYProgress, [0, 1], [0, 160]);
+  const cx = useMotionValue(0); const cy = useMotionValue(0);
+  const scx = useSpring(cx, { stiffness: 80, damping: 20 });
+  const scy = useSpring(cy, { stiffness: 80, damping: 20 });
 
   useEffect(() => {
-    const handleMove = (e: MouseEvent) => {
-      mouseX.set((e.clientX - window.innerWidth / 2) * 0.05);
-      mouseY.set((e.clientY - window.innerHeight / 2) * 0.05);
-    };
-    window.addEventListener("mousemove", handleMove);
-    return () => window.removeEventListener("mousemove", handleMove);
+    const t = setInterval(() => {
+      setLogIdx(i => {
+        const next = (i + 1) % LOG_LINES.length;
+        setVisibleLogs(prev => [...prev.slice(-4), LOG_LINES[next]]);
+        return next;
+      });
+    }, 1800);
+    return () => clearInterval(t);
   }, []);
 
-  return (
-    <div className="premium-theme bg-[#f8fcfb] text-[#004d40] min-h-screen selection:bg-[#004d40] selection:text-white font-mono overflow-x-hidden">
-      
-      {/* Background HUD Grid */}
-      <div className="fixed inset-0 pointer-events-none z-0 opacity-[0.05]" style={{ 
-        backgroundImage: 'linear-gradient(rgba(0, 77, 64, 0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 77, 64, 0.2) 1px, transparent 1px)',
-        backgroundSize: '100px 100px'
-      }} />
+  const faqs = [
+    { q: "What consensus mechanism does Nexus use?", a: "A variant of HotStuff BFT with pipelined rounds. Provides liveness guarantees under ⅓ Byzantine faults with sub-200ms finality." },
+    { q: "How is node onboarding handled?", a: "Operators stake tokens for node admission. Automated health checks gate cluster entry — no manual review required." },
+    { q: "What SLA do you offer?", a: "99.97% network uptime guaranteed by contract. Credits issued automatically for any measured breach." },
+    { q: "Is the protocol open source?", a: "Core consensus and routing code is MIT licensed. Enterprise extensions are proprietary but fully audited." },
+  ];
 
-      {/* Editorial HUD Nav */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-center bg-white/40 backdrop-blur-xl border-b border-[#004d40]/10">
-        <button onClick={() => setView("cluster")} className="text-xl font-black uppercase tracking-tighter hover:opacity-100 transition-opacity">
-           NEXUS_CLUSTER&trade;
-        </button>
-        <div className="hidden md:flex gap-12 text-[10px] font-black uppercase tracking-[0.4em] opacity-30">
-           <button onClick={() => setView("cluster")} className={`hover:opacity-100 transition-opacity ${view === 'cluster' ? 'text-[#004d40] opacity-100 underline decoration-[#004d40] decoration-2 underline-offset-8' : ''}`}>THE_CLUSTER</button>
-           <button onClick={() => setView("network")} className={`hover:opacity-100 transition-opacity ${view === 'network' ? 'text-[#004d40] opacity-100 underline decoration-[#004d40] decoration-2 underline-offset-8' : ''}`}>THE_NETWORK</button>
+  return (
+    <div className="min-h-screen bg-[#040810] text-white font-mono">
+      {/* Nav */}
+      <nav className="fixed top-0 left-0 right-0 z-50 px-6 py-4 flex items-center justify-between border-b border-[#00ff88]/10 bg-[#040810]/90 backdrop-blur-lg">
+        <div className="flex items-center gap-3">
+          <div className="w-6 h-6 border border-[#00ff88]/60 rotate-45 flex items-center justify-center">
+            <div className="w-2 h-2 bg-[#00ff88]" />
+          </div>
+          <span className="text-sm font-black tracking-[0.25em] uppercase text-[#00ff88]">NEXUS</span>
         </div>
-        <div className="flex items-center gap-8">
-           <div className="hidden lg:flex items-center gap-2 opacity-30 text-[9px] uppercase font-black tracking-widest italic">
-              Verification: Level_4_Pass
-           </div>
-           <button onClick={() => setView("network")} className="px-8 py-3 bg-[#004d40] text-white font-black uppercase text-[10px] tracking-widest hover:bg-black transition-all italic">
-              Sync_Node
-           </button>
+        <div className="hidden md:flex gap-8 text-[10px] tracking-[0.2em] uppercase opacity-50">
+          {["Network", "Nodes", "Protocol", "Developers", "Status"].map(l => (
+            <a key={l} href="#" className="hover:text-[#00ff88] hover:opacity-100 transition-all">{l}</a>
+          ))}
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="hidden md:flex items-center gap-1.5 text-[10px] text-[#00ff88] opacity-60">
+            <span className="w-1.5 h-1.5 bg-[#00ff88] rounded-full animate-pulse" /> 1,247 NODES ONLINE
+          </span>
+          <MagneticBtn className="hidden md:block px-4 py-2 border border-[#00ff88]/40 text-[#00ff88] text-[10px] tracking-[0.2em] uppercase hover:bg-[#00ff88]/10 transition-colors">
+            Run Node
+          </MagneticBtn>
+          <button onClick={() => setMobileOpen(true)} className="md:hidden flex flex-col gap-1.5">{[0,1,2].map(i => <span key={i} className="block w-5 h-px bg-[#00ff88]" />)}</button>
         </div>
       </nav>
 
-      <AnimatePresence mode="wait">
-        
-        {/* CLUSTER VIEW (PARALLAX INDEX) */}
-        {view === "cluster" && (
-          <motion.div key="cluster" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-screen w-full flex items-center justify-center">
-             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10">
-                <header className="text-center mb-12">
-                   <h1 className="text-[12vw] font-black uppercase italic tracking-tighter leading-[0.8] mix-blend-multiply opacity-10 select-none">
-                      Archive. <br /> <span className="not-italic">MultiD.</span>
-                   </h1>
-                </header>
-             </div>
-
-             <div className="relative w-full h-full">
-                {PROJECTS.map((p, i) => (
-                   <motion.div 
-                    key={p.id}
-                    style={{ 
-                       left: `${20 + i * 20}%`, 
-                       top: `${30 + (i % 2) * 20}%`,
-                       x: smoothX,
-                       y: smoothY
-                    }}
-                    className="absolute group w-64 h-80 md:w-80 md:h-[30rem] bg-white border border-[#004d40]/10 rounded-3xl overflow-hidden shadow-2xl hover:z-50 transition-all cursor-pointer"
-                    onClick={() => { setActiveItem(i); setView("node"); }}
-                   >
-                      <Image src={p.img} alt={p.name} fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-700 group-hover:scale-110" />
-                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#004d40]/80 to-transparent p-8 opacity-0 group-hover:opacity-100 transition-opacity">
-                         <span className="text-[10px] uppercase font-black tracking-widest text-white/60 mb-2 block">{p.tag}</span>
-                         <h3 className="text-3xl font-black uppercase italic tracking-tighter text-white">{p.name}</h3>
-                      </div>
-                      <div className="absolute top-6 left-6 p-3 bg-white/80 backdrop-blur-xl rounded-full text-[#004d40] border border-[#004d40]/10 opacity-0 group-hover:opacity-100 transition-opacity">
-                         <Maximize2 className="w-4 h-4" />
-                      </div>
-                   </motion.div>
-                ))}
-             </div>
-
-             <div className="fixed bottom-24 left-1/2 -translate-x-1/2 flex items-center gap-6 opacity-20 font-black text-[10px] uppercase tracking-[0.5em] mix-blend-difference pointer-events-none">
-                <Plus className="w-4 h-4" /> Hover to Distort Nexus Perimeter
-             </div>
+      {/* Mobile Menu */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ type: "spring", stiffness: 300, damping: 30 }} className="fixed inset-0 z-[100] bg-[#040810] flex flex-col p-10 border-l border-[#00ff88]/10">
+            <button onClick={() => setMobileOpen(false)} className="self-end mb-12 text-[#00ff88]"><X size={24} /></button>
+            {["Network", "Nodes", "Protocol", "Developers", "Status"].map((l, i) => (
+              <motion.a key={l} href="#" initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.07 }} className="text-3xl font-black mb-6 uppercase tracking-wider text-[#00ff88] hover:opacity-70 transition-opacity" onClick={() => setMobileOpen(false)}>{l}</motion.a>
+            ))}
           </motion.div>
         )}
-
-        {/* NODE VIEW (PROJECT DETAIL) */}
-        {view === "node" && (
-          <motion.div key="node" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen">
-             <button onClick={() => setView("cluster")} className="fixed top-12 left-12 z-[60] bg-[#004d40] text-white p-5 rounded-full hover:scale-110 transition-transform shadow-2xl">
-                <X className="w-6 h-6" />
-             </button>
-
-             <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen">
-                <div className="lg:col-span-12 relative flex items-center justify-center p-8 md:p-32 h-screen overflow-hidden">
-                   <div className="absolute inset-0 bg-[#f0f5f4] z-[-1]" />
-                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[50vh] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-[#004d40]">
-                      STRUCTURE
-                   </div>
-                   
-                   <div className="max-w-[1600px] w-full grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10">
-                      <motion.div initial={{ x: 100, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ duration: 1 }} className="relative aspect-square w-full rounded-[4rem] overflow-hidden border-8 border-white shadow-2xl group">
-                         <Image src={PROJECTS[activeItem].img} alt="Detail" fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[2s]" priority />
-                         <div className="absolute top-12 left-12 p-4 bg-white/80 backdrop-blur-xl rounded-2xl border border-[#004d40]/10">
-                            <Layers className="w-6 h-6 text-[#004d40] animate-pulse" />
-                         </div>
-                      </motion.div>
-
-                      <div className="flex flex-col justify-center space-y-12">
-                         <div className="space-y-6">
-                            <span className="text-[10px] uppercase tracking-[1em] font-black opacity-30 mb-8 block underline decoration-[#004d40] decoration-4 underline-offset-8">Node_Sync // 0x442_B</span>
-                            <h1 className="text-6xl md:text-8xl font-black italic uppercase tracking-tighter leading-none text-[#004d40]">{PROJECTS[activeItem].name}</h1>
-                            <div className="text-4xl font-black italic tracking-tighter opacity-10 italic">Global_Allocation: Reserved</div>
-                         </div>
-
-                         <p className="text-3xl font-light italic leading-relaxed uppercase tracking-tight opacity-50 text-[#004d40]">
-                            {PROJECTS[activeItem].desc} Every angle was computed to maximize silence and minimize human interference with the landscape.
-                         </p>
-
-                         <div className="grid grid-cols-2 gap-12 py-12 border-y border-[#004d40]/10">
-                            {[
-                              { icon: <Compass className="w-5 h-5" />, l: "Coordinates", v: "52.52 / 13.40" },
-                              { icon: <MoveDiagonal2 className="w-5 h-5" />, l: "Dimensions", v: "14,200 SQM" },
-                              { icon: <Shield className="w-5 h-5" />, l: "Security", v: "Military_Grade" },
-                              { icon: <Box className="w-5 h-5" />, l: "Core", v: "Concrete_V1" },
-                            ].map((s, i) => (
-                              <div key={i} className="flex gap-6 items-center text-[#004d40]">
-                                 <div className="opacity-20">{s.icon}</div>
-                                 <div>
-                                    <div className="text-[10px] font-black opacity-30 uppercase tracking-widest mb-1 italic">{s.l}</div>
-                                    <div className="text-sm font-black uppercase italic tracking-tighter">{s.v}</div>
-                                 </div>
-                              </div>
-                            ))}
-                         </div>
-
-                         <div className="flex gap-6 pt-8">
-                            <button onClick={() => setView("network")} className="flex-grow py-8 bg-[#004d40] text-white font-black uppercase text-xs tracking-[1em] hover:bg-black transition-all shadow-2xl">
-                               Establish_Link
-                            </button>
-                            <button className="px-12 py-8 border border-[#004d40]/20 text-[10px] font-black uppercase tracking-[0.5em] hover:scale-105 transition-all text-[#004d40]">
-                               Data_Sheet
-                            </button>
-                         </div>
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
-        {/* NETWORK VIEW (INFO/ABOUT) */}
-        {view === "network" && (
-          <motion.div key="network" initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen flex flex-col justify-center">
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center">
-                <div className="space-y-16">
-                   <span className="text-[10px] uppercase font-black tracking-[1.5em] opacity-30 block text-[#004d40] underline decoration-[#004d40] decoration-2 underline-offset-8 italic">The_Philosophical_Void</span>
-                   <h2 className="text-7xl md:text-[10vw] font-black italic tracking-tighter leading-none text-[#004d40] uppercase">The <br/> Nexus.</h2>
-                   <p className="text-3xl md:text-4xl font-light italic opacity-60 leading-relaxed uppercase tracking-tight text-[#004d40]/60">
-                      We treat architecture as code. Every structure is a function of its environmental variables and tectonic intent. 100% precision. Zero noise.
-                   </p>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t border-[#004d40]/20">
-                      {[
-                        { icon: <Activity className="w-6 h-6" />, t: "Adaptive Flow", v: "Dynamic Load Sync" },
-                        { icon: <Plus className="w-6 h-6" />, t: "Structural Sync", v: "Deep_Material_ID" },
-                      ].map((item, i) => (
-                        <div key={i} className="flex gap-8 group">
-                           <div className="w-16 h-16 rounded-full border border-[#004d40] flex items-center justify-center text-[#004d40] group-hover:bg-[#004d40] group-hover:text-white transition-all shadow-xl">
-                              {item.icon}
-                           </div>
-                           <div>
-                              <h4 className="text-2xl font-black uppercase italic tracking-tighter text-[#004d40] leading-none mb-2">{item.t}</h4>
-                              <p className="text-[10px] opacity-30 uppercase tracking-[0.3em] font-black leading-relaxed text-[#004d40]">{item.v}</p>
-                           </div>
-                        </div>
-                      ))}
-                   </div>
-                </div>
-                <div className="relative aspect-square glass rounded-[4rem] p-12 overflow-hidden border border-[#004d40]/10 group shadow-2xl">
-                   <Image src="https://images.unsplash.com/photo-1541829070764-84a7d30dee62?q=80&w=1000&auto=format&fit=crop" alt="The Void" fill className="object-cover grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-[3s]" />
-                   <div className="absolute inset-x-0 bottom-12 flex justify-center">
-                      <div className="px-12 py-6 border border-[#004d40] text-[#004d40] text-[10px] font-black uppercase tracking-widest italic animate-bounce cursor-pointer hover:bg-[#004d40] hover:text-white transition-all">
-                         Handshake_Protocol
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
       </AnimatePresence>
 
-      {/* Global Status HUD */}
-      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em] italic text-[#004d40]">
-         <div className="flex gap-12 text-[#004d40]">
-            <span>Nexus_Node // alpha</span>
-            <span>Uptime: 99.9%</span>
-         </div>
-         <div className="flex gap-4 items-end text-[#004d40]">
-            <div className="text-right leading-tight italic">
-               Cluster_Control <br /> v4.0.21
+      {/* Hero */}
+      <section ref={heroRef} className="relative h-screen flex items-center justify-center overflow-hidden" onMouseMove={e => { cx.set(e.clientX - window.innerWidth / 2); cy.set(e.clientY - window.innerHeight / 2); }}>
+        <motion.div style={{ y: heroY }} className="absolute inset-0">
+          <Image src={NODES[0].image} alt="network" fill unoptimized className="object-cover opacity-10" />
+          <div className="absolute inset-0 bg-[#040810]/80" />
+        </motion.div>
+        {/* Cursor gradient */}
+        <motion.div className="absolute w-[600px] h-[600px] rounded-full pointer-events-none blur-3xl" style={{ x: scx, y: scy, background: "radial-gradient(circle, rgba(0,255,136,0.08) 0%, transparent 70%)", left: "50%", top: "50%", translateX: "-50%", translateY: "-50%" }} />
+        {/* Grid overlay */}
+        <div className="absolute inset-0 opacity-5" style={{ backgroundImage: "linear-gradient(rgba(0,255,136,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,136,0.5) 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
+        <div className="relative z-10 text-center px-6 max-w-5xl mx-auto">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} className="text-[10px] tracking-[0.3em] text-[#00ff88] mb-6 flex items-center justify-center gap-3">
+            <span className="w-8 h-px bg-[#00ff88]/40" />
+            DISTRIBUTED CLUSTER PROTOCOL v4.2.1
+            <span className="w-8 h-px bg-[#00ff88]/40" />
+          </motion.div>
+          <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.2 }} className="text-5xl md:text-8xl font-black leading-none tracking-tight mb-6">
+            THE <span className="text-[#00ff88]">NEXUS</span><br />CLUSTER
+          </motion.h1>
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="text-sm opacity-40 max-w-lg mx-auto mb-10 tracking-wider leading-loose">
+            1,247 nodes. 6 regions. Zero single point of failure.<br />The backbone of decentralized compute at global scale.
+          </motion.p>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }} className="flex gap-4 justify-center flex-wrap">
+            <a href="#" className="px-8 py-4 bg-[#00ff88] text-[#040810] font-black text-xs tracking-[0.2em] uppercase">
+              Explore Network
+            </a>
+            <a href="#" className="px-8 py-4 border border-[#00ff88]/30 text-[#00ff88] text-xs tracking-[0.2em] uppercase hover:bg-[#00ff88]/5 transition-colors">
+              Read Whitepaper
+            </a>
+          </motion.div>
+        </div>
+
+        {/* Live terminal */}
+        <motion.div initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 1.2 }} className="absolute bottom-12 right-8 hidden md:block w-72 bg-[#040810]/90 border border-[#00ff88]/20 p-4">
+          <div className="flex items-center gap-2 mb-3 text-[9px] tracking-[0.2em] text-[#00ff88]/50">
+            <Terminal size={10} /> LIVE LOG
+          </div>
+          <div className="space-y-1">
+            {visibleLogs.map((l, i) => (
+              <motion.p key={i} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} className="text-[9px] font-mono opacity-50 leading-relaxed">{l}</motion.p>
+            ))}
+          </div>
+        </motion.div>
+      </section>
+
+      {/* Marquee */}
+      <div className="border-y border-[#00ff88]/10 py-3 overflow-hidden bg-[#00ff88]/5">
+        <motion.div animate={{ x: [0, -2400] }} transition={{ repeat: Infinity, duration: 30, ease: "linear" }} className="flex gap-12 whitespace-nowrap">
+          {Array(10).fill(0).map((_, i) => (
+            <span key={i} className="text-[9px] font-mono tracking-[0.2em] text-[#00ff88]/40">NEXUS_PROTOCOL · BFT_CONSENSUS · ZERO_TRUST · GEO_ROUTING · 1247_NODES · 99.97%_UPTIME · OPEN_SOURCE ·</span>
+          ))}
+        </motion.div>
+      </div>
+
+      {/* Node Grid */}
+      <section className="py-24 px-6 max-w-7xl mx-auto">
+        <Reveal><h2 className="text-2xl font-black tracking-[0.2em] uppercase mb-2 text-[#00ff88]">CLUSTER_MAP</h2></Reveal>
+        <Reveal delay={0.1}><p className="text-xs opacity-30 tracking-wider mb-12">Real-time node status across 6 global regions</p></Reveal>
+        <div className="grid md:grid-cols-3 gap-4">
+          {NODES.map((n, i) => (
+            <Reveal key={n.id} delay={i * 0.07}>
+              <motion.div whileHover={{ scale: 1.02 }} onClick={() => setActiveNode(n)} className="cursor-pointer border border-white/5 hover:border-white/10 transition-colors bg-[#070b14] p-5 group">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-[10px] tracking-[0.2em] font-black" style={{ color: n.color }}>{n.name}</span>
+                  <span className="text-[9px] tracking-wider opacity-30">{n.region}</span>
+                </div>
+                <div className="relative overflow-hidden mb-4" style={{ aspectRatio: "16/9" }}>
+                  <Image src={n.image} alt={n.name} fill unoptimized className="object-cover opacity-30 group-hover:opacity-50 transition-opacity" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className={`text-[10px] font-black tracking-widest px-3 py-1.5 border ${n.status === "ACTIVE" ? "border-green-500/40 text-green-400 bg-green-500/10" : n.status === "OFFLINE" ? "border-red-500/40 text-red-400 bg-red-500/10" : "border-yellow-500/40 text-yellow-400 bg-yellow-500/10"}`}>
+                      {n.status}
+                    </span>
+                  </div>
+                </div>
+                <div className="space-y-3 text-[9px]">
+                  <div>
+                    <div className="flex justify-between mb-1.5 opacity-40 tracking-wider">
+                      <span>NODE LOAD</span><span>{n.load}%</span>
+                    </div>
+                    <LoadBar value={n.load} color={n.color} />
+                  </div>
+                  <div className="flex justify-between opacity-30 tracking-wider">
+                    <span>LATENCY</span><span style={{ color: n.color }}>{n.latency > 0 ? `${n.latency}ms` : "—"}</span>
+                  </div>
+                </div>
+              </motion.div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* Services */}
+      <section className="py-24 bg-[#070b14] px-6">
+        <div className="max-w-6xl mx-auto">
+          <Reveal><h2 className="text-2xl font-black tracking-[0.2em] uppercase mb-16 text-[#00ff88]">PROTOCOL_STACK</h2></Reveal>
+          <div className="grid md:grid-cols-3 gap-4">
+            {SERVICES.map((s, i) => (
+              <Reveal key={s.title} delay={i * 0.08}>
+                <motion.div whileHover={{ y: -6 }} className="p-6 border border-white/5 hover:border-[#00ff88]/20 transition-colors">
+                  <s.icon size={20} className="mb-4 opacity-50" style={{ color: "#00ff88" }} />
+                  <h3 className="text-xs font-black tracking-[0.2em] uppercase mb-2">{s.title}</h3>
+                  <p className="text-[11px] opacity-30 leading-relaxed tracking-wide">{s.desc}</p>
+                </motion.div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Stats */}
+      <section className="py-24 px-6 border-y border-white/5">
+        <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-10">
+          {STATS.map((s, i) => (
+            <Reveal key={s.label} delay={i * 0.1} className="text-center">
+              <div className="text-4xl font-black mb-2 text-[#00ff88]"><Counter target={s.value} suffix={s.suffix} /></div>
+              <div className="text-[9px] tracking-[0.25em] uppercase opacity-30">{s.label}</div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="py-24 px-6 max-w-2xl mx-auto">
+        <Reveal><h2 className="text-xl font-black tracking-[0.2em] uppercase mb-12 text-[#00ff88]">FAQ::PROTOCOL</h2></Reveal>
+        {faqs.map((f, i) => (
+          <Reveal key={i} delay={i * 0.05}>
+            <div className="border-b border-white/5">
+              <button onClick={() => setOpenFaq(openFaq === i ? null : i)} className="w-full text-left py-5 flex items-center justify-between text-xs tracking-wider">
+                {f.q}
+                <motion.span animate={{ rotate: openFaq === i ? 180 : 0 }}><ChevronDown size={14} /></motion.span>
+              </button>
+              <AnimatePresence>
+                {openFaq === i && (
+                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+                    <p className="pb-5 text-[11px] opacity-30 leading-relaxed tracking-wide">{f.a}</p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-            <div className="flex gap-[4px] h-4">
-               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-full bg-[#004d40] opacity-${i*20}`}></div>)}
-            </div>
-         </div>
+          </Reveal>
+        ))}
+      </section>
+
+      {/* CTA */}
+      <section className="py-32 px-6 text-center relative overflow-hidden">
+        <div className="absolute inset-0 opacity-5" style={{ backgroundImage: "linear-gradient(rgba(0,255,136,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,136,0.5) 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
+        <div className="relative z-10">
+          <Reveal><h2 className="text-4xl md:text-7xl font-black tracking-tight mb-4 leading-none">JOIN THE<br /><span className="text-[#00ff88]">CLUSTER</span></h2></Reveal>
+          <Reveal delay={0.2}><p className="text-xs opacity-30 mb-10 max-w-sm mx-auto tracking-wider leading-loose">Run a node. Earn rewards. Strengthen the network. No minimum stake required for observer nodes.</p></Reveal>
+          <Reveal delay={0.3}>
+            <MagneticBtn className="inline-flex items-center gap-3 px-10 py-5 bg-[#00ff88] text-[#040810] font-black text-xs tracking-[0.2em] uppercase">
+              RUN A NODE <ArrowRight size={14} />
+            </MagneticBtn>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-white/5 py-12 px-8 flex flex-col md:flex-row items-center justify-between gap-6 text-[9px] opacity-20 tracking-[0.2em]">
+        <span>NEXUS PROTOCOL © 2026</span>
+        <div className="flex gap-8">{["GitHub", "Discord", "Docs", "Status"].map(l => <a key={l} href="#" className="hover:opacity-100 transition-opacity">{l}</a>)}</div>
       </footer>
 
-      <style>{`
-        ::-webkit-scrollbar { width: 0px; }
-      `}</style>
+      {/* Node Modal */}
+      <AnimatePresence>
+        {activeNode && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center p-6" onClick={() => setActiveNode(null)}>
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} onClick={e => e.stopPropagation()} className="bg-[#070b14] border max-w-lg w-full overflow-hidden" style={{ borderColor: activeNode.color + "40" }}>
+              <div className="relative h-48">
+                <Image src={activeNode.image} alt={activeNode.name} fill unoptimized className="object-cover opacity-40" />
+                <button onClick={() => setActiveNode(null)} className="absolute top-4 right-4 opacity-60 hover:opacity-100"><X size={16} /></button>
+              </div>
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-black tracking-[0.2em] text-sm" style={{ color: activeNode.color }}>{activeNode.name}</h3>
+                  <span className="text-[9px] tracking-widest opacity-40">{activeNode.region}</span>
+                </div>
+                <div className="space-y-3 text-[10px] tracking-wider">
+                  <div className="flex justify-between"><span className="opacity-30">STATUS</span><span style={{ color: activeNode.color }}>{activeNode.status}</span></div>
+                  <div className="flex justify-between"><span className="opacity-30">LATENCY</span><span>{activeNode.latency > 0 ? `${activeNode.latency}ms` : "OFFLINE"}</span></div>
+                  <div className="mt-4">
+                    <div className="flex justify-between mb-2 opacity-30"><span>LOAD</span><span>{activeNode.load}%</span></div>
+                    <LoadBar value={activeNode.load} color={activeNode.color} />
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
