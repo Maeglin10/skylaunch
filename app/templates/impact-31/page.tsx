@@ -1,242 +1,223 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { motion, useScroll, useTransform, useInView, AnimatePresence } from "framer-motion";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { X, Menu, Search, Box, Layers, Zap, Activity, Globe, Shield, Command, MoveRight, ArrowUpRight, Cpu, Gauge } from "lucide-react";
+import { ArrowRight, X, Menu, Eye, Layers, Cpu, Globe, Zap, ArrowUpRight, ChevronDown, Play } from "lucide-react";
 import "../premium.css";
 
-const NODES = [
-  { id: 1, title: "SYNAPSE_CORE", cat: "Infrastructure", region: "Alpha", load: "42%", img: "https://images.unsplash.com/photo-1558494949-ef010cbdcc51?q=80&w=1000&auto=format&fit=crop" },
-  { id: 2, title: "LITHE_NODE", cat: "Interface", region: "Bravo", load: "12%", img: "https://images.unsplash.com/photo-1549490349-8643362247b5?q=80&w=1000&auto=format&fit=crop" },
-  { id: 3, title: "ORBIT_PULSE", cat: "Connectivity", region: "Charlie", load: "08%", img: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=1000&auto=format&fit=crop" },
-  { id: 4, title: "AETHER_LINK", cat: "Provisioning", region: "Delta", load: "67%", img: "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?q=80&w=1000&auto=format&fit=crop" },
+const WORKS = [
+  { id: 1, title: "AXIS_SHIFT", type: "XR Installation", year: "2026", img: "https://images.unsplash.com/photo-1614728263952-84ea256f9679?q=80&w=1200&auto=format&fit=crop", color: "#e040fb", desc: "A spatial computing environment that remaps proprioception in real time." },
+  { id: 2, title: "DEPTH_FIELD", type: "Generative Film", year: "2025", img: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=1000&auto=format&fit=crop", color: "#40c4ff", desc: "Cosmos rendered in 16K via procedural gravity simulation." },
+  { id: 3, title: "SOMA_NET", type: "Biometric Art", year: "2025", img: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?q=80&w=1000&auto=format&fit=crop", color: "#69ff47", desc: "Audience biometrics drive a live audiovisual topology in shared space." },
+  { id: 4, title: "PARALLAX_IX", type: "Interactive Web", year: "2024", img: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?q=80&w=1000&auto=format&fit=crop", color: "#ff6d00", desc: "Browser-based narrative using WebGPU for full ray-tracing at 60fps." },
+  { id: 5, title: "FLUID_STATE", type: "Performance", year: "2024", img: "https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=1000&auto=format&fit=crop", color: "#f50057", desc: "Live fluid simulation reacting to dancers' motion via depth cameras." },
+  { id: 6, title: "ZERO_LAYER", type: "Sound Design", year: "2023", img: "https://images.unsplash.com/photo-1508193638397-1c4234db14d8?q=80&w=1000&auto=format&fit=crop", color: "#ffea00", desc: "Spatial audio installation mapping city noise into harmonic structures." },
 ];
 
+const SERVICES = [
+  { icon: Eye, title: "XR & Spatial Computing", desc: "Mixed reality environments for brand activations, cultural institutions, and public space." },
+  { icon: Layers, title: "Generative Systems", desc: "Procedural visuals and parametric design using custom GPU-accelerated pipelines." },
+  { icon: Cpu, title: "Interactive Technology", desc: "WebGPU, WASM, and real-time processing for browser and native contexts." },
+  { icon: Globe, title: "Immersive Events", desc: "Full-service production of large-scale live experiences with technical direction." },
+];
+
+function Reveal({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-80px" });
+  return (
+    <motion.div ref={ref} initial={{ opacity: 0, y: 32 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.8, delay, ease: [0.25, 0.46, 0.45, 0.94] }} className={className}>
+      {children}
+    </motion.div>
+  );
+}
+
 export default function PerspectiveCoreSPA() {
-  const [view, setView] = useState<"perspective" | "core" | "protocol">("perspective");
-  const [activeItem, setActiveItem] = useState(0);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [activeWork, setActiveWork] = useState<number | null>(null);
+  const [hovered, setHovered] = useState<number | null>(null);
+  const [showReel, setShowReel] = useState(false);
+  const { scrollY } = useScroll();
+  const heroY = useTransform(scrollY, [0, 700], [0, 200]);
+  const heroScale = useTransform(scrollY, [0, 700], [1, 1.12]);
+  const heroOpacity = useTransform(scrollY, [0, 500], [1, 0]);
 
   return (
-    <div className="premium-theme bg-[#050505] text-[#38bdf8] min-h-screen selection:bg-[#38bdf8] selection:text-black font-mono overflow-x-hidden">
-      
-      {/* Background HUD Layers */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_#38bdf805_0%,_transparent_70%)] opacity-40" />
-        <div 
-          className="absolute inset-0 opacity-[0.05]"
-          style={{ backgroundImage: `linear-gradient(#ffffff05 1px, transparent 1px), linear-gradient(90deg, #ffffff05 1px, transparent 1px)`, backgroundSize: '60px 60px' }}
-        />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-screen" />
-        
-        {/* Tilting Radial Glow */}
-        <motion.div 
-          animate={{ x: [0, 50, -50, 0], y: [0, -50, 50, 0] }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute inset-0 bg-[radial-gradient(circle_at_center,_#38bdf808_0%,_transparent_60%)]"
-        />
-      </div>
+    <div className="premium-theme bg-[#06030a] text-white min-h-screen overflow-x-hidden">
 
-      {/* Global Header */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-6 md:px-12 md:py-8 flex justify-between items-center bg-black/40 backdrop-blur-xl border-b border-[#38bdf8]/10">
-        <div className="flex gap-12 items-center">
-           <button onClick={() => setView("perspective")} className="text-xl font-black italic tracking-tighter hover:text-white transition-colors flex items-center gap-4">
-              <Command className="w-6 h-6 animate-pulse" /> TILT_MATRIX&trade;
-           </button>
-           <div className="hidden lg:flex gap-8 text-[10px] font-black uppercase tracking-widest opacity-20 italic">
-              Access: Level_04
-              <span className="text-white">Ref: 0x31_P</span>
-           </div>
+      {/* NAV */}
+      <nav className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-8 md:px-16 py-5 bg-[#06030a]/85 backdrop-blur-xl">
+        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="text-sm font-black uppercase tracking-[0.35em]">PERSPECTIVE<span className="text-[#e040fb]">.</span></motion.div>
+        <div className="hidden md:flex items-center gap-10 text-[10px] uppercase tracking-[0.35em] text-white/40">
+          {["Work", "Studio", "Services", "Contact"].map(l => (
+            <a key={l} href="#" className="hover:text-white transition-colors">{l}</a>
+          ))}
         </div>
-        <div className="hidden md:flex gap-12 text-[10px] font-black uppercase tracking-[0.4em] opacity-30">
-           <button onClick={() => setView("perspective")} className={`hover:opacity-100 transition-opacity ${view === 'perspective' ? 'text-white opacity-100 underline decoration-white underline-offset-8 italic' : ''}`}>THE_MATRIX</button>
-           <button onClick={() => setView("protocol")} className={`hover:opacity-100 transition-opacity ${view === 'protocol' ? 'text-white opacity-100 underline decoration-white underline-offset-8 italic' : ''}`}>THE_PROTOCOL</button>
-        </div>
-        <div className="flex items-center gap-8">
-           <Search className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-           <Menu className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
+        <div className="flex items-center gap-3">
+          <a href="#" className="hidden md:block text-[10px] uppercase tracking-widest border border-[#e040fb]/30 text-[#e040fb] px-5 py-2 hover:bg-[#e040fb]/10 transition-all">New Project</a>
+          <button onClick={() => setMenuOpen(true)} className="md:hidden"><Menu size={20} /></button>
         </div>
       </nav>
 
-      <AnimatePresence mode="wait">
-        
-        {/* PERSPECTIVE VIEW (3D GRID) */}
-        {view === "perspective" && (
-          <motion.div key="perspective" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-48 pb-32 px-12 max-w-[1800px] mx-auto min-h-screen flex flex-col justify-center">
-             <header className="mb-24 border-b-2 border-[#38bdf8]/20 pb-12 flex flex-col md:flex-row justify-between items-end gap-12">
-                <div>
-                   <span className="text-[10px] uppercase font-black tracking-[1em] text-[#38bdf8] opacity-40 mb-4 block underline decoration-[#38bdf8]/10 underline-offset-8 italic">Core_Synthesis // Series_031</span>
-                   <h1 className="text-7xl md:text-[12vw] font-black italic uppercase tracking-tighter leading-[0.75] text-white">THE. <br/> <span className="text-[#38bdf8]">CORE.</span></h1>
-                </div>
-                <div className="text-right flex flex-col items-end">
-                   <div className="text-3xl font-black mb-4 tracking-tighter uppercase opacity-10 italic">Secure_Uplink</div>
-                   <div className="w-64 h-1 bg-white/5 rounded-full overflow-hidden">
-                      <motion.div animate={{ width: ['20%', '80%', '40%', '60%'] }} transition={{ duration: 4, repeat: Infinity }} className="h-full bg-[#38bdf8]" />
-                   </div>
-                </div>
-             </header>
-
-             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                {NODES.map((p, i) => (
-                  <motion.div 
-                    key={p.id} initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                    className="group relative h-[60vh] md:h-[70vh] rounded-[3rem] overflow-hidden border border-[#38bdf8]/10 hover:border-[#38bdf8]/40 transition-all cursor-pointer shadow-2xl perspective-2000"
-                    onClick={() => { setActiveItem(i); setView("core"); }}
-                  >
-                     <motion.div 
-                        whileHover={{ rotateY: 10, rotateX: -5, translateZ: 20 }}
-                        className="relative w-full h-full preserve-3d transition-transform duration-700"
-                     >
-                        <Image src={p.img} alt={p.title} fill className="object-cover grayscale opacity-20 group-hover:opacity-40 transition-all duration-[2s] group-hover:scale-110" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                        
-                        <div className="absolute inset-10 flex flex-col justify-between">
-                           <div className="flex justify-between items-start">
-                              <div className="p-4 bg-white/5 border border-white/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity">
-                                 <Plus className="w-5 h-5 text-[#38bdf8]" />
-                              </div>
-                              <div className="text-[10px] font-black uppercase tracking-widest opacity-20 group-hover:opacity-100 transition-opacity text-[#38bdf8]">NODE_0x{p.id}</div>
-                           </div>
-                           <div>
-                              <span className="text-[10px] uppercase font-black tracking-widest text-[#38bdf8]/40 mb-2 block">{p.cat}</span>
-                              <h3 className="text-5xl font-black italic uppercase tracking-tighter text-white group-hover:text-[#38bdf8] transition-colors">{p.title}</h3>
-                           </div>
-                        </div>
-                     </motion.div>
-                  </motion.div>
-                ))}
-             </div>
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] bg-[#06030a] flex flex-col p-10">
+            <button onClick={() => setMenuOpen(false)} className="self-end mb-12 text-white/40"><X size={24} /></button>
+            <div className="flex flex-col gap-8 text-4xl font-black uppercase">
+              {["Work", "Studio", "Services", "Contact"].map(l => <a key={l} href="#" onClick={() => setMenuOpen(false)} className="hover:text-[#e040fb] transition-colors">{l}</a>)}
+            </div>
           </motion.div>
         )}
-
-        {/* CORE VIEW (DETAIL) */}
-        {view === "core" && (
-          <motion.div key="core" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen">
-             <button onClick={() => setView("perspective")} className="fixed top-12 left-12 z-[60] bg-white text-black p-5 rounded-full hover:scale-110 transition-transform shadow-2xl">
-                <X className="w-6 h-6" />
-             </button>
-
-             <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen pt-24 lg:pt-0">
-                <div className="lg:col-span-12 relative flex items-center justify-center p-8 md:p-32 overflow-hidden h-screen bg-[#050505]">
-                   <div className="absolute inset-0 opacity-10">
-                      <Image src={NODES[activeItem].img} alt="Background" fill className="object-cover grayscale" />
-                   </div>
-                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#050505_100%)]" />
-                   
-                   <div className="max-w-[1500px] w-full grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10">
-                      <motion.div initial={{ x: -100, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ duration: 1 }} className="relative aspect-square w-full rounded-[4rem] overflow-hidden border border-[#38bdf8]/20 bg-white/5 shadow-2xl group">
-                         <Image src={NODES[activeItem].img} alt="Project" fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[3s] opacity-80" priority />
-                         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                         <div className="absolute top-12 left-12 p-4 bg-black/60 backdrop-blur-3xl rounded-2xl border border-white/10">
-                            <Layers className="w-6 h-6 text-white animate-pulse" />
-                         </div>
-                      </motion.div>
-
-                      <div className="flex flex-col justify-center space-y-12">
-                         <div className="space-y-6 text-[#38bdf8]">
-                            <span className="text-[10px] uppercase tracking-[1em] font-black opacity-30 mb-8 block underline decoration-white decoration-4 underline-offset-8 italic">Archive_Sync // {NODES[activeItem].cat}</span>
-                            <h1 className="text-7xl md:text-[10vw] font-black italic uppercase tracking-tighter leading-none text-white uppercase">{NODES[activeItem].title}</h1>
-                            <div className="text-4xl font-black italic tracking-tighter opacity-10">State: SYNCHRONIZED</div>
-                         </div>
-
-                         <p className="text-3xl font-light italic leading-relaxed uppercase tracking-tight opacity-40 text-white leading-relaxed">
-                            Structural allocation for {NODES[activeItem].title}. System integrity at 100%. Thermal load nominal at 32C. Every coordinate synchronized.
-                         </p>
-
-                         <div className="grid grid-cols-2 gap-12 py-12 border-y border-[#38bdf8]/10 text-[#38bdf8]">
-                            {[
-                              { icon: <Globe className="w-5 h-5" />, l: "Region", v: NODES[activeItem].region },
-                              { icon: <Zap className="w-5 h-5" />, l: "Logic", v: "Class_A_Core" },
-                              { icon: <Shield className="w-5 h-5" />, l: "Security", v: "High_Impact" },
-                              { icon: <Activity className="w-5 h-5" />, l: "Throughput", v: NODES[activeItem].load },
-                            ].map((s, i) => (
-                              <div key={i} className="flex gap-6 items-center">
-                                 <div className="opacity-20">{s.icon}</div>
-                                 <div className="text-left">
-                                    <div className="text-[10px] font-black opacity-30 uppercase tracking-widest mb-1 italic">{s.l}</div>
-                                    <div className="text-sm font-black uppercase italic tracking-tighter">{s.v}</div>
-                                 </div>
-                              </div>
-                            ))}
-                         </div>
-
-                         <div className="flex gap-6 pt-8">
-                            <button onClick={() => setView("perspective")} className="flex-grow py-8 bg-white text-black font-black uppercase text-xs tracking-[1em] hover:bg-white/80 transition-all shadow-2xl">
-                               Explore_Matrix
-                            </button>
-                            <button className="px-12 py-8 border border-[#38bdf8]/20 text-[10px] font-black uppercase tracking-[0.5em] hover:scale-105 transition-all text-[#38bdf8]">
-                               PDF_Spec
-                            </button>
-                         </div>
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
-        {/* PROTOCOL VIEW (INFO) */}
-        {view === "protocol" && (
-          <motion.div key="protocol" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen flex flex-col justify-center">
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center text-white">
-                <div className="space-y-16">
-                   <span className="text-[10px] uppercase font-black tracking-[1.5em] opacity-30 block underline decoration-[#38bdf8] decoration-2 underline-offset-8 italic text-[#38bdf8]">The_Identity_Protocol</span>
-                   <h2 className="text-7xl md:text-[10vw] font-black italic tracking-tighter leading-none text-white uppercase">The <br/> Truth.</h2>
-                   <p className="text-3xl md:text-4xl font-light italic opacity-60 leading-relaxed uppercase tracking-tight text-[#38bdf8]/60">
-                      We treat architecture as code. Every structure is a function of its environmental variables and tectonic intent. 100% precision. Zero noise.
-                   </p>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t border-[#38bdf8]/20 text-[#38bdf8]">
-                      {[
-                        { icon: <Activity className="w-6 h-6" />, t: "Adaptive Flow", v: "Dynamic Load Sync" },
-                        { icon: <Plus className="w-6 h-6" />, t: "Structural Sync", v: "Deep_Material_ID" },
-                      ].map((item, i) => (
-                        <div key={i} className="flex gap-8 group">
-                           <div className="w-16 h-16 rounded-full border border-[#38bdf8] flex items-center justify-center text-[#38bdf8] group-hover:bg-[#38bdf8] group-hover:text-black transition-all shadow-xl">
-                              {item.icon}
-                           </div>
-                           <div className="text-left">
-                              <h4 className="text-2xl font-black uppercase italic tracking-tighter text-white leading-none mb-2">{item.t}</h4>
-                              <p className="text-[10px] opacity-30 uppercase tracking-[0.3em] font-black leading-relaxed text-[#38bdf8]/40">{item.v}</p>
-                           </div>
-                        </div>
-                      ))}
-                   </div>
-                </div>
-                <div className="relative aspect-square bg-white/5 rounded-[4rem] p-12 overflow-hidden border border-[#38bdf8]/10 group shadow-2xl">
-                   <Image src="https://images.unsplash.com/photo-1541185933-ef5d8ed016c2?q=80&w=1000&auto=format&fit=crop" alt="The Network" fill className="object-cover opacity-20 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-[2s]" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                   <div className="absolute inset-x-0 bottom-12 flex justify-center">
-                      <div className="px-12 py-6 border border-[#38bdf8] text-[#38bdf8] text-[10px] font-black uppercase tracking-widest italic animate-bounce cursor-pointer hover:bg-[#38bdf8] hover:text-black transition-all">
-                         Establish_Handshake
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
       </AnimatePresence>
 
-      {/* Global Status HUD */}
-      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em] italic text-[#38bdf8]">
-         <div className="flex gap-12 text-[#38bdf8]">
-            <span>Tilt_Matrix_Alpha</span>
-            <span>Uptime: 99.9%</span>
-         </div>
-         <div className="flex gap-4 items-end text-[#38bdf8]">
-            <div className="text-right leading-tight italic">
-               Sequence_Control <br /> v4.0.21
+      {/* REEL MODAL */}
+      <AnimatePresence>
+        {showReel && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] bg-black/98 flex items-center justify-center" onClick={() => setShowReel(false)}>
+            <div className="w-full max-w-5xl aspect-video bg-[#111] flex items-center justify-center relative">
+              <p className="text-white/20 text-sm uppercase tracking-widest font-mono">[ Showreel 2026 ]</p>
+              <button className="absolute top-4 right-4 text-white/40 hover:text-white"><X size={20} /></button>
             </div>
-            <div className="flex gap-[4px] h-4">
-               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-full bg-[#38bdf8] opacity-${i*20}`}></div>)}
-            </div>
-         </div>
-      </footer>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      <style>{`
-        ::-webkit-scrollbar { width: 0px; }
-        .preserve-3d { transform-style: preserve-3d; }
-      `}</style>
+      {/* HERO */}
+      <section className="relative h-screen flex items-center overflow-hidden">
+        <motion.div style={{ y: heroY, scale: heroScale }} className="absolute inset-0">
+          <Image src="https://images.unsplash.com/photo-1614728263952-84ea256f9679?q=80&w=2000&auto=format&fit=crop" alt="Immersive" fill className="object-cover opacity-35" unoptimized />
+        </motion.div>
+        <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at 30% 50%, rgba(224,64,251,0.15) 0%, transparent 60%), radial-gradient(ellipse at 80% 30%, rgba(64,196,255,0.1) 0%, transparent 50%)" }} />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#06030a]/90 via-[#06030a]/50 to-transparent" />
+        <motion.div style={{ opacity: heroOpacity }} className="relative z-10 px-8 md:px-16 pt-20">
+          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="text-[10px] uppercase tracking-[0.5em] text-[#e040fb]/60 mb-8">Immersive Experience Studio — Paris · Berlin · Tokyo</motion.p>
+          <motion.h1 initial={{ opacity: 0, y: 80 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, duration: 1, ease: [0.16, 1, 0.3, 1] }} className="text-7xl md:text-[9vw] font-black uppercase leading-none tracking-tighter mb-8">
+            We Build<br />
+            <span className="text-[#e040fb]">Worlds</span><br />
+            People Feel.
+          </motion.h1>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1 }} className="flex items-center gap-6">
+            <a href="#work" className="bg-[#e040fb] text-white px-8 py-4 text-[11px] uppercase tracking-widest font-black hover:bg-[#c030d0] transition-colors">See Our Work</a>
+            <button onClick={() => setShowReel(true)} className="flex items-center gap-3 text-white/50 text-[11px] uppercase tracking-widest hover:text-white transition-colors">
+              <div className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center hover:border-white/50 transition-colors"><Play size={12} className="ml-0.5" /></div>
+              Watch Reel
+            </button>
+          </motion.div>
+        </motion.div>
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce"><ChevronDown size={16} className="text-white/25" /></div>
+      </section>
+
+      {/* MARQUEE */}
+      <div className="overflow-hidden bg-[#e040fb]/8 border-y border-[#e040fb]/15 py-3.5">
+        <motion.div animate={{ x: [0, -2800] }} transition={{ duration: 25, repeat: Infinity, ease: "linear" }} className="flex gap-12 whitespace-nowrap">
+          {Array(18).fill(null).map((_, i) => (
+            <span key={i} className="text-[10px] uppercase tracking-widest text-[#e040fb]/40 shrink-0">XR · Generative Art · Interactive Web · Biometric Performance · Spatial Audio · WebGPU ·</span>
+          ))}
+        </motion.div>
+      </div>
+
+      {/* WORKS */}
+      <section id="work" className="px-8 md:px-16 py-24">
+        <Reveal className="mb-12">
+          <p className="text-[10px] uppercase tracking-[0.4em] text-white/30 mb-4">Portfolio — 2023/2026</p>
+          <h2 className="text-5xl md:text-7xl font-black uppercase leading-none tracking-tighter">Selected<br />Work</h2>
+        </Reveal>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {WORKS.map((w, i) => (
+            <Reveal key={w.id} delay={i * 0.07}>
+              <motion.div className="group relative overflow-hidden cursor-pointer" style={{ height: "48vh" }} onHoverStart={() => setHovered(w.id)} onHoverEnd={() => setHovered(null)} onClick={() => setActiveWork(w.id)} whileHover={{ scale: 1.01 }}>
+                <Image src={w.img} alt={w.title} fill className="object-cover opacity-40 group-hover:opacity-65 transition-all duration-700 group-hover:scale-105" unoptimized />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#06030a]/90 via-transparent to-transparent" />
+                <motion.div initial={{ opacity: 0 }} animate={hovered === w.id ? { opacity: 1 } : { opacity: 0 }} className="absolute inset-0" style={{ background: `radial-gradient(circle at 50% 50%, ${w.color}15, transparent 70%)` }} />
+                <div className="absolute inset-0 p-5 flex flex-col justify-between">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[9px] uppercase tracking-widest px-2 py-1 border" style={{ color: w.color, borderColor: w.color + "40" }}>{w.type}</span>
+                    <span className="text-[9px] text-white/25">{w.year}</span>
+                  </div>
+                  <div>
+                    <h3 className="font-black text-2xl uppercase tracking-tight mb-1" style={{ color: w.color }}>{w.title}</h3>
+                    <p className="text-white/40 text-xs">{w.desc}</p>
+                  </div>
+                </div>
+                <motion.div initial={{ opacity: 0, x: 10 }} animate={hovered === w.id ? { opacity: 1, x: 0 } : { opacity: 0, x: 10 }} className="absolute top-4 right-4">
+                  <ArrowUpRight size={16} style={{ color: w.color }} />
+                </motion.div>
+              </motion.div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* WORK MODAL */}
+      <AnimatePresence>
+        {activeWork !== null && (() => {
+          const w = WORKS.find(x => x.id === activeWork)!;
+          return (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] bg-[#06030a]/96 flex items-center justify-center p-8" onClick={() => setActiveWork(null)}>
+              <motion.div initial={{ scale: 0.9, y: 50 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9 }} className="max-w-3xl w-full" onClick={e => e.stopPropagation()}>
+                <div className="relative h-64 overflow-hidden" style={{ border: `1px solid ${w.color}30` }}>
+                  <Image src={w.img} alt={w.title} fill className="object-cover opacity-50" unoptimized />
+                </div>
+                <div className="bg-[#0d0812] p-8" style={{ borderLeft: `2px solid ${w.color}` }}>
+                  <p className="text-[9px] uppercase tracking-widest mb-2" style={{ color: w.color + "80" }}>{w.type} — {w.year}</p>
+                  <h3 className="font-black text-3xl uppercase tracking-tight mb-3" style={{ color: w.color }}>{w.title}</h3>
+                  <p className="text-white/40 text-sm leading-relaxed mb-6">{w.desc}</p>
+                  <a href="#" className="text-[10px] uppercase tracking-widest border px-5 py-2.5 inline-flex items-center gap-2 hover:opacity-80 transition-opacity" style={{ color: w.color, borderColor: w.color + "40" }}>
+                    View Full Case <ArrowRight size={12} />
+                  </a>
+                </div>
+                <button onClick={() => setActiveWork(null)} className="absolute top-4 right-4 text-white/30 hover:text-white"><X size={18} /></button>
+              </motion.div>
+            </motion.div>
+          );
+        })()}
+      </AnimatePresence>
+
+      {/* SERVICES */}
+      <section className="bg-[#0a0612] px-8 md:px-16 py-24 border-y border-white/5">
+        <Reveal className="mb-14">
+          <p className="text-[10px] uppercase tracking-[0.4em] text-white/30 mb-4">What We Do</p>
+          <h2 className="text-5xl md:text-6xl font-black uppercase leading-none tracking-tighter">Services</h2>
+        </Reveal>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px bg-white/5">
+          {SERVICES.map((s, i) => (
+            <Reveal key={s.title} delay={i * 0.08} className="bg-[#0a0612] p-8 group hover:bg-[#120918] transition-colors">
+              <s.icon size={22} className="text-[#e040fb]/40 group-hover:text-[#e040fb] transition-colors mb-5" />
+              <h3 className="font-black text-base uppercase tracking-tight mb-3">{s.title}</h3>
+              <p className="text-white/35 text-sm leading-relaxed">{s.desc}</p>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="px-8 md:px-16 py-28 flex flex-col items-center text-center">
+        <Reveal>
+          <p className="text-[10px] uppercase tracking-[0.5em] text-[#e040fb]/40 mb-6">New Commission</p>
+          <h2 className="text-6xl md:text-8xl font-black uppercase leading-none tracking-tighter mb-10">
+            Create<br />
+            <span className="text-[#e040fb]">Something</span><br />
+            <span className="text-transparent" style={{ WebkitTextStroke: "2px white" }}>New.</span>
+          </h2>
+        </Reveal>
+        <Reveal delay={0.2}>
+          <a href="#" className="bg-[#e040fb] text-white px-12 py-5 text-[11px] uppercase tracking-[0.3em] font-black hover:bg-[#c030d0] transition-colors inline-flex items-center gap-3">
+            Start a Project <ArrowRight size={14} />
+          </a>
+        </Reveal>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="bg-[#06030a] px-8 md:px-16 py-14 flex flex-col md:flex-row items-start md:items-center justify-between gap-8 border-t border-white/5">
+        <div>
+          <p className="font-black text-base uppercase tracking-[0.2em] mb-1">PERSPECTIVE<span className="text-[#e040fb]">.</span></p>
+          <p className="text-xs text-white/25">Immersive Experience Studio</p>
+        </div>
+        <div className="flex gap-8 text-[10px] uppercase tracking-widest text-white/30">
+          {["Instagram", "Vimeo", "Awards", "Press"].map(l => <a key={l} href="#" className="hover:text-white transition-colors">{l}</a>)}
+        </div>
+        <p className="text-[9px] text-white/15 uppercase">© 2026 Perspective Studio</p>
+      </footer>
     </div>
   );
 }
