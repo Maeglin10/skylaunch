@@ -1,224 +1,271 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, useScroll, useTransform, useInView, AnimatePresence } from "framer-motion";
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { ShoppingBag, ArrowRight, X, Phone, Globe, Shield, Calendar, Clock, Crown, Compass } from "lucide-react";
+import { ShoppingBag, ArrowRight, X, Phone, Shield, Crown, ChevronLeft, ChevronRight, Star, Clock, Award } from "lucide-react";
 import "../premium.css";
 
 const COLLECTION = [
-  { 
-    id: 1, 
-    name: "Aether Era Chrono", 
-    price: 48200, 
-    series: "Rose Gold Edition", 
-    img: "https://images.unsplash.com/photo-1547996160-81ebf62c933b?q=80&w=1000&auto=format&fit=crop", 
-    desc: "18K Rose Gold case with Charcoal dial and Calibre 324 S C Automatic mechanical movement." 
-  },
-  { 
-    id: 2, 
-    name: "Obsidian Tourbillon", 
-    price: 125000, 
-    series: "Heritage Masterpiece", 
-    img: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=1000&auto=format&fit=crop", 
-    desc: "Black ceramic skeleton dial with manual winding tourbillon. Limited to 10 units globally." 
-  },
-  { 
-    id: 3, 
-    name: "Platinum Horizon", 
-    price: 64000, 
-    series: "Voyager Series", 
-    img: "https://images.unsplash.com/photo-1508685096489-775b19114622?q=80&w=1000&auto=format&fit=crop", 
-    desc: "950 Platinum case with deep blue sunburst dial. Dual time zone functionality." 
-  },
+  { id: 1, name: "CHRONO NOIR I", ref: "CV-001", price: "€48,500", category: "Tourbillon", limited: "12/50", img: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=1200&auto=format&fit=crop", desc: "A midnight-dialled perpetual calendar tourbillon in 18k black gold. Movement visible through sapphire exhibition caseback." },
+  { id: 2, name: "SOLSTICE GMT", ref: "CV-002", price: "€28,900", category: "GMT", limited: "28/100", img: "https://images.unsplash.com/photo-1509048191080-d2984bad6ae5?q=80&w=1200&auto=format&fit=crop", desc: "Sunburst dial in guilloché silver. 72-hour power reserve. Three-city time display at 6 o'clock." },
+  { id: 3, name: "ULTRA SLIM", ref: "CV-003", price: "€19,200", category: "Dress", limited: null, img: "https://images.unsplash.com/photo-1547996160-81dfa63595aa?q=80&w=1200&auto=format&fit=crop", desc: "3.7mm total thickness. Integrated bracelet in grade-5 titanium. The thinnest piece we have ever made." },
+  { id: 4, name: "AQUA MASTER", ref: "CV-004", price: "€22,750", category: "Sport", limited: "45/200", img: "https://images.unsplash.com/photo-1434056886845-dac89ffe9b56?q=80&w=1200&auto=format&fit=crop", desc: "500m water-resistant. Unidirectional ceramic bezel. Helium escape valve machined to ±0.001mm." },
 ];
 
+const STATS = [
+  { value: 1962, suffix: "", label: "Founded", prefix: "" },
+  { value: 38, suffix: "", label: "Complications Mastered" },
+  { value: 9, suffix: "K", label: "Watches Made" },
+  { value: 24, suffix: "", label: "Craftsmen" },
+];
+
+const CRAFTS = [
+  { title: "Hand-Finishing", desc: "Every surface is hand-finished by a single artisan. Anglage, perlage, côtes de Genève — each taking between 4 and 14 hours." },
+  { title: "In-House Movement", desc: "From raw metal to regulated calibre, our movements never leave the atelier. 387 individual components, all machined on-site." },
+  { title: "Sapphire Crystal", desc: "Single-crystal sapphire grown and cut in our facility. Anti-reflective coating applied in 7 layers at sub-atomic thickness." },
+];
+
+const TESTIMONIALS = [
+  { name: "Count H. Beaumont", text: "The Chrono Noir I is not a watch. It is a philosophy rendered tangible. I wear it to every state dinner.", role: "Collector, Paris" },
+  { name: "Ms. Yuki Nishida", text: "I have worn twenty grands complications in my career. The Ultra Slim sits closest to skin and closest to perfection.", role: "Horological Journalist, Tokyo" },
+  { name: "Mr. A. Rothbury", text: "What distinguishes Chrono Vaulted is the finish on unseen surfaces. Most houses do not bother. They do.", role: "Independent Watchmaker, Geneva" },
+];
+
+function Reveal({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-80px" });
+  return (
+    <motion.div ref={ref} initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.9, delay, ease: [0.25, 0.46, 0.45, 0.94] }} className={className}>
+      {children}
+    </motion.div>
+  );
+}
+
+function Counter({ target, suffix = "", prefix = "" }: { target: number; suffix?: string; prefix?: string }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true });
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    if (!inView) return;
+    let s = 0;
+    const step = target / 60;
+    const timer = setInterval(() => {
+      s += step;
+      if (s >= target) { setCount(target); clearInterval(timer); } else setCount(Math.floor(s));
+    }, 16);
+    return () => clearInterval(timer);
+  }, [inView, target]);
+  return <span ref={ref}>{prefix}{count}{suffix}</span>;
+}
+
 export default function LuxuryHorologySPA() {
-  const [view, setView] = useState<"collection" | "heritage" | "detail">("collection");
+  const [menuOpen, setMenuOpen] = useState(false);
   const [activeItem, setActiveItem] = useState(0);
-  const [cart, setCart] = useState(0);
+  const [activeTestimonial, setActiveTestimonial] = useState(0);
+  const { scrollY } = useScroll();
+  const heroY = useTransform(scrollY, [0, 700], [0, 180]);
+  const heroScale = useTransform(scrollY, [0, 700], [1, 1.06]);
+  const heroOpacity = useTransform(scrollY, [0, 400], [1, 0]);
+
+  useEffect(() => {
+    const t = setInterval(() => setActiveTestimonial(p => (p + 1) % TESTIMONIALS.length), 6000);
+    return () => clearInterval(t);
+  }, []);
+
+  const prev = () => setActiveItem(p => (p - 1 + COLLECTION.length) % COLLECTION.length);
+  const next = () => setActiveItem(p => (p + 1) % COLLECTION.length);
+  const item = COLLECTION[activeItem];
 
   return (
-    <div className="premium-theme bg-[#070707] text-[#e5e5e5] min-h-screen selection:bg-[#c2a05e] selection:text-black font-sans font-light overflow-x-hidden">
-      
-      {/* Background Ambience */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_#c2a05e15_0%,_transparent_70%)] opacity-40" />
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:100%_4px]" />
-      </div>
+    <div className="premium-theme bg-[#f9f7f4] text-[#1a1410] min-h-screen overflow-x-hidden" style={{ fontFamily: "'Georgia', serif" }}>
 
-      {/* Editorial HUD Nav */}
-      <nav className="fixed top-0 left-0 w-full z-50 px-8 py-10 md:px-12 flex justify-between items-center mix-blend-difference">
-        <button onClick={() => setView("collection")} className="text-2xl md:text-3xl font-serif italic tracking-tighter text-[#c2a05e]">Gold.Heritage</button>
-        <div className="hidden md:flex gap-12 text-[10px] uppercase font-black tracking-[0.5em] opacity-40">
-           <button onClick={() => setView("collection")} className={`hover:text-[#c2a05e] transition-colors ${view === 'collection' ? 'text-[#c2a05e] opacity-100' : ''}`}>COLLECTION</button>
-           <button onClick={() => setView("heritage")} className={`hover:text-[#c2a05e] transition-colors ${view === 'heritage' ? 'text-[#c2a05e] opacity-100' : ''}`}>HERITAGE</button>
+      {/* NAV */}
+      <nav className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-8 md:px-16 py-6 bg-[#f9f7f4]/90 backdrop-blur-xl border-b border-[#1a1410]/8">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-sm uppercase tracking-[0.4em] text-[#8b7355]">Chrono Vaulted</motion.div>
+        <div className="hidden md:flex items-center gap-10 text-[10px] uppercase tracking-[0.35em] opacity-40">
+          {["Maison", "Collection", "Atelier", "Boutiques"].map(l => (
+            <a key={l} href="#" className="hover:opacity-100 transition-opacity">{l}</a>
+          ))}
         </div>
-        <div className="flex gap-8 items-center">
-           <button className="flex items-center gap-4 group">
-              <ShoppingBag className="w-5 h-5 group-hover:text-[#c2a05e] transition-colors" />
-              <span className="text-[10px] font-black opacity-30 group-hover:opacity-100 font-mono">[{cart}]</span>
-           </button>
-           <Crown className="w-5 h-5 opacity-40 text-[#c2a05e]" />
+        <div className="flex items-center gap-4">
+          <a href="#" className="hidden md:flex items-center gap-2 text-[10px] uppercase tracking-widest border border-[#8b7355]/40 text-[#8b7355] px-5 py-2 hover:bg-[#8b7355] hover:text-white transition-all">
+            <Phone size={10} /> Bespoke Inquiry
+          </a>
+          <button onClick={() => setMenuOpen(true)} className="md:hidden"><ShoppingBag size={20} /></button>
         </div>
       </nav>
 
-      <AnimatePresence mode="wait">
-        
-        {/* COLLECTION VIEW (SLIDER) */}
-        {view === "collection" && (
-          <motion.div key="collection" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10">
-             <main className="h-screen flex items-center justify-center pt-24">
-                <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] select-none pointer-events-none">
-                   <h2 className="text-[25vw] font-serif italic font-black whitespace-nowrap">TIMELESS_ERA</h2>
-                </div>
-
-                <div className="relative w-full max-w-[1600px] grid grid-cols-1 md:grid-cols-12 gap-12 items-center px-12">
-                   <div className="hidden md:block col-span-3 space-y-24">
-                      <div className="border-l border-[#c2a05e]/20 pl-8">
-                         <span className="text-[10px] uppercase font-black tracking-[0.4em] text-[#c2a05e] mb-4 block">Exclusivity</span>
-                         <p className="text-xl font-serif italic opacity-60">Limited to 50 items <br/> globally.</p>
-                      </div>
-                      <div className="border-l border-[#c2a05e]/20 pl-8">
-                         <span className="text-[10px] uppercase font-black tracking-[0.4em] text-[#c2a05e] mb-4 block">Craftsmanship</span>
-                         <p className="text-xl font-serif italic opacity-60">Hand-finished in <br/> Geneva.</p>
-                      </div>
-                   </div>
-
-                   <div className="col-span-12 md:col-span-6 flex flex-col items-center">
-                      <motion.div initial={{ scale: 1.1, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }} className="relative w-[300px] md:w-[450px] aspect-square">
-                         <Image src={COLLECTION[activeItem].img} alt="Watch" fill className="object-contain drop-shadow-[0_35px_60px_rgba(194,160,94,0.3)] transition-all duration-[3s]" />
-                      </motion.div>
-                      <div className="mt-8 text-center">
-                         <h1 className="text-5xl md:text-8xl font-serif font-black italic tracking-tighter leading-none mb-4 uppercase">{COLLECTION[activeItem].name}</h1>
-                         <div className="text-[10px] uppercase tracking-[1em] opacity-30 font-black">{COLLECTION[activeItem].series}</div>
-                      </div>
-                      <div className="flex gap-4 mt-12">
-                         {COLLECTION.map((_, i) => (
-                           <button key={i} onClick={() => setActiveItem(i)} className={`w-2 h-2 rounded-full transition-all duration-500 ${i === activeItem ? 'bg-[#c2a05e] scale-150 w-8' : 'bg-white/10 hover:bg-white/40'}`} />
-                         ))}
-                      </div>
-                   </div>
-
-                   <div className="col-span-12 md:col-span-3 flex flex-col items-end">
-                      <div className="text-right mb-12">
-                         <span className="text-[10px] uppercase tracking-[0.5em] opacity-30 font-black block mb-4">Starting At</span>
-                         <div className="text-5xl md:text-6xl font-serif italic text-[#c2a05e] tracking-tighter">${COLLECTION[activeItem].price.toLocaleString()}</div>
-                      </div>
-                      <button onClick={() => setView("detail")} className="w-full py-8 bg-[#c2a05e] text-black font-black uppercase text-xs tracking-[1em] hover:bg-white transition-all shadow-2xl flex items-center justify-center gap-4">
-                         Secure_Purchase <ArrowRight className="w-4 h-4" />
-                      </button>
-                      <div className="mt-8 text-right text-[8px] uppercase tracking-widest opacity-20 font-black leading-loose">
-                         Personalized Consultation <br /> Insured World-Wide Transport
-                      </div>
-                   </div>
-                </div>
-             </main>
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] bg-[#1a1410] text-white flex flex-col p-10">
+            <button onClick={() => setMenuOpen(false)} className="self-end mb-12"><X size={24} /></button>
+            <div className="flex flex-col gap-8 text-4xl uppercase tracking-tight">
+              {["Maison", "Collection", "Atelier", "Boutiques", "Contact"].map(l => (
+                <a key={l} href="#" onClick={() => setMenuOpen(false)} className="hover:text-[#c9a96e] transition-colors">{l}</a>
+              ))}
+            </div>
           </motion.div>
         )}
-
-        {/* HERITAGE VIEW */}
-        {view === "heritage" && (
-          <motion.div key="heritage" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen flex flex-col justify-center">
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-24 items-center">
-                <div className="relative aspect-[3/4] border border-[#c2a05e]/20 p-4 rounded-[4rem]">
-                   <Image src="https://images.unsplash.com/photo-1594533051023-50957dc9f66a?q=80&w=1000&auto=format&fit=crop" alt="Heritage" fill className="object-cover rounded-[3.5rem] opacity-50 grayscale hover:grayscale-0 transition-all duration-1000" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-[#070707] to-transparent" />
-                </div>
-                <div>
-                   <span className="text-[10px] uppercase font-black tracking-[1em] text-[#c2a05e] mb-12 block underline decoration-[#c2a05e]/40 underline-offset-8">Legacy // Geneve 1892</span>
-                   <h2 className="text-7xl md:text-9xl font-serif italic tracking-tighter leading-none mb-12 text-white">The <br/> Origin.</h2>
-                   <p className="text-xl md:text-2xl font-light italic opacity-50 leading-relaxed uppercase tracking-widest mb-16">
-                      For generations, we have mastered time. Not as a metric, but as an art form. Every movement is a heartbeat of mechanical perfection.
-                   </p>
-                   <div className="space-y-12">
-                      {[
-                        { t: "Mechanical Soul", d: "Zero batteries. Only gravity, springs, and human movement." },
-                        { t: "Exquisite Finish", d: "Hand-polished components under 40x magnification." },
-                      ].map((s, i) => (
-                        <div key={i} className="flex gap-8 group">
-                           <div className="w-16 h-16 rounded-full bg-[#c2a05e]/10 border border-[#c2a05e]/20 flex items-center justify-center text-[#c2a05e]">
-                              <Clock className="w-6 h-6" />
-                           </div>
-                           <div>
-                              <h4 className="text-xl font-serif italic text-white uppercase">{s.t}</h4>
-                              <p className="text-[10px] opacity-30 uppercase tracking-[0.3em] font-black mt-2 leading-relaxed">{s.d}</p>
-                           </div>
-                        </div>
-                      ))}
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
-        {/* DETAIL VIEW */}
-        {view === "detail" && (
-          <motion.div key="detail" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen">
-             <button onClick={() => setView("collection")} className="fixed top-12 left-12 z-[60] bg-[#c2a05e] text-black p-5 rounded-full hover:scale-110 transition-transform shadow-2xl">
-                <X className="w-6 h-6" />
-             </button>
-
-             <main className="grid grid-cols-1 lg:grid-cols-12 h-screen">
-                <div className="lg:col-span-8 relative bg-black h-[60vh] lg:h-full">
-                   <Image src={COLLECTION[activeItem].img} alt="Product" fill className="object-cover opacity-80 mix-blend-lighten" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                   <div className="absolute bottom-12 left-12">
-                      <span className="text-[10px] uppercase tracking-[0.8em] font-black text-[#c2a05e] mb-4 block underline decoration-[#c2a05e]/40 underline-offset-8">Asset_Acquisition</span>
-                      <h1 className="text-6xl md:text-[10vw] font-serif italic font-black uppercase tracking-tighter leading-none">{COLLECTION[activeItem].name}</h1>
-                   </div>
-                </div>
-                
-                <div className="lg:col-span-4 p-12 lg:p-24 bg-[#0a0a0a] flex flex-col justify-center space-y-16 overflow-y-auto">
-                   <div className="space-y-8">
-                      <h3 className="text-xs uppercase tracking-[0.5em] font-black opacity-20">The_Narrative</h3>
-                      <p className="text-2xl font-light italic leading-relaxed uppercase tracking-tight opacity-70">
-                         {COLLECTION[activeItem].desc} An investment in horological history, crafted for those who value the silence of perfection.
-                      </p>
-                   </div>
-
-                   <div className="space-y-12">
-                      {[
-                        { icon: <Shield className="w-6 h-6" />, l: "5-Year Global Warranty" },
-                        { icon: <Compass className="w-6 h-6" />, l: "Geneva Seal of Quality" },
-                        { icon: <Activity className="w-6 h-6" />, l: "Individually Tested / 400H" },
-                      ].map((m, i) => (
-                        <div key={i} className="flex gap-8 items-center border-t border-white/5 pt-8 first:border-none first:pt-0">
-                           <div className="text-[#c2a05e]">{m.icon}</div>
-                           <span className="text-[10px] font-black uppercase tracking-[0.5em] opacity-40">{m.l}</span>
-                        </div>
-                      ))}
-                   </div>
-
-                   <div className="pt-12">
-                      <div className="text-4xl font-serif italic text-[#c2a05e] mb-8">${COLLECTION[activeItem].price.toLocaleString()}</div>
-                      <button onClick={() => { setCart(c => c + 1); setView("collection"); }} className="w-full py-8 bg-[#c2a05e] text-black font-black uppercase text-xs tracking-[1em] hover:bg-white transition-all shadow-xl">
-                         Process_Allocation
-                      </button>
-                   </div>
-                </div>
-             </main>
-          </motion.div>
-        )}
-
       </AnimatePresence>
 
-      {/* Persistence Bar */}
-      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em] italic">
-         <div className="flex gap-12">
-            <span>Swiss Craft</span>
-            <span>Est. 1892</span>
-         </div>
-         <div className="flex gap-4 items-end">
-            <div className="text-right leading-tight italic">
-               Heritage_Vault <br /> Geneve_Node
-            </div>
-            <div className="flex gap-[1px] h-3">
-               {[1, 2, 3, 4, 5, 6].map(i => <div key={i} className={`w-[1px] h-full bg-[#c2a05e]`}></div>)}
-            </div>
-         </div>
-      </footer>
+      {/* HERO */}
+      <section className="relative h-screen flex items-end overflow-hidden">
+        <motion.div style={{ y: heroY, scale: heroScale }} className="absolute inset-0">
+          <Image src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=2000&auto=format&fit=crop" alt="Luxury Watch" fill className="object-cover opacity-60" unoptimized />
+        </motion.div>
+        <div className="absolute inset-0 bg-gradient-to-t from-[#1a1410] via-[#1a1410]/30 to-transparent" />
+        <motion.div style={{ opacity: heroOpacity }} className="relative z-10 px-8 md:px-16 pb-24 w-full">
+          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="text-[10px] uppercase tracking-[0.6em] text-[#c9a96e]/70 mb-6">Haute Horlogerie — Since 1962</motion.p>
+          <motion.h1 initial={{ opacity: 0, y: 60 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6, duration: 1, ease: [0.16, 1, 0.3, 1] }} className="text-white text-[8vw] md:text-[6vw] leading-none tracking-tight mb-8">
+            Time<br />
+            <em>Perfected.</em>
+          </motion.h1>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.2 }} className="flex items-center gap-6">
+            <a href="#collection" className="bg-[#c9a96e] text-white px-8 py-3 text-[10px] uppercase tracking-[0.3em] hover:bg-[#b8925a] transition-colors">Discover Collection</a>
+            <a href="#" className="text-white/60 text-[10px] uppercase tracking-[0.3em] hover:text-white transition-colors">About the Maison</a>
+          </motion.div>
+        </motion.div>
+      </section>
 
+      {/* MARQUEE */}
+      <div className="overflow-hidden bg-[#1a1410] py-4">
+        <motion.div animate={{ x: [0, -3200] }} transition={{ duration: 35, repeat: Infinity, ease: "linear" }} className="flex gap-12 whitespace-nowrap">
+          {Array(18).fill(null).map((_, i) => (
+            <span key={i} className="text-[9px] uppercase tracking-[0.6em] text-[#c9a96e]/30 shrink-0">Tourbillon · Perpetual Calendar · Grand Complications · In-House Manufacture · Haute Horlogerie ·</span>
+          ))}
+        </motion.div>
+      </div>
+
+      {/* STATS */}
+      <section className="bg-[#1a1410] text-white px-8 md:px-16 py-20 grid grid-cols-2 md:grid-cols-4 gap-8">
+        {STATS.map((s, i) => (
+          <Reveal key={s.label} delay={i * 0.1} className="text-center">
+            <div className="text-5xl font-light tracking-tight text-[#c9a96e] mb-2"><Counter target={s.value} suffix={s.suffix} /></div>
+            <div className="text-[10px] uppercase tracking-[0.4em] text-white/30">{s.label}</div>
+          </Reveal>
+        ))}
+      </section>
+
+      {/* COLLECTION CAROUSEL */}
+      <section id="collection" className="py-24">
+        <Reveal className="px-8 md:px-16 mb-12">
+          <p className="text-[10px] uppercase tracking-[0.5em] text-[#8b7355] mb-4">Current Collection</p>
+          <h2 className="text-5xl md:text-7xl leading-none tracking-tight">New Arrivals</h2>
+        </Reveal>
+        <div className="relative">
+          <AnimatePresence mode="wait">
+            <motion.div key={activeItem} initial={{ opacity: 0, x: 60 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -60 }} transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }} className="grid grid-cols-1 md:grid-cols-2 gap-0">
+              <div className="relative h-[70vh] bg-[#f0ece4]">
+                <Image src={item.img} alt={item.name} fill className="object-cover" unoptimized />
+                {item.limited && (
+                  <div className="absolute top-6 left-6 bg-[#1a1410] text-[#c9a96e] text-[9px] uppercase tracking-widest px-3 py-1.5">
+                    Limited Edition {item.limited}
+                  </div>
+                )}
+              </div>
+              <div className="flex flex-col justify-center px-12 md:px-20 py-16 bg-[#f9f7f4]">
+                <p className="text-[9px] uppercase tracking-[0.5em] text-[#8b7355] mb-3">{item.category} — Ref. {item.ref}</p>
+                <h3 className="text-4xl md:text-5xl leading-none tracking-tight mb-6">{item.name}</h3>
+                <p className="text-[#8b7355]/80 leading-relaxed text-sm mb-8">{item.desc}</p>
+                <div className="text-3xl text-[#1a1410] font-light mb-8">{item.price}</div>
+                <div className="flex gap-4">
+                  <a href="#" className="bg-[#1a1410] text-white px-8 py-3 text-[10px] uppercase tracking-[0.3em] hover:bg-[#2d2620] transition-colors flex items-center gap-2">
+                    Inquire <ArrowRight size={12} />
+                  </a>
+                  <a href="#" className="border border-[#1a1410]/20 text-[#1a1410] px-8 py-3 text-[10px] uppercase tracking-[0.3em] hover:border-[#1a1410] transition-colors">
+                    3D View
+                  </a>
+                </div>
+              </div>
+            </motion.div>
+          </AnimatePresence>
+          <div className="flex items-center justify-between px-8 md:px-16 mt-8">
+            <div className="flex gap-3">
+              {COLLECTION.map((_, i) => (
+                <button key={i} onClick={() => setActiveItem(i)} className={`w-8 h-1 rounded-full transition-all ${i === activeItem ? "bg-[#c9a96e]" : "bg-[#1a1410]/15"}`} />
+              ))}
+            </div>
+            <div className="flex gap-3">
+              <button onClick={prev} className="w-10 h-10 border border-[#1a1410]/20 flex items-center justify-center hover:bg-[#1a1410] hover:text-white transition-all"><ChevronLeft size={16} /></button>
+              <button onClick={next} className="w-10 h-10 border border-[#1a1410]/20 flex items-center justify-center hover:bg-[#1a1410] hover:text-white transition-all"><ChevronRight size={16} /></button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CRAFTSMANSHIP */}
+      <section className="bg-[#1a1410] text-white px-8 md:px-16 py-24">
+        <Reveal className="mb-16">
+          <p className="text-[10px] uppercase tracking-[0.5em] text-[#c9a96e]/50 mb-4">The Atelier</p>
+          <h2 className="text-5xl md:text-6xl leading-none tracking-tight">Craftsmanship<br />
+            <em className="text-[#c9a96e]">Without Compromise</em>
+          </h2>
+        </Reveal>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-white/5">
+          {CRAFTS.map((c, i) => (
+            <Reveal key={c.title} delay={i * 0.1} className="bg-[#1a1410] p-8 border-t border-[#c9a96e]/20">
+              <div className="w-6 h-px bg-[#c9a96e] mb-6" />
+              <h3 className="text-xl tracking-tight mb-4">{c.title}</h3>
+              <p className="text-white/40 text-sm leading-relaxed">{c.desc}</p>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* TESTIMONIALS */}
+      <section className="px-8 md:px-16 py-24">
+        <Reveal className="mb-12">
+          <Crown size={20} className="text-[#c9a96e] mb-6" />
+          <h2 className="text-5xl leading-none tracking-tight">Connoisseur<br />Voices</h2>
+        </Reveal>
+        <div className="relative min-h-[220px] max-w-3xl">
+          <AnimatePresence mode="wait">
+            <motion.div key={activeTestimonial} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.6 }}>
+              <div className="flex gap-1 mb-6">{Array(5).fill(null).map((_, i) => <Star key={i} size={12} fill="#c9a96e" className="text-[#c9a96e]" />)}</div>
+              <p className="text-2xl font-light leading-relaxed text-[#4a3728] mb-8 italic">"{TESTIMONIALS[activeTestimonial].text}"</p>
+              <div>
+                <p className="text-sm uppercase tracking-widest text-[#1a1410]">{TESTIMONIALS[activeTestimonial].name}</p>
+                <p className="text-[#8b7355] text-xs mt-1">{TESTIMONIALS[activeTestimonial].role}</p>
+              </div>
+            </motion.div>
+          </AnimatePresence>
+          <div className="flex gap-2 mt-8">
+            {TESTIMONIALS.map((_, i) => (
+              <button key={i} onClick={() => setActiveTestimonial(i)} className={`h-px rounded-full transition-all ${i === activeTestimonial ? "w-8 bg-[#c9a96e]" : "w-3 bg-[#1a1410]/20"}`} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="bg-[#1a1410] text-white px-8 md:px-16 py-28 flex flex-col md:flex-row items-center justify-between gap-10">
+        <Reveal>
+          <p className="text-[10px] uppercase tracking-[0.5em] text-[#c9a96e]/50 mb-4">Private Consultation</p>
+          <h2 className="text-5xl md:text-6xl leading-none tracking-tight">
+            Commission<br />
+            <em className="text-[#c9a96e]">Your Timepiece.</em>
+          </h2>
+        </Reveal>
+        <Reveal delay={0.2} className="shrink-0 flex flex-col gap-4">
+          <a href="#" className="bg-[#c9a96e] text-white px-10 py-4 text-[10px] uppercase tracking-[0.3em] hover:bg-[#b8925a] transition-colors text-center">Request Consultation</a>
+          <a href="tel:+41227000000" className="flex items-center gap-2 text-[#c9a96e]/70 text-[10px] uppercase tracking-widest justify-center hover:text-[#c9a96e] transition-colors">
+            <Phone size={10} /> +41 22 700 0000
+          </a>
+        </Reveal>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="bg-[#0f0c09] text-white/30 px-8 md:px-16 py-12 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div>
+          <p className="text-[#c9a96e] uppercase tracking-[0.4em] text-sm mb-1">Chrono Vaulted</p>
+          <p className="text-[9px] uppercase tracking-widest">Haute Horlogerie · Genève</p>
+        </div>
+        <div className="flex gap-8 text-[9px] uppercase tracking-widest">
+          {["Boutiques", "Press", "Heritage", "Legal"].map(l => <a key={l} href="#" className="hover:text-white transition-colors">{l}</a>)}
+        </div>
+        <p className="text-[9px] uppercase">© 2026 Chrono Vaulted SA</p>
+      </footer>
     </div>
   );
 }

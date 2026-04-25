@@ -1,216 +1,301 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { motion, useScroll, useTransform, useInView, AnimatePresence } from "framer-motion";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { ArrowRight, ShoppingCart, Plus, X, Menu, Search, Filter, Info, ChevronRight } from "lucide-react";
+import { ArrowRight, ShoppingCart, Plus, X, Menu, ChevronRight, Search, Minus, Star } from "lucide-react";
 import "../premium.css";
 
 const PRODUCTS = [
-  { id: 1, name: "MONOLITH_CHAIR", price: 2850, tag: "Sculpture", img: "https://images.unsplash.com/photo-1592078615290-033ee584e226?q=80&w=1000&auto=format&fit=crop", desc: "A singular piece of cast aluminum, hand-polished to a mirror finish. Form follows purely structural logic." },
-  { id: 2, name: "ORB_LIGHT_01", price: 950, tag: "Lighting", img: "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?q=80&w=1000&auto=format&fit=crop", desc: "Floating sphere of hand-blown frosted glass. Suspended by a surgical-grade steel thread." },
-  { id: 3, name: "LIN_VASE", price: 420, tag: "Object", img: "https://images.unsplash.com/photo-1581783898377-1c85bf937427?q=80&w=1000&auto=format&fit=crop", desc: "Geometric reduction of a classical form. Matte black ceramic with zero-glaze finish." },
-  { id: 4, name: "STARK_TABLE", price: 5400, tag: "Furniture", img: "https://images.unsplash.com/photo-1533090161767-e6ffed986c88?q=80&w=1000&auto=format&fit=crop", desc: "Massive solid oak slab over a brutalist concrete base. A dialogue between organic and industrial." },
+  { id: 1, name: "MONOLITH CHAIR", price: 2850, tag: "Sculpture", img: "https://images.unsplash.com/photo-1592078615290-033ee584e226?q=80&w=1200&auto=format&fit=crop", desc: "Cast aluminum, hand-polished to a mirror finish. Form follows structural logic." },
+  { id: 2, name: "VOID SHELF", price: 1640, tag: "Storage", img: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?q=80&w=1000&auto=format&fit=crop", desc: "Blackened steel. Three cantilever arms project from a single wall anchor." },
+  { id: 3, name: "STRATUM LAMP", price: 980, tag: "Lighting", img: "https://images.unsplash.com/photo-1513506003901-1e6a35f8b12b?q=80&w=1000&auto=format&fit=crop", desc: "Stacked travertine discs with hidden LED edge lighting. Dimmable via touch." },
+  { id: 4, name: "PLINTH TABLE", price: 3200, tag: "Furniture", img: "https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?q=80&w=1000&auto=format&fit=crop", desc: "Solid marble slab. Monolithic base. Nothing is bolted — gravity does the work." },
+  { id: 5, name: "MEMBRANE DIVIDER", price: 4100, tag: "Spatial", img: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?q=80&w=1000&auto=format&fit=crop", desc: "Tensile steel mesh stretched between two titanium arches. 2.4m tall." },
+  { id: 6, name: "AXIS VASE", price: 480, tag: "Object", img: "https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?q=80&w=1000&auto=format&fit=crop", desc: "Turned black ceramic. Off-center axis creates visual instability at rest." },
 ];
 
+const TAGS = ["All", "Sculpture", "Storage", "Lighting", "Furniture", "Spatial", "Object"];
+
+const STATS = [
+  { value: 34, suffix: "", label: "Objects in Collection" },
+  { value: 8, suffix: "yrs", label: "Practice" },
+  { value: 12, suffix: "", label: "Materials Mastered" },
+  { value: 200, suffix: "+", label: "Private Commissions" },
+];
+
+function Reveal({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-80px" });
+  return (
+    <motion.div ref={ref} initial={{ opacity: 0, y: 32 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.8, delay, ease: [0.25, 0.46, 0.45, 0.94] }} className={className}>
+      {children}
+    </motion.div>
+  );
+}
+
+function Counter({ target, suffix = "" }: { target: number; suffix?: string }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true });
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    if (!inView) return;
+    let s = 0;
+    const step = target / 55;
+    const timer = setInterval(() => {
+      s += step;
+      if (s >= target) { setCount(target); clearInterval(timer); } else setCount(Math.floor(s));
+    }, 16);
+    return () => clearInterval(timer);
+  }, [inView, target]);
+  return <span ref={ref}>{count}{suffix}</span>;
+}
+
 export default function MinimalistObjectSPA() {
-  const [view, setView] = useState<"catalog" | "object" | "process">("catalog");
-  const [activeItem, setActiveItem] = useState(0);
-  const [cart, setCart] = useState(0);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [activeTag, setActiveTag] = useState("All");
+  const [cart, setCart] = useState<number[]>([]);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [quickView, setQuickView] = useState<number | null>(null);
+  const { scrollY } = useScroll();
+  const heroY = useTransform(scrollY, [0, 700], [0, 200]);
+  const heroOpacity = useTransform(scrollY, [0, 400], [1, 0]);
+
+  const filtered = activeTag === "All" ? PRODUCTS : PRODUCTS.filter(p => p.tag === activeTag);
+
+  const addToCart = (id: number) => {
+    setCart(prev => [...prev, id]);
+    setCartOpen(true);
+  };
+
+  const cartItems = cart.map(id => PRODUCTS.find(p => p.id === id)!).filter(Boolean);
+  const cartTotal = cartItems.reduce((sum, p) => sum + p.price, 0);
 
   return (
-    <div className="premium-theme bg-white text-black min-h-screen selection:bg-black selection:text-white font-sans overflow-x-hidden">
-      
-      {/* Global Navigation */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-center bg-white/80 backdrop-blur-xl border-b border-black/5">
-        <button onClick={() => setView("catalog")} className="text-xl font-black uppercase tracking-tighter hover:opacity-100 transition-opacity">
-           NEO.OBJECT&trade;
-        </button>
-        <div className="hidden md:flex gap-12 text-[10px] font-black uppercase tracking-[0.4em] opacity-30">
-           <button onClick={() => setView("catalog")} className={`hover:opacity-100 transition-opacity ${view === 'catalog' ? 'text-black opacity-100' : ''}`}>COLLECTION</button>
-           <button onClick={() => setView("process")} className={`hover:opacity-100 transition-opacity ${view === 'process' ? 'text-black opacity-100' : ''}`}>PROCESS</button>
+    <div className="premium-theme bg-white text-[#111] min-h-screen overflow-x-hidden">
+
+      {/* NAV */}
+      <nav className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-8 md:px-16 py-5 bg-white/90 backdrop-blur-xl border-b border-[#111]/6">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-sm font-black uppercase tracking-[0.35em]">FORMA STUDIO</motion.div>
+        <div className="hidden md:flex items-center gap-10 text-[10px] uppercase tracking-[0.35em] opacity-40">
+          {["Objects", "Materials", "Commission", "About"].map(l => (
+            <a key={l} href="#" className="hover:opacity-100 transition-opacity">{l}</a>
+          ))}
         </div>
-        <div className="flex items-center gap-8">
-           <div className="hidden lg:flex items-center gap-2 opacity-30 text-[9px] uppercase font-black tracking-widest">
-              Stock: Globally_Verified
-           </div>
-           <button className="flex items-center gap-4 group">
-              <ShoppingCart className="w-5 h-5 group-hover:scale-110 transition-transform" />
-              <span className="text-[10px] font-black opacity-30 group-hover:opacity-100">[{cart}]</span>
-           </button>
+        <div className="flex items-center gap-4">
+          <button className="hidden md:block opacity-40 hover:opacity-100 transition-opacity"><Search size={16} /></button>
+          <button onClick={() => setCartOpen(true)} className="relative flex items-center gap-1.5 text-[10px] uppercase tracking-widest">
+            <ShoppingCart size={16} />
+            {cart.length > 0 && (
+              <span className="absolute -top-1 -right-1 bg-[#111] text-white text-[8px] w-4 h-4 rounded-full flex items-center justify-center">{cart.length}</span>
+            )}
+          </button>
+          <button onClick={() => setMenuOpen(true)} className="md:hidden"><Menu size={20} /></button>
         </div>
       </nav>
 
-      <AnimatePresence mode="wait">
-        
-        {/* CATALOG VIEW */}
-        {view === "catalog" && (
-          <motion.div key="catalog" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-48 pb-32 px-8">
-             <header className="mb-32 flex flex-col md:flex-row justify-between items-end border-b-2 border-black pb-12">
-                <h1 className="text-[12vw] font-black uppercase tracking-tighter leading-[0.8] mix-blend-difference">
-                   PURE. <br /> <span className="text-transparent" style={{ WebkitTextStroke: '1px black' }}>FORM.</span>
-                </h1>
-                <div className="text-right flex flex-col items-end">
-                   <div className="text-2xl font-black mb-4 tracking-tighter italic">OBJ_COL_42</div>
-                   <div className="flex gap-4">
-                      <Search className="w-5 h-5 opacity-20" />
-                      <Filter className="w-5 h-5 opacity-20" />
-                   </div>
-                </div>
-             </header>
-
-             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                {PRODUCTS.map((p, i) => (
-                  <motion.div 
-                    key={p.id} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                    className="group flex flex-col cursor-pointer"
-                    onClick={() => { setActiveItem(i); setView("object"); }}
-                  >
-                     <div className="relative aspect-[3/4] bg-[#f5f5f5] overflow-hidden mb-8 border border-black/5">
-                        <Image src={p.img} alt={p.name} fill className="object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000" />
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" />
-                     </div>
-                     <div className="flex justify-between items-start">
-                        <div>
-                           <span className="text-[10px] uppercase font-black tracking-[0.3em] opacity-30 block mb-2">{p.tag}</span>
-                           <h3 className="text-2xl font-black uppercase tracking-tighter leading-none mb-4">{p.name}</h3>
-                        </div>
-                        <div className="text-xl font-bold italic tracking-tighter opacity-20 group-hover:opacity-100 transition-all">${p.price}</div>
-                     </div>
-                     <button className="flex items-center gap-4 text-[9px] font-black tracking-[0.5em] opacity-20 group-hover:opacity-100 transition-all group-hover:gap-8 border-t border-black/5 pt-6">
-                        ACQUIRE_OBJECT <Plus className="w-4 h-4" />
-                     </button>
-                  </motion.div>
-                ))}
-             </div>
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ type: "tween", duration: 0.3 }} className="fixed inset-0 z-[100] bg-[#111] text-white flex flex-col p-10">
+            <button onClick={() => setMenuOpen(false)} className="self-end mb-12"><X size={24} /></button>
+            <div className="flex flex-col gap-8 text-4xl font-black uppercase">
+              {["Objects", "Materials", "Commission", "About"].map(l => <a key={l} href="#" onClick={() => setMenuOpen(false)}>{l}</a>)}
+            </div>
           </motion.div>
         )}
-
-        {/* OBJECT DETAIL VIEW */}
-        {view === "object" && (
-          <motion.div key="object" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen">
-             <button onClick={() => setView("catalog")} className="fixed top-12 left-12 z-[60] bg-black text-white p-5 rounded-full hover:scale-110 transition-transform shadow-2xl">
-                <X className="w-6 h-6" />
-             </button>
-
-             <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen">
-                <div className="lg:col-span-7 relative h-[70vh] lg:h-screen sticky top-0 bg-[#f5f5f5] flex items-center justify-center p-12 lg:p-32">
-                   <motion.div initial={{ scale: 1.1, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1 }} className="relative w-full h-full">
-                      <Image src={PRODUCTS[activeItem].img} alt="Object" fill className="object-contain grayscale" priority />
-                   </motion.div>
-                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[30vh] font-black opacity-[0.02] select-none pointer-events-none italic">
-                      {PRODUCTS[activeItem].name.split('_')[0]}
-                   </div>
-                </div>
-
-                <div className="lg:col-span-5 p-12 lg:p-24 bg-white flex flex-col justify-center space-y-16">
-                   <div className="space-y-8">
-                      <span className="text-[10px] uppercase tracking-[1em] font-black opacity-30 mb-8 block underline decoration-black underline-offset-8">Specifications</span>
-                      <h1 className="text-6xl md:text-8xl font-black uppercase tracking-tighter leading-none text-black">{PRODUCTS[activeItem].name}</h1>
-                      <div className="text-4xl font-black italic tracking-tighter">${PRODUCTS[activeItem].price}</div>
-                   </div>
-
-                   <p className="text-xl font-light italic leading-relaxed opacity-60">
-                      {PRODUCTS[activeItem].desc} Every surface is inspected under polarized light to ensure absolute geometric truth.
-                   </p>
-
-                   <div className="grid grid-cols-2 gap-8 border-y border-black/5 py-12">
-                      {[
-                        { l: "Material", v: "Reinforced_Solid" },
-                        { l: "Origin", v: "Crafted_Kyoto" },
-                        { l: "Series", v: "Neo_Core" },
-                        { l: "Weight", v: "Verified_Net" },
-                      ].map((s, i) => (
-                        <div key={i}>
-                           <div className="text-[10px] font-black opacity-30 uppercase tracking-widest">{s.l}</div>
-                           <div className="text-sm font-black uppercase italic tracking-tighter mt-1">{s.v}</div>
-                        </div>
-                      ))}
-                   </div>
-
-                   <div className="flex gap-6">
-                      <button onClick={() => { setCart(c => c + 1); setView("catalog"); }} className="flex-grow py-8 bg-black text-white font-black uppercase text-xs tracking-[1em] hover:bg-[#111] transition-all">
-                         Acquire_Asset
-                      </button>
-                      <button className="px-12 py-8 border border-black/10 text-[10px] font-black uppercase tracking-[0.5em] hover:bg-black hover:text-white transition-all">
-                         Inquire
-                      </button>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
-        {/* PROCESS VIEW */}
-        {view === "process" && (
-          <motion.div key="process" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen">
-             <div className="flex justify-between items-end mb-32 border-b-2 border-black pb-12">
-                <h1 className="text-7xl md:text-9xl font-black uppercase tracking-tighter leading-none mix-blend-difference">THE_METHOD</h1>
-                <div className="text-right text-[10px] font-black uppercase tracking-widest opacity-20">Protocol // V_04</div>
-             </div>
-
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center mb-48">
-                <div className="relative aspect-square bg-[#f5f5f5] rounded-full overflow-hidden p-12">
-                   <Image src="https://images.unsplash.com/photo-1544411047-c4915842273b?q=80&w=1000&auto=format&fit=crop" alt="Process" fill className="object-cover opacity-50 grayscale hover:grayscale-0 transition-all duration-[2s]" />
-                </div>
-                <div className="space-y-12">
-                   <span className="text-[10px] uppercase font-black tracking-[1.5em] opacity-30 block">Honesty_in_Void</span>
-                   <p className="text-2xl md:text-3xl font-light italic opacity-60 leading-relaxed uppercase tracking-tight">
-                      We do not design objects. We reduce noise until only the structure remains. Every Neo Object is a testament to the pursuit of structural honesty.
-                   </p>
-                   <div className="space-y-8 pt-12">
-                      {[
-                        { t: "Material Truth", d: "We respect the inherent properties of the elements we use." },
-                        { t: "Geometric Logic", d: "Form is not chosen; it is deduced through mathematical necessity." },
-                      ].map((item, i) => (
-                        <div key={i} className="flex gap-8 group">
-                           <div className="w-16 h-16 rounded-full border border-black flex items-center justify-center font-black italic group-hover:bg-black group-hover:text-white transition-all text-xl">
-                              0{i+1}
-                           </div>
-                           <div>
-                              <h4 className="text-2xl font-black uppercase italic tracking-tighter">{item.t}</h4>
-                              <p className="text-[10px] opacity-30 uppercase tracking-[0.3em] font-black mt-2 leading-relaxed">{item.d}</p>
-                           </div>
-                        </div>
-                      ))}
-                   </div>
-                </div>
-             </div>
-
-             <div className="border-t border-black/5 pt-24 grid grid-cols-2 lg:grid-cols-4 gap-12 text-center grayscale opacity-10">
-                {[1, 2, 3, 4].map(i => (
-                  <div key={i}>
-                     <Search className="w-4 h-4 mx-auto mb-4" />
-                     <div className="text-[8px] font-black uppercase tracking-[0.5em]">Verification_Point_0{i}</div>
-                  </div>
-                ))}
-             </div>
-          </motion.div>
-        )}
-
       </AnimatePresence>
 
-      {/* Global Status HUD */}
-      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em]">
-         <div className="flex gap-12">
-            <span>Verified Origin</span>
-            <span>Batch_042</span>
-         </div>
-         <div className="flex gap-4 items-end">
-            <div className="text-right leading-tight italic">
-               Neo_Studio <br /> Digital_Artifacts
-            </div>
-            <div className="flex gap-[2px] h-3">
-               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-full bg-black`}></div>)}
-            </div>
-         </div>
-      </footer>
+      {/* CART DRAWER */}
+      <AnimatePresence>
+        {cartOpen && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[90] bg-black/30" onClick={() => setCartOpen(false)} />
+            <motion.div initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ type: "tween", duration: 0.35 }} className="fixed top-0 right-0 h-full w-full max-w-sm z-[91] bg-white flex flex-col">
+              <div className="flex items-center justify-between px-6 py-5 border-b border-[#111]/8">
+                <p className="font-black uppercase tracking-widest text-sm">Cart ({cart.length})</p>
+                <button onClick={() => setCartOpen(false)}><X size={18} /></button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                {cartItems.length === 0 ? (
+                  <p className="text-sm text-[#111]/40 mt-4">Your cart is empty.</p>
+                ) : cartItems.map((p, i) => (
+                  <div key={i} className="flex gap-4">
+                    <div className="w-16 h-16 shrink-0 overflow-hidden bg-[#f5f5f5]">
+                      <Image src={p.img} alt={p.name} width={64} height={64} className="object-cover w-full h-full" unoptimized />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-black text-xs uppercase tracking-tight">{p.name}</p>
+                      <p className="text-xs text-[#111]/40 mt-0.5">{p.tag}</p>
+                      <p className="text-sm font-black mt-1">€{p.price.toLocaleString()}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {cartItems.length > 0 && (
+                <div className="p-6 border-t border-[#111]/8">
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-sm uppercase tracking-widest opacity-50">Total</span>
+                    <span className="font-black text-xl">€{cartTotal.toLocaleString()}</span>
+                  </div>
+                  <a href="#" className="block w-full bg-[#111] text-white text-center py-3 text-[10px] uppercase tracking-widest hover:bg-[#333] transition-colors">Proceed to Checkout</a>
+                </div>
+              )}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
-      <style>{`
-        ::-webkit-scrollbar {
-          width: 0px;
-        }
-      `}</style>
+      {/* HERO */}
+      <section className="relative h-screen flex items-end overflow-hidden bg-[#111]">
+        <motion.div style={{ y: heroY }} className="absolute inset-0">
+          <Image src="https://images.unsplash.com/photo-1592078615290-033ee584e226?q=80&w=2000&auto=format&fit=crop" alt="Minimalist Objects" fill className="object-cover opacity-60" unoptimized />
+        </motion.div>
+        <div className="absolute inset-0 bg-gradient-to-t from-[#111]/90 via-[#111]/20 to-transparent" />
+        <motion.div style={{ opacity: heroOpacity }} className="relative z-10 px-8 md:px-16 pb-20 w-full">
+          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="text-[10px] uppercase tracking-[0.6em] text-white/40 mb-6">Objects of Radical Simplicity</motion.p>
+          <motion.h1 initial={{ opacity: 0, y: 60 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, duration: 0.9 }} className="text-white text-[9vw] md:text-[6vw] font-black uppercase leading-none tracking-tighter mb-8">
+            Less is<br />
+            <span className="text-transparent" style={{ WebkitTextStroke: "2px white" }}>Everything</span>
+          </motion.h1>
+          <motion.a initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.1 }} href="#objects" className="inline-flex items-center gap-2 text-white border border-white/30 px-8 py-3 text-[10px] uppercase tracking-widest hover:bg-white hover:text-[#111] transition-all">
+            Browse Objects <ArrowRight size={12} />
+          </motion.a>
+        </motion.div>
+      </section>
+
+      {/* MARQUEE */}
+      <div className="overflow-hidden bg-[#f5f5f5] py-4 border-y border-[#111]/6">
+        <motion.div animate={{ x: [0, -2600] }} transition={{ duration: 28, repeat: Infinity, ease: "linear" }} className="flex gap-12 whitespace-nowrap">
+          {Array(18).fill(null).map((_, i) => (
+            <span key={i} className="text-[10px] uppercase tracking-[0.4em] text-[#111]/30 shrink-0">Material Honesty · Structural Minimalism · Radical Reduction · Objects That Last ·</span>
+          ))}
+        </motion.div>
+      </div>
+
+      {/* STATS */}
+      <section className="bg-[#111] text-white px-8 md:px-16 py-16 grid grid-cols-2 md:grid-cols-4 gap-px bg-white/5">
+        {STATS.map((s, i) => (
+          <Reveal key={s.label} delay={i * 0.1} className="bg-[#111] p-10 text-center">
+            <div className="text-5xl font-black tracking-tighter text-white mb-2"><Counter target={s.value} suffix={s.suffix} /></div>
+            <div className="text-[10px] uppercase tracking-[0.3em] text-white/30">{s.label}</div>
+          </Reveal>
+        ))}
+      </section>
+
+      {/* PRODUCTS */}
+      <section id="objects" className="px-8 md:px-16 py-24">
+        <Reveal className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.4em] opacity-40 mb-3">The Collection</p>
+            <h2 className="text-5xl md:text-7xl font-black uppercase leading-none tracking-tighter">Objects</h2>
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            {TAGS.map(t => (
+              <button key={t} onClick={() => setActiveTag(t)} className={`text-[9px] uppercase tracking-widest px-4 py-2 border transition-all ${activeTag === t ? "bg-[#111] text-white border-[#111]" : "border-[#111]/15 hover:border-[#111]/40"}`}>{t}</button>
+            ))}
+          </div>
+        </Reveal>
+        <AnimatePresence mode="wait">
+          <motion.div key={activeTag} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filtered.map((p, i) => (
+              <Reveal key={p.id} delay={i * 0.06}>
+                <motion.div className="group" whileHover={{ y: -4 }}>
+                  <div className="relative overflow-hidden bg-[#f5f5f5] mb-4 cursor-pointer" style={{ height: "55vh" }} onClick={() => setQuickView(p.id)}>
+                    <Image src={p.img} alt={p.name} fill className="object-cover transition-transform duration-700 group-hover:scale-105" unoptimized />
+                    <div className="absolute inset-0 bg-[#111]/0 group-hover:bg-[#111]/20 transition-all duration-500" />
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <div className="bg-white text-[#111] text-[9px] uppercase tracking-widest px-5 py-2 font-black">Quick View</div>
+                    </div>
+                    <div className="absolute top-4 left-4">
+                      <span className="bg-white text-[#111] text-[9px] uppercase tracking-widest px-2 py-1">{p.tag}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-end justify-between">
+                    <div>
+                      <p className="font-black text-base uppercase tracking-tight">{p.name}</p>
+                      <p className="text-sm text-[#111]/40 mt-0.5">{p.desc.slice(0, 48)}…</p>
+                    </div>
+                    <div className="flex flex-col items-end gap-2">
+                      <p className="font-black text-lg">€{p.price.toLocaleString()}</p>
+                      <button onClick={() => addToCart(p.id)} className="bg-[#111] text-white p-2 hover:bg-[#333] transition-colors"><Plus size={14} /></button>
+                    </div>
+                  </div>
+                </motion.div>
+              </Reveal>
+            ))}
+          </motion.div>
+        </AnimatePresence>
+      </section>
+
+      {/* QUICK VIEW MODAL */}
+      <AnimatePresence>
+        {quickView !== null && (() => {
+          const p = PRODUCTS.find(x => x.id === quickView)!;
+          return (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] bg-black/60 flex items-center justify-center p-8" onClick={() => setQuickView(null)}>
+              <motion.div initial={{ y: 60, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 60, opacity: 0 }} className="bg-white max-w-3xl w-full grid md:grid-cols-2" onClick={e => e.stopPropagation()}>
+                <div className="relative h-72 md:h-auto bg-[#f5f5f5]">
+                  <Image src={p.img} alt={p.name} fill className="object-cover" unoptimized />
+                </div>
+                <div className="p-8 flex flex-col justify-between">
+                  <div>
+                    <span className="text-[9px] uppercase tracking-widest bg-[#f5f5f5] text-[#111]/50 px-2 py-1 mb-4 inline-block">{p.tag}</span>
+                    <h3 className="font-black text-3xl uppercase tracking-tight mb-3">{p.name}</h3>
+                    <p className="text-[#111]/50 text-sm leading-relaxed mb-6">{p.desc}</p>
+                    <div className="flex gap-1 mb-6">{Array(5).fill(null).map((_, i) => <Star key={i} size={12} fill="#111" className="text-[#111]" />)}</div>
+                  </div>
+                  <div>
+                    <p className="font-black text-3xl mb-6">€{p.price.toLocaleString()}</p>
+                    <button onClick={() => { addToCart(p.id); setQuickView(null); }} className="w-full bg-[#111] text-white py-3 text-[10px] uppercase tracking-widest hover:bg-[#333] transition-colors flex items-center justify-center gap-2">
+                      Add to Cart <ShoppingCart size={12} />
+                    </button>
+                  </div>
+                </div>
+                <button onClick={() => setQuickView(null)} className="absolute top-4 right-4 text-[#111]/50 hover:text-[#111] transition-colors"><X size={18} /></button>
+              </motion.div>
+            </motion.div>
+          );
+        })()}
+      </AnimatePresence>
+
+      {/* MANIFESTO */}
+      <section className="bg-[#111] text-white px-8 md:px-16 py-28">
+        <Reveal className="max-w-3xl mx-auto text-center">
+          <p className="text-[10px] uppercase tracking-[0.5em] text-white/30 mb-8">Our Philosophy</p>
+          <blockquote className="text-3xl md:text-4xl font-light leading-relaxed text-white/80">
+            "We do not add detail to justify a price. We remove everything until the object cannot be reduced further. Then we stop."
+          </blockquote>
+          <div className="w-12 h-px bg-white/20 mx-auto mt-10" />
+        </Reveal>
+      </section>
+
+      {/* CTA */}
+      <section className="px-8 md:px-16 py-28 flex flex-col items-center text-center">
+        <Reveal>
+          <p className="text-[10px] uppercase tracking-[0.5em] opacity-40 mb-6">Bespoke Objects</p>
+          <h2 className="text-6xl md:text-8xl font-black uppercase leading-none tracking-tighter mb-10">
+            Commission<br />
+            <span className="text-transparent" style={{ WebkitTextStroke: "2px #111" }}>Yours.</span>
+          </h2>
+        </Reveal>
+        <Reveal delay={0.2}>
+          <a href="#" className="bg-[#111] text-white px-12 py-5 text-[11px] uppercase tracking-[0.3em] font-black hover:bg-[#333] transition-colors inline-flex items-center gap-3">
+            Start a Commission <ArrowRight size={14} />
+          </a>
+        </Reveal>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="bg-[#111] text-white px-8 md:px-16 py-14 flex flex-col md:flex-row items-start md:items-center justify-between gap-8 border-t border-white/5">
+        <div>
+          <p className="font-black text-base uppercase tracking-[0.25em] mb-1">FORMA STUDIO</p>
+          <p className="text-xs text-white/30">Objects of Radical Simplicity</p>
+        </div>
+        <div className="flex gap-8 text-[10px] uppercase tracking-widest text-white/30">
+          {["Instagram", "Shop", "Press", "Stockists"].map(l => <a key={l} href="#" className="hover:text-white transition-colors">{l}</a>)}
+        </div>
+        <p className="text-[9px] text-white/20 uppercase">© 2026 Forma Studio</p>
+      </footer>
     </div>
   );
 }
