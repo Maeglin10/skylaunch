@@ -1,216 +1,239 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { motion, useScroll, useTransform, useInView, AnimatePresence } from "framer-motion";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { X, Menu, Search, ArrowRight, MoveRight, Layers, Zap, Activity, Globe, Shield, Command, Plus, ArrowUpRight, Maximize2 } from "lucide-react";
+import { ArrowRight, X, Menu, Zap, Shield, Globe, BarChart3, Users, ChevronRight, Play, Check, TrendingUp } from "lucide-react";
 import "../premium.css";
 
-const FLOW_ITEMS = [
-  { id: 1, title: "LITHE_STUDIO", cat: "Branding", img: "https://images.unsplash.com/photo-1558655146-d09347e92766?q=80&w=1000&auto=format&fit=crop", desc: "A structural exploration of digital identity and presence. Built on the edge." },
-  { id: 2, title: "SILK_SYSTEMS", cat: "Interface", img: "https://images.unsplash.com/photo-1549490349-8643362247b5?q=80&w=1000&auto=format&fit=crop", desc: "Fluid, organic interactions inspired by the movement of raw silk and digital mesh." },
-  { id: 3, title: "ORBIT_DESIGN", cat: "Branding", img: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=1000&auto=format&fit=crop", desc: "Next-gen computing cores forged in the heart of industrial minimalism." },
-  { id: 4, title: "VOID_ARCHIVE", cat: "Architecture", img: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1000&auto=format&fit=crop", desc: "Minimalist hardware chassis forged in high-altitude environments for purity." },
+const FEATURES = [
+  { icon: Zap, title: "Instant Automation", desc: "Build complex multi-step workflows without writing a single line of code.", color: "#f59e0b" },
+  { icon: Shield, title: "Enterprise Security", desc: "SOC2 Type II, GDPR compliant. Your data stays in your chosen region.", color: "#3b82f6" },
+  { icon: BarChart3, title: "Unified Analytics", desc: "One dashboard for every tool in your stack. Real decisions, not raw data.", color: "#10b981" },
+  { icon: Globe, title: "1,200+ Integrations", desc: "Connect any tool in minutes. From legacy ERPs to modern SaaS.", color: "#8b5cf6" },
+  { icon: Users, title: "Team Collaboration", desc: "Shared workflows, audit trails, and approval gates for regulated industries.", color: "#ef4444" },
+  { icon: TrendingUp, title: "AI-Powered Insights", desc: "Proactive anomaly detection and optimization recommendations.", color: "#06b6d4" },
 ];
 
+const STATS = [
+  { value: 14, suffix: "K+", label: "Companies" },
+  { value: 850, suffix: "M+", label: "Workflows Run/Month" },
+  { value: 99, suffix: ".9%", label: "Uptime SLA" },
+  { value: 1200, suffix: "+", label: "Integrations" },
+];
+
+const TIERS = [
+  { name: "Starter", price: 29, desc: "For small teams getting started.", features: ["5 users", "10K runs/month", "100 integrations", "Email support"] },
+  { name: "Growth", price: 149, desc: "For scaling operations.", features: ["25 users", "500K runs/month", "All integrations", "Priority support", "Custom domains"], highlight: true },
+  { name: "Enterprise", price: null, desc: "For complex, regulated environments.", features: ["Unlimited users", "Unlimited runs", "Dedicated infra", "SLA guarantee", "SSO & SAML", "Custom contracts"] },
+];
+
+const LOGOS = ["Salesforce", "HubSpot", "Slack", "Notion", "Jira", "Linear", "Airtable", "Stripe"];
+
+function Reveal({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-80px" });
+  return (
+    <motion.div ref={ref} initial={{ opacity: 0, y: 28 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.8, delay, ease: [0.25, 0.46, 0.45, 0.94] }} className={className}>
+      {children}
+    </motion.div>
+  );
+}
+
+function Counter({ target, suffix = "" }: { target: number; suffix?: string }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true });
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    if (!inView) return;
+    let s = 0;
+    const step = target / 60;
+    const timer = setInterval(() => {
+      s += step;
+      if (s >= target) { setCount(target); clearInterval(timer); } else setCount(Math.floor(s));
+    }, 16);
+    return () => clearInterval(timer);
+  }, [inView, target]);
+  return <span ref={ref}>{count}{suffix}</span>;
+}
+
 export default function FlowStreamSPA() {
-  const [view, setView] = useState<"flow" | "stream" | "pulse">("flow");
-  const [activeItem, setActiveItem] = useState(0);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [activeTier, setActiveTier] = useState(1);
+  const [showDemo, setShowDemo] = useState(false);
+  const { scrollY } = useScroll();
+  const heroY = useTransform(scrollY, [0, 700], [0, 180]);
+  const heroOpacity = useTransform(scrollY, [0, 400], [1, 0]);
 
   return (
-    <div className="premium-theme bg-[#f8f8f8] text-[#1a1a1a] min-h-screen selection:bg-black selection:text-white font-sans overflow-x-hidden">
-      
-      {/* Editorial HUD Nav */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-center bg-white/40 backdrop-blur-3xl border-b border-black/5">
-        <button onClick={() => setView("flow")} className="text-xl font-black italic tracking-tighter hover:scale-105 transition-transform">
-           FLOW_OS&trade;
-        </button>
-        <div className="hidden md:flex gap-12 text-[10px] font-black uppercase tracking-[0.5em] opacity-30">
-           <button onClick={() => setView("flow")} className={`hover:opacity-100 transition-opacity ${view === 'flow' ? 'text-black opacity-100 underline decoration-black underline-offset-8 italic' : ''}`}>THE_FLOW</button>
-           <button onClick={() => setView("pulse")} className={`hover:opacity-100 transition-opacity ${view === 'pulse' ? 'text-black opacity-100 underline decoration-black underline-offset-8 italic' : ''}`}>THE_PULSE</button>
+    <div className="premium-theme bg-[#040810] text-white min-h-screen overflow-x-hidden">
+
+      {/* NAV */}
+      <nav className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-8 md:px-16 py-4 bg-[#040810]/90 backdrop-blur-xl border-b border-white/5">
+        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="text-sm font-black uppercase tracking-[0.3em]">FLOW<span className="text-emerald-400">STREAM</span></motion.div>
+        <div className="hidden md:flex items-center gap-10 text-[10px] uppercase tracking-[0.35em] text-white/40">
+          {["Features", "Integrations", "Pricing", "Docs"].map(l => <a key={l} href="#" className="hover:text-white transition-colors">{l}</a>)}
         </div>
-        <div className="flex items-center gap-8">
-           <Search className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-           <Menu className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
+        <div className="flex items-center gap-3">
+          <a href="#" className="hidden md:block text-[10px] uppercase tracking-widest text-white/50 hover:text-white transition-colors">Sign In</a>
+          <a href="#" className="bg-emerald-500 text-white px-5 py-2 text-[10px] uppercase tracking-widest font-black hover:bg-emerald-400 transition-colors">Start Free</a>
+          <button onClick={() => setMenuOpen(true)} className="md:hidden"><Menu size={20} /></button>
         </div>
       </nav>
 
-      <AnimatePresence mode="wait">
-        
-        {/* FLOW VIEW (HORIZONTAL SLIDER) */}
-        {view === "flow" && (
-          <motion.div key="flow" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-48 pb-32">
-             <header className="px-8 mb-32 border-b-2 border-black pb-10 flex flex-col md:flex-row justify-between items-end gap-12">
-                <h1 className="text-7xl md:text-[12vw] font-serif italic tracking-tighter leading-[0.75] text-black">
-                   Fluid. <br /> <span className="text-transparent" style={{ WebkitTextStroke: '1px rgba(0,0,0,0.2)' }}>Dynamics.</span>
-                </h1>
-                <div className="text-right flex flex-col items-end">
-                   <div className="text-2xl font-black mb-4 tracking-tighter uppercase text-black/10 italic">Unit_Series_0x35</div>
-                   <div className="flex gap-4">
-                      <div className="text-[9px] font-black uppercase tracking-widest opacity-20 italic">Global Movement <br /> Through Subtraction</div>
-                   </div>
-                </div>
-             </header>
-
-             <div className="flex overflow-x-auto gap-8 px-8 pb-12 no-scrollbar scroll-smooth snap-x">
-                {FLOW_ITEMS.map((p, i) => (
-                  <motion.div 
-                    key={p.id} initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }}
-                    className="flex-shrink-0 w-[400px] md:w-[600px] snap-center group"
-                    onClick={() => { setActiveItem(i); setView("stream"); }}
-                  >
-                     <div className="relative aspect-[16/10] overflow-hidden rounded-[3rem] border border-black/5 mb-8 shadow-2xl group-hover:shadow-[0_50px_100px_rgba(0,0,0,0.1)] transition-all cursor-pointer">
-                        <Image src={p.img} alt={p.title} fill className="object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-[2s]" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                        <div className="absolute top-8 right-8 p-4 bg-white/80 backdrop-blur-xl rounded-full opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100 transition-all">
-                           <ArrowUpRight className="w-5 h-5 text-black" />
-                        </div>
-                     </div>
-                     <div className="flex justify-between items-end pr-4">
-                        <div>
-                           <span className="text-[10px] uppercase font-black tracking-widest opacity-30 mb-2 block">{p.cat}</span>
-                           <h3 className="text-5xl font-serif italic tracking-tighter leading-none text-black">{p.title}</h3>
-                        </div>
-                        <span className="text-6xl font-black italic opacity-[0.05]">0{p.id}</span>
-                     </div>
-                  </motion.div>
-                ))}
-             </div>
-
-             <div className="px-8 mt-12 flex items-center gap-6 opacity-20 font-black text-[10px] uppercase tracking-[0.5em] italic">
-                <MoveRight className="w-6 h-6 animate-pulse" /> Scroll to explore the flow
-             </div>
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] bg-[#040810] flex flex-col p-10">
+            <button onClick={() => setMenuOpen(false)} className="self-end mb-12 text-white/40"><X size={24} /></button>
+            <div className="flex flex-col gap-8 text-3xl font-black uppercase">
+              {["Features", "Integrations", "Pricing", "Docs", "Sign In"].map(l => <a key={l} href="#" onClick={() => setMenuOpen(false)}>{l}</a>)}
+            </div>
           </motion.div>
         )}
-
-        {/* STREAM VIEW (DETAIL) */}
-        {view === "stream" && (
-          <motion.div key="stream" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen">
-             <button onClick={() => setView("flow")} className="fixed top-12 left-12 z-[60] bg-black text-white p-5 rounded-full hover:scale-110 transition-transform shadow-2xl">
-                <X className="w-6 h-6" />
-             </button>
-
-             <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen pt-24 lg:pt-0">
-                <div className="lg:col-span-12 relative flex items-center justify-center p-8 md:p-32 overflow-hidden h-screen bg-white">
-                   <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[30vw] font-black opacity-[0.02] select-none pointer-events-none italic tracking-tighter text-center">
-                      STREAM
-                   </div>
-                   
-                   <div className="max-w-[1500px] w-full grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10">
-                      <motion.div initial={{ x: -100, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ duration: 1 }} className="relative aspect-square w-full rounded-[4rem] overflow-hidden border-8 border-white shadow-2xl group">
-                         <Image src={FLOW_ITEMS[activeItem].img} alt="Project" fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[3s] opacity-80" priority />
-                         <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent opacity-80" />
-                         <div className="absolute top-12 left-12 p-4 bg-white/80 backdrop-blur-xl rounded-2xl border border-black/5">
-                            <Maximize2 className="w-6 h-6 text-black animate-pulse" />
-                         </div>
-                      </motion.div>
-
-                      <div className="flex flex-col justify-center space-y-12 text-[#1a1a1a]">
-                         <div className="space-y-6">
-                            <span className="text-[10px] uppercase tracking-[1em] font-black opacity-30 mb-8 block underline decoration-black decoration-4 underline-offset-8 italic">Archive_Sync // {FLOW_ITEMS[activeItem].cat}</span>
-                            <h1 className="text-7xl md:text-9xl font-serif italic tracking-tighter leading-[0.85] uppercase">{FLOW_ITEMS[activeItem].title}</h1>
-                            <div className="text-4xl font-black italic tracking-tighter opacity-10 italic">Allocation: SYNCHRONIZED</div>
-                         </div>
-
-                         <p className="text-3xl font-light italic leading-relaxed uppercase tracking-tight opacity-50 leading-relaxed">
-                            {FLOW_ITEMS[activeItem].desc} Every detail was computed to maximize silence and minimize human interference with the landscape.
-                         </p>
-
-                         <div className="grid grid-cols-2 gap-12 py-12 border-y border-black/10">
-                            {[
-                              { icon: <Globe className="w-5 h-5" />, l: "Region", v: "Global_East" },
-                              { icon: <Zap className="w-5 h-5" />, l: "Logic", v: "Class_A_Core" },
-                              { icon: <Shield className="w-5 h-5" />, l: "Security", v: "High_Impact" },
-                              { icon: <Plus className="w-5 h-5" />, l: "Sync", v: "Phase_Shift" },
-                            ].map((s, i) => (
-                              <div key={i} className="flex gap-6 items-center">
-                                 <div className="opacity-20">{s.icon}</div>
-                                 <div className="text-left">
-                                    <div className="text-[10px] font-black opacity-30 uppercase tracking-widest mb-1 italic">{s.l}</div>
-                                    <div className="text-sm font-black uppercase italic tracking-tighter">{s.v}</div>
-                                 </div>
-                              </div>
-                            ))}
-                         </div>
-
-                         <div className="flex gap-6 pt-8">
-                            <button onClick={() => setView("flow")} className="flex-grow py-8 bg-black text-white font-black uppercase text-xs tracking-[1em] hover:bg-black/80 transition-all shadow-2xl">
-                               Return_to_Flow
-                            </button>
-                            <button className="px-12 py-8 border border-black/20 text-[10px] font-black uppercase tracking-[0.5em] hover:scale-105 transition-all text-black">
-                               PDF_Spec
-                            </button>
-                         </div>
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
-        {/* PULSE VIEW (INFO) */}
-        {view === "pulse" && (
-          <motion.div key="pulse" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen flex flex-col justify-center">
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center text-[#1a1a1a]">
-                <div className="space-y-16">
-                   <span className="text-[10px] uppercase font-black tracking-[1.5em] opacity-30 block underline decoration-black decoration-2 underline-offset-8 italic">The_Foundations</span>
-                   <h2 className="text-7xl md:text-[10vw] font-serif italic tracking-tighter leading-none uppercase">The <br/> Pulse.</h2>
-                   <p className="text-3xl md:text-4xl font-light italic opacity-60 leading-relaxed uppercase tracking-tight text-black/60">
-                      We treat architecture as code. Every structure is a function of its environmental variables and tectonic intent. 100% precision. Zero noise.
-                   </p>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t border-black/10">
-                      {[
-                        { icon: <Activity className="w-6 h-6" />, t: "Adaptive Flow", v: "Dynamic Load Sync" },
-                        { icon: <Plus className="w-6 h-6" />, t: "Structural Sync", v: "Deep_Material_ID" },
-                      ].map((item, i) => (
-                        <div key={i} className="flex gap-8 group">
-                           <div className="w-16 h-16 rounded-full border border-black flex items-center justify-center text-black group-hover:bg-black group-hover:text-white transition-all shadow-xl">
-                              {item.icon}
-                           </div>
-                           <div className="text-left">
-                              <h4 className="text-2xl font-black uppercase italic tracking-tighter leading-none mb-2">{item.t}</h4>
-                              <p className="text-[10px] opacity-30 uppercase tracking-[0.3em] font-black leading-relaxed text-black/40">{item.v}</p>
-                           </div>
-                        </div>
-                      ))}
-                   </div>
-                </div>
-                <div className="relative aspect-square bg-[#ddd] rounded-[4rem] p-12 overflow-hidden border border-black/10 group shadow-2xl">
-                   <Image src="https://images.unsplash.com/photo-1541829070764-84a7d30dee62?q=80&w=1000&auto=format&fit=crop" alt="The Pulse" fill className="object-cover opacity-20 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-[2s]" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-80" />
-                   <div className="absolute inset-x-0 bottom-12 flex justify-center">
-                      <div className="px-12 py-6 bg-black text-white text-[10px] font-black uppercase tracking-widest italic animate-bounce cursor-pointer hover:bg-black/80 transition-all">
-                         Establish_Sync
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
       </AnimatePresence>
 
-      {/* Global Status HUD */}
-      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em] italic text-[#1a1a1a]">
-         <div className="flex gap-12 text-black">
-            <span>Flow_Stream_Alpha</span>
-            <span>Uptime: 99.9%</span>
-         </div>
-         <div className="flex gap-4 items-end text-black">
-            <div className="text-right leading-tight italic">
-               Inventory_Control <br /> v4.0.21
+      <AnimatePresence>
+        {showDemo && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] bg-black/90 flex items-center justify-center p-8" onClick={() => setShowDemo(false)}>
+            <div className="w-full max-w-4xl bg-[#0d1120] border border-emerald-500/20 p-8 relative">
+              <p className="text-emerald-400 text-sm uppercase tracking-widest text-center">[ Interactive Demo Placeholder ]</p>
+              <button onClick={() => setShowDemo(false)} className="absolute top-4 right-4 text-white/40 hover:text-white"><X size={18} /></button>
             </div>
-            <div className="flex gap-[4px] h-4">
-               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-full bg-black opacity-${i*20}`}></div>)}
-            </div>
-         </div>
-      </footer>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      <style>{`
-        ::-webkit-scrollbar { width: 0px; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-      `}</style>
+      {/* HERO */}
+      <section className="relative min-h-screen flex items-center overflow-hidden">
+        <motion.div style={{ y: heroY }} className="absolute inset-0">
+          <Image src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2000&auto=format&fit=crop" alt="Automation" fill className="object-cover opacity-8" unoptimized />
+        </motion.div>
+        <div className="absolute inset-0" style={{ backgroundImage: "linear-gradient(rgba(16,185,129,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,0.04) 1px, transparent 1px)", backgroundSize: "80px 80px" }} />
+        <div className="absolute top-1/3 right-1/3 w-[500px] h-[500px]" style={{ background: "radial-gradient(circle, rgba(16,185,129,0.08) 0%, transparent 70%)", filter: "blur(80px)" }} />
+        <motion.div style={{ opacity: heroOpacity }} className="relative z-10 px-8 md:px-16 pt-28 max-w-5xl">
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }} className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-[9px] uppercase tracking-widest px-4 py-2 mb-8">
+            <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
+            New: AI-Powered Workflow Optimization
+          </motion.div>
+          <motion.h1 initial={{ opacity: 0, y: 80 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4, duration: 1, ease: [0.16, 1, 0.3, 1] }} className="text-6xl md:text-[8vw] font-black uppercase leading-none tracking-tighter mb-6">
+            Automate<br />
+            <span className="text-emerald-400">Everything.</span><br />
+            Grow Fast.
+          </motion.h1>
+          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }} className="text-white/50 text-lg max-w-xl mb-10 leading-relaxed">
+            FlowStream connects your entire stack and automates the work between them. No code, no DevOps, no limits.
+          </motion.p>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.1 }} className="flex flex-col sm:flex-row gap-4">
+            <a href="#" className="bg-emerald-500 text-white px-8 py-4 text-[11px] uppercase tracking-widest font-black hover:bg-emerald-400 transition-colors flex items-center gap-2">
+              Start Free — No CC <ArrowRight size={13} />
+            </a>
+            <button onClick={() => setShowDemo(true)} className="border border-white/10 text-white/60 px-8 py-4 text-[11px] uppercase tracking-widest hover:border-white/30 hover:text-white transition-all flex items-center gap-2">
+              <Play size={12} /> Watch Demo
+            </button>
+          </motion.div>
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.4 }} className="text-[9px] text-white/20 mt-4 uppercase tracking-widest">
+            Trusted by 14,000+ companies
+          </motion.p>
+        </motion.div>
+      </section>
+
+      {/* LOGOS */}
+      <div className="overflow-hidden bg-white/2 border-y border-white/5 py-4">
+        <motion.div animate={{ x: [0, -1800] }} transition={{ duration: 20, repeat: Infinity, ease: "linear" }} className="flex gap-16 whitespace-nowrap items-center">
+          {Array(4).fill(LOGOS).flat().map((l, i) => (
+            <span key={i} className="text-[10px] uppercase tracking-widest text-white/20 shrink-0 font-black">{l}</span>
+          ))}
+        </motion.div>
+      </div>
+
+      {/* STATS */}
+      <section className="px-8 md:px-16 py-20 grid grid-cols-2 md:grid-cols-4 gap-px bg-white/4">
+        {STATS.map((s, i) => (
+          <Reveal key={s.label} delay={i * 0.1} className="bg-[#040810] p-10 text-center border border-white/4">
+            <div className="text-5xl font-black text-emerald-400 mb-2"><Counter target={s.value} suffix={s.suffix} /></div>
+            <div className="text-[9px] uppercase tracking-[0.3em] text-white/30">{s.label}</div>
+          </Reveal>
+        ))}
+      </section>
+
+      {/* FEATURES */}
+      <section className="px-8 md:px-16 py-24 bg-[#07101a]">
+        <Reveal className="mb-16">
+          <p className="text-[9px] uppercase tracking-[0.5em] text-white/30 mb-4">The Platform</p>
+          <h2 className="text-5xl md:text-6xl font-black uppercase leading-none tracking-tighter">One Platform.<br />Every Workflow.</h2>
+        </Reveal>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {FEATURES.map((f, i) => (
+            <Reveal key={f.title} delay={i * 0.07} className="group p-7 border border-white/6 hover:border-white/15 transition-all" style={{ background: `linear-gradient(135deg, ${f.color}06, transparent)` }}>
+              <f.icon size={22} className="mb-5" style={{ color: f.color + "80" }} />
+              <h3 className="font-black text-base uppercase tracking-tight mb-2">{f.title}</h3>
+              <p className="text-white/40 text-sm leading-relaxed">{f.desc}</p>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* PRICING */}
+      <section className="px-8 md:px-16 py-24">
+        <Reveal className="text-center mb-14">
+          <p className="text-[9px] uppercase tracking-[0.5em] text-white/30 mb-4">Pricing</p>
+          <h2 className="text-5xl md:text-6xl font-black uppercase leading-none tracking-tighter">Scale<br />Without Surprises</h2>
+        </Reveal>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-5xl mx-auto">
+          {TIERS.map((t, i) => (
+            <Reveal key={t.name} delay={i * 0.1}>
+              <motion.div onClick={() => setActiveTier(i)} className={`p-8 border cursor-pointer transition-all ${t.highlight || activeTier === i ? "border-emerald-500/50 bg-emerald-500/5" : "border-white/8 hover:border-emerald-500/25"}`} whileHover={{ y: -4 }}>
+                {t.highlight && <div className="text-[8px] uppercase tracking-widest bg-emerald-500 text-white px-3 py-1 mb-4 w-fit font-black">Most Popular</div>}
+                <p className="text-[10px] uppercase tracking-widest text-white/40 mb-1">{t.name}</p>
+                <p className="text-[9px] text-white/25 mb-3">{t.desc}</p>
+                {t.price !== null ? (
+                  <>
+                    <div className="text-4xl font-black text-emerald-400">${t.price}</div>
+                    <p className="text-[9px] text-white/25 mb-6">/month</p>
+                  </>
+                ) : (
+                  <div className="text-3xl font-black mb-7">Custom</div>
+                )}
+                <ul className="space-y-2.5 mb-8">
+                  {t.features.map(f => (
+                    <li key={f} className="flex items-start gap-2 text-sm text-white/60">
+                      <Check size={12} className="text-emerald-400 mt-0.5 shrink-0" /> {f}
+                    </li>
+                  ))}
+                </ul>
+                <a href="#" className={`block text-center py-3 text-[10px] uppercase tracking-widest border transition-all ${t.highlight ? "bg-emerald-500 text-white border-transparent hover:bg-emerald-400" : "border-white/15 hover:border-emerald-400 hover:text-emerald-400"}`}>
+                  {t.price === null ? "Contact Sales" : "Get Started"}
+                </a>
+              </motion.div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="bg-emerald-500/8 border-y border-emerald-500/15 px-8 md:px-16 py-24 flex flex-col md:flex-row items-center justify-between gap-10">
+        <Reveal>
+          <p className="text-[9px] uppercase tracking-[0.5em] text-emerald-400/50 mb-4">Ready to Automate?</p>
+          <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter leading-none">
+            Start today.<br />
+            <span className="text-emerald-400">Scale tomorrow.</span>
+          </h2>
+        </Reveal>
+        <Reveal delay={0.2}>
+          <a href="#" className="bg-emerald-500 text-white px-10 py-4 text-[11px] uppercase tracking-widest font-black hover:bg-emerald-400 transition-colors flex items-center gap-2 shrink-0">
+            Start Free Trial <ArrowRight size={13} />
+          </a>
+        </Reveal>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="px-8 md:px-16 py-12 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border-t border-white/5">
+        <p className="font-black text-sm uppercase tracking-[0.3em]">FLOW<span className="text-emerald-400">STREAM</span></p>
+        <div className="flex gap-8 text-[9px] uppercase tracking-widest text-white/30">
+          {["Features", "Docs", "Status", "Privacy"].map(l => <a key={l} href="#" className="hover:text-white transition-colors">{l}</a>)}
+        </div>
+        <p className="text-[9px] text-white/20 uppercase">© 2026 FlowStream Inc.</p>
+      </footer>
     </div>
   );
 }

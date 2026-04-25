@@ -1,205 +1,241 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { motion, useScroll, useTransform, useInView, AnimatePresence } from "framer-motion";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { ShoppingBag, ArrowRight, X, Menu, Search, Filter, Hash, Fingerprint, MapPin, Plus } from "lucide-react";
+import { ArrowRight, X, Menu, ShoppingBag, Star, Leaf, Droplets, Flame, Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import "../premium.css";
 
-const POTTERY = [
-  { id: 1, name: "KILN_DRAFT_01", price: 340, tag: "Vessel", img: "https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?q=80&w=1000&auto=format&fit=crop", desc: "A raw, unglazed vessel for internal reflection. Captured in the first morning fire." },
-  { id: 2, name: "ASH_PLATE_04", price: 180, tag: "Ceramic", img: "https://images.unsplash.com/photo-1610701596007-11502861dcfa?q=80&w=1000&auto=format&fit=crop", desc: "Forged from volcanic ash and deep sea minerals. A structural study of flatness." },
-  { id: 3, name: "VOID_CUP", price: 95, tag: "Object", img: "https://images.unsplash.com/photo-1514228742587-6b1558fbed20?q=80&w=1000&auto=format&fit=crop", desc: "The absence of weight. Hand-turned until the clay reaches its breaking point." },
-  { id: 4, name: "STARK_BOWL", price: 550, tag: "Masterpiece", img: "https://images.unsplash.com/photo-1493106641515-6b5ca27e4dbe?q=80&w=1000&auto=format&fit=crop", desc: "A monolithic statement of utility. Matte charcoal exterior with a white silica core." },
+const PIECES = [
+  { id: 1, name: "Coupelle Vide", price: "€380", clay: "Stoneware", finish: "Raw matte", img: "https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?q=80&w=1200&auto=format&fit=crop", desc: "A single thrown form, unglazed. The thumb marks of the maker remain visible at the base." },
+  { id: 2, name: "Vase Colonne", price: "€620", clay: "Porcelain", finish: "Crackle celadon", img: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?q=80&w=1000&auto=format&fit=crop", desc: "Wheel-thrown and stretched by hand. Each crackle in the glaze is unique and irreproducible." },
+  { id: 3, name: "Bol Cendré", price: "€280", clay: "Raku", finish: "Carbon smoked", img: "https://images.unsplash.com/photo-1612195583950-b8fd34c87093?q=80&w=1000&auto=format&fit=crop", desc: "Raku-fired in a reduction atmosphere. Carbon deposits create a unique surface that evolves with use." },
+  { id: 4, name: "Assiette Terrain", price: "€240", clay: "Earthenware", finish: "Oxide wash", img: "https://images.unsplash.com/photo-1558618047-f4fd15a54e2c?q=80&w=1000&auto=format&fit=crop", desc: "Hand-built from local earthenware clay. Iron oxide wash reveals texture on each piece." },
+  { id: 5, name: "Pichet Noir", price: "€450", clay: "Stoneware", finish: "Ash glaze", img: "https://images.unsplash.com/photo-1594938298603-c8148c4b4084?q=80&w=1000&auto=format&fit=crop", desc: "Wood-fired for 48 hours. The natural ash glaze creates patterns that cannot be replicated." },
+  { id: 6, name: "Tasse Minérale", price: "€195", clay: "Porcelain", finish: "Shino", img: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?q=80&w=1000&auto=format&fit=crop", desc: "Hand-thrown porcelain cup. Shino glaze develops pinholes during firing — each one intentional." },
 ];
 
+const PROCESS = [
+  { icon: Droplets, title: "Throwing", desc: "Each piece begins on the wheel. Clay from three regions, chosen for specific properties." },
+  { icon: Flame, title: "Firing", desc: "Wood-fired kiln at 1280°C. A 48-hour process we cannot fully control — which is the point." },
+  { icon: Leaf, title: "Glazing", desc: "Natural ash glazes, oxide washes, and unglazed surfaces. Nothing synthetic enters our kiln." },
+];
+
+const TESTIMONIALS = [
+  { name: "Maria S.", text: "The Coupelle Vide lives on my desk. Every morning it changes slightly — the light, the shadow, the mood. It is the most alive object I own.", rating: 5 },
+  { name: "T. Nakamura", text: "I have collected ceramics for 20 years. This work has the quietness of the best Japanese pieces — without imitation.", rating: 5 },
+];
+
+function Reveal({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-80px" });
+  return (
+    <motion.div ref={ref} initial={{ opacity: 0, y: 24 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.9, delay, ease: [0.25, 0.46, 0.45, 0.94] }} className={className}>
+      {children}
+    </motion.div>
+  );
+}
+
 export default function CeramicsAtelierSPA() {
-  const [view, setView] = useState<"kiln" | "object" | "philosophy">("kiln");
-  const [activeItem, setActiveItem] = useState(0);
-  const [cart, setCart] = useState(0);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [activePiece, setActivePiece] = useState<number | null>(null);
+  const [cart, setCart] = useState<number[]>([]);
+  const [activeTestimonial, setActiveTestimonial] = useState(0);
+  const { scrollY } = useScroll();
+  const heroY = useTransform(scrollY, [0, 700], [0, 180]);
+  const heroScale = useTransform(scrollY, [0, 700], [1, 1.06]);
+  const heroOpacity = useTransform(scrollY, [0, 500], [1, 0]);
+
+  useEffect(() => {
+    const t = setInterval(() => setActiveTestimonial(p => (p + 1) % TESTIMONIALS.length), 6000);
+    return () => clearInterval(t);
+  }, []);
 
   return (
-    <div className="premium-theme bg-[#f8f7f4] text-[#1a1a1a] min-h-screen selection:bg-[#1a1a1a] selection:text-white font-sans overflow-x-hidden">
-      
-      {/* Editorial HUD Nav */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-center bg-white/40 backdrop-blur-xl border-b border-black/5">
-        <button onClick={() => setView("kiln")} className="text-xl font-black uppercase tracking-tighter hover:opacity-100 transition-opacity">
-           ATELIER_036&trade;
-        </button>
-        <div className="hidden md:flex gap-12 text-[10px] font-black uppercase tracking-[0.4em] opacity-30">
-           <button onClick={() => setView("kiln")} className={`hover:opacity-100 transition-opacity ${view === 'kiln' ? 'opacity-100' : ''}`}>THE_KILN</button>
-           <button onClick={() => setView("philosophy")} className={`hover:opacity-100 transition-opacity ${view === 'philosophy' ? 'opacity-100' : ''}`}>PHILOSOPHY</button>
+    <div className="premium-theme bg-[#f6f2ec] text-[#1e1a14] min-h-screen overflow-x-hidden" style={{ fontFamily: "'Georgia', serif" }}>
+
+      {/* NAV */}
+      <nav className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-8 md:px-16 py-5 bg-[#f6f2ec]/90 backdrop-blur-xl border-b border-[#1e1a14]/6">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-base uppercase tracking-[0.5em] text-[#8b6b4a]">ARGILE</motion.div>
+        <div className="hidden md:flex items-center gap-10 text-[9px] uppercase tracking-[0.4em] opacity-40" style={{ fontFamily: "sans-serif" }}>
+          {["Collection", "Process", "Atelier", "Bespoke"].map(l => (
+            <a key={l} href="#" className="hover:opacity-100 transition-opacity">{l}</a>
+          ))}
         </div>
-        <div className="flex items-center gap-8">
-           <div className="hidden lg:flex items-center gap-2 opacity-30 text-[9px] uppercase font-black tracking-widest italic">
-              Batch: 0x442_A
-           </div>
-           <button className="flex items-center gap-4 group">
-              <ShoppingBag className="w-5 h-5 group-hover:scale-110 transition-transform" />
-              <span className="text-[10px] font-black opacity-30 group-hover:opacity-100 font-mono">[{cart}]</span>
-           </button>
+        <div className="flex items-center gap-4">
+          <button className="relative">
+            <ShoppingBag size={16} className="text-[#8b6b4a]/60" />
+            {cart.length > 0 && <span className="absolute -top-1 -right-1 bg-[#8b6b4a] text-white text-[8px] w-3.5 h-3.5 rounded-full flex items-center justify-center">{cart.length}</span>}
+          </button>
+          <button onClick={() => setMenuOpen(true)} className="md:hidden"><Menu size={20} /></button>
         </div>
       </nav>
 
-      <AnimatePresence mode="wait">
-        
-        {/* KILN VIEW (CATALOG) */}
-        {view === "kiln" && (
-          <motion.div key="kiln" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-48 pb-32 px-8">
-             <header className="mb-32 flex flex-col md:flex-row justify-between items-end border-b-2 border-black pb-12">
-                <h1 className="text-[10vw] font-serif italic font-black uppercase tracking-tighter leading-[0.8]">
-                   Fire. <br /> <span className="not-italic text-transparent" style={{ WebkitTextStroke: '1px black' }}>Silence.</span>
-                </h1>
-                <div className="text-right flex flex-col items-end">
-                   <div className="text-2xl font-black mb-4 tracking-tighter uppercase opacity-10">Kyoto_Digital</div>
-                   <div className="flex gap-4">
-                      <Search className="w-5 h-5 opacity-20" />
-                      <Filter className="w-5 h-5 opacity-20" />
-                   </div>
-                </div>
-             </header>
-
-             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
-                {POTTERY.map((p, i) => (
-                  <motion.div 
-                    key={p.id} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                    className="group flex flex-col cursor-pointer"
-                    onClick={() => { setActiveItem(i); setView("object"); }}
-                  >
-                     <div className="relative aspect-[3/4] bg-[#eae9e6] overflow-hidden mb-8 border border-black/5 rounded-3xl p-6">
-                        <Image src={p.img} alt={p.name} fill className="object-contain grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000" />
-                        <div className="absolute top-8 left-8 text-[8px] font-black uppercase tracking-widest opacity-20 group-hover:opacity-100 transition-opacity">
-                           <Hash className="w-3 h-3 mb-1" /> REF_{p.id}
-                        </div>
-                     </div>
-                     <div className="flex justify-between items-start mb-6">
-                        <div>
-                           <span className="text-[10px] uppercase font-black tracking-[0.3em] opacity-30 block mb-2">{p.tag}</span>
-                           <h3 className="text-3xl font-black uppercase tracking-tighter leading-none hover:text-orange-950">{p.name}</h3>
-                        </div>
-                        <div className="text-xl font-bold italic tracking-tighter opacity-20 group-hover:opacity-100 transition-all">${p.price}</div>
-                     </div>
-                     <button className="flex items-center gap-4 text-[9px] font-black tracking-[0.5em] opacity-20 group-hover:opacity-100 transition-all group-hover:gap-8 border-t border-black/5 pt-6">
-                        STUDY_OBJECT <Plus className="w-4 h-4" />
-                     </button>
-                  </motion.div>
-                ))}
-             </div>
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div initial={{ y: "-100%" }} animate={{ y: 0 }} exit={{ y: "-100%" }} transition={{ type: "tween", duration: 0.3 }} className="fixed inset-0 z-[100] bg-[#1e1a14] text-white flex flex-col p-10">
+            <button onClick={() => setMenuOpen(false)} className="self-end mb-12"><X size={24} /></button>
+            <div className="flex flex-col gap-8 text-4xl uppercase">
+              {["Collection", "Process", "Atelier", "Bespoke"].map(l => <a key={l} href="#" onClick={() => setMenuOpen(false)} className="hover:opacity-60 transition-opacity">{l}</a>)}
+            </div>
           </motion.div>
         )}
-
-        {/* OBJECT VIEW (DETAIL) */}
-        {view === "object" && (
-          <motion.div key="object" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen pt-24 lg:pt-0">
-             <button onClick={() => setView("kiln")} className="fixed top-12 left-12 z-[60] bg-black text-white p-5 rounded-full hover:scale-110 transition-transform shadow-2xl">
-                <X className="w-6 h-6" />
-             </button>
-
-             <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen">
-                <div className="lg:col-span-7 relative h-[60vh] lg:h-screen sticky top-0 bg-[#eae9e6] flex items-center justify-center p-12 lg:p-32">
-                   <motion.div initial={{ scale: 1.1, opacity: 0, rotate: -5 }} animate={{ scale: 1, opacity: 1, rotate: 0 }} transition={{ duration: 1.5 }} className="relative w-full h-full">
-                      <Image src={POTTERY[activeItem].img} alt="Object" fill className="object-contain grayscale" priority />
-                   </motion.div>
-                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[45vh] font-serif italic font-black opacity-[0.02] select-none pointer-events-none capitalize">
-                      {POTTERY[activeItem].tag}
-                   </div>
-                </div>
-
-                <div className="lg:col-span-5 p-12 lg:p-24 bg-white flex flex-col justify-center space-y-16">
-                   <div className="space-y-8">
-                      <span className="text-[10px] uppercase tracking-[1em] font-black opacity-30 mb-8 block underline decoration-black decoration-4 underline-offset-8">Material_Data</span>
-                      <h1 className="text-6xl md:text-8xl font-serif italic font-black uppercase tracking-tighter leading-none">{POTTERY[activeItem].name}</h1>
-                      <div className="text-4xl font-black italic tracking-tighter opacity-40">${POTTERY[activeItem].price}</div>
-                   </div>
-
-                   <p className="text-2xl font-light italic leading-relaxed opacity-60 uppercase tracking-tight">
-                      {POTTERY[activeItem].desc} Every ridge and imperfection is preserved as a timestamp of the human-clay interface.
-                   </p>
-
-                   <div className="grid grid-cols-2 gap-8 border-y border-black/5 py-12">
-                      {[
-                        { icon: <MapPin className="w-4 h-4" />, l: "Origin", v: "Bizen_Kiln" },
-                        { icon: <Fingerprint className="w-4 h-4" />, l: "Texture", v: "Coarse_Grain" },
-                        { icon: <Plus className="w-4 h-4" />, l: "Firing", v: "1280°C_RED" },
-                        { icon: <X className="w-4 h-4" />, l: "Batch", v: "0x442_A" },
-                      ].map((s, i) => (
-                        <div key={i} className="flex gap-4 items-center">
-                           <div className="text-black/20">{s.icon}</div>
-                           <div>
-                              <div className="text-[10px] font-black opacity-30 uppercase tracking-widest">{s.l}</div>
-                              <div className="text-xs font-black uppercase italic tracking-tighter mt-1">{s.v}</div>
-                           </div>
-                        </div>
-                      ))}
-                   </div>
-
-                   <div className="flex flex-col md:flex-row gap-6">
-                      <button onClick={() => { setCart(c => c + 1); setView("kiln"); }} className="flex-grow py-8 bg-black text-white font-black uppercase text-xs tracking-[1em] hover:bg-[#111] transition-all">
-                         Acquire_Object
-                      </button>
-                      <button onClick={() => setView("philosophy")} className="px-12 py-8 border border-black/10 text-[10px] font-black uppercase tracking-[0.5em] hover:bg-black hover:text-white transition-all">
-                         Atelier_Note
-                      </button>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
-        {/* PHILOSOPHY VIEW */}
-        {view === "philosophy" && (
-          <motion.div key="philosophy" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen flex flex-col justify-center">
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center mb-32">
-                <div className="space-y-12">
-                   <span className="text-[10px] uppercase font-black tracking-[1.5em] opacity-30 block">Slow_Production</span>
-                   <h2 className="text-7xl md:text-[10vw] font-serif italic tracking-tighter leading-none text-black font-black uppercase">THE <br/> BREADTH.</h2>
-                   <p className="text-2xl md:text-3xl font-light italic opacity-60 leading-relaxed uppercase tracking-tight">
-                      We reject the digital perfection for the honest flaw. Every piece is a meditation on entropy and the endurance of fired earth.
-                   </p>
-                </div>
-                <div className="relative aspect-square glass rounded-[4rem] p-12 overflow-hidden border border-black/5 bg-[#eae9e6]">
-                   <Image src="https://images.unsplash.com/photo-1541829070764-84a7d30dee62?q=80&w=1000&auto=format&fit=crop" alt="Process" fill className="object-cover opacity-50 grayscale hover:grayscale-0 transition-all duration-[2s]" />
-                </div>
-             </div>
-             
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-12 border-t border-black/5 pt-12 text-center opacity-30 grayscale hover:opacity-100 hover:grayscale-0 transition-all">
-                {[
-                  { t: "The Turn", d: "Manual rotation at 12 RPM ensures the clay retains its structural memory." },
-                  { t: "The Glaze", d: "No glazes. Only the reaction between wood ash and minerals during firing." },
-                  { t: "The Break", d: "Objects are intentionally pushed to their structural limits before release." },
-                ].map((item, i) => (
-                  <div key={i}>
-                     <h4 className="text-2xl font-black uppercase italic tracking-tighter mb-4 text-black">{item.t}</h4>
-                     <p className="text-[10px] opacity-60 uppercase tracking-[0.2em] font-black leading-relaxed">{item.d}</p>
-                  </div>
-                ))}
-             </div>
-          </motion.div>
-        )}
-
       </AnimatePresence>
 
-      {/* Global Status HUD */}
-      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em] italic">
-         <div className="flex gap-12">
-            <span>Kyoto_Atelier</span>
-            <span>Batch_042</span>
-         </div>
-         <div className="flex gap-4 items-end">
-            <div className="text-right leading-tight italic">
-               Atelier_036 <br /> Digital_Artifacts
-            </div>
-            <div className="flex gap-[2px] h-4">
-               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[3px] h-full bg-black opacity-${i*20}`}></div>)}
-            </div>
-         </div>
-      </footer>
+      {/* HERO */}
+      <section className="relative h-screen flex items-end overflow-hidden bg-[#e8e0d5]">
+        <motion.div style={{ y: heroY, scale: heroScale }} className="absolute inset-0">
+          <Image src="https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?q=80&w=2000&auto=format&fit=crop" alt="Ceramics" fill className="object-cover opacity-60" unoptimized />
+        </motion.div>
+        <div className="absolute inset-0 bg-gradient-to-t from-[#1e1a14]/80 via-transparent to-transparent" />
+        <motion.div style={{ opacity: heroOpacity }} className="relative z-10 px-8 md:px-16 pb-20 w-full">
+          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="text-[9px] uppercase tracking-[0.6em] text-white/40 mb-5" style={{ fontFamily: "sans-serif" }}>Céramique Artisanale · Atelier Rural · Bourgogne</motion.p>
+          <motion.h1 initial={{ opacity: 0, y: 60 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, duration: 1 }} className="text-white text-6xl md:text-[8vw] leading-none mb-6">
+            Form<br />Follows<br /><em>Fire.</em>
+          </motion.h1>
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9 }} className="text-white/50 max-w-sm text-sm leading-relaxed mb-8" style={{ fontFamily: "sans-serif" }}>
+            Handmade ceramics from a wood-fired kiln in rural Burgundy. Every piece unique — intentionally so.
+          </motion.p>
+          <motion.a initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.1 }} href="#collection" className="inline-block bg-white text-[#1e1a14] px-8 py-3 text-[10px] uppercase tracking-[0.3em] hover:bg-white/90 transition-colors" style={{ fontFamily: "sans-serif" }}>
+            Browse Collection
+          </motion.a>
+        </motion.div>
+      </section>
 
-      <style>{`
-        ::-webkit-scrollbar {
-          width: 0px;
-        }
-      `}</style>
+      {/* MARQUEE */}
+      <div className="overflow-hidden bg-[#1e1a14] py-3.5">
+        <motion.div animate={{ x: [0, -2800] }} transition={{ duration: 30, repeat: Infinity, ease: "linear" }} className="flex gap-12 whitespace-nowrap">
+          {Array(18).fill(null).map((_, i) => (
+            <span key={i} className="text-[9px] uppercase tracking-[0.5em] text-white/20 shrink-0" style={{ fontFamily: "sans-serif" }}>Wood-Fired · Stoneware · Porcelain · Raku · Natural Glazes · Burgundy ·</span>
+          ))}
+        </motion.div>
+      </div>
+
+      {/* COLLECTION */}
+      <section id="collection" className="px-8 md:px-16 py-24">
+        <Reveal className="mb-12">
+          <p className="text-[9px] uppercase tracking-[0.5em] text-[#8b6b4a] mb-4" style={{ fontFamily: "sans-serif" }}>The Collection</p>
+          <h2 className="text-5xl md:text-6xl leading-none tracking-tight">Current<br />Pieces</h2>
+        </Reveal>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {PIECES.map((p, i) => (
+            <Reveal key={p.id} delay={i * 0.07}>
+              <motion.div className="group cursor-pointer" whileHover={{ y: -5 }} onClick={() => setActivePiece(p.id)}>
+                <div className="relative overflow-hidden bg-[#ede8e0] mb-5" style={{ height: "55vh" }}>
+                  <Image src={p.img} alt={p.name} fill className="object-cover transition-transform duration-700 group-hover:scale-105" unoptimized />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#1e1a14]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="bg-white text-[9px] uppercase tracking-widest px-5 py-2" style={{ fontFamily: "sans-serif" }}>View Details</div>
+                  </div>
+                </div>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h3 className="text-xl leading-tight mb-1">{p.name}</h3>
+                    <p className="text-[9px] text-[#1e1a14]/40 uppercase tracking-widest" style={{ fontFamily: "sans-serif" }}>{p.clay} · {p.finish}</p>
+                  </div>
+                  <p className="font-bold text-[#8b6b4a]" style={{ fontFamily: "sans-serif" }}>{p.price}</p>
+                </div>
+              </motion.div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* PIECE MODAL */}
+      <AnimatePresence>
+        {activePiece !== null && (() => {
+          const p = PIECES.find(x => x.id === activePiece)!;
+          return (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] bg-black/60 flex items-center justify-center p-8" onClick={() => setActivePiece(null)}>
+              <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }} className="bg-[#f6f2ec] max-w-3xl w-full grid md:grid-cols-2" onClick={e => e.stopPropagation()}>
+                <div className="relative h-72 md:h-auto">
+                  <Image src={p.img} alt={p.name} fill className="object-cover" unoptimized />
+                </div>
+                <div className="p-8 flex flex-col justify-between">
+                  <div>
+                    <p className="text-[9px] uppercase tracking-widest text-[#8b6b4a] mb-2" style={{ fontFamily: "sans-serif" }}>{p.clay} · {p.finish}</p>
+                    <h3 className="text-3xl leading-tight mb-3">{p.name}</h3>
+                    <p className="text-sm text-[#1e1a14]/50 leading-relaxed mb-6" style={{ fontFamily: "sans-serif" }}>{p.desc}</p>
+                  </div>
+                  <div>
+                    <p className="text-2xl text-[#8b6b4a] font-bold mb-5" style={{ fontFamily: "sans-serif" }}>{p.price}</p>
+                    <button onClick={() => { setCart(c => [...c, p.id]); setActivePiece(null); }} className="w-full bg-[#1e1a14] text-white py-3 text-[10px] uppercase tracking-widest hover:bg-[#2d2820] transition-colors flex items-center justify-center gap-2" style={{ fontFamily: "sans-serif" }}>
+                      Add to Bag <ShoppingBag size={12} />
+                    </button>
+                    <p className="text-[9px] text-[#1e1a14]/30 text-center mt-3" style={{ fontFamily: "sans-serif" }}>One of a kind. Once sold, gone.</p>
+                  </div>
+                </div>
+                <button onClick={() => setActivePiece(null)} className="absolute top-4 right-4 text-[#1e1a14]/40 hover:text-[#1e1a14]"><X size={16} /></button>
+              </motion.div>
+            </motion.div>
+          );
+        })()}
+      </AnimatePresence>
+
+      {/* PROCESS */}
+      <section className="bg-[#1e1a14] text-white px-8 md:px-16 py-24">
+        <Reveal className="mb-14">
+          <p className="text-[9px] uppercase tracking-[0.5em] text-[#c9a96e]/50 mb-4" style={{ fontFamily: "sans-serif" }}>How Each Piece is Made</p>
+          <h2 className="text-4xl md:text-5xl leading-tight">The<br />Process</h2>
+        </Reveal>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-white/5">
+          {PROCESS.map((p, i) => (
+            <Reveal key={p.title} delay={i * 0.1} className="bg-[#1e1a14] p-8 border-t-2 border-[#c9a96e]/20">
+              <p.icon size={20} className="text-[#c9a96e]/40 mb-5" />
+              <h3 className="text-xl mb-3">{p.title}</h3>
+              <p className="text-white/40 text-sm leading-relaxed" style={{ fontFamily: "sans-serif" }}>{p.desc}</p>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* TESTIMONIALS */}
+      <section className="px-8 md:px-16 py-24">
+        <Reveal className="mb-10">
+          <p className="text-[9px] uppercase tracking-[0.5em] text-[#8b6b4a] mb-4" style={{ fontFamily: "sans-serif" }}>Collectors</p>
+          <h2 className="text-4xl leading-tight">What They<br />Hold</h2>
+        </Reveal>
+        <div className="relative min-h-[160px] max-w-2xl">
+          <AnimatePresence mode="wait">
+            <motion.div key={activeTestimonial} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.5 }}>
+              <div className="flex gap-1 mb-5">{Array(TESTIMONIALS[activeTestimonial].rating).fill(null).map((_, i) => <Star key={i} size={11} fill="#8b6b4a" className="text-[#8b6b4a]" />)}</div>
+              <p className="text-xl leading-relaxed text-[#1e1a14]/60 mb-5">"{TESTIMONIALS[activeTestimonial].text}"</p>
+              <p className="text-[9px] uppercase tracking-widest text-[#8b6b4a]" style={{ fontFamily: "sans-serif" }}>— {TESTIMONIALS[activeTestimonial].name}</p>
+            </motion.div>
+          </AnimatePresence>
+          <div className="flex gap-2 mt-8">
+            {TESTIMONIALS.map((_, i) => (
+              <button key={i} onClick={() => setActiveTestimonial(i)} className={`h-px rounded-full transition-all ${i === activeTestimonial ? "w-8 bg-[#8b6b4a]" : "w-3 bg-[#1e1a14]/15"}`} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="bg-[#e8e0d5] px-8 md:px-16 py-24 flex flex-col md:flex-row items-center justify-between gap-10">
+        <Reveal>
+          <p className="text-[9px] uppercase tracking-[0.5em] text-[#8b6b4a] mb-4" style={{ fontFamily: "sans-serif" }}>Commission a Piece</p>
+          <h2 className="text-5xl leading-none tracking-tight">Something<br /><em>Made for You.</em></h2>
+          <p className="text-sm text-[#1e1a14]/50 mt-4 max-w-sm leading-relaxed" style={{ fontFamily: "sans-serif" }}>Bespoke commissions accepted twice yearly. 12-week minimum lead time.</p>
+        </Reveal>
+        <Reveal delay={0.2}>
+          <a href="#" className="bg-[#1e1a14] text-white px-10 py-4 text-[10px] uppercase tracking-[0.3em] hover:bg-[#2d2820] transition-colors inline-flex items-center gap-2" style={{ fontFamily: "sans-serif" }}>
+            Enquire About Commission <ArrowRight size={12} />
+          </a>
+        </Reveal>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="bg-[#1e1a14] text-white px-8 md:px-16 py-12 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div>
+          <p className="text-[#c9a96e] uppercase tracking-[0.5em] text-sm mb-1">ARGILE</p>
+          <p className="text-[9px] text-white/30" style={{ fontFamily: "sans-serif" }}>Céramique · Bourgogne, France</p>
+        </div>
+        <div className="flex gap-8 text-[9px] uppercase tracking-widest text-white/30" style={{ fontFamily: "sans-serif" }}>
+          {["Instagram", "Shop", "Commission", "Contact"].map(l => <a key={l} href="#" className="hover:text-white transition-colors">{l}</a>)}
+        </div>
+        <p className="text-[9px] text-white/20 uppercase" style={{ fontFamily: "sans-serif" }}>© 2026 Argile</p>
+      </footer>
     </div>
   );
 }
