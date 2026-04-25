@@ -1,206 +1,275 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-import { useState, useRef } from "react";
+import { motion, useScroll, useTransform, useInView, useMotionValue, useSpring, AnimatePresence } from "framer-motion";
+import { useState, useRef, useEffect, useCallback } from "react";
 import Image from "next/image";
-import { ArrowRight, MoveUpRight, Zap, Terminal, Plus, X, ArrowLeft, MoreHorizontal, MousePointer2 } from "lucide-react";
+import { Film, Camera, Palette, Monitor, PenTool, Award, ChevronDown, Menu, X, ArrowRight, ArrowUpRight, Play } from "lucide-react";
 import "../premium.css";
 
-const PROJECTS = [
-  { id: 1, title: "LUMINA_STUDIO", tag: "Identity", year: "2025", img: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=1000&auto=format&fit=crop", content: "A radical approach to digital presence for a cutting-edge AI research studio. Focus on procedural aesthetics." },
-  { id: 2, title: "VEIL_EDITORIAL", tag: "Fashion", year: "2024", img: "https://images.unsplash.com/photo-1509631179647-0177331693ae?q=80&w=1000&auto=format&fit=crop", content: "Conceptual editorial for a high-end textile house in Paris. Exploring the tension between fabric and skin." },
-  { id: 3, title: "KRYPT_WALLET", tag: "Web3", year: "2025", img: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?q=80&w=1000&auto=format&fit=crop", content: "Reimagining the security interface for the next generation of decentralized finance. Dark HUD focus." },
-  { id: 4, title: "DRIFT_RECORDS", tag: "Music", year: "2023", img: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=1000&auto=format&fit=crop", content: "Sound and visual synthesis for an underground techno label based in Berlin. High-contrast monochromatic design." },
-  { id: 5, title: "VOX_AI", tag: "Technology", year: "2026", img: "https://images.unsplash.com/photo-1531746790731-6c087fdec69a?q=80&w=1000&auto=format&fit=crop", content: "Designing the personality for a sentient vocal interface. Focus on fluid motion and organic waveforms." },
+const DISCIPLINES = [
+  { icon: Film, title: "Film Direction", desc: "Narrative shorts, brand films, and documentary work that moves audiences and moves product.", tag: "Film" },
+  { icon: Camera, title: "Photography", desc: "Editorial portraiture and campaign photography at top fashion weeks and cultural moments.", tag: "Photo" },
+  { icon: Palette, title: "Art Direction", desc: "Visual concepts that define the visual language of a brand for a decade.", tag: "Direction" },
+  { icon: Monitor, title: "Digital Creative", desc: "Interactive experiences and generative campaigns with measurable cultural impact.", tag: "Digital" },
+  { icon: PenTool, title: "Creative Strategy", desc: "Strategic creative frameworks that bridge brand positioning and cultural relevance.", tag: "Strategy" },
+  { icon: Award, title: "Installation", desc: "Site-specific physical installations for galleries, brands, and public spaces globally.", tag: "Installation" },
 ];
 
+const WORK = [
+  { title: "L'Instant Parfait", client: "Chanel", type: "Short Film", img: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=1200&auto=format&fit=crop" },
+  { title: "Human / Machine", client: "Nike", type: "Campaign", img: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=1200&auto=format&fit=crop" },
+  { title: "Terra Nova", client: "Self-Initiated", type: "Installation", img: "https://images.unsplash.com/photo-1547891654-e66ed7ebb968?q=80&w=1200&auto=format&fit=crop" },
+  { title: "Gravity Series", client: "Vogue", type: "Editorial", img: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=1200&auto=format&fit=crop" },
+  { title: "City Pulse", client: "BMW", type: "Brand Film", img: "https://images.unsplash.com/photo-1616530940355-351fabd9524b?q=80&w=1200&auto=format&fit=crop" },
+];
+
+const STATS = [
+  { value: 22, suffix: "+", label: "Years directing" },
+  { value: 140, suffix: "+", label: "Projects delivered" },
+  { value: 28, suffix: "", label: "Cannes entries" },
+  { value: 6, suffix: "", label: "D&AD Pencils" },
+];
+
+const TESTIMONIALS = [
+  { name: "Claire Moreau", role: "VP Creative, Chanel", quote: "They don't just execute a brief — they transform it into something you could never have imagined alone.", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop" },
+  { name: "Jordan Blake", role: "Global CD, Nike", quote: "The Human / Machine campaign changed how we think about athlete creative. It became our benchmark.", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop" },
+  { name: "Mei Lin", role: "Editor-in-Chief, Vogue Asia", quote: "Working with them on Gravity was the most creatively expansive shoot I've experienced in 20 years.", avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=200&auto=format&fit=crop" },
+];
+
+const FAQ = [
+  { q: "What scale of project do you take on?", a: "Everything from a short film for a micro-brand to multi-market campaign for a global house. The deciding factor is creative ambition, not budget." },
+  { q: "How do you approach brand collaborations?", a: "We take an immersive briefing period of 2–4 weeks before any creative is presented. We want to understand the brand at a cellular level before making anything." },
+  { q: "Do you work with agencies or direct brands?", a: "Both. We collaborate closely with agencies when they're right for the project, and work direct with brands who want unmediated creative leadership." },
+  { q: "Are you open to self-initiated projects?", a: "Yes — self-initiated work is where some of our most significant work has emerged. We allocate time for these projects every year." },
+];
+
+function Reveal({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-60px" });
+  return (
+    <motion.div ref={ref} initial={{ opacity: 0, y: 35 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.7, delay, ease: [0.25, 0.1, 0.25, 1] }} className={className}>
+      {children}
+    </motion.div>
+  );
+}
+
+function Counter({ target, suffix = "", label }: { target: number; suffix?: string; label: string }) {
+  const [count, setCount] = useState(0);
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true });
+  useEffect(() => {
+    if (!inView) return;
+    const steps = 50;
+    let cur = 0;
+    const t = setInterval(() => {
+      cur += target / steps;
+      if (cur >= target) { setCount(target); clearInterval(t); }
+      else setCount(Math.floor(cur));
+    }, 1800 / steps);
+    return () => clearInterval(t);
+  }, [inView, target]);
+  return (
+    <div ref={ref} className="text-center">
+      <div className="text-5xl font-black text-white mb-1">{count}{suffix}</div>
+      <div className="text-sm text-white/40 uppercase tracking-wider">{label}</div>
+    </div>
+  );
+}
+
 export default function CreativeDirectorSPA() {
-  const [view, setView] = useState<"catalog" | "project" | "info">("catalog");
-  const [activeProject, setActiveProject] = useState(0);
-  const constraintsRef = useRef(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [activeT, setActiveT] = useState(0);
+  const [hoveredWork, setHoveredWork] = useState<number | null>(null);
+  const { scrollY } = useScroll();
+  const heroY = useTransform(scrollY, [0, 600], [0, 160]);
+  const heroScale = useTransform(scrollY, [0, 600], [1, 1.1]);
+
+  const mx = useMotionValue(0); const my = useMotionValue(0);
+  const sx = useSpring(mx, { stiffness: 120, damping: 20 }); const sy = useSpring(my, { stiffness: 120, damping: 20 });
+
+  useEffect(() => {
+    const t = setInterval(() => setActiveT(p => (p + 1) % TESTIMONIALS.length), 5500);
+    return () => clearInterval(t);
+  }, []);
 
   return (
-    <div className="premium-theme bg-[#030303] text-white min-h-screen overflow-hidden selection:bg-white selection:text-black font-mono">
-      
-      {/* HUD Navigation */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-start mix-blend-difference uppercase text-[10px] font-black tracking-[0.5em]">
-        <button onClick={() => setView("catalog")} className="text-2xl font-black italic tracking-tighter hover:opacity-100 transition-opacity">
-           LIQUID_DRIVE&trade;
-        </button>
-        <div className="hidden md:flex flex-col items-end gap-2 opacity-30 group hover:opacity-100 transition-opacity cursor-pointer" onClick={() => setView("info")}>
-           <span>Info / Expertise</span>
-           <div className="w-16 h-[1px] bg-white group-hover:w-24 transition-all"></div>
+    <div className="min-h-screen bg-[#0c0c0c] text-white overflow-x-hidden">
+      <motion.nav initial={{ y: -80 }} animate={{ y: 0 }} transition={{ duration: 0.6 }} className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-12 py-5 bg-[#0c0c0c]/90 backdrop-blur-xl border-b border-white/5">
+        <div className="font-black text-lg tracking-tight">MAISON CRÉATIF</div>
+        <div className="hidden md:flex items-center gap-10 text-sm text-white/40">
+          {["Work", "Disciplines", "Studio", "Contact"].map(item => (
+            <a key={item} href="#" className="hover:text-white transition-colors">{item}</a>
+          ))}
         </div>
-      </nav>
+        <motion.button style={{ x: sx, y: sy }} onMouseMove={(e) => { const r = e.currentTarget.getBoundingClientRect(); mx.set((e.clientX - r.left - r.width / 2) * 0.3); my.set((e.clientY - r.top - r.height / 2) * 0.3); }} onMouseLeave={() => { mx.set(0); my.set(0); }} className="hidden md:block px-6 py-3 bg-white text-black text-sm font-black rounded-xl hover:bg-gray-100 transition-colors">
+          Brief us
+        </motion.button>
+        <button className="md:hidden text-white" onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}</button>
+      </motion.nav>
 
-      <AnimatePresence mode="wait">
-        
-        {/* CATALOG VIEW (HORIZONTAL DRAG) */}
-        {view === "catalog" && (
-          <motion.div key="catalog" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-screen flex items-center">
-             <div className="absolute inset-x-12 top-1/2 -translate-y-1/2 pointer-events-none z-0 hidden lg:block">
-                <div className="text-[25vh] font-black italic opacity-[0.02] tracking-tighter leading-none select-none">
-                   CREATIVE_DIRECTOR_2026
-                </div>
-             </div>
-
-             <motion.div 
-               ref={constraintsRef}
-               className="px-[15vw] flex gap-12 md:gap-24 cursor-grab active:cursor-grabbing h-[60vh] relative z-10"
-               drag="x"
-               dragConstraints={{ left: -1800, right: 0 }}
-               transition={{ type: "spring", damping: 40, stiffness: 150 }}
-             >
-                {PROJECTS.map((p, i) => (
-                  <motion.div 
-                    key={p.id}
-                    onClick={() => { setActiveProject(i); setView("project"); }}
-                    className="relative min-w-[70vw] md:min-w-[45vw] h-full group bg-white/5 border border-white/5 rounded-[3rem] overflow-hidden p-8 md:p-12 flex flex-col justify-between transition-colors hover:bg-white/10"
-                  >
-                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[35vh] font-black italic opacity-[0.03] pointer-events-none select-none group-hover:opacity-[0.08] transition-opacity">
-                        0{i + 1}
-                     </div>
-
-                     <div className="relative z-10 flex justify-between items-start">
-                        <div>
-                           <span className="text-[10px] uppercase font-black tracking-widest opacity-20 block mb-2">{p.tag}</span>
-                           <h2 className="text-5xl md:text-7xl font-black uppercase italic tracking-tighter leading-none">{p.title}</h2>
-                        </div>
-                        <div className="w-16 h-16 rounded-full border border-white/10 flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
-                           <MoveUpRight className="w-6 h-6" />
-                        </div>
-                     </div>
-
-                     <div className="relative z-10 flex justify-between items-end">
-                        <div className="max-w-[250px] text-[10px] uppercase font-bold tracking-widest opacity-30 leading-relaxed group-hover:opacity-60 transition-opacity">
-                           {p.content}
-                        </div>
-                        <div className="text-right">
-                           <div className="text-xl font-black italic opacity-20 transition-all group-hover:opacity-100">REV_0{i+1}</div>
-                        </div>
-                     </div>
-
-                     {/* Partial Floating Image */}
-                     <div className="absolute right-[-20%] bottom-[-10%] w-[120%] aspect-square opacity-[0.05] group-hover:opacity-100 transition-all duration-[1.5s] grayscale group-hover:grayscale-0 pointer-events-none">
-                        <Image src={p.img} alt={p.title} fill className="object-contain" />
-                     </div>
-                  </motion.div>
-                ))}
-             </motion.div>
-
-             <div className="fixed bottom-24 left-1/2 -translate-x-1/2 flex items-center gap-6 opacity-20 font-black text-[10px] uppercase tracking-[0.5em]">
-                <MousePointer2 className="w-4 h-4" /> Drag to explore
-             </div>
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-40 bg-[#0c0c0c] flex flex-col items-center justify-center gap-8 text-3xl font-black">
+            {["Work", "Disciplines", "Studio", "Contact"].map(item => <a key={item} href="#" onClick={() => setMenuOpen(false)}>{item}</a>)}
           </motion.div>
         )}
-
-        {/* PROJECT DETAIL VIEW */}
-        {view === "project" && (
-          <motion.div key="project" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen">
-             <div className="fixed top-12 left-12 z-[60] flex gap-4">
-                <button onClick={() => setView("catalog")} className="bg-white text-black p-5 rounded-full hover:scale-110 transition-transform shadow-2xl">
-                   <ArrowLeft className="w-6 h-6" />
-                </button>
-             </div>
-
-             <main className="grid grid-cols-1 lg:grid-cols-12 min-h-screen">
-                <div className="lg:col-span-8 relative h-[60vh] lg:h-screen bg-[#111]">
-                   <Image src={PROJECTS[activeProject].img} alt="Hero" fill className="object-cover" priority />
-                   <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
-                   <div className="absolute bottom-12 left-12">
-                      <h1 className="text-6xl md:text-9xl font-black italic uppercase tracking-tighter leading-none">{PROJECTS[activeProject].title}</h1>
-                   </div>
-                </div>
-                
-                <div className="lg:col-span-4 p-12 lg:p-24 bg-black flex flex-col justify-center gap-16">
-                   <div>
-                      <span className="text-[10px] uppercase tracking-[0.8em] font-black opacity-30 mb-8 block">Project_Overview</span>
-                      <p className="text-2xl leading-relaxed italic opacity-80 uppercase tracking-tight">
-                         {PROJECTS[activeProject].content}
-                      </p>
-                   </div>
-
-                   <div className="space-y-8 opacity-40">
-                      {[
-                        { l: "Year", v: PROJECTS[activeProject].year },
-                        { l: "Service", v: PROJECTS[activeProject].tag },
-                        { l: "Protocol", v: "AES_SYNTH_09" },
-                      ].map((s, i) => (
-                        <div key={i} className="flex justify-between border-b border-white/10 pb-4">
-                           <span className="text-[10px] uppercase font-black">{s.l}</span>
-                           <span className="text-[10px] uppercase font-black">{s.v}</span>
-                        </div>
-                      ))}
-                   </div>
-
-                   <button onClick={() => setView("catalog")} className="w-full py-8 border border-white/20 text-[10px] font-black uppercase tracking-[1em] hover:bg-white hover:text-black transition-all">
-                      Browse_Next
-                   </button>
-                </div>
-             </main>
-          </motion.div>
-        )}
-
-        {/* INFO VIEW */}
-        {view === "info" && (
-          <motion.div key="info" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative z-10 p-12 md:p-32 max-w-7xl mx-auto min-h-screen flex flex-col justify-center">
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-end mb-32">
-                <div>
-                   <h1 className="text-8xl md:text-[12vw] font-black italic uppercase italic tracking-tighter leading-[0.85] mb-12">System_Error <br /> Design.</h1>
-                   <p className="text-2xl md:text-3xl font-light opacity-60 leading-relaxed uppercase tracking-widest">
-                      We operate at the fringe of visual logic. We design for the future that refuses to follow the grid.
-                   </p>
-                </div>
-                <div className="text-right">
-                   <div className="text-8xl font-black italic opacity-10">404</div>
-                   <div className="text-[10px] uppercase font-black tracking-widest opacity-40">Protocols established since 2012</div>
-                </div>
-             </div>
-
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-12 border-t border-white/5 pt-12">
-                {['Direction', 'Execution', 'Annihilation'].map((t, i) => (
-                  <div key={i} className="group cursor-pointer">
-                     <span className="text-[10px] font-black opacity-20 block mb-4">0{i+1}</span>
-                     <h3 className="text-4xl font-black uppercase italic tracking-tighter group-hover:text-red-500 transition-colors mb-4">{t}</h3>
-                     <p className="text-[10px] opacity-30 uppercase font-black leading-relaxed tracking-widest">Procedural generation combined with human intuition to create undeniable impact.</p>
-                  </div>
-                ))}
-             </div>
-
-             <button onClick={() => setView("catalog")} className="mt-24 self-start flex items-center gap-6 group">
-                <div className="w-16 h-16 rounded-full bg-white text-black flex items-center justify-center group-hover:scale-110 transition-transform">
-                   <ArrowLeft className="w-6 h-6" />
-                </div>
-                <span className="text-[10px] font-black uppercase tracking-[1em]">Back_to_catalog</span>
-             </button>
-          </motion.div>
-        )}
-
       </AnimatePresence>
 
-      {/* Global HUD Data Bar */}
-      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em]">
-         <div className="flex gap-12">
-            <span>Lat: 35.6762 | Long: 139.6503</span>
-            <span>Flux: Stable</span>
-         </div>
-         <div className="flex gap-4 items-end">
-            <div className="text-right leading-tight">
-               Aeon System <br /> v4.0.21
-            </div>
-            <div className="flex gap-[2px] h-3">
-               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-full bg-white`}></div>)}
-            </div>
-         </div>
-      </footer>
+      {/* Hero */}
+      <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        <motion.div style={{ y: heroY, scale: heroScale }} className="absolute inset-0">
+          <Image src="https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=2000&auto=format&fit=crop" alt="Creative Director" fill className="object-cover opacity-25" unoptimized />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#0c0c0c]/40 via-transparent to-[#0c0c0c]" />
+        </motion.div>
 
-      <style>{`
-        .glass {
-          background: rgba(255, 255, 255, 0.05);
-          backdrop-filter: blur(40px);
-          -webkit-backdrop-filter: blur(40px);
-        }
-      `}</style>
+        <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 pt-24 w-full">
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="text-white/40 text-xs uppercase tracking-[0.3em] mb-8">
+            Film · Photography · Art Direction · Since 2002
+          </motion.p>
+          <motion.h1 initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.1 }} className="text-[12vw] md:text-[10vw] font-black leading-none tracking-tight mb-12">
+            WE MAKE<br />CULTURE<br /><em className="not-italic text-white/30">MOVE.</em>
+          </motion.h1>
+          <div className="flex items-end justify-between flex-wrap gap-8">
+            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="text-xl text-white/60 max-w-sm leading-relaxed">
+              Award-winning creative studio working at the intersection of film, photography, and cultural strategy.
+            </motion.p>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }} className="flex gap-4">
+              <motion.a href="#" whileHover={{ scale: 1.03 }} className="px-8 py-4 bg-white text-black font-black rounded-xl flex items-center gap-2 hover:bg-gray-100 transition-colors">
+                See work <ArrowRight className="w-4 h-4" />
+              </motion.a>
+              <motion.a href="#" whileHover={{ scale: 1.03 }} className="px-8 py-4 border border-white/10 text-white font-bold rounded-xl hover:bg-white/5 transition-colors flex items-center gap-2">
+                <Play className="w-4 h-4" /> Showreel
+              </motion.a>
+            </motion.div>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <section className="py-20 px-6 bg-white/[0.02] border-y border-white/5">
+        <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-12">
+          {STATS.map((s, i) => <Reveal key={s.label} delay={i * 0.1}><Counter target={s.value} suffix={s.suffix} label={s.label} /></Reveal>)}
+        </div>
+      </section>
+
+      {/* Work */}
+      <section className="py-24 px-6 md:px-12 max-w-7xl mx-auto">
+        <Reveal className="mb-16">
+          <p className="text-white/40 text-xs uppercase tracking-widest mb-3">Selected work</p>
+          <h2 className="text-5xl font-black">The work</h2>
+        </Reveal>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {WORK.map((w, i) => (
+            <Reveal key={w.title} delay={i * 0.08} className={i === 0 ? "md:row-span-2" : ""}>
+              <motion.div
+                className={`relative rounded-2xl overflow-hidden cursor-pointer ${i === 0 ? "h-[580px]" : "h-64"}`}
+                onHoverStart={() => setHoveredWork(i)} onHoverEnd={() => setHoveredWork(null)}
+                whileHover={{ scale: 1.01 }}
+              >
+                <Image src={w.img} alt={w.title} fill className="object-cover transition-transform duration-700" style={{ transform: hoveredWork === i ? "scale(1.05)" : "scale(1)" }} unoptimized />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+                <AnimatePresence>
+                  {hoveredWork === i && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                        <ArrowUpRight className="w-6 h-6 text-white" />
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+                <div className="absolute bottom-6 left-6">
+                  <p className="text-white/50 text-xs mb-1">{w.client} · {w.type}</p>
+                  <p className="font-black text-white text-xl">{w.title}</p>
+                </div>
+              </motion.div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* Disciplines */}
+      <section className="py-24 px-6 md:px-12 max-w-7xl mx-auto">
+        <Reveal className="mb-16">
+          <p className="text-white/40 text-xs uppercase tracking-widest mb-3">Disciplines</p>
+          <h2 className="text-5xl font-black">What we do</h2>
+        </Reveal>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {DISCIPLINES.map((d, i) => (
+            <Reveal key={d.title} delay={i * 0.07}>
+              <motion.div whileHover={{ y: -6 }} className="p-8 border border-white/5 rounded-2xl hover:border-white/10 transition-colors group">
+                <span className="inline-block px-3 py-1 text-xs font-bold bg-white/10 text-white/60 rounded-full mb-4">{d.tag}</span>
+                <d.icon className="w-6 h-6 text-white mb-4" />
+                <h3 className="font-black text-white text-lg mb-3">{d.title}</h3>
+                <p className="text-white/40 text-sm leading-relaxed">{d.desc}</p>
+                <div className="mt-6 flex items-center gap-1 text-sm text-white/40 group-hover:text-white transition-colors font-bold">Learn more <ArrowUpRight className="w-4 h-4" /></div>
+              </motion.div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="py-24 bg-white text-black px-6">
+        <div className="max-w-3xl mx-auto text-center">
+          <Reveal><h2 className="text-4xl font-black mb-16">Client perspective</h2></Reveal>
+          <AnimatePresence mode="wait">
+            <motion.div key={activeT} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.5 }}>
+              <p className="text-2xl font-black leading-tight mb-8">"{TESTIMONIALS[activeT].quote}"</p>
+              <div className="flex items-center justify-center gap-3">
+                <Image src={TESTIMONIALS[activeT].avatar} alt={TESTIMONIALS[activeT].name} width={48} height={48} className="rounded-full object-cover" unoptimized />
+                <div className="text-left">
+                  <p className="font-bold">{TESTIMONIALS[activeT].name}</p>
+                  <p className="text-gray-500 text-sm">{TESTIMONIALS[activeT].role}</p>
+                </div>
+              </div>
+            </motion.div>
+          </AnimatePresence>
+          <div className="flex justify-center gap-2 mt-8">
+            {TESTIMONIALS.map((_, i) => <button key={i} onClick={() => setActiveT(i)} className={`w-2 h-2 rounded-full transition-colors ${i === activeT ? "bg-black" : "bg-black/20"}`} />)}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="py-24 px-6 max-w-3xl mx-auto">
+        <Reveal className="mb-12"><h2 className="text-4xl font-black">How we work</h2></Reveal>
+        <div className="space-y-4">
+          {FAQ.map((f, i) => (
+            <Reveal key={i} delay={i * 0.05}>
+              <div className="border-b border-white/10">
+                <button onClick={() => setOpenFaq(openFaq === i ? null : i)} className="w-full flex items-center justify-between py-6 text-left">
+                  <span className="font-bold">{f.q}</span>
+                  <motion.div animate={{ rotate: openFaq === i ? 180 : 0 }}><ChevronDown className="w-5 h-5 text-white/40 shrink-0" /></motion.div>
+                </button>
+                <AnimatePresence>
+                  {openFaq === i && (
+                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}>
+                      <p className="pb-6 text-white/50 text-sm leading-relaxed">{f.a}</p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="py-32 px-6 bg-white text-black">
+        <Reveal className="max-w-4xl mx-auto text-center">
+          <h2 className="text-6xl md:text-8xl font-black leading-none mb-8">Let's make<br />something<br />unforgettable.</h2>
+          <motion.a href="#" whileHover={{ scale: 1.03 }} className="inline-flex items-center gap-2 px-10 py-5 bg-black text-white font-black text-lg rounded-2xl hover:bg-gray-900 transition-colors">
+            Start a conversation <ArrowRight className="w-5 h-5" />
+          </motion.a>
+        </Reveal>
+      </section>
+
+      <footer className="py-12 px-6 max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-white/30 border-t border-white/5">
+        <div className="font-black text-white">MAISON CRÉATIF</div>
+        <p>© 2026 Maison Créatif. All rights reserved.</p>
+        <div className="flex gap-6">{["Privacy", "Terms", "Instagram"].map(l => <a key={l} href="#" className="hover:text-white transition-colors">{l}</a>)}</div>
+      </footer>
     </div>
   );
 }

@@ -1,217 +1,271 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-import { useState, useRef } from "react";
+import { motion, useScroll, useTransform, useInView, AnimatePresence } from "framer-motion";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { ArrowUpRight, X, Menu, Search, Filter, Globe, Zap, Shield, Plus, Play, ChevronRight, Share2 } from "lucide-react";
+import { BookMarked, Archive, Search, Clock, Tag, ChevronDown, Menu, X, ArrowRight, ArrowUpRight, Calendar } from "lucide-react";
 import "../premium.css";
 
-const PROJECTS = [
-  { id: 1, name: "AETHEL_STUDIOS", tag: "Creative", img: "https://images.unsplash.com/photo-1558655146-d09347e92766?q=80&w=1000&auto=format&fit=crop", desc: "A structural exploration of digital identity and presence. Built on the edge." },
-  { id: 2, name: "SILK_OS", tag: "Interface", img: "https://images.unsplash.com/photo-1549490349-8643362247b5?q=80&w=1000&auto=format&fit=crop", desc: "Fluid, organic interactions inspired by the movement of raw silk and digital mesh." },
-  { id: 3, name: "ORBIT_X", tag: "Hardware", img: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=1000&auto=format&fit=crop", desc: "Next-gen computing cores forged in the heart of industrial minimalism." },
-  { id: 4, name: "NEO_TYPE", tag: "Visual", img: "https://images.unsplash.com/photo-1542382156909-9ae37b3f56fd?q=80&w=1000&auto=format&fit=crop", desc: "Experimental typography systems designed for high-end editorial narratives." },
+const ESSAYS = [
+  { title: "On the Permanence of Impermanence", cat: "Philosophy", year: "2024", read: "14 min", img: "https://images.unsplash.com/photo-1504711434969-e33886168f5c?q=80&w=1200&auto=format&fit=crop", featured: true },
+  { title: "The Economy of Attention in Late Modernity", cat: "Society", year: "2023", read: "9 min", img: "https://images.unsplash.com/photo-1516979187457-637abb4f9353?q=80&w=1200&auto=format&fit=crop", featured: false },
+  { title: "Architecture as Political Statement", cat: "Culture", year: "2023", read: "11 min", img: "https://images.unsplash.com/photo-1457369804613-52c61a468e7d?q=80&w=1200&auto=format&fit=crop", featured: false },
+  { title: "Against Productivity: A Manifesto", cat: "Philosophy", year: "2022", read: "7 min", img: "https://images.unsplash.com/photo-1495020689067-958852a7765e?q=80&w=1200&auto=format&fit=crop", featured: false },
+  { title: "Memory, Place, and the Digital Archive", cat: "Tech", year: "2022", read: "12 min", img: "https://images.unsplash.com/photo-1547891654-e66ed7ebb968?q=80&w=1200&auto=format&fit=crop", featured: false },
+  { title: "The Topology of Grief", cat: "Society", year: "2021", read: "8 min", img: "https://images.unsplash.com/photo-1541701494587-cb58502866ab?q=80&w=1200&auto=format&fit=crop", featured: false },
 ];
 
+const YEARS = ["All", "2024", "2023", "2022", "2021"];
+const CATS = ["All", "Philosophy", "Society", "Culture", "Tech"];
+
+const STATS = [
+  { value: 180, suffix: "+", label: "Published essays" },
+  { value: 9, suffix: " years", label: "Archive depth" },
+  { value: 42, suffix: "", label: "Contributing voices" },
+  { value: 3, suffix: "M+", label: "Words in archive" },
+];
+
+const TESTIMONIALS = [
+  { name: "Sofia Beltrán", role: "Professor of Literature, Madrid", quote: "The archive is indispensable. I assign it to every graduate seminar I teach.", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop" },
+  { name: "Thomas Hale", role: "Cultural Editor, FT", quote: "There is no outlet doing long-form criticism at this level. It's a national treasure.", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop" },
+  { name: "Naomi Okafor", role: "Curator, Serpentine Gallery", quote: "They think in essays the way galleries think in exhibitions — with curatorial depth.", avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=200&auto=format&fit=crop" },
+];
+
+const FAQ = [
+  { q: "How far back does the archive go?", a: "Our full archive spans from 2015 to present. All 180+ essays are available to subscribers. The most recent 12 months are partially open-access." },
+  { q: "Can I cite these essays in academic work?", a: "Yes. All essays have persistent DOI links. We follow Chicago citation style. Contact us if you need any additional publication details for citations." },
+  { q: "Are guest essays commissioned or submitted?", a: "Both. We commission most essays but accept unsolicited pitches from thinkers whose work aligns with our editorial focus. A pitch document is on our site." },
+  { q: "Is there a print edition?", a: "We publish an annual print anthology each December — a curated selection of the year's best essays, beautifully designed and printed on archival paper." },
+];
+
+function Reveal({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-60px" });
+  return (
+    <motion.div ref={ref} initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.7, delay, ease: [0.25, 0.1, 0.25, 1] }} className={className}>
+      {children}
+    </motion.div>
+  );
+}
+
+function Counter({ target, suffix = "", label }: { target: number; suffix?: string; label: string }) {
+  const [count, setCount] = useState(0);
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true });
+  useEffect(() => {
+    if (!inView) return;
+    const steps = 50;
+    let cur = 0;
+    const t = setInterval(() => {
+      cur += target / steps;
+      if (cur >= target) { setCount(target); clearInterval(t); }
+      else setCount(Math.floor(cur));
+    }, 2000 / steps);
+    return () => clearInterval(t);
+  }, [inView, target]);
+  return (
+    <div ref={ref} className="text-center">
+      <div className="text-4xl font-black text-[#1a1a1a] mb-1">{count}{suffix}</div>
+      <div className="text-sm text-[#9ca3af]">{label}</div>
+    </div>
+  );
+}
+
 export default function EditorialArchiveSPA() {
-  const [view, setView] = useState<"index" | "story" | "collect">("index");
-  const [activeItem, setActiveItem] = useState(0);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [activeYear, setActiveYear] = useState("All");
+  const [activeCat, setActiveCat] = useState("All");
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [activeT, setActiveT] = useState(0);
+  const { scrollY } = useScroll();
+  const heroY = useTransform(scrollY, [0, 500], [0, 100]);
+
+  useEffect(() => {
+    const t = setInterval(() => setActiveT(p => (p + 1) % TESTIMONIALS.length), 6000);
+    return () => clearInterval(t);
+  }, []);
+
+  const filtered = ESSAYS.filter(e =>
+    (activeYear === "All" || e.year === activeYear) &&
+    (activeCat === "All" || e.cat === activeCat)
+  );
 
   return (
-    <div className="premium-theme bg-[#050505] text-white min-h-screen selection:bg-white selection:text-black font-sans overflow-x-hidden">
-      
-      {/* Background Mesh */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute top-[-20%] left-[-10%] w-[100vw] h-[100vw] bg-gradient-to-br from-indigo-950/20 to-transparent blur-[150px] rounded-full" />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.02] mix-blend-overlay" />
-      </div>
-
-      {/* Global Navigation */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-center bg-black/20 backdrop-blur-3xl border-b border-white/5">
-        <button onClick={() => setView("index")} className="text-xl font-black italic tracking-tighter hover:scale-105 transition-transform">
-           ARCHIVE_CORP&trade;
-        </button>
-        <div className="hidden md:flex gap-12 text-[10px] font-black uppercase tracking-[0.5em] opacity-30">
-           <button onClick={() => setView("index")} className={`hover:opacity-100 transition-opacity ${view === 'index' ? 'text-white opacity-100 underline decoration-white underline-offset-8' : ''}`}>THE_INDEX</button>
-           <button onClick={() => setView("collect")} className={`hover:opacity-100 transition-opacity ${view === 'collect' ? 'text-white opacity-100 underline decoration-white underline-offset-8' : ''}`}>THE_COLLECTIVE</button>
+    <div className="min-h-screen bg-[#f8f6f3] text-[#1a1a1a] overflow-x-hidden">
+      <motion.nav initial={{ y: -80 }} animate={{ y: 0 }} transition={{ duration: 0.6 }} className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-12 py-5 bg-[#f8f6f3]/95 backdrop-blur-md border-b border-black/5">
+        <div className="flex items-center gap-2">
+          <Archive className="w-4 h-4" />
+          <span className="font-black text-lg tracking-tight font-serif">The Archive</span>
         </div>
-        <div className="flex items-center gap-8">
-           <Search className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-           <Menu className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
+        <div className="hidden md:flex items-center gap-8 text-sm text-[#9ca3af]">
+          {["Essays", "Authors", "Themes", "About", "Print"].map(item => (
+            <a key={item} href="#" className="hover:text-[#1a1a1a] transition-colors">{item}</a>
+          ))}
         </div>
-      </nav>
+        <div className="hidden md:flex items-center gap-4">
+          <button className="flex items-center gap-2 text-sm text-[#9ca3af] hover:text-[#1a1a1a] transition-colors">
+            <Search className="w-4 h-4" /> Search
+          </button>
+          <motion.button whileHover={{ scale: 1.02 }} className="px-5 py-2 bg-[#1a1a1a] text-white text-sm font-bold rounded-lg hover:bg-black transition-colors">
+            Subscribe
+          </motion.button>
+        </div>
+        <button className="md:hidden" onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}</button>
+      </motion.nav>
 
-      <AnimatePresence mode="wait">
-        
-        {/* THE INDEX VIEW (GRID) */}
-        {view === "index" && (
-          <motion.div key="index" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-48 pb-32 px-8">
-             <header className="mb-32 flex flex-col md:flex-row justify-between items-end gap-12 border-b border-white/10 pb-10">
-                <h1 className="text-7xl md:text-[12vw] font-black italic uppercase tracking-tighter leading-[0.75]">
-                   Structural <br /> <span className="text-transparent" style={{ WebkitTextStroke: '1px rgba(255,255,255,0.3)' }}>Narratives.</span>
-                </h1>
-                <div className="text-right text-[10px] font-black uppercase tracking-widest opacity-20">Protocol_Archive // v4.2</div>
-             </header>
-
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-24">
-                {PROJECTS.map((p, i) => (
-                  <motion.div 
-                    key={p.id} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                    className="group flex flex-col cursor-pointer border-l-2 border-white/0 hover:border-white transition-all pl-0 hover:pl-8"
-                    onClick={() => { setActiveItem(i); setView("story"); }}
-                  >
-                     <div className="relative aspect-video bg-white/5 overflow-hidden mb-12 rounded-[2rem] border border-white/5">
-                        <Image src={p.img} alt={p.name} fill className="object-cover group-hover:scale-110 transition-transform duration-[2s] opacity-40 group-hover:opacity-100 grayscale group-hover:grayscale-0" />
-                        <div className="absolute top-12 left-12 flex gap-4">
-                           <div className="p-3 bg-black/60 backdrop-blur-xl rounded-full border border-white/10">
-                              <Plus className="w-4 h-4 text-white" />
-                           </div>
-                        </div>
-                        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60" />
-                     </div>
-                     <div className="flex justify-between items-start pr-8">
-                        <div>
-                           <span className="text-[10px] uppercase font-black tracking-[0.4em] opacity-30 mb-2 block">{p.tag}</span>
-                           <h3 className="text-4xl md:text-5xl font-black italic uppercase tracking-tighter leading-none mb-6 group-hover:text-white transition-colors">{p.name}</h3>
-                        </div>
-                        <div className="text-2xl font-black italic tracking-tighter opacity-10 group-hover:opacity-100 transition-all font-mono">/0{p.id}</div>
-                     </div>
-                     <p className="text-lg font-light italic opacity-40 max-w-sm uppercase tracking-tight">{p.desc}</p>
-                     <button className="flex items-center gap-4 text-[9px] font-black tracking-[0.5em] opacity-20 group-hover:opacity-100 transition-all group-hover:gap-8 border-t border-white/5 pt-8 mt-12 w-full">
-                        ACTIVATE_STUDY <ArrowUpRight className="w-4 h-4" />
-                     </button>
-                  </motion.div>
-                ))}
-             </div>
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-40 bg-[#f8f6f3] flex flex-col items-center justify-center gap-8 text-2xl font-serif font-black">
+            {["Essays", "Authors", "Themes", "About"].map(item => <a key={item} href="#" onClick={() => setMenuOpen(false)}>{item}</a>)}
           </motion.div>
         )}
-
-        {/* THE STORY VIEW (DETAIL) */}
-        {view === "story" && (
-          <motion.div key="story" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen">
-             <button onClick={() => setView("index")} className="fixed top-12 left-12 z-[60] bg-white text-black p-5 rounded-full hover:scale-110 transition-transform shadow-2xl">
-                <X className="w-6 h-6" />
-             </button>
-
-             <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen">
-                <div className="lg:col-span-12 relative flex items-center justify-center p-8 md:p-24 overflow-hidden h-screen">
-                   <div className="absolute inset-0 z-[-1]">
-                      <Image src={PROJECTS[activeItem].img} alt="Background" fill className="object-cover opacity-20 grayscale brightness-50" />
-                   </div>
-                   
-                   <div className="max-w-[1400px] w-full grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10">
-                      <motion.div initial={{ scale: 1.2, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1.5 }} className="relative aspect-[4/5] w-full rounded-[4rem] overflow-hidden border border-white/10 group shadow-2xl">
-                         <Image src={PROJECTS[activeItem].img} alt="Story" fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[3s]" priority />
-                         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60" />
-                         <div className="absolute bottom-12 left-12 right-12 flex justify-between items-center">
-                            <span className="text-[10px] font-black tracking-[0.5em] uppercase italic opacity-40">Series_Alpha</span>
-                            <Share2 className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-                         </div>
-                      </motion.div>
-
-                      <div className="flex flex-col justify-center space-y-12">
-                         <div className="space-y-6">
-                            <span className="text-[10px] uppercase tracking-[1em] font-black text-white/40 mb-8 block underline decoration-white/20 underline-offset-8 italic">Case_Study // 0x442_B</span>
-                            <h1 className="text-6xl md:text-8xl font-black italic uppercase tracking-tighter leading-none text-white">{PROJECTS[activeItem].name}</h1>
-                            <div className="text-4xl font-black italic tracking-tighter opacity-10">Status: ARCHIVED</div>
-                         </div>
-
-                         <p className="text-2xl font-light italic leading-relaxed uppercase tracking-tight opacity-40">
-                            {PROJECTS[activeItem].desc} Every pixel is a dialogue between human machine interface and organic structure.
-                         </p>
-
-                         <div className="grid grid-cols-2 gap-12 py-12 border-y border-white/10">
-                            {[
-                              { l: "Year", v: "2026.04" },
-                              { l: "Client", v: "Aeon_Labs" },
-                              { l: "Protocol", v: "High_End_UX" },
-                              { l: "Security", v: "0_Latency" },
-                            ].map((s, i) => (
-                              <div key={i} className="flex gap-6 items-center">
-                                 <div className="w-2 h-2 rounded-full bg-white opacity-20" />
-                                 <div>
-                                    <div className="text-[10px] font-black opacity-30 uppercase tracking-widest mb-1 italic">{s.l}</div>
-                                    <div className="text-sm font-black uppercase italic tracking-tighter text-white">{s.v}</div>
-                                 </div>
-                              </div>
-                            ))}
-                         </div>
-
-                         <button onClick={() => setView("index")} className="w-full py-8 bg-white text-black font-black uppercase text-xs tracking-[1em] hover:bg-black hover:text-white border border-white transition-all shadow-2xl skew-x-[-10deg]">
-                            Explore_Next_Cycle
-                         </button>
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
-        {/* THE COLLECTIVE VIEW (INFO) */}
-        {view === "collect" && (
-          <motion.div key="collect" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen">
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center">
-                <div className="relative aspect-square glass rounded-[4rem] p-12 overflow-hidden border border-white/10 group">
-                   <Image src="https://images.unsplash.com/photo-1541829070764-84a7d30dee62?q=80&w=1000&auto=format&fit=crop" alt="The Void" fill className="object-cover opacity-20 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-[2s]" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-[#050505] to-transparent" />
-                   <div className="absolute bottom-12 left-12 right-12 flex justify-between items-center opacity-40">
-                      <span className="text-[10px] font-black tracking-widest uppercase italic">Berlin_HQ</span>
-                      <Activity className="w-5 h-5 animate-pulse" />
-                   </div>
-                </div>
-                <div className="space-y-12">
-                   <span className="text-[10px] uppercase font-black tracking-[1.5em] opacity-30 block">The_Philosophical_Void</span>
-                   <h2 className="text-7xl md:text-9xl font-black italic tracking-tighter leading-none text-white uppercase">The <br/> Pulse.</h2>
-                   <p className="text-2xl md:text-3xl font-light italic opacity-60 leading-relaxed uppercase tracking-tight">
-                      We treat architecture as code. Every structure is a function of its environmental variables and tectonic intent. 100% precision. Zero noise.
-                   </p>
-                   <div className="space-y-12 pt-12 border-t border-white/10">
-                      {[
-                         { icon: <Zap className="w-6 h-6" />, t: "Adaptive Flow", d: "Zero-latency workflows built on a proprietary decentralized node network." },
-                         { icon: <Globe className="w-6 h-6" />, t: "Global Vision", d: "A synthesis of cultural perspectives, from Tokyo's tech to Milan's minimalism." },
-                      ].map((item, i) => (
-                        <div key={i} className="flex gap-8 group">
-                           <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white group-hover:bg-white group-hover:text-black transition-all">
-                              {item.icon}
-                           </div>
-                           <div>
-                              <h4 className="text-2xl font-black uppercase italic tracking-tighter text-white">{item.t}</h4>
-                              <p className="text-[10px] opacity-20 uppercase tracking-[0.3em] font-black mt-2 leading-relaxed">{item.d}</p>
-                           </div>
-                        </div>
-                      ))}
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
       </AnimatePresence>
 
-      {/* Global Status HUD */}
-      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em] italic">
-         <div className="flex gap-12 text-white">
-            <span>Archive_Node:BERLIN</span>
-            <div className="flex gap-1">
-               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-3 bg-white opacity-${i*20}`}></div>)}
-            </div>
-         </div>
-         <div className="flex gap-4 items-end text-white">
-            <div className="text-right leading-tight italic">
-               Protocol_Archive <br /> v4.0.21
-            </div>
-         </div>
-      </footer>
+      {/* Hero */}
+      <div className="relative overflow-hidden pt-24">
+        <motion.div style={{ y: heroY }} className="absolute right-0 top-0 w-1/2 h-full opacity-10">
+          <Image src="https://images.unsplash.com/photo-1457369804613-52c61a468e7d?q=80&w=1200&auto=format&fit=crop" alt="Archive" fill className="object-cover" unoptimized />
+        </motion.div>
+        <div className="relative z-10 max-w-5xl mx-auto px-6 md:px-12 py-28">
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="text-xs uppercase tracking-[0.3em] text-[#9ca3af] mb-6">
+            Nine years of independent criticism
+          </motion.p>
+          <motion.h1 initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.1 }} className="text-6xl md:text-8xl font-black leading-none mb-8 font-serif">
+            The
+            <br />
+            <em className="not-italic">editorial</em>
+            <br />
+            archive.
+          </motion.h1>
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="text-xl text-[#6b7280] max-w-xl leading-relaxed mb-10">
+            180+ essays on culture, philosophy, society, and technology — curated for the reader who still believes in slow thinking.
+          </motion.p>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="flex gap-4 flex-wrap">
+            <motion.a href="#" whileHover={{ scale: 1.02 }} className="px-8 py-4 bg-[#1a1a1a] text-white font-bold rounded-xl flex items-center gap-2 hover:bg-black transition-colors">
+              Browse archive <ArrowRight className="w-4 h-4" />
+            </motion.a>
+            <motion.a href="#" whileHover={{ scale: 1.02 }} className="px-8 py-4 border border-black/10 text-[#1a1a1a] font-bold rounded-xl hover:bg-black/5 transition-colors">
+              Latest essay
+            </motion.a>
+          </motion.div>
+        </div>
+      </div>
 
-      <style>{`
-        .glass {
-          background: rgba(255, 255, 255, 0.02);
-          backdrop-filter: blur(80px);
-          -webkit-backdrop-filter: blur(80px);
-          border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-        ::-webkit-scrollbar { width: 0px; }
-      `}</style>
+      {/* Stats */}
+      <section className="py-16 bg-white border-y border-black/5">
+        <div className="max-w-4xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8">
+          {STATS.map((s, i) => <Reveal key={s.label} delay={i * 0.1}><Counter target={s.value} suffix={s.suffix} label={s.label} /></Reveal>)}
+        </div>
+      </section>
+
+      {/* Archive grid */}
+      <section className="py-24 px-6 md:px-12 max-w-7xl mx-auto">
+        <Reveal className="mb-10">
+          <div className="flex items-center justify-between flex-wrap gap-4 mb-6">
+            <h2 className="text-3xl font-black font-serif">Browse essays</h2>
+          </div>
+          <div className="flex gap-3 flex-wrap mb-4">
+            <span className="text-xs text-[#9ca3af] uppercase tracking-wider self-center">Year:</span>
+            {YEARS.map(y => (
+              <button key={y} onClick={() => setActiveYear(y)} className={`px-3 py-1 rounded text-sm font-medium transition-colors ${activeYear === y ? "bg-[#1a1a1a] text-white" : "bg-black/5 text-[#6b7280] hover:bg-black/10"}`}>{y}</button>
+            ))}
+          </div>
+          <div className="flex gap-3 flex-wrap">
+            <span className="text-xs text-[#9ca3af] uppercase tracking-wider self-center">Category:</span>
+            {CATS.map(c => (
+              <button key={c} onClick={() => setActiveCat(c)} className={`px-3 py-1 rounded text-sm font-medium transition-colors ${activeCat === c ? "bg-[#1a1a1a] text-white" : "bg-black/5 text-[#6b7280] hover:bg-black/10"}`}>{c}</button>
+            ))}
+          </div>
+        </Reveal>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <AnimatePresence>
+            {filtered.map((essay, i) => (
+              <Reveal key={essay.title} delay={i * 0.06} className={essay.featured ? "md:col-span-2 lg:col-span-2" : ""}>
+                <motion.a href="#" whileHover={{ y: -4 }} className="group block">
+                  <div className={`relative overflow-hidden rounded-2xl mb-4 ${essay.featured ? "h-64" : "h-44"}`}>
+                    <Image src={essay.img} alt={essay.title} fill className="object-cover transition-transform duration-700 group-hover:scale-105" unoptimized />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                    <span className="absolute top-3 left-3 px-2 py-1 bg-white/90 text-xs font-bold rounded text-[#1a1a1a]">{essay.cat}</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-xs text-[#9ca3af] mb-2">
+                    <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{essay.year}</span>
+                    <span>·</span>
+                    <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{essay.read}</span>
+                  </div>
+                  <h3 className={`font-black font-serif leading-tight group-hover:underline decoration-1 ${essay.featured ? "text-2xl" : "text-lg"}`}>{essay.title}</h3>
+                  <div className="mt-3 flex items-center gap-1 text-sm text-[#9ca3af] group-hover:text-[#1a1a1a] transition-colors font-medium">
+                    Read <ArrowUpRight className="w-4 h-4" />
+                  </div>
+                </motion.a>
+              </Reveal>
+            ))}
+          </AnimatePresence>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="py-24 bg-[#1a1a1a] text-white px-6">
+        <div className="max-w-3xl mx-auto text-center">
+          <Reveal><h2 className="text-4xl font-black font-serif mb-16">From our readers</h2></Reveal>
+          <AnimatePresence mode="wait">
+            <motion.div key={activeT} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.5 }}>
+              <p className="text-xl text-white/80 italic leading-relaxed mb-8 font-serif">"{TESTIMONIALS[activeT].quote}"</p>
+              <div className="flex items-center justify-center gap-3">
+                <Image src={TESTIMONIALS[activeT].avatar} alt={TESTIMONIALS[activeT].name} width={44} height={44} className="rounded-full object-cover" unoptimized />
+                <div className="text-left">
+                  <p className="font-bold text-sm">{TESTIMONIALS[activeT].name}</p>
+                  <p className="text-white/50 text-xs">{TESTIMONIALS[activeT].role}</p>
+                </div>
+              </div>
+            </motion.div>
+          </AnimatePresence>
+          <div className="flex justify-center gap-2 mt-8">
+            {TESTIMONIALS.map((_, i) => <button key={i} onClick={() => setActiveT(i)} className={`w-2 h-2 rounded-full transition-colors ${i === activeT ? "bg-white" : "bg-white/20"}`} />)}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="py-24 px-6 max-w-3xl mx-auto">
+        <Reveal className="mb-12"><h2 className="text-3xl font-black font-serif">Questions</h2></Reveal>
+        <div className="space-y-4">
+          {FAQ.map((f, i) => (
+            <Reveal key={i} delay={i * 0.05}>
+              <div className="border-b border-black/10">
+                <button onClick={() => setOpenFaq(openFaq === i ? null : i)} className="w-full flex items-center justify-between py-5 text-left">
+                  <span className="font-bold">{f.q}</span>
+                  <motion.div animate={{ rotate: openFaq === i ? 180 : 0 }}><ChevronDown className="w-5 h-5 text-[#9ca3af] shrink-0" /></motion.div>
+                </button>
+                <AnimatePresence>
+                  {openFaq === i && (
+                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}>
+                      <p className="pb-5 text-[#6b7280] text-sm leading-relaxed">{f.a}</p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="py-24 bg-[#1a1a1a] text-white px-6">
+        <Reveal className="max-w-3xl mx-auto text-center">
+          <h2 className="text-5xl font-black font-serif mb-6">Access the full archive</h2>
+          <p className="text-white/60 text-lg mb-10">Unlimited access to 180+ essays, the weekly dispatch, and the annual print edition.</p>
+          <motion.button whileHover={{ scale: 1.03 }} className="px-10 py-5 bg-white text-black font-black rounded-2xl flex items-center gap-2 mx-auto hover:bg-white/90 transition-colors">
+            Subscribe — €9/month <ArrowRight className="w-5 h-5" />
+          </motion.button>
+        </Reveal>
+      </section>
+
+      <footer className="py-12 px-6 max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-[#9ca3af] border-t border-black/5">
+        <div className="font-black text-[#1a1a1a] font-serif flex items-center gap-2"><Archive className="w-4 h-4" />The Archive</div>
+        <p>© 2026 The Archive. Independent since 2015.</p>
+        <div className="flex gap-6">{["About", "Privacy", "Contact", "Print"].map(l => <a key={l} href="#" className="hover:text-[#1a1a1a] transition-colors">{l}</a>)}</div>
+      </footer>
     </div>
   );
 }

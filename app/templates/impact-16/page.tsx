@@ -1,224 +1,305 @@
 "use client";
 
-import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, useInView, AnimatePresence } from "framer-motion";
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { Menu, ArrowRight, X, Phone, Globe, Shield, Calendar, MapPin, ChevronDown } from "lucide-react";
+import { Star, MapPin, Wifi, Coffee, Waves, ChevronDown, Menu, X, ArrowRight, ChevronLeft, ChevronRight as ChevronRightIcon, Phone, Mail } from "lucide-react";
 import "../premium.css";
 
-export default function LuxuryHospitalitySPA() {
-  const [view, setView] = useState<"stay" | "sanctuary" | "reserve">("stay");
-  const containerRef = useRef<HTMLDivElement>(null);
-  
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start start", "end end"],
-  });
+const ROOMS = [
+  { name: "Grand Palais Suite", size: "120 m²", view: "Ocean panoramic", price: "€1,200", img: "https://images.unsplash.com/photo-1445019980597-93fa8acb246c?q=80&w=1200&auto=format&fit=crop" },
+  { name: "Jardin Privé Villa", size: "200 m²", view: "Private garden", price: "€2,400", img: "https://images.unsplash.com/photo-1582719508461-905c673771fd?q=80&w=1200&auto=format&fit=crop" },
+  { name: "Horizon Penthouse", size: "280 m²", view: "360° sea view", price: "€4,800", img: "https://images.unsplash.com/photo-1518684079-3c830dcef090?q=80&w=1200&auto=format&fit=crop" },
+  { name: "Côte d'Azur Room", size: "45 m²", view: "Garden terrace", price: "€480", img: "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?q=80&w=1200&auto=format&fit=crop" },
+];
 
-  const beamOpacity = useTransform(scrollYProgress, [0, 0.5, 1], [0.4, 0.8, 0.4]);
-  const beamRotate = useTransform(scrollYProgress, [0, 1], [-20, 20]);
-  const imageScale = useTransform(scrollYProgress, [0, 1], [1, 1.15]);
+const AMENITIES = [
+  { icon: Waves, title: "Infinity Pool", desc: "85m heated infinity pool overlooking the Mediterranean, open year-round." },
+  { icon: Coffee, title: "La Table du Chef", desc: "3-Michelin-star dining from Chef Laurent Dubois, celebrated for his coastal Mediterranean cuisine." },
+  { icon: Star, title: "Prestige Spa", desc: "3,000m² spa sanctuary with hydrotherapy pools, hammam, and bespoke treatment rituals." },
+  { icon: Wifi, title: "Exclusive Transfers", desc: "Helicopter and private yacht transfers from Monaco, Cannes, and Nice on request." },
+  { icon: MapPin, title: "Private Beach", desc: "400m of exclusive white sand beach with butler service and personalised cabanas." },
+  { icon: Star, title: "Concierge 24h", desc: "Legendary service — from private island picnics to Formula 1 hospitality suites." },
+];
+
+const STATS = [
+  { value: 34, suffix: "", label: "Years of excellence" },
+  { value: 5, suffix: " stars", label: "Palace distinction" },
+  { value: 48, suffix: "", label: "Suites & villas" },
+  { value: 98, suffix: "%", label: "Guest return rate" },
+];
+
+const TESTIMONIALS = [
+  { name: "Princess A.K.", role: "Royal guest, 12 stays", quote: "There is no hotel in the world that understands privacy, comfort, and elegance in quite the same measure.", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop" },
+  { name: "James & Claire Morton", role: "Honeymoon guests", quote: "The penthouse, the dinners, the morning sea views — we return every anniversary without question.", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop" },
+  { name: "Emmanuel Leclerc", role: "CEO, guest since 2018", quote: "When I need to disappear from the world and return refreshed — this is the only address that delivers.", avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=200&auto=format&fit=crop" },
+];
+
+const FAQ = [
+  { q: "What is the minimum stay?", a: "We recommend a minimum of 3 nights to fully experience the property. During peak season (July–August) a 5-night minimum applies for suites and villas." },
+  { q: "Is the hotel family-friendly?", a: "Yes, while we maintain an intimate atmosphere, we warmly welcome families. Children above 12 are welcomed in all areas; we offer a dedicated young guests programme." },
+  { q: "Can you arrange helicopter transfers?", a: "Our concierge arranges helicopter transfers from Nice Côte d'Azur, Monaco Héliport, and private landing pads throughout the region. We require 48 hours notice." },
+  { q: "Are pets welcome?", a: "We welcome small dogs up to 10kg with prior arrangement. A dedicated pet butler service is available, including gourmet pet menus and walking services." },
+];
+
+function Reveal({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-60px" });
+  return (
+    <motion.div ref={ref} initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.8, delay, ease: [0.25, 0.1, 0.25, 1] }} className={className}>
+      {children}
+    </motion.div>
+  );
+}
+
+function Counter({ target, suffix = "", label }: { target: number; suffix?: string; label: string }) {
+  const [count, setCount] = useState(0);
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true });
+  useEffect(() => {
+    if (!inView) return;
+    const steps = 50;
+    let cur = 0;
+    const t = setInterval(() => {
+      cur += target / steps;
+      if (cur >= target) { setCount(target); clearInterval(t); }
+      else setCount(Math.floor(cur));
+    }, 1800 / steps);
+    return () => clearInterval(t);
+  }, [inView, target]);
+  return (
+    <div ref={ref} className="text-center">
+      <div className="text-5xl font-black text-[#d4af37] mb-2">{count}{suffix}</div>
+      <div className="text-sm text-[#c9b592]/60 uppercase tracking-wider">{label}</div>
+    </div>
+  );
+}
+
+export default function LuxuryHospitalitySPA() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [activeT, setActiveT] = useState(0);
+  const [activeRoom, setActiveRoom] = useState(0);
+  const { scrollY } = useScroll();
+  const heroY = useTransform(scrollY, [0, 600], [0, 200]);
+
+  useEffect(() => {
+    const t = setInterval(() => setActiveT(p => (p + 1) % TESTIMONIALS.length), 6000);
+    return () => clearInterval(t);
+  }, []);
 
   return (
-    <div ref={containerRef} className="premium-theme bg-[#050805] text-rose-50 min-h-screen selection:bg-rose-900 selection:text-white font-sans font-light overflow-x-hidden">
-      
-      {/* Cinematic Background Layer - Persistent */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
-         <motion.div style={{ scale: imageScale }} className="relative h-full w-full">
-            <Image
-               src="https://images.unsplash.com/photo-1544124499-58913cb3bb3a?q=80&w=2000&auto=format&fit=crop"
-               alt="Luxury Sanctuary"
-               fill
-               className="object-cover brightness-50 contrast-125 saturate-50"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#050805] via-transparent to-[#050805]/80 mix-blend-multiply" />
-         </motion.div>
-      </div>
-
-      {/* Atmospheric Special FX: Silent Beams */}
-      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden mix-blend-screen">
-         {[...Array(3)].map((_, i) => (
-           <motion.div 
-             key={i}
-             style={{ 
-               opacity: beamOpacity,
-               rotate: beamRotate,
-               x: `${(i - 1) * 35}%`
-             }}
-             className="absolute top-[-30%] left-1/2 w-[40vw] h-[160%] bg-gradient-to-b from-white/10 to-transparent blur-[120px] origin-top"
-           />
-         ))}
-      </div>
-
-      {/* Nav HUD */}
-      <nav className="fixed top-0 left-0 w-full z-50 px-8 py-10 flex justify-between items-center mix-blend-difference">
-        <button onClick={() => setView("stay")} className="text-2xl font-serif italic tracking-tighter uppercase text-white">Silent.Beams&trade;</button>
-        <div className="hidden md:flex gap-12 text-[10px] uppercase tracking-[0.6em] font-black opacity-40">
-           <button onClick={() => setView("stay")} className={`hover:opacity-100 transition-opacity ${view === 'stay' ? 'text-white opacity-100' : ''}`}>THE_STAY</button>
-           <button onClick={() => setView("sanctuary")} className={`hover:opacity-100 transition-opacity ${view === 'sanctuary' ? 'text-white opacity-100' : ''}`}>SANCTUARY</button>
-           <button onClick={() => setView("reserve")} className={`hover:opacity-100 transition-opacity ${view === 'reserve' ? 'text-white opacity-100' : ''}`}>RESERVE</button>
+    <div className="min-h-screen bg-[#0a0a12] text-[#e8dcc8] overflow-x-hidden">
+      <motion.nav initial={{ y: -80 }} animate={{ y: 0 }} transition={{ duration: 0.6 }} className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-12 py-5 bg-[#0a0a12]/90 backdrop-blur-xl border-b border-[#d4af37]/10">
+        <div className="text-center">
+          <div className="font-serif text-xl font-black tracking-widest text-[#d4af37]">GRAND PALAIS</div>
+          <div className="text-xs tracking-[0.3em] text-[#c9b592]/50 uppercase">Côte d'Azur</div>
         </div>
-        <div className="flex gap-8 items-center">
-           <div className="hidden lg:flex items-center gap-2 opacity-30 text-[9px] uppercase font-black tracking-widest">
-              <MapPin className="w-3 h-3" /> Maldives / Private
-           </div>
-           <Menu className="w-5 h-5 opacity-60 hover:opacity-100 cursor-pointer text-white" />
+        <div className="hidden md:flex items-center gap-10 text-xs text-[#c9b592]/50 tracking-widest uppercase">
+          {["Suites", "Experiences", "Dining", "Spa", "Weddings"].map(item => (
+            <a key={item} href="#" className="hover:text-[#d4af37] transition-colors">{item}</a>
+          ))}
         </div>
-      </nav>
+        <motion.button whileHover={{ scale: 1.02 }} className="hidden md:block px-6 py-3 border border-[#d4af37]/30 text-[#d4af37] text-xs tracking-widest uppercase hover:bg-[#d4af37]/10 transition-colors">
+          Reserve
+        </motion.button>
+        <button className="md:hidden text-[#d4af37]" onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}</button>
+      </motion.nav>
 
-      <AnimatePresence mode="wait">
-        
-        {/* THE STAY VIEW */}
-        {view === "stay" && (
-          <motion.div key="stay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10">
-             <main className="min-h-screen flex flex-col items-center justify-center text-center px-6 pt-32">
-                <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}>
-                   <span className="text-[10px] uppercase tracking-[1em] opacity-30 mb-12 block font-black">Escape the Surface</span>
-                   <h1 className="text-7xl md:text-[14vw] font-serif italic leading-[0.75] tracking-tighter mb-12 drop-shadow-2xl">
-                     Return <br /> <span className="not-italic font-black text-white/90">to Silence.</span>
-                   </h1>
-                   <div className="flex justify-center mt-12 mb-24">
-                      <div className="h-32 w-[1px] bg-gradient-to-b from-white/40 to-transparent" />
-                   </div>
-                </motion.div>
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }} className="flex flex-col items-center">
-                   <p className="text-xs font-black uppercase tracking-[0.8em] opacity-40 mb-3 underline decoration-white/20 underline-offset-8">Explore Architecture</p>
-                   <ChevronDown className="w-5 h-5 opacity-20 animate-bounce" />
-                </motion.div>
-             </main>
-
-             <section className="min-h-screen py-48 px-8 md:px-24 bg-[#050805]/90 backdrop-blur-xl">
-                <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-24 items-center">
-                   <div className="lg:col-span-12 mb-24">
-                      <h2 className="text-5xl md:text-8xl font-serif italic tracking-tighter leading-none mb-12">The Poetry of <br/> Unplugging.</h2>
-                   </div>
-                   <div className="lg:col-span-5 space-y-12">
-                      <p className="text-2xl font-light italic leading-relaxed opacity-60">
-                         We have removed the noise. We have removed the crowd. What remains is a curated dialogue between your soul and the island's rhythm.
-                      </p>
-                      <div className="space-y-8 pt-12">
-                         {[
-                           { t: "Ocean Villas", d: "Suspended over the abyss, designed for total visual immersion." },
-                           { t: "Night Cycles", d: "Zero artificial light pollution. The stars are your only ceiling." },
-                         ].map((item, i) => (
-                           <div key={i} className="flex gap-8 group cursor-pointer border-t border-white/5 pt-8">
-                              <span className="text-[10px] font-black opacity-20">0{i+1}</span>
-                              <div>
-                                 <h4 className="text-lg font-black uppercase italic tracking-tighter">{item.t}</h4>
-                                 <p className="text-xs opacity-30 uppercase tracking-[0.3em] font-bold mt-2">{item.d}</p>
-                              </div>
-                           </div>
-                        ))}
-                      </div>
-                   </div>
-                   <div className="lg:col-span-7 relative aspect-video rounded-[4rem] overflow-hidden border border-white/10 p-4">
-                      <Image src="https://images.unsplash.com/photo-1571896349842-33c89424de2d?q=80&w=1500&auto=format&fit=crop" alt="Resort" fill className="object-cover rounded-[3.5rem] opacity-80 transition-transform duration-[4s] hover:scale-105" />
-                   </div>
-                </div>
-             </section>
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-40 bg-[#0a0a12] flex flex-col items-center justify-center gap-8">
+            {["Suites", "Experiences", "Dining", "Spa"].map(item => (
+              <a key={item} href="#" className="text-[#d4af37] text-2xl font-serif tracking-widest" onClick={() => setMenuOpen(false)}>{item}</a>
+            ))}
           </motion.div>
         )}
-
-        {/* SANCTUARY VIEW */}
-        {view === "sanctuary" && (
-          <motion.div key="sanctuary" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen">
-             <div className="flex flex-col md:flex-row justify-between items-end mb-32 border-b border-white/5 pb-12">
-                <h1 className="text-7xl md:text-9xl font-serif italic tracking-tighter leading-none text-white">Sanctuary.</h1>
-                <div className="text-[10px] uppercase font-black tracking-[0.5em] opacity-30 text-right">Wellness / Protocols</div>
-             </div>
-
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-                {[
-                  { t: "Crystalline Spa", d: "Treatments using mineral-infused thermal waters and ancient volcanic salt.", img: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?q=80&w=800&auto=format&fit=crop" },
-                  { t: "Neural Audio", d: "Sound baths designed to synchronize brainwaves with the ocean's frequency.", img: "https://images.unsplash.com/photo-1515377905703-c4788e51af15?q=80&w=800&auto=format&fit=crop" },
-                  { t: "Botanical Lab", d: "Personalized nutrition extracted from the island's own curated medicinal garden.", img: "https://images.unsplash.com/photo-1532187806296-39629af8f175?q=80&w=800&auto=format&fit=crop" },
-                ].map((item, i) => (
-                  <motion.div key={i} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} className="group">
-                     <div className="relative aspect-[3/4] rounded-[3rem] overflow-hidden border border-white/10 mb-8 p-3">
-                        <Image src={item.img} alt={item.t} fill className="object-cover rounded-[2.5rem] opacity-60 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-1000" />
-                     </div>
-                     <h3 className="text-2xl font-serif italic tracking-tighter mb-4 text-white">{item.t}</h3>
-                     <p className="text-xs opacity-40 uppercase tracking-widest leading-relaxed mb-8">{item.d}</p>
-                     <button className="flex items-center gap-4 text-[9px] font-black tracking-[0.5em] group-hover:gap-8 transition-all">
-                        EXPLORE_SANCTUARY <ArrowRight className="w-4 h-4" />
-                     </button>
-                  </motion.div>
-                ))}
-             </div>
-          </motion.div>
-        )}
-
-        {/* RESERVE VIEW */}
-        {view === "reserve" && (
-          <motion.div key="reserve" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-8 max-w-4xl mx-auto min-h-screen">
-             <div className="glass p-12 md:p-24 rounded-[4rem] border border-white/10 text-center">
-                <span className="text-[10px] uppercase tracking-[1em] opacity-30 mb-8 block font-black">Limited Engagement</span>
-                <h2 className="text-5xl md:text-8xl font-serif italic tracking-tighter mb-12 text-white leading-none">Initiate Your <br/> Departure.</h2>
-                <div className="space-y-12">
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                      <div className="text-left border-b border-white/10 pb-6">
-                         <label className="text-[10px] uppercase font-black tracking-widest opacity-20 block mb-4">Departure_Date</label>
-                         <div className="flex justify-between items-center cursor-pointer">
-                            <span className="text-2xl italic tracking-tighter">OCT_12_2026</span>
-                            <Calendar className="w-5 h-5 opacity-40" />
-                         </div>
-                      </div>
-                      <div className="text-left border-b border-white/10 pb-6">
-                         <label className="text-[10px] uppercase font-black tracking-widest opacity-20 block mb-4">Guest_Count</label>
-                         <div className="flex justify-between items-center cursor-pointer">
-                            <span className="text-2xl italic tracking-tighter">02_ADULTS</span>
-                            <ChevronDown className="w-5 h-5 opacity-40" />
-                         </div>
-                      </div>
-                   </div>
-                   <button className="w-full py-8 bg-rose-50 text-black font-black uppercase text-xs tracking-[1em] hover:bg-white transition-all shadow-xl rounded-full">
-                      Request_Allocation
-                   </button>
-                </div>
-                <div className="mt-24 pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-12 opacity-30 text-[9px] font-black tracking-widest uppercase">
-                   <div className="flex items-center gap-3">
-                      <Shield className="w-4 h-4" /> Secure Protocol
-                   </div>
-                   <div className="flex items-center gap-3">
-                      <Globe className="w-4 h-4" /> Global Support
-                   </div>
-                   <div className="flex items-center gap-3">
-                      <Phone className="w-4 h-4" /> Private Line
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
       </AnimatePresence>
 
-      <footer className="relative z-20 py-24 px-8 border-t border-white/5 bg-[#050805]/80 backdrop-blur-md">
-         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-16 font-black uppercase text-[9px] tracking-[0.5em] opacity-30">
-            <div className="text-center md:text-left">
-               <div className="text-3xl font-serif italic mb-4 tracking-tighter text-white opacity-100 uppercase">Silent.Beams</div>
-               <p>&copy; 2026 Archive Hospitality Group. All Rights Reserved.</p>
-            </div>
-            <div className="flex gap-12">
-               <span className="hover:text-white cursor-pointer transition-colors">Press</span>
-               <span className="hover:text-white cursor-pointer transition-colors">Protocol</span>
-               <span className="hover:text-white cursor-pointer transition-colors">Instagram</span>
-            </div>
-            <div className="flex gap-4 items-end">
-               <div className="text-right leading-tight">Aevia_Resort <br /> Maldives_Node</div>
-               <div className="flex gap-[2px] h-3">
-                  {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-full bg-white opacity-${i*20}`}></div>)}
-               </div>
-            </div>
-         </div>
-      </footer>
+      {/* Hero */}
+      <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        <motion.div style={{ y: heroY }} className="absolute inset-0">
+          <Image src="https://images.unsplash.com/photo-1582719508461-905c673771fd?q=80&w=2400&auto=format&fit=crop" alt="Grand Palais Hotel" fill className="object-cover opacity-40" unoptimized />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a12]/60 via-transparent to-[#0a0a12]" />
+        </motion.div>
 
-      <style>{`
-        .glass {
-          background: rgba(255, 255, 255, 0.02);
-          backdrop-filter: blur(60px);
-          -webkit-backdrop-filter: blur(60px);
-        }
-      `}</style>
+        <div className="relative z-10 text-center max-w-4xl mx-auto px-6 pt-20">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="flex justify-center mb-6">
+            {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 text-[#d4af37] fill-[#d4af37]" />)}
+          </motion.div>
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="text-[#c9b592]/50 text-xs tracking-[0.4em] uppercase mb-8">
+            Palace distinction · Côte d'Azur · Since 1992
+          </motion.p>
+          <motion.h1 initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.15 }} className="text-6xl md:text-8xl font-black font-serif leading-none mb-8 text-white">
+            Where the<br />Mediterranean<br /><em className="not-italic text-[#d4af37]">begins.</em>
+          </motion.h1>
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="text-[#c9b592]/60 text-lg max-w-xl mx-auto mb-12 leading-relaxed font-serif">
+            A legendary palace hotel poised above the sea, where timeless elegance meets the eternal blue of the French Riviera.
+          </motion.p>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }} className="flex flex-wrap gap-4 justify-center">
+            <motion.button whileHover={{ scale: 1.02 }} className="px-10 py-4 bg-[#d4af37] hover:bg-[#c9a830] text-black font-black tracking-wider flex items-center gap-2 transition-colors">
+              Reserve a Suite <ArrowRight className="w-4 h-4" />
+            </motion.button>
+            <motion.button whileHover={{ scale: 1.02 }} className="px-10 py-4 border border-[#d4af37]/30 text-[#d4af37] font-bold tracking-wider hover:bg-[#d4af37]/10 transition-colors">
+              Discover
+            </motion.button>
+          </motion.div>
+        </div>
+
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.5 }} className="absolute bottom-8 left-1/2 -translate-x-1/2">
+          <motion.div animate={{ y: [0, 8, 0] }} transition={{ duration: 2.5, repeat: Infinity }}>
+            <ChevronDown className="w-5 h-5 text-[#d4af37]/40" />
+          </motion.div>
+        </motion.div>
+      </div>
+
+      {/* Stats */}
+      <section className="py-20 border-y border-[#d4af37]/10 px-6">
+        <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-12">
+          {STATS.map((s, i) => <Reveal key={s.label} delay={i * 0.1}><Counter target={s.value} suffix={s.suffix} label={s.label} /></Reveal>)}
+        </div>
+      </section>
+
+      {/* Suites */}
+      <section className="py-24 px-6 max-w-7xl mx-auto">
+        <Reveal className="text-center mb-16">
+          <p className="text-[#c9b592]/40 text-xs tracking-[0.3em] uppercase mb-4">Accommodation</p>
+          <h2 className="text-5xl font-black font-serif text-white">Our suites & villas</h2>
+        </Reveal>
+        <div className="relative">
+          <AnimatePresence mode="wait">
+            <motion.div key={activeRoom} initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }} transition={{ duration: 0.5 }} className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+              <div className="relative h-[500px] rounded-2xl overflow-hidden">
+                <Image src={ROOMS[activeRoom].img} alt={ROOMS[activeRoom].name} fill className="object-cover" unoptimized />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                <div className="absolute bottom-6 left-6">
+                  <p className="text-[#d4af37] text-sm font-bold mb-1">{ROOMS[activeRoom].size} · {ROOMS[activeRoom].view}</p>
+                  <p className="text-white font-black text-2xl font-serif">{ROOMS[activeRoom].name}</p>
+                </div>
+              </div>
+              <div>
+                <h3 className="text-4xl font-black font-serif text-white mb-4">{ROOMS[activeRoom].name}</h3>
+                <p className="text-[#c9b592]/60 mb-3 text-sm">{ROOMS[activeRoom].view} · {ROOMS[activeRoom].size}</p>
+                <div className="flex items-baseline gap-1 mb-8">
+                  <span className="text-4xl font-black text-[#d4af37]">{ROOMS[activeRoom].price}</span>
+                  <span className="text-[#c9b592]/40 text-sm">per night</span>
+                </div>
+                <ul className="space-y-3 mb-8 text-sm text-[#c9b592]/70">
+                  {["24h butler service", "Complimentary minibar", "Private terrace", "Premium toiletries", "Evening turndown"].map(f => (
+                    <li key={f} className="flex items-center gap-3"><span className="w-1 h-1 bg-[#d4af37] rounded-full" />{f}</li>
+                  ))}
+                </ul>
+                <motion.button whileHover={{ scale: 1.02 }} className="px-8 py-4 bg-[#d4af37] text-black font-black flex items-center gap-2 hover:bg-[#c9a830] transition-colors">
+                  Reserve this suite <ArrowRight className="w-4 h-4" />
+                </motion.button>
+              </div>
+            </motion.div>
+          </AnimatePresence>
+          <div className="flex items-center justify-center gap-4 mt-12">
+            <button onClick={() => setActiveRoom(p => (p - 1 + ROOMS.length) % ROOMS.length)} className="w-12 h-12 rounded-full border border-[#d4af37]/30 flex items-center justify-center text-[#d4af37] hover:bg-[#d4af37]/10 transition-colors">
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            {ROOMS.map((_, i) => <button key={i} onClick={() => setActiveRoom(i)} className={`w-2 h-2 rounded-full transition-colors ${i === activeRoom ? "bg-[#d4af37]" : "bg-[#d4af37]/20"}`} />)}
+            <button onClick={() => setActiveRoom(p => (p + 1) % ROOMS.length)} className="w-12 h-12 rounded-full border border-[#d4af37]/30 flex items-center justify-center text-[#d4af37] hover:bg-[#d4af37]/10 transition-colors">
+              <ChevronRightIcon className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Amenities */}
+      <section className="py-24 px-6 max-w-7xl mx-auto">
+        <Reveal className="text-center mb-16">
+          <p className="text-[#c9b592]/40 text-xs tracking-[0.3em] uppercase mb-4">Experiences</p>
+          <h2 className="text-5xl font-black font-serif text-white">The art of the exceptional</h2>
+        </Reveal>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {AMENITIES.map((a, i) => (
+            <Reveal key={a.title} delay={i * 0.07}>
+              <motion.div whileHover={{ y: -6 }} className="p-8 border border-[#d4af37]/10 rounded-2xl hover:border-[#d4af37]/20 transition-colors">
+                <a.icon className="w-8 h-8 text-[#d4af37] mb-6" />
+                <h3 className="font-black text-white font-serif text-xl mb-3">{a.title}</h3>
+                <p className="text-[#c9b592]/50 text-sm leading-relaxed">{a.desc}</p>
+              </motion.div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="py-24 px-6 bg-white/[0.02] border-y border-[#d4af37]/10">
+        <div className="max-w-3xl mx-auto text-center">
+          <Reveal><p className="text-[#c9b592]/40 text-xs tracking-[0.3em] uppercase mb-4">Guest perspectives</p></Reveal>
+          <Reveal><h2 className="text-4xl font-black font-serif text-white mb-16">What our guests say</h2></Reveal>
+          <AnimatePresence mode="wait">
+            <motion.div key={activeT} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.5 }}>
+              <div className="flex justify-center mb-4">{[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 text-[#d4af37] fill-[#d4af37]" />)}</div>
+              <p className="text-xl text-[#e8dcc8]/70 italic font-serif leading-relaxed mb-8">"{TESTIMONIALS[activeT].quote}"</p>
+              <div className="flex items-center justify-center gap-3">
+                <Image src={TESTIMONIALS[activeT].avatar} alt={TESTIMONIALS[activeT].name} width={48} height={48} className="rounded-full object-cover border border-[#d4af37]/20" unoptimized />
+                <div className="text-left">
+                  <p className="font-bold text-white text-sm">{TESTIMONIALS[activeT].name}</p>
+                  <p className="text-[#c9b592]/40 text-xs">{TESTIMONIALS[activeT].role}</p>
+                </div>
+              </div>
+            </motion.div>
+          </AnimatePresence>
+          <div className="flex justify-center gap-2 mt-8">
+            {TESTIMONIALS.map((_, i) => <button key={i} onClick={() => setActiveT(i)} className={`w-2 h-2 rounded-full transition-colors ${i === activeT ? "bg-[#d4af37]" : "bg-[#d4af37]/20"}`} />)}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="py-24 px-6 max-w-3xl mx-auto">
+        <Reveal className="mb-12"><h2 className="text-4xl font-black font-serif text-white">Guest information</h2></Reveal>
+        <div className="space-y-4">
+          {FAQ.map((f, i) => (
+            <Reveal key={i} delay={i * 0.05}>
+              <div className="border-b border-[#d4af37]/10">
+                <button onClick={() => setOpenFaq(openFaq === i ? null : i)} className="w-full flex items-center justify-between py-6 text-left">
+                  <span className="font-semibold text-[#e8dcc8]">{f.q}</span>
+                  <motion.div animate={{ rotate: openFaq === i ? 180 : 0 }}><ChevronDown className="w-5 h-5 text-[#d4af37]/40 shrink-0" /></motion.div>
+                </button>
+                <AnimatePresence>
+                  {openFaq === i && (
+                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}>
+                      <p className="pb-6 text-[#c9b592]/50 text-sm leading-relaxed">{f.a}</p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="py-32 px-6 relative overflow-hidden">
+        <div className="absolute inset-0">
+          <Image src="https://images.unsplash.com/photo-1582719508461-905c673771fd?q=80&w=2000&auto=format&fit=crop" alt="Reserve" fill className="object-cover opacity-15" unoptimized />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a12] to-[#0a0a12]/80" />
+        </div>
+        <Reveal className="relative z-10 max-w-3xl mx-auto text-center">
+          <p className="text-[#d4af37]/50 text-xs tracking-[0.3em] uppercase mb-6">Begin your stay</p>
+          <h2 className="text-5xl font-black font-serif text-white mb-6">An address beyond compare</h2>
+          <p className="text-[#c9b592]/50 text-lg mb-12 leading-relaxed">Contact our reservations team to begin crafting your stay.</p>
+          <div className="flex flex-col md:flex-row gap-4 justify-center">
+            <motion.button whileHover={{ scale: 1.02 }} className="px-10 py-5 bg-[#d4af37] text-black font-black flex items-center gap-2 justify-center hover:bg-[#c9a830] transition-colors">
+              Reserve now <ArrowRight className="w-4 h-4" />
+            </motion.button>
+            <div className="flex items-center gap-3 justify-center text-[#c9b592]/50 text-sm">
+              <Phone className="w-4 h-4" /><span>+33 4 93 00 00 00</span>
+            </div>
+          </div>
+        </Reveal>
+      </section>
+
+      <footer className="py-12 px-6 max-w-7xl mx-auto border-t border-[#d4af37]/10 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-[#c9b592]/30 tracking-widest uppercase">
+        <div className="font-serif font-black text-[#d4af37] text-base">GRAND PALAIS · CÔTE D'AZUR</div>
+        <p>© 2026 Grand Palais. All rights reserved.</p>
+        <div className="flex gap-6">{["Privacy", "Terms", "Contact"].map(l => <a key={l} href="#" className="hover:text-[#d4af37] transition-colors">{l}</a>)}</div>
+      </footer>
     </div>
   );
 }
