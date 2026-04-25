@@ -1,224 +1,230 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { motion, useScroll, useTransform, useInView, AnimatePresence } from "framer-motion";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { ShoppingBag, ArrowRight, Plus, X, Menu, Search, Filter, Droplets, Sparkles, Wind } from "lucide-react";
+import { ShoppingBag, X, Menu, ArrowRight, Star, ChevronLeft, ChevronRight, Plus, Minus, Leaf, Droplets, Wind } from "lucide-react";
 import "../premium.css";
 
-const PRODUCTS = [
-  { id: 1, name: "LUCID_AIR", price: 320, tag: "Ethereal", img: "https://images.unsplash.com/photo-1541643600914-78b084683601?q=80&w=1000&auto=format&fit=crop", desc: "A transparent dialogue of ozone, cold mineral water, and crushed mountain glass. Crisp, sharp, and hauntingly clear." },
-  { id: 2, name: "AMBER_VOID", price: 450, tag: "Deep", img: "https://images.unsplash.com/photo-1594035910387-fea47794261f?q=80&w=1000&auto=format&fit=crop", desc: "A heavy, refractive scent of smoked resin, dark vanilla, and ancient fossilized woods. Captured in a leaded crystal vessel." },
-  { id: 3, name: "NEON_DEW", price: 280, tag: "Electric", img: "https://images.unsplash.com/photo-1563170351-be82bc888bb4?q=80&w=1000&auto=format&fit=crop", desc: "Synthentic violet, green tea, and static electricity. A fragrance that vibrates on the skin like digital light." },
-  { id: 4, name: "SILK_MESH", price: 380, tag: "Tactile", img: "https://images.unsplash.com/photo-1585218356057-dc042f340605?q=80&w=1000&auto=format&fit=crop", desc: "A soft, structural blend of white musk, raw silk fiber, and cold metallic iron. Impeccably balanced." },
+const FRAGRANCES = [
+  { id: 1, name: "VIDE", subtitle: "Eau de Parfum", price: "€320", notes: ["White Musk", "Vetiver", "Iso E Super"], family: "Woody", intensity: "Silage", img: "https://images.unsplash.com/photo-1541643600914-78b084683702?q=80&w=1200&auto=format&fit=crop", desc: "The scent of a room just vacated by someone who left a lasting impression. Quiet, luminous, and unsettling." },
+  { id: 2, name: "OBSIDIAN", subtitle: "Parfum Extrait", price: "€490", notes: ["Oud", "Black Pepper", "Labdanum", "Smoke"], family: "Oriental", intensity: "Sillage", img: "https://images.unsplash.com/photo-1523293182086-7651a899d37f?q=80&w=1200&auto=format&fit=crop", desc: "Volcanic stone ground at midnight. Dense, geological, unrepeatable." },
+  { id: 3, name: "SALINE", subtitle: "Eau de Parfum", price: "€280", notes: ["Sea Salt", "Ambergris", "Skin", "Driftwood"], family: "Aquatic", intensity: "Moderate", img: "https://images.unsplash.com/photo-1547005327-834182f8e05a?q=80&w=1200&auto=format&fit=crop", desc: "The coast in January, stripped of any romance. Pure and cold and honest." },
+  { id: 4, name: "TERRE ROUGE", subtitle: "Eau de Parfum", price: "€340", notes: ["Red Clay", "Geranium", "Patchouli", "Cedar"], family: "Earthy", intensity: "Moderate", img: "https://images.unsplash.com/photo-1457301353672-324d6d14f471?q=80&w=1200&auto=format&fit=crop", desc: "Rain on sun-baked laterite. The fragrance of memory displaced in space." },
 ];
 
+const TESTIMONIALS = [
+  { name: "Amélie R.", text: "VIDE is the first perfume I've worn that people ask me not to name. They want it to stay mysterious.", rating: 5 },
+  { name: "S. Beaumont", text: "OBSIDIAN changed my relationship with fragrance. It's not decorative — it's a statement of presence.", rating: 5 },
+  { name: "Yuki N.", text: "The packaging alone would justify the price. But the SALINE is extraordinary — like wearing winter.", rating: 5 },
+];
+
+const NOTE_ICONS: Record<string, typeof Leaf> = { Woody: Leaf, Aquatic: Droplets, Oriental: Wind, Earthy: Leaf };
+
+function Reveal({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-80px" });
+  return (
+    <motion.div ref={ref} initial={{ opacity: 0, y: 28 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.9, delay, ease: [0.25, 0.46, 0.45, 0.94] }} className={className}>
+      {children}
+    </motion.div>
+  );
+}
+
 export default function GlassFragranceSPA() {
-  const [view, setView] = useState<"catalog" | "product" | "info">("catalog");
-  const [activeItem, setActiveItem] = useState(0);
-  const [cart, setCart] = useState(0);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [activeFragrance, setActiveFragrance] = useState(0);
+  const [cartCount, setCartCount] = useState(0);
+  const [cartFlash, setCartFlash] = useState(false);
+  const [activeTestimonial, setActiveTestimonial] = useState(0);
+  const { scrollY } = useScroll();
+  const heroY = useTransform(scrollY, [0, 700], [0, 180]);
+  const heroOpacity = useTransform(scrollY, [0, 500], [1, 0]);
+  const f = FRAGRANCES[activeFragrance];
+
+  const addToCart = () => {
+    setCartCount(n => n + 1);
+    setCartFlash(true);
+    setTimeout(() => setCartFlash(false), 800);
+  };
+
+  useEffect(() => {
+    const t = setInterval(() => setActiveTestimonial(p => (p + 1) % TESTIMONIALS.length), 5500);
+    return () => clearInterval(t);
+  }, []);
 
   return (
-    <div className="premium-theme bg-[#0a0a0f] text-white min-h-screen selection:bg-cyan-500 selection:text-black font-sans overflow-x-hidden">
-      
-      {/* Background Refractive Layers */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <motion.div 
-          animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3], x: [0, 50, 0] }}
-          transition={{ duration: 15, repeat: Infinity }}
-          className="absolute top-[-20%] right-[-10%] w-[80vw] h-[80vw] bg-cyan-900/10 blur-[200px] rounded-full"
-        />
-        <motion.div 
-          animate={{ scale: [1.2, 1, 1.2], opacity: [0.2, 0.4, 0.2], x: [0, -50, 0] }}
-          transition={{ duration: 20, repeat: Infinity }}
-          className="absolute bottom-[-10%] left-[-10%] w-[60vw] h-[60vw] bg-indigo-900/10 blur-[180px] rounded-full"
-        />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay" />
-      </div>
+    <div className="premium-theme bg-[#fdfcfb] text-[#1a1410] min-h-screen overflow-x-hidden" style={{ fontFamily: "'Georgia', serif" }}>
 
-      {/* Global Navigation */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-center bg-white/5 backdrop-blur-3xl border-b border-white/5">
-        <button onClick={() => setView("catalog")} className="text-xl font-black uppercase tracking-[0.4em] text-cyan-400 hover:text-white transition-colors">
-           GLASS.BOUTIQUE&trade;
-        </button>
-        <div className="hidden md:flex gap-12 text-[10px] font-black uppercase tracking-[0.5em] opacity-30">
-           <button onClick={() => setView("catalog")} className={`hover:opacity-100 transition-opacity ${view === 'catalog' ? 'text-white opacity-100' : ''}`}>THE_ESSENCE</button>
-           <button onClick={() => setView("info")} className={`hover:opacity-100 transition-opacity ${view === 'info' ? 'text-white opacity-100' : ''}`}>THE_GLASSHOUSE</button>
+      {/* NAV */}
+      <nav className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-8 md:px-16 py-5 bg-[#fdfcfb]/90 backdrop-blur-xl border-b border-[#1a1410]/6">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-sm uppercase tracking-[0.5em] text-[#8b7355]">VIDE PARFUMS</motion.div>
+        <div className="hidden md:flex items-center gap-10 text-[9px] uppercase tracking-[0.4em] opacity-40" style={{ fontFamily: "sans-serif" }}>
+          {["Collection", "Ingredients", "Philosophy", "Boutiques"].map(l => (
+            <a key={l} href="#" className="hover:opacity-100 transition-opacity">{l}</a>
+          ))}
         </div>
-        <div className="flex items-center gap-8">
-           <button className="flex items-center gap-4 group">
-              <ShoppingBag className="w-5 h-5 group-hover:text-cyan-400 transition-colors" />
-              <span className="text-[10px] font-black opacity-30 group-hover:opacity-100 font-mono">[{cart}]</span>
-           </button>
-           <Menu className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
+        <div className="flex items-center gap-4">
+          <motion.button onClick={addToCart} animate={cartFlash ? { scale: [1, 1.2, 1] } : {}} className="relative" style={{ fontFamily: "sans-serif" }}>
+            <ShoppingBag size={18} className="text-[#1a1410]/60" />
+            {cartCount > 0 && <span className="absolute -top-1 -right-1 bg-[#8b7355] text-white text-[8px] w-4 h-4 rounded-full flex items-center justify-center">{cartCount}</span>}
+          </motion.button>
+          <button onClick={() => setMenuOpen(true)} className="md:hidden"><Menu size={20} /></button>
         </div>
       </nav>
 
-      <AnimatePresence mode="wait">
-        
-        {/* CATALOG VIEW */}
-        {view === "catalog" && (
-          <motion.div key="catalog" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-48 pb-32 px-8 md:px-12 max-w-[1800px] mx-auto">
-             <header className="mb-32 flex flex-col md:flex-row justify-between items-end gap-12 border-b border-white/10 pb-12">
-                <h1 className="text-7xl md:text-[10vw] font-serif italic tracking-tighter leading-[0.8] text-white">
-                   Transparency <br /> <span className="not-italic font-black text-transparent" style={{ WebkitTextStroke: '1px rgba(255,255,255,0.4)' }}>Defined.</span>
-                </h1>
-                <div className="text-right flex flex-col items-end">
-                   <div className="text-[10px] font-black uppercase tracking-[0.4em] opacity-30 mb-4 block">Refraction_Index: 1.45</div>
-                   <div className="flex gap-4">
-                      <Search className="w-5 h-5 opacity-40 hover:text-cyan-400 cursor-pointer" />
-                      <Filter className="w-5 h-5 opacity-40 hover:text-cyan-400 cursor-pointer" />
-                   </div>
-                </div>
-             </header>
-
-             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
-                {PRODUCTS.map((p, i) => (
-                  <motion.div 
-                    key={p.id} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.1 }}
-                    className="glass rounded-[3rem] p-8 group border border-white/5 hover:border-cyan-400/30 transition-all cursor-pointer flex flex-col"
-                    onClick={() => { setActiveItem(i); setView("product"); }}
-                  >
-                     <div className="relative aspect-square mb-12 rounded-[2rem] overflow-hidden bg-white/5 p-4 flex items-center justify-center">
-                        <motion.div whileHover={{ scale: 1.1 }} transition={{ duration: 1.5 }} className="relative w-full h-full">
-                           <Image src={p.img} alt={p.name} fill className="object-contain grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all" />
-                        </motion.div>
-                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_black_100%)] opacity-20" />
-                     </div>
-                     <div className="flex justify-between items-end mb-8">
-                        <div>
-                           <span className="text-[10px] uppercase font-black tracking-widest text-cyan-400 mb-2 block">{p.tag}</span>
-                           <h3 className="text-3xl font-black uppercase tracking-tighter italic leading-none">{p.name}</h3>
-                        </div>
-                        <div className="text-xl font-bold italic tracking-tighter opacity-40 group-hover:opacity-100 transition-all">${p.price}</div>
-                     </div>
-                     <button className="w-full py-5 bg-white/5 border border-white/10 rounded-2xl text-[10px] uppercase font-black tracking-[0.4em] hover:bg-cyan-500 hover:text-black transition-all">
-                        Experience_Notes
-                     </button>
-                  </motion.div>
-                ))}
-             </div>
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div initial={{ y: "-100%" }} animate={{ y: 0 }} exit={{ y: "-100%" }} transition={{ type: "tween", duration: 0.35 }} className="fixed inset-0 z-[100] bg-[#1a1410] text-white flex flex-col p-10">
+            <button onClick={() => setMenuOpen(false)} className="self-end mb-12"><X size={24} /></button>
+            <div className="flex flex-col gap-8 text-4xl uppercase">
+              {["Collection", "Ingredients", "Philosophy", "Boutiques", "Contact"].map(l => <a key={l} href="#" onClick={() => setMenuOpen(false)} className="hover:opacity-60 transition-opacity">{l}</a>)}
+            </div>
           </motion.div>
         )}
-
-        {/* PRODUCT DETAIL VIEW */}
-        {view === "product" && (
-          <motion.div key="product" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 pt-32 pb-32">
-             <button onClick={() => setView("catalog")} className="fixed top-12 left-12 z-[60] bg-white text-black p-5 rounded-full hover:scale-110 transition-transform shadow-2xl">
-                <X className="w-6 h-6" />
-             </button>
-
-             <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen">
-                <div className="lg:col-span-7 relative h-[70vh] lg:h-screen sticky top-0 bg-transparent flex items-center justify-center p-12 lg:p-32 overflow-hidden">
-                   <div className="absolute inset-0 bg-[#0a0a0f] z-[-1]" />
-                   <motion.div 
-                     initial={{ scale: 1.2, opacity: 0, rotate: -5 }} animate={{ scale: 1, opacity: 1, rotate: 0 }} transition={{ duration: 1.5 }}
-                     className="relative w-full h-full"
-                   >
-                      <Image src={PRODUCTS[activeItem].img} alt="Product" fill className="object-contain" priority />
-                   </motion.div>
-                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[40vh] font-serif italic font-black opacity-[0.02] select-none pointer-events-none capitalize">
-                      {PRODUCTS[activeItem].tag}
-                   </div>
-                </div>
-
-                <div className="lg:col-span-5 p-12 lg:p-24 bg-white/5 backdrop-blur-3xl border-l border-white/5 flex flex-col justify-center space-y-16">
-                   <div className="space-y-8">
-                      <span className="text-[10px] uppercase tracking-[1em] font-black opacity-30 block underline decoration-cyan-400 underline-offset-8">Olfactory_Sequence</span>
-                      <h1 className="text-6xl md:text-8xl font-black italic uppercase tracking-tighter leading-none">{PRODUCTS[activeItem].name}</h1>
-                      <div className="text-4xl font-bold tracking-tighter text-cyan-400">${PRODUCTS[activeItem].price}</div>
-                   </div>
-
-                   <p className="text-xl font-light italic leading-relaxed opacity-60 uppercase tracking-tight">
-                      {PRODUCTS[activeItem].desc} A scent that exists at the limit of visibility and perception. 
-                   </p>
-
-                   <div className="grid grid-cols-3 gap-8 py-12 border-y border-white/5 text-center">
-                      {[
-                        { icon: <Wind className="w-5 h-5 mx-auto mb-3" />, l: "Top Notes", v: "Ozone/Steel" },
-                        { icon: <Droplets className="w-5 h-5 mx-auto mb-3" />, l: "Heart Notes", v: "Iched Tea" },
-                        { icon: <Sparkles className="w-5 h-5 mx-auto mb-3" />, l: "Base Notes", v: "White Musk" },
-                      ].map((s, i) => (
-                        <div key={i} className="group">
-                           <div className="text-cyan-400 opacity-40 group-hover:opacity-100 transition-opacity">{s.icon}</div>
-                           <div className="text-[9px] font-black uppercase tracking-widest opacity-20 mb-1">{s.l}</div>
-                           <div className="text-[10px] font-black uppercase italic tracking-tighter">{s.v}</div>
-                        </div>
-                      ))}
-                   </div>
-
-                   <div className="flex flex-col md:flex-row gap-6">
-                      <button onClick={() => { setCart(c => c + 1); setView("catalog"); }} className="flex-grow py-8 bg-cyan-400 text-black font-black uppercase text-xs tracking-[1em] hover:bg-white transition-all shadow-[0_0_50px_rgba(34,211,238,0.2)]">
-                         Acquire_Essence
-                      </button>
-                      <button className="px-12 py-8 border border-white/20 text-[10px] font-black uppercase tracking-[0.5em] hover:bg-white hover:text-black transition-all">
-                         Inquiry
-                      </button>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
-        {/* INFO VIEW */}
-        {view === "info" && (
-          <motion.div key="info" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen">
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
-                <div className="relative aspect-square glass rounded-[4rem] p-12 overflow-hidden border border-white/10">
-                   <Image src="https://images.unsplash.com/photo-1510250660352-0d19f27c7322?q=80&w=1000&auto=format&fit=crop" alt="Process" fill className="object-cover opacity-60 grayscale" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0f] to-transparent" />
-                </div>
-                <div className="space-y-12">
-                   <span className="text-[10px] uppercase tracking-[1.5em] font-black opacity-30 block">Refractive_Thinking</span>
-                   <h2 className="text-7xl md:text-8xl font-serif italic tracking-tighter leading-none text-white font-black">Architecture <br/> of Air.</h2>
-                   <p className="text-2xl md:text-3xl font-light italic opacity-60 leading-relaxed uppercase tracking-tight">
-                      We treat fragrance as a structural element. A landscape of scent built through additive synthesis and material purity. Born in Geneva, refined in the void.
-                   </p>
-                   <div className="space-y-10 pt-12">
-                      {[
-                        { t: "Molecular Sourcing", d: "We utilize supercritical fluid extraction to ensure zero degradation of the organic profile." },
-                        { t: "Refractive Crystal", d: "Our vessels are lead-free crystal, designed to interact with light like a prism." },
-                      ].map((item, i) => (
-                        <div key={i} className="flex gap-8 group">
-                           <div className="w-16 h-[1px] bg-cyan-400 mt-4 group-hover:w-24 transition-all" />
-                           <div>
-                              <h4 className="text-2xl font-black uppercase italic tracking-tighter">{item.t}</h4>
-                              <p className="text-[10px] opacity-30 uppercase tracking-[0.3em] font-black mt-2 leading-relaxed">{item.d}</p>
-                           </div>
-                        </div>
-                      ))}
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
       </AnimatePresence>
 
-      {/* Global Status HUD */}
-      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em]">
-         <div className="flex gap-12">
-            <span>Glass_Certified</span>
-            <span>Batch_042</span>
-         </div>
-         <div className="flex gap-4 items-end">
-            <div className="text-right leading-tight italic">
-               Glass_Boutique <br /> Tokyo_Node
+      {/* HERO */}
+      <section className="relative h-screen flex items-end overflow-hidden bg-[#f0ece5]">
+        <motion.div style={{ y: heroY }} className="absolute inset-0">
+          <AnimatePresence mode="wait">
+            <motion.div key={activeFragrance} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.9 }} className="absolute inset-0">
+              <Image src={f.img} alt={f.name} fill className="object-cover opacity-50" unoptimized />
+            </motion.div>
+          </AnimatePresence>
+        </motion.div>
+        <div className="absolute inset-0 bg-gradient-to-t from-[#1a1410]/80 via-transparent to-transparent" />
+        <motion.div style={{ opacity: heroOpacity }} className="relative z-10 px-8 md:px-16 pb-20 w-full flex flex-col md:flex-row items-end gap-8">
+          <div className="flex-1">
+            <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="text-[9px] uppercase tracking-[0.6em] text-white/40 mb-4" style={{ fontFamily: "sans-serif" }}>
+              {f.family} · {f.intensity}
+            </motion.p>
+            <motion.h1 key={`h-${activeFragrance}`} initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }} className="text-white text-7xl md:text-[9vw] leading-none mb-4">{f.name}</motion.h1>
+            <motion.p key={`s-${activeFragrance}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="text-white/50 text-sm max-w-sm leading-relaxed mb-6">{f.desc}</motion.p>
+            <div className="flex gap-3">
+              <motion.button key={`b-${activeFragrance}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }} onClick={addToCart} className="bg-white text-[#1a1410] px-8 py-3 text-[10px] uppercase tracking-widest hover:bg-white/90 transition-colors" style={{ fontFamily: "sans-serif" }}>
+                Add to Cart — {f.price}
+              </motion.button>
             </div>
-            <div className="flex gap-[2px] h-3">
-               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-full bg-cyan-400`}></div>)}
-            </div>
-         </div>
-      </footer>
+          </div>
+          {/* Fragrance selector */}
+          <div className="flex md:flex-col gap-3">
+            {FRAGRANCES.map((fr, i) => (
+              <button key={fr.id} onClick={() => setActiveFragrance(i)} className={`w-10 h-10 overflow-hidden border-2 transition-all ${i === activeFragrance ? "border-white scale-110" : "border-transparent opacity-50 hover:opacity-80"}`}>
+                <Image src={fr.img} alt={fr.name} width={40} height={40} className="object-cover w-full h-full" unoptimized />
+              </button>
+            ))}
+          </div>
+        </motion.div>
+      </section>
 
-      <style>{`
-        .glass {
-          background: rgba(255, 255, 255, 0.01);
-          backdrop-filter: blur(80px);
-          -webkit-backdrop-filter: blur(80px);
-          border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-      `}</style>
+      {/* MARQUEE */}
+      <div className="overflow-hidden bg-[#1a1410] py-3.5">
+        <motion.div animate={{ x: [0, -2800] }} transition={{ duration: 32, repeat: Infinity, ease: "linear" }} className="flex gap-12 whitespace-nowrap">
+          {Array(18).fill(null).map((_, i) => (
+            <span key={i} className="text-[9px] uppercase tracking-[0.5em] text-white/20 shrink-0" style={{ fontFamily: "sans-serif" }}>Niche Perfumery · Natural Ingredients · Unisex · Cruelty-Free · Paris ·</span>
+          ))}
+        </motion.div>
+      </div>
+
+      {/* COLLECTION GRID */}
+      <section className="px-8 md:px-16 py-24">
+        <Reveal className="mb-12">
+          <p className="text-[9px] uppercase tracking-[0.5em] text-[#8b7355] mb-4" style={{ fontFamily: "sans-serif" }}>The Collection</p>
+          <h2 className="text-5xl md:text-6xl leading-none tracking-tight">Four Compositions</h2>
+        </Reveal>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {FRAGRANCES.map((fr, i) => {
+            const Icon = NOTE_ICONS[fr.family] || Leaf;
+            return (
+              <Reveal key={fr.id} delay={i * 0.08}>
+                <motion.div className="group cursor-pointer" whileHover={{ y: -6 }} onClick={() => setActiveFragrance(i)}>
+                  <div className="relative overflow-hidden bg-[#f0ece5] mb-5" style={{ height: "50vh" }}>
+                    <Image src={fr.img} alt={fr.name} fill className="object-cover transition-transform duration-700 group-hover:scale-105" unoptimized />
+                    {activeFragrance === i && <div className="absolute inset-0 ring-2 ring-inset ring-[#8b7355]/50" />}
+                  </div>
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <p className="text-[9px] uppercase tracking-widest text-[#8b7355] mb-1" style={{ fontFamily: "sans-serif" }}>{fr.subtitle}</p>
+                      <h3 className="text-2xl leading-none tracking-tight">{fr.name}</h3>
+                    </div>
+                    <p className="text-[#1a1410] font-bold text-sm" style={{ fontFamily: "sans-serif" }}>{fr.price}</p>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Icon size={10} className="text-[#8b7355]" />
+                    <p className="text-[9px] text-[#1a1410]/40 uppercase tracking-widest" style={{ fontFamily: "sans-serif" }}>{fr.notes.join(" · ")}</p>
+                  </div>
+                </motion.div>
+              </Reveal>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* PHILOSOPHY */}
+      <section className="bg-[#1a1410] text-white px-8 md:px-16 py-28 flex flex-col md:flex-row gap-16 items-start">
+        <Reveal className="md:w-1/2">
+          <p className="text-[9px] uppercase tracking-[0.5em] text-[#8b7355] mb-6" style={{ fontFamily: "sans-serif" }}>Our Approach</p>
+          <h2 className="text-5xl leading-tight mb-8">Fragrance as<br />Negative Space</h2>
+          <p className="text-white/50 leading-relaxed text-sm mb-6">
+            We do not build perfumes toward a goal. We remove — accord by accord — until only the essential remains. Like a sentence rewritten until it cannot lose a single word.
+          </p>
+          <p className="text-white/50 leading-relaxed text-sm">
+            Every ingredient is ethically sourced, every extraction process documented. We believe transparency is not a marketing term but an obligation.
+          </p>
+        </Reveal>
+        <Reveal delay={0.2} className="md:w-1/2 relative h-80 md:h-auto">
+          <div className="relative w-full" style={{ height: "60vh" }}>
+            <Image src="https://images.unsplash.com/photo-1523293182086-7651a899d37f?q=80&w=1000&auto=format&fit=crop" alt="Atelier" fill className="object-cover opacity-40" unoptimized />
+          </div>
+        </Reveal>
+      </section>
+
+      {/* TESTIMONIALS */}
+      <section className="px-8 md:px-16 py-24">
+        <Reveal className="mb-12">
+          <p className="text-[9px] uppercase tracking-[0.5em] text-[#8b7355] mb-4" style={{ fontFamily: "sans-serif" }}>Wearers</p>
+          <h2 className="text-5xl leading-none tracking-tight">Voices</h2>
+        </Reveal>
+        <div className="relative min-h-[180px] max-w-2xl">
+          <AnimatePresence mode="wait">
+            <motion.div key={activeTestimonial} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.6 }}>
+              <div className="flex gap-1 mb-5">{Array(TESTIMONIALS[activeTestimonial].rating).fill(null).map((_, i) => <Star key={i} size={12} fill="#8b7355" className="text-[#8b7355]" />)}</div>
+              <p className="text-xl leading-relaxed text-[#1a1410]/70 mb-6">"{TESTIMONIALS[activeTestimonial].text}"</p>
+              <p className="text-[9px] uppercase tracking-widest text-[#8b7355]" style={{ fontFamily: "sans-serif" }}>— {TESTIMONIALS[activeTestimonial].name}</p>
+            </motion.div>
+          </AnimatePresence>
+          <div className="flex gap-2 mt-8">
+            {TESTIMONIALS.map((_, i) => (
+              <button key={i} onClick={() => setActiveTestimonial(i)} className={`h-px rounded-full transition-all ${i === activeTestimonial ? "w-8 bg-[#8b7355]" : "w-3 bg-[#1a1410]/15"}`} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="bg-[#f0ece5] px-8 md:px-16 py-24 flex flex-col items-center text-center">
+        <Reveal>
+          <p className="text-[9px] uppercase tracking-[0.6em] text-[#8b7355] mb-6" style={{ fontFamily: "sans-serif" }}>Free Sample Program</p>
+          <h2 className="text-5xl md:text-6xl leading-none tracking-tight mb-4">Discover<br /><em>Your Vide.</em></h2>
+          <p className="text-[#1a1410]/50 text-sm leading-relaxed max-w-sm mb-8" style={{ fontFamily: "sans-serif" }}>Order a discovery set of all four compositions. €48 — credited to your first full bottle.</p>
+          <a href="#" className="bg-[#1a1410] text-white px-10 py-4 text-[10px] uppercase tracking-[0.3em] hover:bg-[#2d2620] transition-colors inline-flex items-center gap-2" style={{ fontFamily: "sans-serif" }}>
+            Order Discovery Set <ArrowRight size={12} />
+          </a>
+        </Reveal>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="bg-[#1a1410] text-white px-8 md:px-16 py-12 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div>
+          <p className="text-[#c9a96e] uppercase tracking-[0.4em] text-sm mb-1">VIDE PARFUMS</p>
+          <p className="text-[9px] uppercase tracking-widest text-white/30" style={{ fontFamily: "sans-serif" }}>Niche Perfumery · Paris</p>
+        </div>
+        <div className="flex gap-8 text-[9px] uppercase tracking-widest text-white/30" style={{ fontFamily: "sans-serif" }}>
+          {["Instagram", "Boutiques", "Press", "Wholesale"].map(l => <a key={l} href="#" className="hover:text-white transition-colors">{l}</a>)}
+        </div>
+        <p className="text-[9px] text-white/20 uppercase" style={{ fontFamily: "sans-serif" }}>© 2026 Vide Parfums SAS</p>
+      </footer>
     </div>
   );
 }
