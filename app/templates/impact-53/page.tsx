@@ -1,205 +1,299 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { motion, useScroll, useTransform, AnimatePresence, useInView, useMotionValue, useSpring } from "framer-motion";
+import { useRef, useState, useEffect } from "react";
 import Image from "next/image";
-import { ArrowRight, X, Menu, Search, Mail, Share2, MessageCircle, Maximize2, Plus, ArrowUpRight, Globe, Zap } from "lucide-react";
-import "../premium.css";
+import { ArrowRight, X, ChevronDown, Palette, Brush, Frame, Tag, Heart, ShoppingBag, ZoomIn } from "lucide-react";
 
-const PROJECTS = [
-  { id: 1, name: "AETHEL_STUDIOS", cat: "Editorial", img: "https://images.unsplash.com/photo-1558655146-d09347e92766?q=80&w=1000&auto=format&fit=crop", desc: "A structural exploration of digital identity and presence. Built on the edge." },
-  { id: 2, name: "SILK_OS", cat: "Interface", img: "https://images.unsplash.com/photo-1549490349-8643362247b5?q=80&w=1000&auto=format&fit=crop", desc: "Fluid, organic interactions inspired by the movement of raw silk and digital mesh." },
-  { id: 3, name: "ORBIT_X", cat: "Branding", img: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=1000&auto=format&fit=crop", desc: "Next-gen computing cores forged in the heart of industrial minimalism." },
-  { id: 4, name: "NEO_TYPE", cat: "Visual", img: "https://images.unsplash.com/photo-1542382156909-9ae37b3f56fd?q=80&w=1000&auto=format&fit=crop", desc: "Experimental typography systems designed for high-end editorial narratives." },
-  { id: 5, name: "VOID_SHELL", cat: "Architecture", img: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1000&auto=format&fit=crop", desc: "Minimalist hardware chassis forged in high-altitude environments for purity." },
-  { id: 6, name: "CORE_PLATE", cat: "Hardware", img: "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1000&auto=format&fit=crop", desc: "A structural study of photonic processing and thermal inertia. 4.8GHz stable." },
+const ARTWORKS = [
+  { id: "a1", title: "Chromatic Dissolution I", artist: "Sofia Nava", year: 2025, medium: "Oil on canvas", size: "120×160cm", price: "€8,400", edition: "Unique", image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80", tags: ["Abstract", "Large Format"], color: "#f43f5e" },
+  { id: "a2", title: "Untitled (Grid Study 7)", artist: "Marcus Holt", year: 2025, medium: "Acrylic on panel", size: "80×80cm", price: "€3,200", edition: "Unique", image: "https://images.unsplash.com/photo-1549490349-8643362247b5?w=800&q=80", tags: ["Geometric", "Minimalist"], color: "#818cf8" },
+  { id: "a3", title: "After Rain, Series III", artist: "Chen Wei", year: 2024, medium: "Watercolor", size: "50×70cm", price: "€1,800", edition: "1/3", image: "https://images.unsplash.com/photo-1547891654-e66ed7ebb968?w=800&q=80", tags: ["Landscape", "Paper"], color: "#34d399" },
+  { id: "a4", title: "Portrait of Nobody", artist: "Lara Voss", year: 2024, medium: "Oil on linen", size: "60×80cm", price: "€4,600", edition: "Unique", image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&q=80", tags: ["Figurative", "Portrait"], color: "#f59e0b" },
+  { id: "a5", title: "Blue Field Study", artist: "Sofia Nava", year: 2024, medium: "Mixed media", size: "100×140cm", price: "€6,200", edition: "Unique", image: "https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=800&q=80", tags: ["Abstract", "Mixed Media"], color: "#0ea5e9" },
+  { id: "a6", title: "Meridian Triptych", artist: "Marcus Holt", year: 2023, medium: "Digital print", size: "3×40×60cm", price: "€2,400", edition: "3/10", image: "https://images.unsplash.com/photo-1549289524-06cf8837ace5?w=800&q=80", tags: ["Digital", "Print"], color: "#e879f9" },
 ];
 
+const ARTISTS = [
+  { name: "Sofia Nava", bio: "Madrid-born, Paris-based. Works in oil and mixed media exploring chromatic dissolution.", image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80", works: 14 },
+  { name: "Marcus Holt", bio: "British painter known for geometric minimalism. Royal Academy trained.", image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&q=80", works: 22 },
+  { name: "Chen Wei", bio: "Shanghai-based watercolorist. Exhibited at Venice Biennale 2024.", image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&q=80", works: 8 },
+  { name: "Lara Voss", bio: "Figurative painter exploring identity and anonymity. Berlin Studio.", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&q=80", works: 11 },
+];
+
+function Reveal({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-60px" });
+  return (
+    <motion.div ref={ref} initial={{ opacity: 0, y: 40 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.8, delay, ease: [0.22, 1, 0.36, 1] }} className={className}>
+      {children}
+    </motion.div>
+  );
+}
+
+function Counter({ target, suffix = "" }: { target: number; suffix?: string }) {
+  const [count, setCount] = useState(0);
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true });
+  useEffect(() => {
+    if (!inView) return;
+    let n = 0; const step = Math.max(1, Math.ceil(target / 55));
+    const t = setInterval(() => { n += step; if (n >= target) { setCount(target); clearInterval(t); } else setCount(n); }, 24);
+    return () => clearInterval(t);
+  }, [inView, target]);
+  return <span ref={ref}>{count}{suffix}</span>;
+}
+
+function MagneticBtn({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  const ref = useRef<HTMLAnchorElement>(null);
+  const x = useMotionValue(0); const y = useMotionValue(0);
+  const sx = useSpring(x, { stiffness: 200, damping: 20 });
+  const sy = useSpring(y, { stiffness: 200, damping: 20 });
+  return (
+    <motion.a ref={ref} style={{ x: sx, y: sy }} onMouseMove={e => { const r = ref.current!.getBoundingClientRect(); x.set((e.clientX - r.left - r.width / 2) * 0.35); y.set((e.clientY - r.top - r.height / 2) * 0.35); }} onMouseLeave={() => { x.set(0); y.set(0); }} href="#" className={className}>{children}</motion.a>
+  );
+}
+
 export default function FloatCanvasSPA() {
-  const [view, setView] = useState<"grid" | "study" | "studio">("grid");
-  const [activeItem, setActiveItem] = useState(0);
+  const [selectedWork, setSelectedWork] = useState<typeof ARTWORKS[0] | null>(null);
+  const [activeTag, setActiveTag] = useState("All");
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [wishlist, setWishlist] = useState<string[]>([]);
+  const [cartFlash, setCartFlash] = useState(false);
+  const heroRef = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
+  const heroY = useTransform(scrollYProgress, [0, 1], [0, 180]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+
+  const allTags = ["All", "Abstract", "Figurative", "Geometric", "Landscape", "Digital"];
+  const filtered = activeTag === "All" ? ARTWORKS : ARTWORKS.filter(a => a.tags.includes(activeTag));
+
+  const faqs = [
+    { q: "Do you offer art advisory services?", a: "Yes — our team provides complimentary advisory for collectors building a collection or sourcing for a specific space." },
+    { q: "How are works shipped?", a: "All works ship via white-glove art handlers with full insurance. Framing and installation available on request." },
+    { q: "Can I view works in person?", a: "Our gallery is open Tuesday–Saturday 11–19h. Private viewings available by appointment outside opening hours." },
+    { q: "Do you accept payment plans?", a: "Works over €3,000 are eligible for a 3-month payment plan at 0% interest. Contact us to arrange." },
+  ];
 
   return (
-    <div className="premium-theme bg-[#f8f8f8] text-[#1a1a1a] min-h-screen selection:bg-black selection:text-white font-sans overflow-x-hidden">
-      
-      {/* Editorial HUD Nav */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-center bg-white/40 backdrop-blur-3xl border-b border-black/5">
-        <button onClick={() => setView("grid")} className="text-xl font-black italic tracking-tighter hover:scale-105 transition-transform">
-           FLOAT_UNIT&trade;
-        </button>
-        <div className="hidden md:flex gap-12 text-[10px] font-black uppercase tracking-[0.5em] opacity-30">
-           <button onClick={() => setView("grid")} className={`hover:opacity-100 transition-opacity ${view === 'grid' ? 'text-black opacity-100 underline decoration-black underline-offset-8' : ''}`}>THE_CANVAS</button>
-           <button onClick={() => setView("studio")} className={`hover:opacity-100 transition-opacity ${view === 'studio' ? 'text-black opacity-100 underline decoration-black underline-offset-8' : ''}`}>THE_STUDIO</button>
+    <div className="min-h-screen bg-[#f8f6f2] text-[#1a1512]" style={{ fontFamily: "'Helvetica Neue', sans-serif" }}>
+      {/* Nav */}
+      <nav className="fixed top-0 left-0 right-0 z-50 px-8 py-5 flex items-center justify-between bg-[#f8f6f2]/90 backdrop-blur-lg border-b border-black/5">
+        <div className="flex items-center gap-2">
+          <Frame size={16} className="opacity-50" />
+          <span className="text-sm font-black tracking-[0.12em] uppercase">Float & Canvas</span>
         </div>
-        <div className="flex items-center gap-8">
-           <Search className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-           <Menu className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
+        <div className="hidden md:flex gap-8 text-[10px] tracking-[0.2em] uppercase opacity-50">
+          {["Exhibitions", "Artists", "Editions", "Advisory", "About"].map(l => (
+            <a key={l} href="#" className="hover:opacity-100 transition-opacity">{l}</a>
+          ))}
         </div>
+        <MagneticBtn className="hidden md:flex items-center gap-2 px-5 py-2 bg-[#1a1512] text-white text-xs font-black tracking-widest uppercase hover:bg-[#c9a96e] transition-colors">
+          <ShoppingBag size={12} /> Collect
+        </MagneticBtn>
+        <button onClick={() => setMobileOpen(true)} className="md:hidden">{[0,1,2].map(i => <span key={i} className="block w-5 h-px bg-[#1a1512] mb-1.5" />)}</button>
       </nav>
 
-      <AnimatePresence mode="wait">
-        
-        {/* GRID VIEW (PORTFOLIO) */}
-        {view === "grid" && (
-          <motion.div key="grid" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-48 pb-32 px-8">
-             <header className="mb-32 flex flex-col md:flex-row justify-between items-end gap-12 border-b-2 border-black pb-10">
-                <h1 className="text-7xl md:text-[12vw] font-serif italic tracking-tighter leading-[0.75] text-black">
-                   Silent. <br /> <span className="text-transparent" style={{ WebkitTextStroke: '1px rgba(0,0,0,0.2)' }}>Forms.</span>
-                </h1>
-                <div className="text-right flex flex-col items-end">
-                   <div className="text-2xl font-black mb-4 tracking-tighter uppercase text-black/10 italic">Unit_Series_029</div>
-                   <div className="flex gap-4">
-                      <div className="text-[9px] font-black uppercase tracking-widest opacity-20 italic">Curating Excellence <br /> Through Subtraction</div>
-                   </div>
-                </div>
-             </header>
-
-             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-16">
-                {PROJECTS.map((p, i) => (
-                  <motion.div 
-                    key={p.id} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                    className="group flex flex-col cursor-pointer"
-                    onClick={() => { setActiveItem(i); setView("study"); }}
-                  >
-                     <div className="relative aspect-[4/5] bg-white overflow-hidden mb-12 rounded-[3rem] border border-black/5 shadow-2xi group-hover:shadow-[0_40px_80px_rgba(0,0,0,0.1)] transition-all">
-                        <Image src={p.img} alt={p.name} fill className="object-cover group-hover:scale-110 transition-transform duration-[2s] grayscale group-hover:grayscale-0" />
-                        <div className="absolute top-10 left-10 flex gap-4">
-                           <div className="p-4 bg-white/80 backdrop-blur-xl rounded-full border border-black/5 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Plus className="w-5 h-5 text-black" />
-                           </div>
-                        </div>
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                     </div>
-                     <div className="flex justify-between items-start flex-col">
-                        <span className="text-[10px] uppercase font-black tracking-[0.4em] opacity-30 mb-2 block">{p.cat}</span>
-                        <div className="flex justify-between items-end w-full pr-4">
-                           <h3 className="text-4xl font-serif italic tracking-tighter leading-none group-hover:text-black transition-colors">{p.name}</h3>
-                           <div className="text-3xl font-black italic tracking-tighter opacity-10 group-hover:opacity-100 transition-all">/0{p.id}</div>
-                        </div>
-                     </div>
-                     <p className="text-sm font-light italic opacity-40 uppercase tracking-tight max-w-xs mt-6">{p.desc}</p>
-                     <button className="flex items-center gap-4 text-[9px] font-black tracking-[0.6em] opacity-20 group-hover:opacity-100 transition-all group-hover:gap-12 border-t border-black/5 pt-10 mt-10">
-                        VIEW_CASE_STUDY <ArrowUpRight className="w-4 h-4" />
-                     </button>
-                  </motion.div>
-                ))}
-             </div>
+      {/* Mobile Menu */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ type: "spring", stiffness: 300, damping: 30 }} className="fixed inset-0 z-[100] bg-[#1a1512] text-white flex flex-col p-10">
+            <button onClick={() => setMobileOpen(false)} className="self-end mb-12"><X size={24} /></button>
+            {["Exhibitions", "Artists", "Editions", "Advisory", "About"].map((l, i) => (
+              <motion.a key={l} href="#" initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.07 }} className="text-4xl font-black mb-6 uppercase tracking-wider hover:text-[#c9a96e] transition-colors" onClick={() => setMobileOpen(false)}>{l}</motion.a>
+            ))}
           </motion.div>
         )}
-
-        {/* STUDY VIEW (DETAIL) */}
-        {view === "study" && (
-          <motion.div key="study" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen">
-             <button onClick={() => setView("grid")} className="fixed top-12 left-12 z-[60] bg-black text-white p-5 rounded-full hover:scale-110 transition-transform shadow-2xl">
-                <X className="w-6 h-6" />
-             </button>
-
-             <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen">
-                <div className="lg:col-span-12 relative flex items-center justify-center p-8 md:p-32 h-screen overflow-hidden bg-white">
-                   <div className="absolute inset-0 z-[-1]">
-                      <Image src={PROJECTS[activeItem].img} alt="Background" fill className="object-cover opacity-5 grayscale" />
-                   </div>
-                   
-                   <div className="max-w-[1500px] w-full grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10">
-                      <motion.div initial={{ scale: 1.1, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1 }} className="relative aspect-[4/5] w-full rounded-[4rem] overflow-hidden border-8 border-white shadow-2xl group">
-                         <Image src={PROJECTS[activeItem].img} alt="Project" fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[3s]" priority />
-                         <div className="absolute top-12 left-12 p-4 bg-white/80 backdrop-blur-xl rounded-2xl border border-black/5">
-                            <Maximize2 className="w-6 h-6 text-black animate-pulse" />
-                         </div>
-                      </motion.div>
-
-                      <div className="flex flex-col justify-center space-y-12">
-                         <div className="space-y-6">
-                            <span className="text-[10px] uppercase tracking-[1em] font-black opacity-30 mb-8 block underline decoration-black decoration-4 underline-offset-8 italic">Archive_Sync // {PROJECTS[activeItem].cat}</span>
-                            <h1 className="text-7xl md:text-9xl font-serif italic tracking-tighter leading-[0.85] text-black uppercase">{PROJECTS[activeItem].name}</h1>
-                            <div className="text-4xl font-black italic tracking-tighter opacity-10 italic">Global_Allocation: Reserved</div>
-                         </div>
-
-                         <p className="text-3xl font-light italic leading-relaxed uppercase tracking-tight opacity-50 text-black">
-                            {PROJECTS[activeItem].desc} Every angle was computed to maximize silence and minimize human interference with the landscape.
-                         </p>
-
-                         <div className="grid grid-cols-2 gap-12 py-12 border-y border-black/10">
-                            {[
-                              { icon: <Globe className="w-5 h-5" />, l: "Region", v: "Global_East" },
-                              { icon: <Zap className="w-5 h-5" />, l: "Processing", v: "Class_A" },
-                              { icon: <Shield className="w-5 h-5" />, l: "Security", v: "Phase_Shift" },
-                              { icon: <Plus className="w-5 h-5" />, l: "Material", v: "Titanium" },
-                            ].map((s, i) => (
-                              <div key={i} className="flex gap-6 items-center text-black">
-                                 <div className="opacity-20">{s.icon}</div>
-                                 <div>
-                                    <div className="text-[10px] font-black opacity-30 uppercase tracking-widest mb-1 italic">{s.l}</div>
-                                    <div className="text-sm font-black uppercase italic tracking-tighter">{s.v}</div>
-                                 </div>
-                              </div>
-                            ))}
-                         </div>
-
-                         <div className="flex gap-6 pt-8">
-                            <button onClick={() => setView("grid")} className="flex-grow py-8 bg-black text-white font-black uppercase text-xs tracking-[1em] hover:bg-black/80 transition-all shadow-2xl">
-                               Explore_Archive
-                            </button>
-                            <button className="px-12 py-8 border border-black/20 text-[10px] font-black uppercase tracking-[0.5em] hover:scale-105 transition-all text-black">
-                               PDF_Spec
-                            </button>
-                         </div>
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
-        {/* STUDIO VIEW (ABOUT) */}
-        {view === "studio" && (
-          <motion.div key="studio" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen flex flex-col justify-center">
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center">
-                <div className="space-y-16">
-                   <span className="text-[10px] uppercase font-black tracking-[1.5em] opacity-30 block underline decoration-black decoration-2 underline-offset-8 italic">Since_2012</span>
-                   <h2 className="text-7xl md:text-[10vw] font-serif italic tracking-tighter leading-none text-black uppercase">THE <br/> ORIGIN.</h2>
-                   <p className="text-3xl md:text-4xl font-light italic opacity-60 leading-relaxed uppercase tracking-tight">
-                      We treat architecture as code. Every structure is a function of its environmental variables and tectonic intent. 100% precision. Zero noise.
-                   </p>
-                   <div className="flex gap-12 pt-12 border-t border-black/10">
-                      <Share2 className="w-8 h-8 opacity-20 hover:opacity-100 cursor-pointer transition-opacity" />
-                      <MessageCircle className="w-8 h-8 opacity-20 hover:opacity-100 cursor-pointer transition-opacity" />
-                      <Mail className="w-8 h-8 opacity-20 hover:opacity-100 cursor-pointer transition-opacity" />
-                   </div>
-                </div>
-                <div className="relative aspect-square bg-[#ddd] rounded-[4rem] p-12 overflow-hidden border border-black/5 group">
-                   <Image src="https://images.unsplash.com/photo-1541829070764-84a7d30dee62?q=80&w=1000&auto=format&fit=crop" alt="The Studio" fill className="object-cover opacity-20 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-[2s]" />
-                   <div className="absolute inset-x-0 bottom-12 flex justify-center">
-                      <div className="px-12 py-6 bg-black text-white text-[10px] font-black uppercase tracking-widest italic animate-bounce cursor-pointer hover:bg-black/80 transition-all">
-                         Establish_Handshake
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
       </AnimatePresence>
 
-      {/* Global Status HUD */}
-      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em] italic text-black">
-         <div className="flex gap-12 text-black">
-            <span>Float_Unit_Alpha</span>
-            <span>Uptime: 99.9%</span>
-         </div>
-         <div className="flex gap-4 items-end text-black">
-            <div className="text-right leading-tight italic">
-               Inventory_Control <br /> v4.0.21
-            </div>
-            <div className="flex gap-[4px] h-4">
-               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-full bg-black opacity-${i*20}`}></div>)}
-            </div>
-         </div>
+      {/* Hero */}
+      <section ref={heroRef} className="relative h-screen flex items-end overflow-hidden">
+        <motion.div style={{ y: heroY, opacity: heroOpacity }} className="absolute inset-0">
+          <Image src={ARTWORKS[0].image} alt="hero" fill unoptimized className="object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#f8f6f2] via-[#f8f6f2]/20 to-transparent" />
+        </motion.div>
+        <div className="relative z-10 px-8 md:px-16 pb-16">
+          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }} className="text-[10px] tracking-[0.3em] uppercase mb-4 opacity-50">
+            Summer Exhibition — Now Open
+          </motion.p>
+          <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, delay: 0.1 }} className="text-5xl md:text-9xl font-black leading-none tracking-tight mb-8">
+            Art that<br />stays with you.
+          </motion.h1>
+          <MagneticBtn className="inline-flex items-center gap-3 px-8 py-4 bg-[#1a1512] text-white font-black text-xs tracking-widest uppercase hover:bg-[#c9a96e] transition-colors">
+            View Exhibition <ArrowRight size={14} />
+          </MagneticBtn>
+        </div>
+      </section>
+
+      {/* Marquee */}
+      <div className="border-y border-black/5 py-4 overflow-hidden bg-[#1a1512]">
+        <motion.div animate={{ x: [0, -2400] }} transition={{ repeat: Infinity, duration: 28, ease: "linear" }} className="flex gap-12 whitespace-nowrap">
+          {Array(8).fill(0).map((_, i) => ARTISTS.map(a => (
+            <span key={`${i}-${a.name}`} className="text-[9px] tracking-[0.25em] uppercase text-white/30">{a.name} ·</span>
+          )))}
+        </motion.div>
+      </div>
+
+      {/* Works */}
+      <section className="py-24 px-6 max-w-7xl mx-auto">
+        <Reveal className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+          <div>
+            <h2 className="text-3xl font-black tracking-tight mb-2">Available Works</h2>
+            <p className="text-sm opacity-40">Original works and limited editions by represented artists.</p>
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            {allTags.map(t => (
+              <button key={t} onClick={() => setActiveTag(t)} className="px-4 py-2 text-xs font-bold tracking-widest uppercase transition-colors" style={{ background: activeTag === t ? "#1a1512" : "transparent", color: activeTag === t ? "white" : "inherit", border: "1px solid", borderColor: activeTag === t ? "#1a1512" : "rgba(0,0,0,0.12)" }}>
+                {t}
+              </button>
+            ))}
+          </div>
+        </Reveal>
+        <div className="grid md:grid-cols-3 gap-6">
+          <AnimatePresence mode="popLayout">
+            {filtered.map((a, i) => (
+              <Reveal key={a.id} delay={i * 0.06}>
+                <motion.div layout whileHover={{ y: -6 }} className="group cursor-pointer bg-white">
+                  <div className="relative overflow-hidden" style={{ aspectRatio: "3/4" }}>
+                    <Image src={a.image} alt={a.title} fill unoptimized className="object-cover transition-transform duration-700 group-hover:scale-105" />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                      <button onClick={e => { e.stopPropagation(); setSelectedWork(a); }} className="border border-white text-white text-[10px] px-4 py-2 tracking-widest uppercase mr-2">
+                        View
+                      </button>
+                    </div>
+                    <button onClick={e => { e.stopPropagation(); setWishlist(w => w.includes(a.id) ? w.filter(id => id !== a.id) : [...w, a.id]); }} className="absolute top-3 right-3 p-2 bg-white/80 hover:bg-white transition-colors">
+                      <Heart size={14} fill={wishlist.includes(a.id) ? "#f43f5e" : "none"} stroke={wishlist.includes(a.id) ? "#f43f5e" : "currentColor"} />
+                    </button>
+                    <div className="absolute top-3 left-3 flex gap-1 flex-wrap max-w-[60%]">
+                      {a.tags.map(t => <span key={t} className="text-[8px] font-bold px-2 py-0.5 bg-white/80 tracking-wider uppercase">{t}</span>)}
+                    </div>
+                  </div>
+                  <div className="p-4 cursor-pointer" onClick={() => setSelectedWork(a)}>
+                    <h3 className="text-sm font-black mb-1">{a.title}</h3>
+                    <p className="text-[10px] opacity-40 mb-3">{a.artist} · {a.year} · {a.medium}</p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-base font-black" style={{ color: a.color }}>{a.price}</span>
+                      <span className="text-[9px] opacity-30">{a.edition}</span>
+                    </div>
+                  </div>
+                </motion.div>
+              </Reveal>
+            ))}
+          </AnimatePresence>
+        </div>
+      </section>
+
+      {/* Artists */}
+      <section className="py-24 bg-[#1a1512] text-white px-6">
+        <div className="max-w-6xl mx-auto">
+          <Reveal><h2 className="text-3xl font-black tracking-tight mb-16">Represented Artists</h2></Reveal>
+          <div className="grid md:grid-cols-4 gap-6">
+            {ARTISTS.map((a, i) => (
+              <Reveal key={a.name} delay={i * 0.1}>
+                <motion.div whileHover={{ y: -6 }}>
+                  <div className="relative overflow-hidden mb-4" style={{ aspectRatio: "3/4" }}>
+                    <Image src={a.image} alt={a.name} fill unoptimized className="object-cover grayscale hover:grayscale-0 transition-all duration-700" />
+                  </div>
+                  <h3 className="text-sm font-black mb-1">{a.name}</h3>
+                  <p className="text-xs opacity-40 leading-relaxed mb-2">{a.bio}</p>
+                  <p className="text-[10px] opacity-20">{a.works} works available</p>
+                </motion.div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Stats */}
+      <section className="py-24 px-6 border-y border-black/5">
+        <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-10">
+          {[{ label: "Artists Represented", value: 42, suffix: "" }, { label: "Works Sold", value: 1240, suffix: "+" }, { label: "Private Collections", value: 380, suffix: "+" }, { label: "Years in Business", value: 18, suffix: "" }].map((s, i) => (
+            <Reveal key={s.label} delay={i * 0.1} className="text-center">
+              <div className="text-4xl font-black mb-2" style={{ color: "#c9a96e" }}><Counter target={s.value} suffix={s.suffix} /></div>
+              <div className="text-[9px] tracking-[0.2em] uppercase opacity-40">{s.label}</div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="py-24 bg-[#f0ede6] px-6">
+        <div className="max-w-2xl mx-auto">
+          <Reveal><h2 className="text-2xl font-black tracking-tight mb-12">Collecting FAQ</h2></Reveal>
+          {faqs.map((f, i) => (
+            <Reveal key={i} delay={i * 0.05}>
+              <div className="border-b border-black/10">
+                <button onClick={() => setOpenFaq(openFaq === i ? null : i)} className="w-full text-left py-5 flex items-center justify-between text-sm font-bold">
+                  {f.q} <motion.span animate={{ rotate: openFaq === i ? 180 : 0 }}><ChevronDown size={16} /></motion.span>
+                </button>
+                <AnimatePresence>
+                  {openFaq === i && (
+                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+                      <p className="pb-5 text-sm opacity-60 leading-relaxed">{f.a}</p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="py-32 px-6 text-center bg-[#1a1512] text-white">
+        <Reveal><h2 className="text-5xl md:text-7xl font-black tracking-tight mb-4 leading-none">Start Your<br /><em className="text-[#c9a96e] not-italic">Collection</em></h2></Reveal>
+        <Reveal delay={0.2}><p className="text-sm opacity-40 mb-10 max-w-md mx-auto">Our advisors are available for private consultations — in-gallery, at your home, or virtually.</p></Reveal>
+        <Reveal delay={0.3}>
+          <MagneticBtn className="inline-flex items-center gap-3 px-10 py-5 bg-[#c9a96e] text-[#1a1512] font-black text-xs tracking-[0.2em] uppercase">
+            Book an Advisory Session <ArrowRight size={14} />
+          </MagneticBtn>
+        </Reveal>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-white/10 bg-[#1a1512] text-white py-12 px-8 flex flex-col md:flex-row items-center justify-between gap-6 text-[10px] opacity-30 tracking-wider uppercase">
+        <span>Float & Canvas © 2026</span>
+        <div className="flex gap-8">{["Instagram", "Artsy", "Newsletter", "Press"].map(l => <a key={l} href="#" className="hover:opacity-100 transition-opacity">{l}</a>)}</div>
       </footer>
 
-      <style>{`
-        ::-webkit-scrollbar { width: 0px; }
-      `}</style>
+      {/* Work Modal */}
+      <AnimatePresence>
+        {selectedWork && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] bg-black/75 flex items-center justify-center p-6" onClick={() => setSelectedWork(null)}>
+            <motion.div initial={{ scale: 0.92 }} animate={{ scale: 1 }} exit={{ scale: 0.92 }} onClick={e => e.stopPropagation()} className="bg-[#f8f6f2] max-w-2xl w-full overflow-hidden flex flex-col md:flex-row">
+              <div className="relative md:w-1/2" style={{ aspectRatio: "3/4" }}>
+                <Image src={selectedWork.image} alt={selectedWork.title} fill unoptimized className="object-cover" />
+              </div>
+              <div className="p-6 flex-1">
+                <button onClick={() => setSelectedWork(null)} className="float-right opacity-40 hover:opacity-100"><X size={18} /></button>
+                <div className="clear-right pt-2">
+                  <h3 className="text-xl font-black mb-1">{selectedWork.title}</h3>
+                  <p className="text-xs opacity-40 mb-4">{selectedWork.artist} · {selectedWork.year}</p>
+                  <div className="space-y-1.5 text-xs mb-6">
+                    <div className="flex justify-between border-b border-black/5 py-2"><span className="opacity-40">Medium</span><span>{selectedWork.medium}</span></div>
+                    <div className="flex justify-between border-b border-black/5 py-2"><span className="opacity-40">Dimensions</span><span>{selectedWork.size}</span></div>
+                    <div className="flex justify-between border-b border-black/5 py-2"><span className="opacity-40">Edition</span><span>{selectedWork.edition}</span></div>
+                  </div>
+                  <div className="text-2xl font-black mb-4" style={{ color: selectedWork.color }}>{selectedWork.price}</div>
+                  <button onClick={() => { setCartFlash(true); setSelectedWork(null); setTimeout(() => setCartFlash(false), 1000); }} className="w-full py-3 bg-[#1a1512] text-white font-black text-xs tracking-widest uppercase hover:bg-[#c9a96e] hover:text-[#1a1512] transition-colors">
+                    Enquire to Purchase
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Cart flash */}
+      <AnimatePresence>
+        {cartFlash && (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-[#1a1512] text-white text-xs font-bold tracking-widest uppercase px-6 py-3 z-[300] flex items-center gap-2">
+            <ShoppingBag size={14} className="text-[#c9a96e]" /> Enquiry Sent
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
