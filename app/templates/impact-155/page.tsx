@@ -13,6 +13,28 @@ const WORKS = [
   { id: 3, title: "NEURAL_DRIFT", cat: "Generative", value: "Locked", img: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&q=80&w=1500" },
 ];
 
+function TextScramble({ text }: { text: string }) {
+  const [display, setDisplay] = useState(text);
+  const chars = "!<>-_\\/[]{}—=+*^?#________";
+  
+  useEffect(() => {
+    let iteration = 0;
+    const interval = setInterval(() => {
+      setDisplay(prev => 
+        text.split("").map((char, index) => {
+          if (index < iteration) return text[index];
+          return chars[Math.floor(Math.random() * chars.length)];
+        }).join("")
+      );
+      if (iteration >= text.length) clearInterval(interval);
+      iteration += 1/3;
+    }, 30);
+    return () => clearInterval(interval);
+  }, [text]);
+
+  return <span>{display}</span>;
+}
+
 export default function ArtIndexGallerySPA() {
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: containerRef });
@@ -35,7 +57,7 @@ export default function ArtIndexGallerySPA() {
   }, [mouseX, mouseY]);
 
   return (
-    <div ref={containerRef} className="premium-theme bg-[#050505] text-stone-400 min-h-screen font-sans selection:bg-stone-600 selection:text-white overflow-hidden relative">
+    <div ref={containerRef} className="premium-theme bg-[#050505] text-stone-400 min-h-screen font-sans selection:bg-stone-600 selection:text-white overflow-hidden relative uppercase">
       
       {/* STONE GLOW & NOISE */}
       <div className="fixed inset-0 z-0 pointer-events-none">
@@ -49,11 +71,11 @@ export default function ArtIndexGallerySPA() {
 
       {/* HEADER */}
       <header className="fixed top-0 left-0 w-full px-6 md:px-12 py-10 flex justify-between items-center z-50 bg-[#050505]/50 backdrop-blur-3xl border-b border-stone-500/10">
-        <Link href="/" className="font-black text-2xl tracking-[0.4em] text-white flex items-center gap-4 italic uppercase">
+        <Link href="/" className="font-black text-2xl tracking-[0.4em] text-white flex items-center gap-4 italic uppercase text-center md:text-left">
            ART<span className="text-stone-500">_INDEX</span>
         </Link>
         
-        <nav className="hidden lg:flex gap-16 font-black text-[10px] uppercase tracking-[0.8em] text-white/30">
+        <nav className="hidden lg:flex gap-16 font-black text-[10px] uppercase tracking-[0.8em] text-white/30 text-center">
             <Link href="#" className="hover:text-stone-400 transition-colors group">
                Exhibition<span className="inline-block w-0 group-hover:w-4 transition-all overflow-hidden text-stone-500 italic">.</span>
             </Link>
@@ -66,7 +88,7 @@ export default function ArtIndexGallerySPA() {
         </nav>
         
         <div className="flex items-center gap-10">
-           <button className="bg-stone-800 text-white px-12 py-4 font-black text-[10px] uppercase tracking-[0.5em] hover:bg-white hover:text-black transition-all shadow-2xl">
+           <button className="bg-stone-800 text-white px-12 py-4 font-black text-[10px] uppercase tracking-[0.5em] hover:bg-white hover:text-black transition-all shadow-xl">
               Subscribe_
            </button>
            <Menu className="w-6 h-6 text-stone-500 cursor-pointer" />
@@ -74,67 +96,75 @@ export default function ArtIndexGallerySPA() {
       </header>
 
       {/* HERO SECTION */}
-      <section className="relative h-screen flex flex-col justify-center items-center px-6 text-center z-10 pt-20 overflow-hidden">
+      <section className="relative h-screen flex flex-col justify-center items-center px-6 text-center z-10 pt-20 overflow-hidden text-center">
          <motion.div style={{ scale: heroScale, y: yHero }} className="absolute inset-0 z-0">
-            <Image src="https://images.unsplash.com/photo-1549490349-8643362247b5?auto=format&fit=crop&q=80&w=2500" alt="Art" fill className="object-cover opacity-20 grayscale contrast-150" priority />
+            <Image src="https://images.unsplash.com/photo-1549490349-8643362247b5?auto=format&fit=crop&q=80&w=2500" alt="Art" fill className="object-cover opacity-20 grayscale contrast-150 text-center" priority />
             <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-[#050505]" />
          </motion.div>
          
-         <div className="relative z-10 max-w-7xl w-full">
+         <div className="relative z-10 max-w-7xl w-full text-center">
             <motion.div 
-               initial={{ opacity: 0, y: 100 }}
-               animate={{ opacity: 1, y: 0 }}
-               transition={{ duration: 1.8, ease: [0.16, 1, 0.3, 1] }}
+               initial={{ opacity: 0, scale: 0.95 }}
+               animate={{ opacity: 1, scale: 1 }}
+               transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
             >
-               <div className="inline-flex items-center gap-6 font-black text-[10px] uppercase tracking-[1.2em] text-stone-500/50 mb-20 border-l-2 border-stone-600 pl-12 italic font-mono">
+               <div className="inline-flex items-center gap-6 font-black text-[10px] uppercase tracking-[1.2em] text-stone-500/50 mb-20 border-l-2 border-stone-600 pl-12 italic font-mono text-center">
                   Visual_Record // 0155_Alpha
                </div>
                
-               <h1 className="text-7xl md:text-[13vw] font-black italic uppercase leading-[0.75] tracking-tighter mb-24 text-white drop-shadow-2xl">
-                  BEYOND<br/>
+               <h1 className="text-7xl md:text-[13vw] font-black italic uppercase leading-[0.75] tracking-tighter mb-24 text-white text-center">
+                  <TextScramble text="BEYOND." /><br/>
                   <span className="text-transparent" style={{ WebkitTextStroke: "1px rgba(120,113,108,0.6)" }}>STATIC.</span>
                </h1>
                
-               <p className="text-xl md:text-3xl font-light italic text-white/20 max-w-3xl mx-auto mb-28 leading-relaxed uppercase tracking-tight">
+               <p className="text-xl md:text-3xl font-light italic text-white/20 max-w-3xl mx-auto mb-28 leading-relaxed uppercase tracking-tight text-center">
                   A curated index of visual tectonic shifts. Architectural intent redefined through generative resonance.
                </p>
                
-               <div className="flex flex-col md:flex-row gap-20 justify-center items-center font-mono">
-                  <div className="flex items-center gap-10 group cursor-pointer">
+               <div className="flex flex-col md:flex-row gap-20 justify-center items-center font-mono text-center">
+                  <div className="flex items-center gap-10 group cursor-pointer text-center">
                      <div className="w-24 h-px bg-stone-600/30 group-hover:w-32 transition-all" />
                      <span className="text-[10px] font-black uppercase tracking-[1em] text-stone-500">Explore_Works</span>
                   </div>
                   <div className="hidden md:block w-px h-20 bg-white/5" />
-                  <div className="font-black text-[9px] uppercase tracking-[0.8em] text-white/10 italic">
+                  <div className="font-black text-[9px] uppercase tracking-[0.8em] text-white/10 italic text-center">
                      Established_2026 // Global
                   </div>
                </div>
             </motion.div>
          </div>
 
-         {/* Decorative Side HUD */}
-         <div className="absolute right-12 bottom-12 flex flex-col items-end gap-6 font-black text-[8px] uppercase tracking-[1em] text-stone-500/10 hidden md:flex italic font-mono">
-            <span>INDEX_STATUS: STABLE</span>
+         {/* Index HUD */}
+         <div className="absolute right-12 bottom-12 flex flex-col items-end gap-6 font-black text-[8px] uppercase tracking-[1em] text-stone-500/10 hidden md:flex italic font-mono text-center">
+            <span>INDEX_SYNC: ACTIVE</span>
             <div className="flex gap-1 h-16 items-end">
-               {[1, 2, 3, 4, 5, 6, 7, 8].map(i => <motion.div key={i} animate={{ height: [`${20 + Math.random() * 80}%`, `${20 + Math.random() * 80}%`] }} transition={{ duration: 1, repeat: Infinity, repeatType: "reverse" }} className="w-[1px] bg-stone-500" />)}
+               {[1, 2, 3, 4, 5, 6].map(i => <motion.div key={i} animate={{ height: ['20%', '100%', '40%'] }} transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }} className="w-[1px] bg-stone-500" />)}
+            </div>
+         </div>
+         
+         <div className="absolute left-12 bottom-12 hidden md:block text-center">
+            <div className="flex flex-col gap-2 text-[8px] font-black uppercase tracking-[0.4em] text-white/10 italic font-mono text-center">
+               <span>NODES: 2048</span>
+               <span>STATE: STABLE</span>
+               <span>STATUS: ARCHIVED</span>
             </div>
          </div>
       </section>
 
       {/* WORKS GRID */}
       <section className="py-48 px-6 md:px-12 max-w-[1800px] mx-auto relative z-10 bg-[#050505]">
-         <div className="flex flex-col md:flex-row justify-between items-end mb-48 border-b border-stone-500/10 pb-24 gap-20">
+         <div className="flex flex-col md:flex-row justify-between items-end mb-48 border-b border-stone-500/10 pb-24 gap-20 text-center md:text-left">
             <div>
-               <span className="text-[10px] font-black uppercase tracking-[2em] text-stone-600 mb-10 block italic">Exhibition_Manifest</span>
-               <h2 className="text-6xl md:text-[10vw] font-black italic uppercase tracking-tighter text-white leading-none">The <span className="text-stone-500">Index_</span></h2>
+               <span className="text-[10px] font-black uppercase tracking-[2em] text-stone-600 mb-10 block italic font-mono text-center md:text-left">Exhibition_Manifest</span>
+               <h2 className="text-6xl md:text-[10vw] font-black italic uppercase tracking-tighter text-white leading-none text-center md:text-left">The <span className="text-stone-500">Index_</span></h2>
             </div>
-            <div className="flex gap-20 text-[10px] font-black uppercase tracking-[1em] text-white/20 italic font-mono">
+            <div className="flex gap-20 text-[10px] font-black uppercase tracking-[1em] text-white/20 italic font-mono text-center md:text-left">
                <span>Curated: [Active]</span>
                <span>Records: [03]</span>
             </div>
          </div>
 
-         <div className="grid grid-cols-1 md:grid-cols-3 gap-20">
+         <div className="grid grid-cols-1 md:grid-cols-3 gap-20 text-center">
             {WORKS.map((p, i) => (
                 <motion.div 
                    key={i} 
@@ -142,25 +172,25 @@ export default function ArtIndexGallerySPA() {
                    whileInView={{ opacity: 1, y: 0 }}
                    viewport={{ once: true, margin: "-100px" }}
                    transition={{ duration: 1.2, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
-                   className="group relative h-[90vh] bg-neutral-900 border border-white/5 overflow-hidden cursor-pointer hover:border-stone-500/40 transition-all shadow-2xl"
+                   className="group relative h-[90vh] bg-neutral-900 border border-white/5 overflow-hidden cursor-pointer hover:border-stone-500/40 transition-all text-center shadow-2xl"
                 >
-                    <Image src={p.img} alt={p.title} fill className="object-cover opacity-40 grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-1000" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent opacity-95" />
-                    <div className="absolute inset-0 bg-stone-600/5 group-hover:bg-transparent transition-colors duration-700" />
+                    <Image src={p.img} alt={p.title} fill className="object-cover opacity-40 grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-1000 text-center" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent opacity-95 text-center" />
+                    <div className="absolute inset-0 bg-stone-600/5 group-hover:bg-transparent transition-colors duration-700 text-center" />
                     
-                    <div className="absolute inset-20 flex flex-col justify-between z-10 font-sans text-white">
-                        <div className="flex justify-between items-start">
-                           <div className="p-6 bg-white/5 border border-white/10 rounded-none group-hover:bg-stone-600 group-hover:text-black transition-all shadow-xl">
-                              <Eye className="w-8 h-8" />
+                    <div className="absolute inset-20 flex flex-col justify-between z-10 font-sans text-white text-center">
+                        <div className="flex justify-between items-start text-center">
+                           <div className="p-6 bg-white/5 border border-white/10 rounded-none group-hover:bg-stone-600 group-hover:text-black transition-all text-center shadow-xl">
+                              <Eye className="w-8 h-8 text-center" />
                            </div>
-                           <div className="text-[10px] font-black uppercase tracking-[1em] text-stone-500/20 italic font-mono">Ref_0x{i+155}</div>
+                           <div className="text-[10px] font-black uppercase tracking-[1em] text-stone-500/20 italic font-mono text-center">Ref_0x{i+155}</div>
                         </div>
                         
-                        <div>
-                           <span className="text-[10px] uppercase tracking-[1em] text-stone-500 mb-10 block italic font-black font-mono">{p.cat} // {p.value}</span>
-                           <h3 className="text-6xl md:text-7xl font-black italic uppercase tracking-tighter mb-20 text-white group-hover:tracking-[0.1em] transition-all leading-[0.8]">{p.title}</h3>
-                           <div className="flex items-center gap-10 text-[10px] font-black uppercase tracking-[1em] opacity-0 group-hover:opacity-100 transition-all translate-y-10 group-hover:translate-y-0 text-white">
-                              View_Record <ArrowRight className="w-8 h-8" />
+                        <div className="text-center">
+                           <span className="text-[10px] uppercase tracking-[1em] text-stone-500 mb-10 block italic font-black font-mono text-center">{p.cat} // {p.value}</span>
+                           <h3 className="text-6xl md:text-7xl font-black italic uppercase tracking-tighter mb-20 text-white group-hover:tracking-[0.1em] transition-all leading-[0.8] text-center">{p.title}</h3>
+                           <div className="flex items-center gap-10 text-[10px] font-black uppercase tracking-[1em] opacity-0 group-hover:opacity-100 transition-all translate-y-10 group-hover:translate-y-0 text-white text-center justify-center">
+                              View_Record <ArrowRight className="w-8 h-8 text-center" />
                            </div>
                         </div>
                     </div>
@@ -171,36 +201,30 @@ export default function ArtIndexGallerySPA() {
 
       {/* FOOTER */}
       <footer className="py-60 px-6 md:px-12 border-t border-white/5 relative z-10 bg-[#050505]">
-         <div className="max-w-[1800px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-60">
-            <div className="max-w-2xl">
-               <div className="text-stone-500 mb-20 flex items-center gap-8 font-black text-3xl italic uppercase tracking-[0.5em] font-mono">
-                  <Activity className="w-12 h-12" /> Exhibition_Sync
+         <div className="max-w-[1800px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-60 text-center md:text-left">
+            <div className="text-center md:text-left">
+               <div className="text-stone-500 mb-20 flex items-center gap-8 font-black text-3xl italic uppercase tracking-[0.5em] font-mono justify-center md:justify-start">
+                  <Activity className="w-12 h-12 text-center md:text-left" /> Exhibition_Sync
                </div>
-               <p className="text-5xl md:text-7xl font-light italic leading-[0.9] text-white/10 uppercase tracking-tighter mb-24">
+               <p className="text-5xl md:text-7xl font-light italic leading-[0.9] text-white/10 uppercase tracking-tighter mb-24 text-center md:text-left">
                   VISUAL REASONING IS A FUNCTION OF ENVIRONMENTAL VARIABLES.
                </p>
-               <div className="flex gap-24 font-black text-[10px] uppercase tracking-[1em] text-stone-500/30 italic font-mono">
+               <div className="flex gap-24 font-black text-[10px] uppercase tracking-[1em] text-stone-500/30 italic font-mono justify-center md:justify-start">
                   <span>Berlin</span>
                   <span>New York</span>
                   <span>Tokyo</span>
                </div>
             </div>
-            <div className="flex flex-col justify-between items-end text-right font-mono">
-               <div className="w-full">
-                  <h4 className="text-[15vw] font-black italic uppercase tracking-tighter text-white opacity-[0.02] leading-none mb-24">INDEX</h4>
-                  <nav className="flex flex-col gap-12 font-black text-[10px] uppercase tracking-[1em] text-white/10">
-                     <Link href="#" className="hover:text-stone-400 transition-colors group">
-                        Instagram<span className="text-stone-500/0 group-hover:text-stone-500 transition-all">_</span>
-                     </Link>
-                     <Link href="#" className="hover:text-stone-400 transition-colors group">
-                        Archives<span className="text-stone-500/0 group-hover:text-stone-500 transition-all">_</span>
-                     </Link>
-                     <Link href="#" className="hover:text-stone-400 transition-colors group">
-                        Manifesto<span className="text-stone-500/0 group-hover:text-stone-500 transition-all">_</span>
-                     </Link>
+            <div className="flex flex-col justify-between items-end text-right font-mono text-center md:text-right text-stone-500">
+               <div className="w-full text-center md:text-right">
+                  <h4 className="text-[15vw] font-black italic uppercase tracking-tighter text-white opacity-[0.02] leading-none mb-24 text-center md:text-right">INDEX</h4>
+                  <nav className="flex flex-col gap-12 font-black text-[10px] uppercase tracking-[1em] text-white/10 text-center md:text-right">
+                     <Link href="#" className="hover:text-stone-400 transition-colors group">Instagram</Link>
+                     <Link href="#" className="hover:text-stone-400 transition-colors group">Archives</Link>
+                     <Link href="#" className="hover:text-stone-400 transition-colors group">Manifesto</Link>
                   </nav>
                </div>
-               <div className="font-black text-[9px] uppercase tracking-[2em] text-white/5 mt-48 italic">
+               <div className="font-black text-[9px] uppercase tracking-[2em] text-white/5 mt-48 italic text-center md:text-right">
                   &copy; 2026 // ART_INDEX&trade;
                </div>
             </div>
