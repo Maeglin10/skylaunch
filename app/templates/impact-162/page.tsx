@@ -13,6 +13,28 @@ const ITEMS = [
   { id: 3, title: "VOID_BREW", cat: "Cold Steep", value: "Locked", img: "https://images.unsplash.com/photo-1442512595331-e89e73bf53f2?auto=format&fit=crop&q=80&w=1500" },
 ];
 
+function TextScramble({ text }: { text: string }) {
+  const [display, setDisplay] = useState(text);
+  const chars = "!<>-_\\/[]{}—=+*^?#________";
+  
+  useEffect(() => {
+    let iteration = 0;
+    const interval = setInterval(() => {
+      setDisplay(prev => 
+        text.split("").map((char, index) => {
+          if (index < iteration) return text[index];
+          return chars[Math.floor(Math.random() * chars.length)];
+        }).join("")
+      );
+      if (iteration >= text.length) clearInterval(interval);
+      iteration += 1/3;
+    }, 30);
+    return () => clearInterval(interval);
+  }, [text]);
+
+  return <span>{display}</span>;
+}
+
 export default function TheRoastCafeSPA() {
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: containerRef });
@@ -35,7 +57,7 @@ export default function TheRoastCafeSPA() {
   }, [mouseX, mouseY]);
 
   return (
-    <div ref={containerRef} className="premium-theme bg-[#FAF8F5] text-[#3E2723] min-h-screen font-sans selection:bg-[#3E2723] selection:text-white overflow-hidden relative">
+    <div ref={containerRef} className="premium-theme bg-[#FAF8F5] text-[#3E2723] min-h-screen font-sans selection:bg-[#3E2723] selection:text-white overflow-hidden relative uppercase text-center">
       
       {/* COFFEE GRID & NOISE */}
       <div className="fixed inset-0 z-0 pointer-events-none">
@@ -49,11 +71,11 @@ export default function TheRoastCafeSPA() {
 
       {/* HEADER */}
       <header className="fixed top-0 left-0 w-full px-6 md:px-12 py-10 flex justify-between items-center z-50 bg-[#FAF8F5]/30 backdrop-blur-3xl border-b border-[#3E2723]/5">
-        <Link href="/" className="font-black text-2xl tracking-[0.2em] text-[#3E2723] flex items-center gap-4 italic uppercase">
+        <Link href="/" className="font-black text-2xl tracking-[0.2em] text-[#3E2723] flex items-center gap-4 italic uppercase text-center md:text-left">
            THE<span className="text-[#3E2723]/30">_ROAST</span>
         </Link>
         
-        <nav className="hidden lg:flex gap-16 font-black text-[10px] uppercase tracking-[0.6em] text-[#3E2723]/30">
+        <nav className="hidden lg:flex gap-16 font-black text-[10px] uppercase tracking-[0.6em] text-[#3E2723]/30 text-center">
             <Link href="#" className="hover:text-[#3E2723] transition-colors group">
                Brew<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-[#3E2723] italic">.</span>
             </Link>
@@ -66,7 +88,7 @@ export default function TheRoastCafeSPA() {
         </nav>
         
         <div className="flex items-center gap-10">
-           <button className="bg-[#3E2723] text-white px-12 py-4 font-black text-[10px] uppercase tracking-[0.4em] hover:bg-[#5E4743] transition-all">
+           <button className="bg-[#3E2723] text-white px-12 py-4 font-black text-[10px] uppercase tracking-[0.4em] hover:bg-[#5E4743] transition-all shadow-sm">
               Order_Now
            </button>
            <Menu className="w-6 h-6 text-[#3E2723] cursor-pointer" />
@@ -74,67 +96,75 @@ export default function TheRoastCafeSPA() {
       </header>
 
       {/* HERO SECTION */}
-      <section className="relative h-screen flex flex-col justify-center items-center px-6 text-center z-10 pt-20 overflow-hidden">
+      <section className="relative h-screen flex flex-col justify-center items-center px-6 text-center z-10 pt-20 overflow-hidden text-center">
          <motion.div style={{ scale: heroScale, y: yHero }} className="absolute inset-0 z-0">
-            <Image src="https://images.unsplash.com/photo-1497935586351-b67a49e012bf?auto=format&fit=crop&q=80&w=2500" alt="Cafe" fill className="object-cover opacity-30 grayscale contrast-125" priority />
+            <Image src="https://images.unsplash.com/photo-1497935586351-b67a49e012bf?auto=format&fit=crop&q=80&w=2500" alt="Cafe" fill className="object-cover opacity-30 grayscale contrast-125 text-center" priority />
             <div className="absolute inset-0 bg-gradient-to-t from-[#FAF8F5] via-transparent to-[#FAF8F5]/40" />
          </motion.div>
          
-         <div className="relative z-10 max-w-7xl w-full">
+         <div className="relative z-10 max-w-7xl w-full text-center">
             <motion.div 
-               initial={{ opacity: 0, y: 80 }}
-               animate={{ opacity: 1, y: 0 }}
+               initial={{ opacity: 0, scale: 0.95 }}
+               animate={{ opacity: 1, scale: 1 }}
                transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
             >
-               <div className="inline-flex items-center gap-4 font-black text-[10px] uppercase tracking-[1em] text-[#3E2723]/30 mb-16 border-l-2 border-[#3E2723]/20 pl-10 italic font-mono">
+               <div className="inline-flex items-center gap-4 font-black text-[10px] uppercase tracking-[1em] text-[#3E2723]/30 mb-16 border-l-2 border-[#3E2723]/20 pl-10 italic font-mono text-center">
                   Artisan_Sync // 0162_Alpha
                </div>
                
-               <h1 className="text-7xl md:text-[13vw] font-black italic uppercase leading-[0.8] tracking-tighter mb-24 text-[#3E2723]">
-                  PURE.<br/>
+               <h1 className="text-7xl md:text-[13vw] font-black italic uppercase leading-[0.8] tracking-tighter mb-24 text-[#3E2723] text-center">
+                  <TextScramble text="PURE." /><br/>
                   <span className="text-transparent" style={{ WebkitTextStroke: "1.5px #3E2723" }}>BREW.</span>
                </h1>
                
-               <p className="text-xl md:text-3xl font-light italic text-[#3E2723]/40 max-w-2xl mx-auto mb-28 leading-relaxed uppercase tracking-tight">
+               <p className="text-xl md:text-3xl font-light italic text-[#3E2723]/40 max-w-2xl mx-auto mb-28 leading-relaxed uppercase tracking-tight text-center">
                   Structural allocation for artisan intent. Architecting the future of coffee with tectonic precision.
                </p>
                
-               <div className="flex flex-col md:flex-row gap-20 justify-center items-center font-mono">
-                  <div className="flex items-center gap-8 group cursor-pointer">
+               <div className="flex flex-col md:flex-row gap-20 justify-center items-center font-mono text-center">
+                  <div className="flex items-center gap-8 group cursor-pointer text-center">
                      <div className="w-20 h-px bg-[#3E2723]/10 group-hover:w-32 transition-all" />
                      <span className="text-[10px] font-black uppercase tracking-[0.8em] text-[#3E2723]">View_Menu</span>
                   </div>
                   <div className="hidden md:block w-px h-16 bg-[#3E2723]/5" />
-                  <div className="font-black text-[9px] uppercase tracking-[0.6em] text-[#3E2723]/10 italic">
+                  <div className="font-black text-[9px] uppercase tracking-[0.6em] text-[#3E2723]/10 italic text-center">
                      Established // NYC // 2026
                   </div>
                </div>
             </motion.div>
          </div>
 
-         {/* Decorative Side HUD */}
-         <div className="absolute right-12 bottom-12 flex flex-col items-end gap-4 font-black text-[8px] uppercase tracking-[0.8em] text-[#3E2723]/10 hidden md:flex italic font-mono">
-            <span>TEMP: 92.5C</span>
-            <div className="flex gap-[2px] w-32 h-1 items-center bg-[#3E2723]/5 overflow-hidden">
-               <motion.div animate={{ x: ['-100%', '100%'] }} transition={{ duration: 3, repeat: Infinity, ease: "linear" }} className="w-1/2 h-full bg-[#3E2723]/40" />
+         {/* Roast HUD */}
+         <div className="absolute right-12 bottom-12 flex flex-col items-end gap-4 font-black text-[8px] uppercase tracking-[0.8em] text-[#3E2723]/10 hidden md:flex italic font-mono text-center">
+            <span>ROAST_SYNC: ACTIVE</span>
+            <div className="flex gap-1 h-12 items-end">
+               {[1, 2, 3, 4, 5].map(i => <motion.div key={i} animate={{ height: ['20%', '100%', '40%'] }} transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }} className="w-[1px] bg-[#3E2723]" />)}
+            </div>
+         </div>
+         
+         <div className="absolute left-12 bottom-12 hidden md:block text-center">
+            <div className="flex flex-col gap-2 text-[8px] font-black uppercase tracking-[0.4em] text-[#3E2723]/10 italic font-mono text-center">
+               <span>TEMP: 92.5C</span>
+               <span>PRESSURE: 9BAR</span>
+               <span>STATUS: READY</span>
             </div>
          </div>
       </section>
 
       {/* ITEMS GRID */}
       <section className="py-48 px-6 md:px-12 max-w-[1800px] mx-auto relative z-10 bg-[#FAF8F5]">
-         <div className="flex flex-col md:flex-row justify-between items-end mb-40 border-b border-[#3E2723]/10 pb-20 gap-16">
+         <div className="flex flex-col md:flex-row justify-between items-end mb-40 border-b border-[#3E2723]/10 pb-20 gap-16 text-center md:text-left">
             <div>
-               <span className="text-[10px] font-black uppercase tracking-[2em] text-[#3E2723]/20 mb-8 block italic font-mono">Artisan_Manifest</span>
-               <h2 className="text-6xl md:text-[10vw] font-black italic uppercase tracking-tighter text-[#3E2723] leading-[0.8]">The <br/> <span className="text-[#3E2723]/5">Roast_</span></h2>
+               <span className="text-[10px] font-black uppercase tracking-[2em] text-[#3E2723]/20 mb-8 block italic font-mono text-center md:text-left">Artisan_Manifest</span>
+               <h2 className="text-6xl md:text-[10vw] font-black italic uppercase tracking-tighter text-[#3E2723] leading-[0.8] text-center md:text-left">The <br/> <span className="text-[#3E2723]/5">Roast_</span></h2>
             </div>
-            <div className="flex gap-16 text-[10px] font-black uppercase tracking-[0.6em] text-[#3E2723]/30 italic font-mono">
+            <div className="flex gap-16 text-[10px] font-black uppercase tracking-[0.6em] text-[#3E2723]/30 italic font-mono text-center md:text-left">
                <span>Records: [03]</span>
                <span>Status: [Verified]</span>
             </div>
          </div>
 
-         <div className="grid grid-cols-1 md:grid-cols-3 gap-16">
+         <div className="grid grid-cols-1 md:grid-cols-3 gap-16 text-center">
             {ITEMS.map((p, i) => (
                 <motion.div 
                    key={i} 
@@ -142,25 +172,25 @@ export default function TheRoastCafeSPA() {
                    whileInView={{ opacity: 1, y: 0 }}
                    viewport={{ once: true, margin: "-100px" }}
                    transition={{ duration: 1.2, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
-                   className="group relative h-[85vh] bg-stone-50 border border-[#3E2723]/5 overflow-hidden cursor-pointer hover:border-[#3E2723]/20 transition-all shadow-sm"
+                   className="group relative h-[85vh] bg-stone-50 border border-[#3E2723]/5 overflow-hidden cursor-pointer hover:border-[#3E2723]/20 transition-all text-center shadow-sm"
                 >
-                    <Image src={p.img} alt={p.title} fill className="object-cover opacity-60 grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-1000" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#FAF8F5] via-transparent to-transparent opacity-90" />
-                    <div className="absolute inset-0 bg-[#3E2723]/5 group-hover:bg-transparent transition-colors duration-700" />
+                    <Image src={p.img} alt={p.title} fill className="object-cover opacity-60 grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-1000 text-center" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#FAF8F5] via-transparent to-transparent opacity-90 text-center" />
+                    <div className="absolute inset-0 bg-[#3E2723]/5 group-hover:bg-transparent transition-colors duration-700 text-center" />
                     
-                    <div className="absolute inset-16 flex flex-col justify-between z-10 font-mono">
-                        <div className="flex justify-between items-start">
-                           <div className="p-5 bg-white/40 backdrop-blur-xl border border-[#3E2723]/5 rounded-none group-hover:bg-[#3E2723] group-hover:text-white transition-all shadow-sm">
-                              <Coffee className="w-6 h-6" />
+                    <div className="absolute inset-16 flex flex-col justify-between z-10 font-mono text-[#3E2723] text-center">
+                        <div className="flex justify-between items-start text-center">
+                           <div className="p-5 bg-white/40 backdrop-blur-xl border border-[#3E2723]/5 rounded-none group-hover:bg-[#3E2723] group-hover:text-white transition-all shadow-sm text-center">
+                              <Coffee className="w-6 h-6 text-center" />
                            </div>
-                           <div className="text-[10px] font-black uppercase tracking-[0.8em] text-[#3E2723]/20 italic">Ref_0x{i+162}</div>
+                           <div className="text-[10px] font-black uppercase tracking-[0.8em] text-[#3E2723]/20 italic font-mono text-center">Ref_0x{i+162}</div>
                         </div>
                         
-                        <div>
-                           <span className="text-[10px] uppercase tracking-[0.8em] text-[#3E2723] mb-8 block italic font-black">{p.cat} // {p.value}</span>
-                           <h3 className="text-5xl md:text-6xl font-black italic uppercase tracking-tighter mb-16 text-[#3E2723] group-hover:tracking-widest transition-all leading-[0.8]">{p.title}</h3>
-                           <div className="flex items-center gap-8 text-[10px] font-black uppercase tracking-[0.6em] opacity-0 group-hover:opacity-100 transition-all translate-y-10 group-hover:translate-y-0 text-[#3E2723]">
-                              View_Details <ArrowRight className="w-6 h-6" />
+                        <div className="text-center">
+                           <span className="text-[10px] uppercase tracking-[0.8em] text-[#3E2723] mb-8 block italic font-black text-center">{p.cat} // {p.value}</span>
+                           <h3 className="text-5xl md:text-6xl font-black italic uppercase tracking-tighter mb-16 text-[#3E2723] group-hover:tracking-widest transition-all leading-[0.8] text-center">{p.title}</h3>
+                           <div className="flex items-center gap-8 text-[10px] font-black uppercase tracking-[0.6em] opacity-0 group-hover:opacity-100 transition-all translate-y-10 group-hover:translate-y-0 text-[#3E2723] text-center justify-center">
+                              View_Details <ArrowRight className="w-6 h-6 text-center" />
                            </div>
                         </div>
                     </div>
@@ -171,36 +201,30 @@ export default function TheRoastCafeSPA() {
 
       {/* FOOTER */}
       <footer className="py-48 px-6 md:px-12 border-t border-[#3E2723]/5 relative z-10 bg-[#FAF8F5]">
-         <div className="max-w-[1800px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-40">
-            <div className="max-w-2xl">
-               <div className="text-[#3E2723] mb-16 flex items-center gap-6 font-black text-2xl italic uppercase tracking-widest font-mono">
-                  <Activity className="w-10 h-10" /> Roast_Logs
+         <div className="max-w-[1800px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-40 text-center md:text-left">
+            <div className="text-center md:text-left">
+               <div className="text-[#3E2723] mb-16 flex items-center gap-6 font-black text-2xl italic uppercase tracking-widest font-mono justify-center md:justify-start">
+                  <Activity className="w-10 h-10 text-center md:text-left" /> Roast_Logs
                </div>
-               <p className="text-4xl md:text-6xl font-light italic leading-[0.9] text-[#3E2723]/20 uppercase tracking-tighter mb-20">
+               <p className="text-4xl md:text-6xl font-light italic leading-[0.9] text-[#3E2723]/20 uppercase tracking-tighter mb-20 text-center md:text-left">
                   WE TREAT COFFEE AS ARCHITECTURE. EVERY BREW A FUNCTION.
                </p>
-               <div className="flex gap-20 font-black text-[10px] uppercase tracking-[0.8em] text-[#3E2723]/30 italic font-mono">
+               <div className="flex gap-20 font-black text-[10px] uppercase tracking-[0.8em] text-[#3E2723]/30 italic font-mono justify-center md:justify-start">
                   <span>NYC</span>
                   <span>London</span>
                   <span>Tokyo</span>
                </div>
             </div>
-            <div className="flex flex-col justify-between items-end text-right font-mono">
-               <div className="w-full">
-                  <h4 className="text-[12vw] font-black italic uppercase tracking-tighter text-[#3E2723] opacity-[0.02] leading-none mb-20">ROAST</h4>
-                  <nav className="flex flex-col gap-10 font-black text-[10px] uppercase tracking-[0.8em] text-[#3E2723]/10">
-                     <Link href="#" className="hover:text-[#3E2723] transition-colors group">
-                        Instagram<span className="text-[#3E2723]/0 group-hover:text-[#3E2723] transition-all">_</span>
-                     </Link>
-                     <Link href="#" className="hover:text-[#3E2723] transition-colors group">
-                        Journal<span className="text-[#3E2723]/0 group-hover:text-[#3E2723] transition-all">_</span>
-                     </Link>
-                     <Link href="#" className="hover:text-[#3E2723] transition-colors group">
-                        Stockists<span className="text-[#3E2723]/0 group-hover:text-[#3E2723] transition-all">_</span>
-                     </Link>
+            <div className="flex flex-col justify-between items-end text-right font-mono text-center md:text-right text-[#3E2723]">
+               <div className="w-full text-center md:text-right">
+                  <h4 className="text-[12vw] font-black italic uppercase tracking-tighter text-[#3E2723] opacity-[0.02] leading-none mb-20 text-center md:text-right">ROAST</h4>
+                  <nav className="flex flex-col gap-10 font-black text-[10px] uppercase tracking-[0.8em] text-[#3E2723]/10 text-center md:text-right">
+                     <Link href="#" className="hover:text-[#3E2723] transition-colors group">Instagram</Link>
+                     <Link href="#" className="hover:text-[#3E2723] transition-colors group">Journal</Link>
+                     <Link href="#" className="hover:text-[#3E2723] transition-colors group">Stockists</Link>
                   </nav>
                </div>
-               <div className="font-black text-[9px] uppercase tracking-[1.5em] text-[#3E2723]/5 mt-32 italic">
+               <div className="font-black text-[9px] uppercase tracking-[1.5em] text-[#3E2723]/5 mt-32 italic text-center md:text-right">
                   &copy; 2026 // THE_ROAST_CAFE&trade;
                </div>
             </div>
