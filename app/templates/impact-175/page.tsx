@@ -4,7 +4,7 @@ import { motion, useScroll, useTransform, useSpring, useMotionValue } from "fram
 import { useRef, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Ticket, CalendarDays, MapPin, Menu, Search, ArrowRight, Layers, Activity, Zap } from "lucide-react";
+import { Ticket, CalendarDays, MapPin, Menu, Search, ArrowRight, Layers, Activity, Zap, Compass } from "lucide-react";
 import "../premium.css";
 
 const SPEAKERS = [
@@ -12,6 +12,28 @@ const SPEAKERS = [
   { name: "MARCUS_CHEN", role: "Founder_Frame", value: "Active", img: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=1500" },
   { name: "SOPHIA_MARTINEZ", role: "Creative_Dir", value: "Locked", img: "https://images.unsplash.com/photo-1531123897727-8f129e1eb1df?auto=format&fit=crop&q=80&w=1500" },
 ];
+
+function TextScramble({ text }: { text: string }) {
+  const [display, setDisplay] = useState(text);
+  const chars = "!<>-_\\/[]{}—=+*^?#________";
+  
+  useEffect(() => {
+    let iteration = 0;
+    const interval = setInterval(() => {
+      setDisplay(prev => 
+        text.split("").map((char, index) => {
+          if (index < iteration) return text[index];
+          return chars[Math.floor(Math.random() * chars.length)];
+        }).join("")
+      );
+      if (iteration >= text.length) clearInterval(interval);
+      iteration += 1/3;
+    }, 30);
+    return () => clearInterval(interval);
+  }, [text]);
+
+  return <span>{display}</span>;
+}
 
 export default function SyntheseEventSPA() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -35,102 +57,110 @@ export default function SyntheseEventSPA() {
   }, [mouseX, mouseY]);
 
   return (
-    <div ref={containerRef} className="premium-theme bg-[#0F0F0F] text-white min-h-screen font-sans selection:bg-[#FF2E93] selection:text-white overflow-hidden relative">
+    <div ref={containerRef} className="premium-theme bg-[#050505] text-white min-h-screen font-sans selection:bg-[#00FFCC] selection:text-black overflow-hidden relative uppercase">
       
       {/* CYBER GRID & NOISE */}
       <div className="fixed inset-0 z-0 pointer-events-none perspective-[1000px]">
         <motion.div 
            style={{ rotateX: 60, y: useTransform(scrollYProgress, [0, 1], [0, -200]) }}
-           className="absolute inset-0 bg-[linear-gradient(rgba(255,46,147,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,204,0.1)_1px,transparent_1px)] bg-[size:10rem_10rem] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_70%,transparent_100%)] origin-bottom" 
+           className="absolute inset-0 bg-[linear-gradient(rgba(0,255,204,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(255,46,147,0.1)_1px,transparent_1px)] bg-[size:10rem_10rem] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_70%,transparent_100%)] origin-bottom" 
         />
         <motion.div 
            style={{ x: springX, y: springY }}
-           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70vw] h-[70vw] bg-[#FF2E93] opacity-[0.05] blur-[150px] rounded-full mix-blend-screen" 
+           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70vw] h-[70vw] bg-[#00FFCC] opacity-[0.05] blur-[150px] rounded-full mix-blend-screen" 
         />
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.1] mix-blend-screen" />
       </div>
 
       {/* HEADER */}
-      <header className="fixed top-0 left-0 w-full px-6 md:px-12 py-10 flex justify-between items-center z-50 bg-[#0F0F0F]/50 backdrop-blur-3xl border-b border-white/5">
+      <header className="fixed top-0 left-0 w-full px-6 md:px-12 py-10 flex justify-between items-center z-50 bg-[#050505]/50 backdrop-blur-3xl border-b border-white/5">
         <Link href="/" className="font-black text-2xl tracking-[0.3em] text-white flex items-center gap-4 italic uppercase">
            SYNTHESE<span className="text-[#00FFCC]">_26</span>
         </Link>
         
         <nav className="hidden lg:flex gap-16 font-black text-[10px] uppercase tracking-[0.6em] text-white/30">
-            <Link href="#" className="hover:text-[#FF2E93] transition-colors group">
-               Lineup<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-[#FF2E93] italic">.</span>
+            <Link href="#" className="hover:text-[#00FFCC] transition-colors group">
+               Lineup<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-[#00FFCC] italic">.</span>
             </Link>
-            <Link href="#" className="hover:text-[#FF2E93] transition-colors group">
-               Schedule<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-[#FF2E93] italic">.</span>
+            <Link href="#" className="hover:text-[#00FFCC] transition-colors group">
+               Schedule<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-[#00FFCC] italic">.</span>
             </Link>
-            <Link href="#" className="hover:text-[#FF2E93] transition-colors group">
-               Venue<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-[#FF2E93] italic">.</span>
+            <Link href="#" className="hover:text-[#00FFCC] transition-colors group">
+               Venue<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-[#00FFCC] italic">.</span>
             </Link>
         </nav>
         
         <div className="flex items-center gap-10">
-           <button className="bg-[#00FFCC] text-black px-12 py-4 font-black text-[10px] uppercase tracking-[0.4em] hover:bg-[#FF2E93] hover:text-white transition-all shadow-[0_0_40px_rgba(0,255,204,0.2)]">
+           <button className="bg-[#00FFCC] text-black px-12 py-4 font-black text-[10px] uppercase tracking-[0.4em] hover:bg-white transition-all shadow-[0_0_40px_rgba(0,255,204,0.3)]">
               Get_Passes
            </button>
-           <Menu className="w-6 h-6 text-[#FF2E93] cursor-pointer" />
+           <Menu className="w-6 h-6 text-[#00FFCC] cursor-pointer" />
         </div>
       </header>
 
       {/* HERO SECTION */}
-      <section className="relative h-screen flex flex-col justify-center items-center px-6 text-center z-10 pt-20 overflow-hidden">
+      <section className="relative h-screen flex flex-col justify-center items-center px-6 text-center z-10 pt-20 overflow-hidden text-center">
          <motion.div style={{ scale: heroScale, y: yHero }} className="absolute inset-0 z-0">
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0F0F0F] via-transparent to-[#0F0F0F]/40" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-[#050505]/40" />
          </motion.div>
          
-         <div className="relative z-10 max-w-7xl w-full">
+         <div className="relative z-10 max-w-7xl w-full text-center">
             <motion.div 
                initial={{ opacity: 0, y: 100 }}
                animate={{ opacity: 1, y: 0 }}
                transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
             >
-               <div className="inline-flex items-center gap-4 font-black text-[10px] uppercase tracking-[1em] text-[#FF2E93] mb-16 border-l-2 border-[#FF2E93] pl-10 italic font-mono">
+               <div className="inline-flex items-center gap-4 font-black text-[10px] uppercase tracking-[1em] text-[#00FFCC] mb-16 border-l-2 border-[#00FFCC] pl-10 italic font-mono text-center">
                   Event_Capture // 0175_Alpha
                </div>
                
                <h1 className="text-7xl md:text-[14vw] font-black italic uppercase leading-[0.75] tracking-tighter mb-20 text-white">
-                  FUTURE.<br/>
-                  <span className="text-transparent" style={{ WebkitTextStroke: "2px rgba(255,255,255,0.6)" }}>CONVERGENCE.</span>
+                  <TextScramble text="FUTURE." /><br/>
+                  <span className="text-transparent" style={{ WebkitTextStroke: "2px #00FFCC" }}>CONVERGENCE.</span>
                </h1>
                
-               <p className="text-xl md:text-3xl font-light italic text-white/30 max-w-3xl mx-auto mb-24 leading-relaxed uppercase tracking-widest">
+               <p className="text-xl md:text-3xl font-light italic text-white/30 max-w-3xl mx-auto mb-24 leading-relaxed uppercase tracking-widest text-center">
                   Structural allocation for aesthetic intent. Architecting the future of interaction with tectonic precision.
                </p>
                
-               <div className="flex flex-col md:flex-row gap-16 justify-center items-center font-mono">
+               <div className="flex flex-col md:flex-row gap-16 justify-center items-center font-mono text-center">
                   <div className="flex items-center gap-8 group cursor-pointer">
-                     <div className="w-20 h-px bg-[#FF2E93]/30 group-hover:w-32 transition-all" />
+                     <div className="w-20 h-px bg-[#00FFCC]/30 group-hover:w-32 transition-all" />
                      <span className="text-[10px] font-black uppercase tracking-[0.8em] text-white">Join_2000_Visionaries</span>
                   </div>
                   <div className="hidden md:block w-px h-16 bg-white/5" />
-                  <div className="font-black text-[9px] uppercase tracking-[0.6em] text-white/10 italic">
+                  <div className="font-black text-[9px] uppercase tracking-[0.6em] text-white/10 italic text-center">
                      Paris // Oct_12-14 // 2026
                   </div>
                </div>
             </motion.div>
          </div>
 
-         {/* Decorative Side HUD */}
-         <div className="absolute right-12 bottom-12 flex flex-col items-end gap-4 font-black text-[8px] uppercase tracking-[1em] text-[#00FFCC]/20 hidden md:flex italic font-mono">
-            <span>SYNC_STATUS: ACTIVE</span>
-            <div className="flex gap-1 h-12 items-end">
+         {/* Cyber HUD */}
+         <div className="absolute right-12 bottom-12 flex flex-col items-end gap-4 font-black text-[8px] uppercase tracking-[1em] text-[#00FFCC]/20 hidden md:flex italic font-mono text-center">
+            <span>NETWORK_SYNC: ACTIVE</span>
+            <div className="flex gap-1 h-12 items-end text-center">
                {[1, 2, 3, 4, 5].map(i => <motion.div key={i} animate={{ height: ['20%', '100%', '40%'] }} transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }} className="w-[1px] bg-[#00FFCC]" />)}
+            </div>
+         </div>
+         
+         <div className="absolute left-12 bottom-12 hidden md:block">
+            <div className="flex flex-col gap-2 text-[8px] font-black uppercase tracking-[0.4em] text-white/10 italic font-mono text-center">
+               <span>NODES: 1,024</span>
+               <span>BANDWIDTH: 10GBPS</span>
+               <span>STATUS: SYNCED</span>
             </div>
          </div>
       </section>
 
       {/* LINEUP GRID */}
-      <section className="py-48 px-6 md:px-12 max-w-[1800px] mx-auto relative z-10 bg-[#0F0F0F]">
+      <section className="py-48 px-6 md:px-12 max-w-[1800px] mx-auto relative z-10 bg-[#050505]">
          <div className="flex flex-col md:flex-row justify-between items-end mb-40 border-b border-white/10 pb-20 gap-16">
             <div>
-               <span className="text-[10px] font-black uppercase tracking-[2em] text-[#FF2E93] mb-8 block italic font-mono">Event_Manifest</span>
-               <h2 className="text-6xl md:text-[10vw] font-black italic uppercase tracking-tighter text-white leading-none">The <span className="text-[#FF2E93]/20">Lineup_</span></h2>
+               <span className="text-[10px] font-black uppercase tracking-[2em] text-[#00FFCC] mb-8 block italic font-mono">Event_Manifest</span>
+               <h2 className="text-6xl md:text-[10vw] font-black italic uppercase tracking-tighter text-white leading-none text-center md:text-left">The <span className="text-white/20">Lineup_</span></h2>
             </div>
-            <div className="flex gap-16 text-[10px] font-black uppercase tracking-[0.6em] text-white/20 italic font-mono">
+            <div className="flex gap-16 text-[10px] font-black uppercase tracking-[0.6em] text-white/20 italic font-mono text-center md:text-left">
                <span>Records: [03]</span>
                <span>Status: [Verified]</span>
             </div>
@@ -144,22 +174,22 @@ export default function SyntheseEventSPA() {
                    whileInView={{ opacity: 1, y: 0 }}
                    viewport={{ once: true, margin: "-100px" }}
                    transition={{ duration: 1.2, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
-                   className="group relative h-[85vh] bg-[#1A1A1A] border border-white/5 overflow-hidden cursor-pointer hover:border-[#FF2E93]/30 transition-all shadow-2xl"
+                   className="group relative h-[85vh] bg-white/5 border border-white/5 overflow-hidden cursor-pointer hover:border-[#00FFCC]/30 transition-all shadow-2xl"
                 >
                     <Image src={p.img} alt={p.name} fill className="object-cover opacity-30 grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-1000" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0F0F0F] via-transparent to-transparent opacity-95" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent opacity-95" />
                     <div className="absolute inset-0 bg-white/5 group-hover:bg-transparent transition-colors duration-700" />
                     
                     <div className="absolute inset-16 flex flex-col justify-between z-10 font-mono text-white">
                         <div className="flex justify-between items-start">
-                           <div className="p-5 bg-white/5 border border-white/10 rounded-none group-hover:bg-[#FF2E93] group-hover:text-white transition-all shadow-xl">
+                           <div className="p-5 bg-white/5 border border-white/10 rounded-none group-hover:bg-[#00FFCC] group-hover:text-black transition-all shadow-xl">
                               <Zap className="w-8 h-8" />
                            </div>
-                           <div className="text-[10px] font-black uppercase tracking-[0.8em] text-[#FF2E93] italic font-mono">Ref_0x{i+175}</div>
+                           <div className="text-[10px] font-black uppercase tracking-[0.8em] text-[#00FFCC] italic font-mono">Ref_0x{i+175}</div>
                         </div>
                         
                         <div>
-                           <span className="text-[10px] uppercase tracking-[0.8em] text-[#FF2E93] mb-8 block italic font-black">{p.role} // Verified</span>
+                           <span className="text-[10px] uppercase tracking-[0.8em] text-[#00FFCC] mb-8 block italic font-black">{p.role} // Verified</span>
                            <h3 className="text-5xl md:text-6xl font-black italic uppercase tracking-tighter mb-16 text-white group-hover:tracking-widest transition-all leading-[0.8]">{p.name}</h3>
                            <div className="flex items-center gap-8 text-[10px] font-black uppercase tracking-[0.6em] opacity-0 group-hover:opacity-100 transition-all translate-y-10 group-hover:translate-y-0 text-white">
                               Bio <ArrowRight className="w-6 h-6" />
@@ -172,37 +202,37 @@ export default function SyntheseEventSPA() {
       </section>
 
       {/* FOOTER */}
-      <footer className="py-48 px-6 md:px-12 border-t border-white/5 relative z-10 bg-[#0F0F0F]">
-         <div className="max-w-[1800px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-40">
-            <div className="max-w-2xl">
-               <div className="text-[#FF2E93] mb-16 flex items-center gap-6 font-black text-2xl italic uppercase tracking-widest font-mono">
+      <footer className="py-48 px-6 md:px-12 border-t border-white/5 relative z-10 bg-[#050505]">
+         <div className="max-w-[1800px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-40 font-sans text-center md:text-left">
+            <div className="max-w-2xl text-center md:text-left">
+               <div className="text-[#00FFCC] mb-16 flex items-center gap-6 font-black text-2xl italic uppercase tracking-widest font-mono justify-center md:justify-start">
                   <Activity className="w-10 h-10" /> Synthese_Logs
                </div>
-               <p className="text-4xl md:text-6xl font-light italic leading-[0.9] text-white/20 uppercase tracking-tighter mb-20">
+               <p className="text-4xl md:text-6xl font-light italic leading-[0.9] text-white/20 uppercase tracking-tighter mb-20 text-center md:text-left">
                   WE TREAT EVENTS AS ARCHITECTURE. EVERY SPEAKER A FUNCTION.
                </p>
-               <div className="flex gap-20 font-black text-[10px] uppercase tracking-[0.8em] text-[#FF2E93]/40 italic font-mono">
+               <div className="flex gap-20 font-black text-[10px] uppercase tracking-[0.8em] text-[#00FFCC]/40 italic font-mono justify-center md:justify-start">
                   <span>Berlin</span>
                   <span>London</span>
                   <span>NYC</span>
                </div>
             </div>
-            <div className="flex flex-col justify-between items-end text-right font-mono">
-               <div className="w-full">
-                  <h4 className="text-[12vw] font-black italic uppercase tracking-tighter text-white opacity-[0.02] leading-none mb-20">SYNTHESE</h4>
-                  <nav className="flex flex-col gap-10 font-black text-[10px] uppercase tracking-[0.8em] text-white/10">
-                     <Link href="#" className="hover:text-[#FF2E93] transition-colors group">
-                        Instagram<span className="text-[#FF2E93]/0 group-hover:text-[#FF2E93] transition-all">_</span>
+            <div className="flex flex-col justify-between items-end text-right font-mono text-center md:text-right">
+               <div className="w-full text-center md:text-right">
+                  <h4 className="text-[12vw] font-black italic uppercase tracking-tighter text-white opacity-[0.02] leading-none mb-20 text-center md:text-right">SYNTHESE</h4>
+                  <nav className="flex flex-col gap-10 font-black text-[10px] uppercase tracking-[0.8em] text-white/10 text-center md:text-right">
+                     <Link href="#" className="hover:text-[#00FFCC] transition-colors group">
+                        Instagram<span className="text-[#00FFCC]/0 group-hover:text-[#00FFCC] transition-all">_</span>
                      </Link>
-                     <Link href="#" className="hover:text-[#FF2E93] transition-colors group">
-                        Archive<span className="text-[#FF2E93]/0 group-hover:text-[#FF2E93] transition-all">_</span>
+                     <Link href="#" className="hover:text-[#00FFCC] transition-colors group">
+                        Archive<span className="text-[#00FFCC]/0 group-hover:text-[#00FFCC] transition-all">_</span>
                      </Link>
-                     <Link href="#" className="hover:text-[#FF2E93] transition-colors group">
-                        Legal<span className="text-[#FF2E93]/0 group-hover:text-[#FF2E93] transition-all">_</span>
+                     <Link href="#" className="hover:text-[#00FFCC] transition-colors group">
+                        Legal<span className="text-[#00FFCC]/0 group-hover:text-[#00FFCC] transition-all">_</span>
                      </Link>
                   </nav>
                </div>
-               <div className="font-black text-[9px] uppercase tracking-[1.5em] text-white/5 mt-32 italic">
+               <div className="font-black text-[9px] uppercase tracking-[1.5em] text-white/5 mt-32 italic text-center md:text-right">
                   &copy; 2026 // SYNTHESE_CONFERENCE_GROUP&trade;
                </div>
             </div>
