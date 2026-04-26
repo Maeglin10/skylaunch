@@ -13,6 +13,28 @@ const PIECES = [
   { id: 3, title: "NEON_CUFF", cat: "Platinum", value: "Locked", img: "https://images.unsplash.com/photo-1535639818669-c059d2f038e6?auto=format&fit=crop&q=80&w=1500" },
 ];
 
+function TextScramble({ text }: { text: string }) {
+  const [display, setDisplay] = useState(text);
+  const chars = "!<>-_\\/[]{}—=+*^?#________";
+  
+  useEffect(() => {
+    let iteration = 0;
+    const interval = setInterval(() => {
+      setDisplay(prev => 
+        text.split("").map((char, index) => {
+          if (index < iteration) return text[index];
+          return chars[Math.floor(Math.random() * chars.length)];
+        }).join("")
+      );
+      if (iteration >= text.length) clearInterval(interval);
+      iteration += 1/3;
+    }, 30);
+    return () => clearInterval(interval);
+  }, [text]);
+
+  return <span>{display}</span>;
+}
+
 export default function AurumJewelrySPA() {
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: containerRef });
@@ -35,25 +57,25 @@ export default function AurumJewelrySPA() {
   }, [mouseX, mouseY]);
 
   return (
-    <div ref={containerRef} className="premium-theme bg-[#0D0A09] text-amber-500 min-h-screen font-serif selection:bg-amber-800 selection:text-white overflow-hidden relative">
+    <div ref={containerRef} className="premium-theme bg-[#0D0A09] text-amber-500 min-h-screen font-serif selection:bg-amber-800 selection:text-white overflow-hidden relative uppercase text-center">
       
       {/* GOLD GLOW & NOISE */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#0D0A09_100%)] opacity-80" />
         <motion.div 
            style={{ x: springX, y: springY }}
-           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] bg-amber-600 opacity-[0.05] blur-[150px] rounded-full mix-blend-screen" 
+           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] bg-amber-600 opacity-[0.03] blur-[150px] rounded-full mix-blend-screen" 
         />
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.15] mix-blend-soft-light" />
       </div>
 
       {/* HEADER */}
-      <header className="fixed top-0 left-0 w-full px-6 md:px-12 py-10 flex justify-between items-center z-50 bg-[#0D0A09]/50 backdrop-blur-3xl border-b border-amber-500/10 font-mono">
-        <Link href="/" className="font-light text-2xl tracking-[0.4em] text-white flex items-center gap-4 italic uppercase">
+      <header className="fixed top-0 left-0 w-full px-6 md:px-12 py-10 flex justify-between items-center z-50 bg-[#0D0A09]/50 backdrop-blur-3xl border-b border-amber-500/10">
+        <Link href="/" className="font-light text-2xl tracking-[0.4em] text-white flex items-center gap-4 italic uppercase text-center md:text-left">
            AURUM<span className="text-amber-500 font-black">_OS</span>
         </Link>
         
-        <nav className="hidden lg:flex gap-16 font-black text-[10px] uppercase tracking-[0.6em] text-white/30">
+        <nav className="hidden lg:flex gap-16 font-black text-[10px] uppercase tracking-[0.6em] text-white/30 text-center">
             <Link href="#" className="hover:text-amber-500 transition-colors group">
                Atelier<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-amber-500 italic">.</span>
             </Link>
@@ -66,78 +88,83 @@ export default function AurumJewelrySPA() {
         </nav>
         
         <div className="flex items-center gap-10">
-           <div className="hidden md:flex flex-col items-end opacity-20">
-              <span className="text-[9px] font-black uppercase tracking-widest text-amber-500 italic">Vault_Sync</span>
-              <span className="text-[10px] font-black uppercase tracking-widest text-white italic">Active_Ref_157</span>
-           </div>
-           <button className="bg-amber-600 text-white px-12 py-4 font-black text-[10px] uppercase tracking-[0.4em] hover:bg-white hover:text-black transition-all shadow-[0_0_30px_rgba(217,119,6,0.2)]">
+           <button className="bg-amber-600 text-white px-12 py-4 font-black text-[10px] uppercase tracking-[0.4em] hover:bg-white hover:text-black transition-all shadow-xl">
               Reserve_Piece
            </button>
+           <Menu className="w-6 h-6 text-amber-500 cursor-pointer" />
         </div>
       </header>
 
       {/* HERO SECTION */}
-      <section className="relative h-screen flex flex-col justify-center items-center px-6 text-center z-10 pt-20 overflow-hidden">
+      <section className="relative h-screen flex flex-col justify-center items-center px-6 text-center z-10 pt-20 overflow-hidden text-center">
          <motion.div style={{ scale: heroScale, y: yHero }} className="absolute inset-0 z-0">
-            <Image src="https://images.unsplash.com/photo-1515562141207-7a88fb0ce33e?auto=format&fit=crop&q=80&w=2500" alt="Jewelry" fill className="object-cover opacity-30 grayscale contrast-125" priority />
+            <Image src="https://images.unsplash.com/photo-1515562141207-7a88fb0ce33e?auto=format&fit=crop&q=80&w=2500" alt="Jewelry" fill className="object-cover opacity-30 grayscale contrast-125 text-center" priority />
             <div className="absolute inset-0 bg-gradient-to-t from-[#0D0A09] via-transparent to-[#0D0A09]/60" />
          </motion.div>
          
-         <div className="relative z-10 max-w-7xl w-full">
+         <div className="relative z-10 max-w-7xl w-full text-center">
             <motion.div 
-               initial={{ opacity: 0, y: 100 }}
-               animate={{ opacity: 1, y: 0 }}
+               initial={{ opacity: 0, scale: 0.95 }}
+               animate={{ opacity: 1, scale: 1 }}
                transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
             >
-               <div className="inline-flex items-center gap-4 font-black text-[10px] uppercase tracking-[1em] text-amber-500/50 mb-16 border-l-2 border-amber-600 pl-10 italic font-mono">
+               <div className="inline-flex items-center gap-4 font-black text-[10px] uppercase tracking-[1em] text-amber-500/50 mb-16 border-l-2 border-amber-600 pl-10 italic font-mono text-center">
                   Luxury_Sync // 0157_Alpha
                </div>
                
-               <h1 className="text-7xl md:text-[12vw] font-light italic uppercase leading-[0.8] tracking-tighter mb-20 text-white drop-shadow-2xl">
-                  ETERNAL.<br/>
+               <h1 className="text-7xl md:text-[12vw] font-light italic uppercase leading-[0.8] tracking-tighter mb-20 text-white drop-shadow-2xl text-center">
+                  <TextScramble text="ETERNAL." /><br/>
                   <span className="text-transparent" style={{ WebkitTextStroke: "1px rgba(245,158,11,0.6)" }}>REFINED.</span>
                </h1>
                
-               <p className="text-xl md:text-3xl font-light italic text-white/30 max-w-3xl mx-auto mb-24 leading-relaxed uppercase tracking-widest">
+               <p className="text-xl md:text-3xl font-light italic text-white/30 max-w-3xl mx-auto mb-24 leading-relaxed uppercase tracking-widest text-center">
                   Structural elegance meets tectonic intent. Architecting the future of high jewelry with precision and gold.
                </p>
                
-               <div className="flex flex-col md:flex-row gap-16 justify-center items-center font-mono">
-                  <div className="flex items-center gap-8 group cursor-pointer">
+               <div className="flex flex-col md:flex-row gap-16 justify-center items-center font-mono text-center">
+                  <div className="flex items-center gap-8 group cursor-pointer text-center">
                      <div className="w-20 h-px bg-amber-600/30 group-hover:w-32 transition-all" />
                      <span className="text-[10px] font-black uppercase tracking-[0.8em] text-amber-500">Explore_Atelier</span>
                   </div>
                   <div className="hidden md:block w-px h-16 bg-white/5" />
-                  <div className="font-black text-[9px] uppercase tracking-[0.6em] text-white/10 italic">
+                  <div className="font-black text-[9px] uppercase tracking-[0.6em] text-white/10 italic text-center">
                      Geneva // New York // Tokyo
                   </div>
                </div>
             </motion.div>
          </div>
 
-         {/* Decorative Side HUD */}
-         <div className="absolute right-12 bottom-12 flex flex-col items-end gap-4 font-black text-[8px] uppercase tracking-[0.8em] text-amber-500/20 hidden md:flex italic font-mono">
-            <span>SYNC_LOAD: 0.003ms</span>
+         {/* Vault HUD */}
+         <div className="absolute right-12 bottom-12 flex flex-col items-end gap-4 font-black text-[8px] uppercase tracking-[0.8em] text-amber-500/20 hidden md:flex italic font-mono text-center">
+            <span>VAULT_SYNC: ACTIVE</span>
             <div className="flex gap-1 h-12 items-end">
                {[1, 2, 3, 4, 5].map(i => <motion.div key={i} animate={{ height: ['30%', '100%', '50%'] }} transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }} className="w-[1px] bg-amber-500" />)}
+            </div>
+         </div>
+         
+         <div className="absolute left-12 bottom-12 hidden md:block text-center">
+            <div className="flex flex-col gap-2 text-[8px] font-black uppercase tracking-[0.4em] text-white/10 italic font-mono text-center">
+               <span>PURITY: 24K</span>
+               <span>SECURITY: L4</span>
+               <span>STATUS: SECURED</span>
             </div>
          </div>
       </section>
 
       {/* PIECES GRID */}
       <section className="py-48 px-6 md:px-12 max-w-[1800px] mx-auto relative z-10 bg-[#0D0A09]">
-         <div className="flex flex-col md:flex-row justify-between items-end mb-40 border-b border-amber-500/10 pb-20 gap-16">
+         <div className="flex flex-col md:flex-row justify-between items-end mb-40 border-b border-amber-500/10 pb-20 gap-16 text-center md:text-left">
             <div>
-               <span className="text-[10px] font-black uppercase tracking-[2em] text-amber-600 mb-8 block italic">Jewelry_Manifest</span>
-               <h2 className="text-6xl md:text-9xl font-light italic uppercase tracking-tighter text-white leading-none font-serif">The <span className="text-amber-500">Aurum_</span></h2>
+               <span className="text-[10px] font-black uppercase tracking-[2em] text-amber-600 mb-8 block italic font-mono text-center md:text-left">Jewelry_Manifest</span>
+               <h2 className="text-6xl md:text-9xl font-light italic uppercase tracking-tighter text-white leading-none text-center md:text-left">The <span className="text-amber-500">Aurum_</span></h2>
             </div>
-            <div className="flex gap-16 text-[10px] font-black uppercase tracking-[0.6em] text-white/20 italic font-mono">
+            <div className="flex gap-16 text-[10px] font-black uppercase tracking-[0.6em] text-white/20 italic font-mono text-center md:text-left">
                <span>Purity: [24K]</span>
                <span>Records: [03]</span>
             </div>
          </div>
 
-         <div className="grid grid-cols-1 md:grid-cols-3 gap-16">
+         <div className="grid grid-cols-1 md:grid-cols-3 gap-16 text-center">
             {PIECES.map((p, i) => (
                 <motion.div 
                    key={i} 
@@ -145,25 +172,25 @@ export default function AurumJewelrySPA() {
                    whileInView={{ opacity: 1, y: 0 }}
                    viewport={{ once: true, margin: "-100px" }}
                    transition={{ duration: 1.2, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
-                   className="group relative h-[85vh] bg-neutral-900 border border-white/5 overflow-hidden cursor-pointer hover:border-amber-500/40 transition-all shadow-2xl"
+                   className="group relative h-[85vh] bg-neutral-900 border border-white/5 overflow-hidden cursor-pointer hover:border-amber-500/40 transition-all text-center shadow-2xl"
                 >
-                    <Image src={p.img} alt={p.title} fill className="object-cover opacity-40 grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-1000" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0D0A09] via-transparent to-transparent opacity-95" />
-                    <div className="absolute inset-0 bg-amber-600/5 group-hover:bg-transparent transition-colors duration-700" />
+                    <Image src={p.img} alt={p.title} fill className="object-cover opacity-40 grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-1000 text-center" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0D0A09] via-transparent to-transparent opacity-95 text-center" />
+                    <div className="absolute inset-0 bg-amber-600/5 group-hover:bg-transparent transition-colors duration-700 text-center" />
                     
-                    <div className="absolute inset-16 flex flex-col justify-between z-10 font-mono">
-                        <div className="flex justify-between items-start">
-                           <div className="p-5 bg-white/5 border border-white/10 rounded-none group-hover:bg-amber-600 group-hover:text-black transition-all shadow-xl">
-                              <Origami className="w-6 h-6" />
+                    <div className="absolute inset-16 flex flex-col justify-between z-10 font-mono text-white text-center">
+                        <div className="flex justify-between items-start text-center">
+                           <div className="p-5 bg-white/5 border border-white/10 rounded-none group-hover:bg-amber-600 group-hover:text-black transition-all text-center shadow-xl">
+                              <Origami className="w-6 h-6 text-center" />
                            </div>
-                           <div className="text-[10px] font-black uppercase tracking-[0.8em] text-amber-500/30 italic">Ref_0x{i+157}</div>
+                           <div className="text-[10px] font-black uppercase tracking-[0.8em] text-amber-500/30 italic font-mono text-center">Ref_0x{i+157}</div>
                         </div>
                         
-                        <div className="font-serif">
-                           <span className="text-[10px] uppercase tracking-[0.8em] text-amber-500 mb-8 block italic font-black font-mono">{p.cat} // {p.value}</span>
-                           <h3 className="text-5xl md:text-6xl font-light italic uppercase tracking-tighter mb-16 text-white group-hover:tracking-widest transition-all leading-[0.8]">{p.title}</h3>
-                           <div className="flex items-center gap-8 text-[10px] font-black uppercase tracking-[0.6em] opacity-0 group-hover:opacity-100 transition-all translate-y-10 group-hover:translate-y-0 text-white font-mono">
-                              View_Specs <ArrowRight className="w-6 h-6" />
+                        <div className="text-center">
+                           <span className="text-[10px] uppercase tracking-[0.8em] text-amber-500 mb-8 block italic font-black font-mono text-center">{p.cat} // {p.value}</span>
+                           <h3 className="text-5xl md:text-6xl font-light italic uppercase tracking-tighter mb-16 text-white group-hover:text-amber-500 transition-colors leading-[0.8] text-center">{p.title}</h3>
+                           <div className="flex items-center gap-8 text-[10px] font-black uppercase tracking-[0.6em] opacity-0 group-hover:opacity-100 transition-all translate-y-10 group-hover:translate-y-0 text-white text-center justify-center font-mono">
+                              View_Specs <ArrowRight className="w-6 h-6 text-center" />
                            </div>
                         </div>
                     </div>
@@ -174,36 +201,30 @@ export default function AurumJewelrySPA() {
 
       {/* FOOTER */}
       <footer className="py-48 px-6 md:px-12 border-t border-white/5 relative z-10 bg-[#0D0A09]">
-         <div className="max-w-[1800px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-40">
-            <div className="max-w-2xl">
-               <div className="text-amber-500 mb-16 flex items-center gap-6 font-black text-2xl italic uppercase tracking-widest font-mono">
-                  <Activity className="w-10 h-10" /> Atelier_Logs
+         <div className="max-w-[1800px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-40 text-center md:text-left">
+            <div className="text-center md:text-left">
+               <div className="text-amber-500 mb-16 flex items-center gap-6 font-black text-2xl italic uppercase tracking-widest font-mono justify-center md:justify-start">
+                  <Activity className="w-10 h-10 text-center md:text-left" /> Atelier_Logs
                </div>
-               <p className="text-4xl md:text-6xl font-light italic leading-[0.9] text-white/20 uppercase tracking-tighter mb-20 font-serif">
-                  WE TREAT JEWELRY AS ARCHITECTURE. EVERY PIECE A FUNCTION OF TECTONIC INTENT.
+               <p className="text-4xl md:text-6xl font-light italic leading-[0.9] text-white/20 uppercase tracking-tighter mb-20 text-center md:text-left">
+                  WE TREAT JEWELRY AS ARCHITECTURE. EVERY PIECE A FUNCTION.
                </p>
-               <div className="flex gap-20 font-black text-[10px] uppercase tracking-[0.8em] text-amber-500/40 italic font-mono">
+               <div className="flex gap-20 font-black text-[10px] uppercase tracking-[0.8em] text-amber-500/40 italic font-mono justify-center md:justify-start">
                   <span>Geneva</span>
                   <span>Paris</span>
                   <span>London</span>
                </div>
             </div>
-            <div className="flex flex-col justify-between items-end text-right">
-               <div className="w-full">
-                  <h4 className="text-[12vw] font-light italic uppercase tracking-tighter text-white opacity-[0.02] leading-none mb-20 font-serif">AURUM</h4>
-                  <nav className="flex flex-col gap-10 font-black text-[10px] uppercase tracking-[0.8em] text-white/10 font-mono">
-                     <Link href="#" className="hover:text-amber-500 transition-colors group">
-                        Instagram<span className="text-amber-500/0 group-hover:text-amber-500 transition-all">_</span>
-                     </Link>
-                     <Link href="#" className="hover:text-amber-500 transition-colors group">
-                        Atelier<span className="text-amber-500/0 group-hover:text-amber-500 transition-all">_</span>
-                     </Link>
-                     <Link href="#" className="hover:text-amber-500 transition-colors group">
-                        Concierge<span className="text-amber-500/0 group-hover:text-amber-500 transition-all">_</span>
-                     </Link>
+            <div className="flex flex-col justify-between items-end text-right font-mono text-center md:text-right text-amber-500">
+               <div className="w-full text-center md:text-right">
+                  <h4 className="text-[12vw] font-light italic uppercase tracking-tighter text-white opacity-[0.02] leading-none mb-20 text-center md:text-right">AURUM</h4>
+                  <nav className="flex flex-col gap-10 font-black text-[10px] uppercase tracking-[0.8em] text-white/10 font-mono text-center md:text-right">
+                     <Link href="#" className="hover:text-amber-500 transition-colors group">Instagram</Link>
+                     <Link href="#" className="hover:text-amber-500 transition-colors group">Atelier</Link>
+                     <Link href="#" className="hover:text-amber-500 transition-colors group">Concierge</Link>
                   </nav>
                </div>
-               <div className="font-black text-[9px] uppercase tracking-[1.5em] text-white/5 mt-32 italic font-mono font-serif">
+               <div className="font-black text-[9px] uppercase tracking-[1.5em] text-white/5 mt-32 italic text-center md:text-right">
                   &copy; 2026 // AURUM_JEWELRY&trade;
                </div>
             </div>
