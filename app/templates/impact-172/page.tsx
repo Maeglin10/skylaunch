@@ -4,7 +4,7 @@ import { motion, useScroll, useTransform, useSpring, useMotionValue } from "fram
 import { useRef, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Scale, ShieldAlert, Landmark, Briefcase, Menu, Search, ArrowRight, Layers, Activity, Zap } from "lucide-react";
+import { Scale, ShieldAlert, Landmark, Briefcase, Menu, Search, ArrowRight, Layers, Activity, Zap, Compass } from "lucide-react";
 import "../premium.css";
 
 const AREAS = [
@@ -12,6 +12,28 @@ const AREAS = [
   { icon: <ShieldAlert className="w-8 h-8" />, title: "WHITE_COLLAR", cat: "Defense", value: "Active", img: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=1500" },
   { icon: <Landmark className="w-8 h-8" />, title: "APPELLATE_LAW", cat: "Supreme", value: "Locked", img: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&q=80&w=1500" },
 ];
+
+function TextScramble({ text }: { text: string }) {
+  const [display, setDisplay] = useState(text);
+  const chars = "!<>-_\\/[]{}—=+*^?#________";
+  
+  useEffect(() => {
+    let iteration = 0;
+    const interval = setInterval(() => {
+      setDisplay(prev => 
+        text.split("").map((char, index) => {
+          if (index < iteration) return text[index];
+          return chars[Math.floor(Math.random() * chars.length)];
+        }).join("")
+      );
+      if (iteration >= text.length) clearInterval(interval);
+      iteration += 1/3;
+    }, 30);
+    return () => clearInterval(interval);
+  }, [text]);
+
+  return <span>{display}</span>;
+}
 
 export default function LawFirmSPA() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -35,21 +57,21 @@ export default function LawFirmSPA() {
   }, [mouseX, mouseY]);
 
   return (
-    <div ref={containerRef} className="premium-theme bg-[#0F0F0F] text-[#E5E5E5] min-h-screen font-serif selection:bg-[#B8860B] selection:text-white overflow-hidden relative">
+    <div ref={containerRef} className="premium-theme bg-[#0A0A0A] text-[#E5E5E5] min-h-screen font-serif selection:bg-[#B8860B] selection:text-white overflow-hidden relative uppercase">
       
       {/* LEGAL GRID & NOISE */}
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(184,134,11,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(184,134,11,0.03)_1px,transparent_1px)] bg-[size:10rem_10rem] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_70%,transparent_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(184,134,11,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(184,134,11,0.05)_1px,transparent_1px)] bg-[size:15rem_15rem] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_70%,transparent_100%)]" />
         <motion.div 
            style={{ x: springX, y: springY }}
-           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70vw] h-[70vw] bg-[#B8860B] opacity-[0.02] blur-[150px] rounded-full mix-blend-screen" 
+           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70vw] h-[70vw] bg-[#B8860B] opacity-[0.05] blur-[150px] rounded-full mix-blend-screen" 
         />
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.1] mix-blend-screen" />
       </div>
 
       {/* HEADER */}
-      <header className="fixed top-0 left-0 w-full px-6 md:px-12 py-10 flex justify-between items-center z-50 bg-[#0F0F0F]/50 backdrop-blur-3xl border-b border-white/5">
-        <Link href="/" className="font-black text-2xl tracking-[0.3em] text-white flex items-center gap-4 italic uppercase">
+      <header className="fixed top-0 left-0 w-full px-6 md:px-12 py-10 flex justify-between items-center z-50 bg-[#0A0A0A]/50 backdrop-blur-3xl border-b border-white/5">
+        <Link href="/" className="font-black text-2xl tracking-[0.4em] text-white flex items-center gap-4 italic uppercase">
            STERLING<span className="text-[#B8860B]">_VANCE</span>
         </Link>
         
@@ -66,7 +88,7 @@ export default function LawFirmSPA() {
         </nav>
         
         <div className="flex items-center gap-10">
-           <button className="bg-white text-black px-12 py-4 font-sans font-black text-[10px] uppercase tracking-[0.4em] hover:bg-[#B8860B] hover:text-white transition-all shadow-[0_0_40px_rgba(184,134,11,0.1)]">
+           <button className="bg-white text-black px-12 py-4 font-sans font-black text-[10px] uppercase tracking-[0.4em] hover:bg-[#B8860B] hover:text-white transition-all shadow-[0_0_40px_rgba(184,134,11,0.2)]">
               Confidential_Inquiry
            </button>
            <Menu className="w-6 h-6 text-white cursor-pointer" />
@@ -77,7 +99,7 @@ export default function LawFirmSPA() {
       <section className="relative h-screen flex flex-col justify-center items-center px-6 text-center z-10 pt-20 overflow-hidden">
          <motion.div style={{ scale: heroScale, y: yHero }} className="absolute inset-0 z-0">
             <Image src="https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&q=80&w=2500" alt="Law Firm" fill className="object-cover opacity-20 grayscale contrast-125" priority />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0F0F0F] via-transparent to-[#0F0F0F]/40" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-transparent to-[#0A0A0A]/40" />
          </motion.div>
          
          <div className="relative z-10 max-w-7xl w-full">
@@ -91,7 +113,7 @@ export default function LawFirmSPA() {
                </div>
                
                <h1 className="text-7xl md:text-[14vw] font-black italic uppercase leading-[0.75] tracking-tighter mb-20 text-white">
-                  UNCOMPROMISING.<br/>
+                  <TextScramble text="UNCOMPROMISING." /><br/>
                   <span className="text-transparent" style={{ WebkitTextStroke: "2px rgba(255,255,255,0.6)" }}>ADVOCACY.</span>
                </h1>
                
@@ -112,21 +134,29 @@ export default function LawFirmSPA() {
             </motion.div>
          </div>
 
-         {/* Decorative Side HUD */}
-         <div className="absolute right-12 bottom-12 flex flex-col items-end gap-4 font-sans font-black text-[8px] uppercase tracking-[1em] text-white/20 hidden md:flex italic">
-            <span>SYNC_STATUS: ACTIVE</span>
+         {/* Case Archive HUD */}
+         <div className="absolute right-12 bottom-12 flex flex-col items-end gap-4 font-sans font-black text-[8px] uppercase tracking-[1em] text-[#B8860B]/30 hidden md:flex italic font-mono">
+            <span>CASE_SYNC: ACTIVE</span>
             <div className="flex gap-1 h-12 items-end">
                {[1, 2, 3, 4, 5].map(i => <motion.div key={i} animate={{ height: ['20%', '100%', '40%'] }} transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }} className="w-[1px] bg-[#B8860B]" />)}
+            </div>
+         </div>
+         
+         <div className="absolute left-12 bottom-12 hidden md:block">
+            <div className="flex flex-col gap-2 text-[8px] font-black uppercase tracking-[0.4em] text-white/10 italic font-mono">
+               <span>WIN_RATE: 98.4%</span>
+               <span>VERDICTS: 1,240+</span>
+               <span>STATUS: UNBEATEN</span>
             </div>
          </div>
       </section>
 
       {/* PRACTICE GRID */}
-      <section className="py-48 px-6 md:px-12 max-w-[1800px] mx-auto relative z-10 bg-[#0F0F0F]">
+      <section className="py-48 px-6 md:px-12 max-w-[1800px] mx-auto relative z-10 bg-[#0A0A0A]">
          <div className="flex flex-col md:flex-row justify-between items-end mb-40 border-b border-white/10 pb-20 gap-16 font-sans">
             <div>
                <span className="text-[10px] font-black uppercase tracking-[2em] text-[#B8860B] mb-8 block italic font-mono">Legal_Manifest</span>
-               <h2 className="text-6xl md:text-[10vw] font-black italic uppercase tracking-tighter text-white leading-none">The <span className="text-white/10">Expertise_</span></h2>
+               <h2 className="text-6xl md:text-[10vw] font-black italic uppercase tracking-tighter text-white leading-none text-center md:text-left">The <span className="text-white/10">Expertise_</span></h2>
             </div>
             <div className="flex gap-16 text-[10px] font-black uppercase tracking-[0.6em] text-white/20 italic font-mono">
                <span>Records: [03]</span>
@@ -142,15 +172,15 @@ export default function LawFirmSPA() {
                    whileInView={{ opacity: 1, y: 0 }}
                    viewport={{ once: true, margin: "-100px" }}
                    transition={{ duration: 1.2, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
-                   className="group relative h-[85vh] bg-[#1A1A1A] border border-white/5 overflow-hidden cursor-pointer hover:border-[#B8860B]/30 transition-all shadow-2xl"
+                   className="group relative h-[85vh] bg-white/5 border border-white/5 overflow-hidden cursor-pointer hover:border-[#B8860B]/30 transition-all shadow-2xl"
                 >
                     <Image src={p.img} alt={p.title} fill className="object-cover opacity-30 grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-1000" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0F0F0F] via-transparent to-transparent opacity-95" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-transparent to-transparent opacity-95" />
                     <div className="absolute inset-0 bg-white/5 group-hover:bg-transparent transition-colors duration-700" />
                     
                     <div className="absolute inset-16 flex flex-col justify-between z-10 font-mono text-white">
                         <div className="flex justify-between items-start">
-                           <div className="p-5 bg-white/5 border border-white/10 rounded-none group-hover:bg-[#B8860B] group-hover:text-black transition-all shadow-xl">
+                           <div className="p-5 bg-white/5 backdrop-blur-xl border border-white/10 rounded-none group-hover:bg-[#B8860B] group-hover:text-black transition-all shadow-xl">
                               {p.icon}
                            </div>
                            <div className="text-[10px] font-black uppercase tracking-[0.8em] text-[#B8860B] italic font-mono">Ref_0x{i+172}</div>
@@ -170,16 +200,16 @@ export default function LawFirmSPA() {
       </section>
 
       {/* FOOTER */}
-      <footer className="py-48 px-6 md:px-12 border-t border-white/5 relative z-10 bg-[#0F0F0F]">
-         <div className="max-w-[1800px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-40 font-sans">
+      <footer className="py-48 px-6 md:px-12 border-t border-white/5 relative z-10 bg-[#0A0A0A]">
+         <div className="max-w-[1800px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-40 font-sans text-center md:text-left">
             <div className="max-w-2xl">
-               <div className="text-[#B8860B] mb-16 flex items-center gap-6 font-black text-2xl italic uppercase tracking-widest font-mono">
+               <div className="text-[#B8860B] mb-16 flex items-center gap-6 font-black text-2xl italic uppercase tracking-widest font-mono justify-center md:justify-start">
                   <Activity className="w-10 h-10" /> Sterling_Logs
                </div>
-               <p className="text-4xl md:text-6xl font-light italic leading-[0.9] text-white/20 uppercase tracking-tighter mb-20">
+               <p className="text-4xl md:text-6xl font-light italic leading-[0.9] text-white/20 uppercase tracking-tighter mb-20 text-center md:text-left">
                   WE TREAT LAW AS ARCHITECTURE. EVERY DEFENSE A FUNCTION.
                </p>
-               <div className="flex gap-20 font-black text-[10px] uppercase tracking-[0.8em] text-white/40 italic font-mono">
+               <div className="flex gap-20 font-black text-[10px] uppercase tracking-[0.8em] text-white/40 italic font-mono justify-center md:justify-start">
                   <span>New York</span>
                   <span>London</span>
                   <span>D.C.</span>
@@ -200,7 +230,7 @@ export default function LawFirmSPA() {
                      </Link>
                   </nav>
                </div>
-               <div className="font-black text-[9px] uppercase tracking-[1.5em] text-white/5 mt-32 italic">
+               <div className="font-black text-[9px] uppercase tracking-[1.5em] text-white/5 mt-32 italic text-center md:text-right">
                   &copy; 2026 // STERLING_VANCE_PARTNERS&trade;
                </div>
             </div>
