@@ -14,6 +14,28 @@ const PRODUCTS = [
   { name: "MINIMAL SNEAKER", price: 150, img: "https://images.unsplash.com/photo-1560769623-688fd61376d2?auto=format&fit=crop&q=80&w=1500", imgHover: "https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&q=80&w=1500" },
 ];
 
+function TextScramble({ text }: { text: string }) {
+  const [display, setDisplay] = useState(text);
+  const chars = "!<>-_\\/[]{}—=+*^?#________";
+  
+  useEffect(() => {
+    let iteration = 0;
+    const interval = setInterval(() => {
+      setDisplay(prev => 
+        text.split("").map((char, index) => {
+          if (index < iteration) return text[index];
+          return chars[Math.floor(Math.random() * chars.length)];
+        }).join("")
+      );
+      if (iteration >= text.length) clearInterval(interval);
+      iteration += 1/3;
+    }, 30);
+    return () => clearInterval(interval);
+  }, [text]);
+
+  return <span>{display}</span>;
+}
+
 export default function BasicsEcommerceSPA() {
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: containerRef });
@@ -36,7 +58,7 @@ export default function BasicsEcommerceSPA() {
   }, [mouseX, mouseY]);
 
   return (
-    <div ref={containerRef} className="premium-theme bg-[#e5e5e5] text-black min-h-screen font-sans selection:bg-black selection:text-white overflow-hidden relative">
+    <div ref={containerRef} className="premium-theme bg-[#e5e5e5] text-black min-h-screen font-sans selection:bg-black selection:text-white overflow-hidden relative uppercase text-center">
       
       {/* BASICS GRID & NOISE */}
       <div className="fixed inset-0 z-0 pointer-events-none">
@@ -50,11 +72,11 @@ export default function BasicsEcommerceSPA() {
 
       {/* HEADER */}
       <header className="fixed top-0 left-0 w-full px-6 md:px-12 py-10 flex justify-between items-center z-50 bg-[#e5e5e5]/30 backdrop-blur-3xl border-b border-black/5">
-        <Link href="/" className="font-black text-2xl tracking-[0.2em] text-black flex items-center gap-4 italic uppercase">
+        <Link href="/" className="font-black text-2xl tracking-[0.2em] text-black flex items-center gap-4 italic uppercase text-center md:text-left">
            BASICS<span className="text-black/20">_</span>
         </Link>
         
-        <nav className="hidden lg:flex gap-16 font-black text-[10px] uppercase tracking-[0.6em] text-black/30">
+        <nav className="hidden lg:flex gap-16 font-black text-[10px] uppercase tracking-[0.6em] text-black/30 text-center">
             <Link href="#" className="hover:text-black transition-colors group">
                Shop<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-black italic">.</span>
             </Link>
@@ -67,7 +89,7 @@ export default function BasicsEcommerceSPA() {
         </nav>
         
         <div className="flex items-center gap-10">
-           <button className="bg-black text-white px-12 py-4 font-black text-[10px] uppercase tracking-[0.4em] hover:bg-stone-800 transition-all">
+           <button className="bg-black text-white px-12 py-4 font-black text-[10px] uppercase tracking-[0.4em] hover:bg-stone-800 transition-all shadow-xl">
               Cart_[02]
            </button>
            <Menu className="w-6 h-6 text-black cursor-pointer" />
@@ -75,67 +97,75 @@ export default function BasicsEcommerceSPA() {
       </header>
 
       {/* HERO SECTION */}
-      <section className="relative h-screen flex flex-col justify-center items-center px-6 text-center z-10 pt-20 overflow-hidden">
-         <motion.div style={{ scale: heroScale, y: yHero }} className="absolute inset-0 z-0">
-            <Image src="https://images.unsplash.com/photo-1445205170230-053b830160b0?auto=format&fit=crop&q=80&w=2500" alt="Collection" fill className="object-cover opacity-20 grayscale contrast-125" priority />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#e5e5e5] via-transparent to-[#e5e5e5]/40" />
+      <section className="relative h-screen flex flex-col justify-center items-center px-6 text-center z-10 pt-20 overflow-hidden text-center">
+         <motion.div style={{ scale: heroScale, y: yHero }} className="absolute inset-0 z-0 text-center">
+            <Image src="https://images.unsplash.com/photo-1445205170230-053b830160b0?auto=format&fit=crop&q=80&w=2500" alt="Collection" fill className="object-cover opacity-20 grayscale contrast-125 text-center" priority />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#e5e5e5] via-transparent to-[#e5e5e5]/40 text-center" />
          </motion.div>
          
-         <div className="relative z-10 max-w-7xl w-full">
+         <div className="relative z-10 max-w-7xl w-full text-center">
             <motion.div 
-               initial={{ opacity: 0, y: 100 }}
-               animate={{ opacity: 1, y: 0 }}
-               transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+               initial={{ opacity: 0, scale: 0.95 }}
+               animate={{ opacity: 1, scale: 1 }}
+               transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
             >
-               <div className="inline-flex items-center gap-4 font-black text-[10px] uppercase tracking-[1em] text-black/20 mb-16 border-l-2 border-black pl-10 italic font-mono">
+               <div className="inline-flex items-center gap-4 font-black text-[10px] uppercase tracking-[1em] text-black/20 mb-16 border-l-2 border-black pl-10 italic font-mono text-center">
                   Visual_Capture // 0168_Alpha
                </div>
                
-               <h1 className="text-7xl md:text-[14vw] font-black italic uppercase leading-[0.75] tracking-tighter mb-20 text-black">
-                  LESS.<br/>
-                  <span className="text-transparent" style={{ WebkitTextStroke: "2px #000" }}>BETTER.</span>
+               <h1 className="text-7xl md:text-[14vw] font-black italic uppercase leading-[0.75] tracking-tighter mb-20 text-black text-center">
+                  <TextScramble text="LESS." /><br/>
+                  <span className="text-transparent" style={{ WebkitTextStroke: "2px #000" }}><TextScramble text="BETTER." /></span>
                </h1>
                
-               <p className="text-xl md:text-3xl font-light italic text-black/30 max-w-3xl mx-auto mb-24 leading-relaxed uppercase tracking-widest">
+               <p className="text-xl md:text-3xl font-light italic text-black/30 max-w-3xl mx-auto mb-24 leading-relaxed uppercase tracking-widest text-center">
                   Structural allocation for aesthetic intent. Architecting the future of essentials with tectonic precision.
                </p>
                
-               <div className="flex flex-col md:flex-row gap-16 justify-center items-center font-mono">
-                  <div className="flex items-center gap-8 group cursor-pointer">
+               <div className="flex flex-col md:flex-row gap-16 justify-center items-center font-mono text-center">
+                  <div className="flex items-center gap-8 group cursor-pointer text-center">
                      <div className="w-20 h-px bg-black/10 group-hover:w-32 transition-all" />
                      <span className="text-[10px] font-black uppercase tracking-[0.8em] text-black">View_Collection</span>
                   </div>
                   <div className="hidden md:block w-px h-16 bg-black/5" />
-                  <div className="font-black text-[9px] uppercase tracking-[0.6em] text-black/10 italic">
+                  <div className="font-black text-[9px] uppercase tracking-[0.6em] text-black/10 italic text-center">
                      Berlin // London // NYC
                   </div>
                </div>
             </motion.div>
          </div>
 
-         {/* Decorative Side HUD */}
-         <div className="absolute right-12 bottom-12 flex flex-col items-end gap-4 font-black text-[8px] uppercase tracking-[1em] text-black/20 hidden md:flex italic font-mono">
-            <span>SYNC_STATUS: ACTIVE</span>
+         {/* Basics HUD */}
+         <div className="absolute right-12 bottom-12 flex flex-col items-end gap-4 font-black text-[8px] uppercase tracking-[1em] text-black/20 hidden md:flex italic font-mono text-center">
+            <span>BASICS_SYNC: ACTIVE</span>
             <div className="flex gap-1 h-12 items-end">
                {[1, 2, 3, 4, 5].map(i => <motion.div key={i} animate={{ height: ['20%', '100%', '40%'] }} transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }} className="w-[1px] bg-black/40" />)}
+            </div>
+         </div>
+         
+         <div className="absolute left-12 bottom-12 hidden md:block text-center">
+            <div className="flex flex-col gap-2 text-[8px] font-black uppercase tracking-[0.4em] text-black/10 italic font-mono text-center">
+               <span>STOCK: OPTIMAL</span>
+               <span>GRID: STABLE</span>
+               <span>STATUS: READY</span>
             </div>
          </div>
       </section>
 
       {/* PRODUCTS GRID */}
       <section className="py-48 px-6 md:px-12 max-w-[1800px] mx-auto relative z-10 bg-[#e5e5e5]">
-         <div className="flex flex-col md:flex-row justify-between items-end mb-40 border-b border-black/10 pb-20 gap-16">
-            <div>
-               <span className="text-[10px] font-black uppercase tracking-[2em] text-black/40 mb-8 block italic font-mono">Visual_Manifest</span>
-               <h2 className="text-6xl md:text-9xl font-black italic uppercase tracking-tighter text-black leading-none">The <span className="text-black/10">Basics_</span></h2>
+         <div className="flex flex-col md:flex-row justify-between items-end mb-40 border-b border-black/10 pb-20 gap-16 text-center md:text-left">
+            <div className="text-center md:text-left">
+               <span className="text-[10px] font-black uppercase tracking-[2em] text-black/40 mb-8 block italic font-mono text-center md:text-left">Visual_Manifest</span>
+               <h2 className="text-6xl md:text-9xl font-black italic uppercase tracking-tighter text-black leading-none text-center md:text-left">The <span className="text-black/10">Basics_</span></h2>
             </div>
-            <div className="flex gap-16 text-[10px] font-black uppercase tracking-[0.6em] text-black/20 italic font-mono">
+            <div className="flex gap-16 text-[10px] font-black uppercase tracking-[0.6em] text-black/20 italic font-mono text-center md:text-left">
                <span>Records: [04]</span>
                <span>Status: [Verified]</span>
             </div>
          </div>
 
-         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
             {PRODUCTS.map((p, i) => (
                 <motion.div 
                    key={i} 
@@ -143,25 +173,25 @@ export default function BasicsEcommerceSPA() {
                    whileInView={{ opacity: 1, y: 0 }}
                    viewport={{ once: true, margin: "-100px" }}
                    transition={{ duration: 1.2, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
-                   className="group relative h-[70vh] bg-stone-100 border border-black/5 overflow-hidden cursor-pointer hover:border-black/30 transition-all shadow-sm"
+                   className="group relative h-[70vh] bg-stone-100 border border-black/5 overflow-hidden cursor-pointer hover:border-black/30 transition-all text-center shadow-sm"
                 >
-                    <Image src={p.img} alt={p.name} fill className="object-cover opacity-60 grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-1000" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#e5e5e5] via-transparent to-transparent opacity-95" />
-                    <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors duration-700" />
+                    <Image src={p.img} alt={p.name} fill className="object-cover opacity-60 grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-1000 text-center" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#e5e5e5] via-transparent to-transparent opacity-95 text-center" />
+                    <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors duration-700 text-center" />
                     
-                    <div className="absolute inset-12 flex flex-col justify-between z-10 font-mono">
-                        <div className="flex justify-between items-start">
-                           <div className="p-4 bg-white/40 backdrop-blur-xl border border-black/5 rounded-none group-hover:bg-black group-hover:text-white transition-all shadow-sm">
-                              <ShoppingBag className="w-5 h-5" />
+                    <div className="absolute inset-12 flex flex-col justify-between z-10 font-mono text-center">
+                        <div className="flex justify-between items-start text-center">
+                           <div className="p-4 bg-white/40 backdrop-blur-xl border border-black/5 rounded-none group-hover:bg-black group-hover:text-white transition-all shadow-sm text-center">
+                              <ShoppingBag className="w-5 h-5 text-center" />
                            </div>
-                           <div className="text-[10px] font-black uppercase tracking-[0.8em] text-black/20 italic">Ref_0x{i+168}</div>
+                           <div className="text-[10px] font-black uppercase tracking-[0.8em] text-black/20 italic text-center">Ref_0x{i+168}</div>
                         </div>
                         
-                        <div>
-                           <span className="text-[10px] uppercase tracking-[0.8em] text-black mb-6 block italic font-black">Essential // Verified</span>
-                           <h3 className="text-4xl font-black italic uppercase tracking-tighter mb-12 text-black group-hover:tracking-widest transition-all leading-[0.8]">{p.name}</h3>
-                           <div className="flex items-center gap-8 text-[10px] font-black uppercase tracking-[0.6em] opacity-0 group-hover:opacity-100 transition-all translate-y-10 group-hover:translate-y-0 text-black">
-                              ${p.price} // Buy <ArrowRight className="w-6 h-6" />
+                        <div className="text-center">
+                           <span className="text-[10px] uppercase tracking-[0.8em] text-black mb-6 block italic font-black text-center">Essential // Verified</span>
+                           <h3 className="text-4xl font-black italic uppercase tracking-tighter mb-12 text-black group-hover:tracking-widest transition-all leading-[0.8] text-center">{p.name}</h3>
+                           <div className="flex items-center gap-8 text-[10px] font-black uppercase tracking-[0.6em] opacity-0 group-hover:opacity-100 transition-all translate-y-10 group-hover:translate-y-0 text-black text-center justify-center">
+                              ${p.price} // Buy <ArrowRight className="w-6 h-6 text-center" />
                            </div>
                         </div>
                     </div>
@@ -172,36 +202,30 @@ export default function BasicsEcommerceSPA() {
 
       {/* FOOTER */}
       <footer className="py-48 px-6 md:px-12 border-t border-black/5 relative z-10 bg-[#e5e5e5]">
-         <div className="max-w-[1800px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-40">
-            <div className="max-w-2xl">
-               <div className="text-black mb-16 flex items-center gap-6 font-black text-2xl italic uppercase tracking-widest font-mono">
-                  <Activity className="w-10 h-10" /> Basics_Logs
+         <div className="max-w-[1800px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-40 text-center md:text-left">
+            <div className="text-center md:text-left">
+               <div className="text-black mb-16 flex items-center gap-6 font-black text-2xl italic uppercase tracking-widest font-mono justify-center md:justify-start">
+                  <Activity className="w-10 h-10 text-center md:text-left" /> Basics_Logs
                </div>
-               <p className="text-4xl md:text-6xl font-light italic leading-[0.9] text-black/20 uppercase tracking-tighter mb-20">
+               <p className="text-4xl md:text-6xl font-light italic leading-[0.9] text-black/20 uppercase tracking-tighter mb-20 text-center md:text-left">
                   WE TREAT ESSENTIALS AS ARCHITECTURE. EVERY PIECE A FUNCTION.
                </p>
-               <div className="flex gap-20 font-black text-[10px] uppercase tracking-[0.8em] text-black/40 italic font-mono">
+               <div className="flex gap-20 font-black text-[10px] uppercase tracking-[0.8em] text-black/40 italic font-mono justify-center md:justify-start">
                   <span>Berlin</span>
                   <span>London</span>
                   <span>NYC</span>
                </div>
             </div>
-            <div className="flex flex-col justify-between items-end text-right font-mono">
-               <div className="w-full">
-                  <h4 className="text-[12vw] font-black italic uppercase tracking-tighter text-black opacity-[0.02] leading-none mb-20">BASICS</h4>
-                  <nav className="flex flex-col gap-10 font-black text-[10px] uppercase tracking-[0.8em] text-black/10">
-                     <Link href="#" className="hover:text-black transition-colors group">
-                        Instagram<span className="text-black/0 group-hover:text-black transition-all">_</span>
-                     </Link>
-                     <Link href="#" className="hover:text-black transition-colors group">
-                        Journal<span className="text-black/0 group-hover:text-black transition-all">_</span>
-                     </Link>
-                     <Link href="#" className="hover:text-black transition-colors group">
-                        Legal<span className="text-black/0 group-hover:text-black transition-all">_</span>
-                     </Link>
+            <div className="flex flex-col justify-between items-end text-right font-mono text-center md:text-right text-black">
+               <div className="w-full text-center md:text-right">
+                  <h4 className="text-[12vw] font-black italic uppercase tracking-tighter text-black opacity-[0.02] leading-none mb-20 text-center md:text-right">BASICS</h4>
+                  <nav className="flex flex-col gap-10 font-black text-[10px] uppercase tracking-[0.8em] text-black/10 text-center md:text-right">
+                     <Link href="#" className="hover:text-black transition-colors group">Instagram</Link>
+                     <Link href="#" className="hover:text-black transition-colors group">Journal</Link>
+                     <Link href="#" className="hover:text-black transition-colors group">Legal</Link>
                   </nav>
                </div>
-               <div className="font-black text-[9px] uppercase tracking-[1.5em] text-black/5 mt-32 italic">
+               <div className="font-black text-[9px] uppercase tracking-[1.5em] text-black/5 mt-32 italic text-center md:text-right">
                   &copy; 2026 // BASICS_CLOTHING_STUDIO&trade;
                </div>
             </div>
