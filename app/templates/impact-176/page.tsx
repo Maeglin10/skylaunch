@@ -3,7 +3,7 @@
 import { motion, useScroll, useTransform, useSpring, useMotionValue } from "framer-motion";
 import { useRef, useEffect, useState } from "react";
 import Image from "next/image";
-import { Search, Bell, BarChart2, Users, CreditCard, Settings, ChevronDown, Activity, ArrowUpRight, ArrowDownRight, Zap, Menu, Layers } from "lucide-react";
+import { Search, Bell, BarChart2, Users, CreditCard, Settings, ChevronDown, Activity, ArrowUpRight, ArrowDownRight, Zap, Menu, Layers, Compass } from "lucide-react";
 import "../premium.css";
 
 const KPIS = [
@@ -17,6 +17,28 @@ const ACTIVITY = [
   { action: "NEW_ANNUAL", user: "Wayne Ent.", time: "1 hr ago", amt: "+$12,000" },
   { action: "CHURN_LOSS", user: "Oscorp", time: "3 hrs ago", amt: "-$200/mo" }
 ];
+
+function TextScramble({ text }: { text: string }) {
+  const [display, setDisplay] = useState(text);
+  const chars = "!<>-_\\/[]{}—=+*^?#________";
+  
+  useEffect(() => {
+    let iteration = 0;
+    const interval = setInterval(() => {
+      setDisplay(prev => 
+        text.split("").map((char, index) => {
+          if (index < iteration) return text[index];
+          return chars[Math.floor(Math.random() * chars.length)];
+        }).join("")
+      );
+      if (iteration >= text.length) clearInterval(interval);
+      iteration += 1/3;
+    }, 30);
+    return () => clearInterval(interval);
+  }, [text]);
+
+  return <span>{display}</span>;
+}
 
 export default function MetricFlowSPA() {
   const [activeTab, setActiveTab] = useState("OVERVIEW");
@@ -37,14 +59,14 @@ export default function MetricFlowSPA() {
   }, [mouseX, mouseY]);
 
   return (
-    <div ref={containerRef} className="premium-theme bg-[#0A0A0A] text-[#FAFAFA] min-h-screen font-sans selection:bg-[#6366F1] selection:text-white flex overflow-hidden relative">
+    <div ref={containerRef} className="premium-theme bg-[#050505] text-[#FAFAFA] min-h-screen font-sans selection:bg-[#6366F1] selection:text-white flex overflow-hidden relative uppercase">
       
       {/* DASHBOARD GRID & NOISE */}
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(99,102,241,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(99,102,241,0.03)_1px,transparent_1px)] bg-[size:5rem_5rem] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_70%,transparent_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(99,102,241,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(99,102,241,0.05)_1px,transparent_1px)] bg-[size:10rem_10rem] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_70%,transparent_100%)]" />
         <motion.div 
            style={{ x: springX, y: springY }}
-           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70vw] h-[70vw] bg-[#6366F1] opacity-[0.02] blur-[150px] rounded-full mix-blend-screen" 
+           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70vw] h-[70vw] bg-[#6366F1] opacity-[0.03] blur-[150px] rounded-full mix-blend-screen" 
         />
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.1] mix-blend-screen" />
       </div>
@@ -57,7 +79,7 @@ export default function MetricFlowSPA() {
          
          <nav className="flex-1 space-y-12">
             <div className="space-y-4">
-               <span className="text-[10px] font-black uppercase tracking-[0.6em] text-white/20 italic mb-6 block">Main_Menu</span>
+               <span className="text-[10px] font-black uppercase tracking-[0.6em] text-white/20 italic mb-6 block font-mono">Main_Menu</span>
                {["OVERVIEW", "AUDIENCE", "BILLING", "SETTINGS"].map((t) => (
                   <div 
                      key={t}
@@ -69,20 +91,20 @@ export default function MetricFlowSPA() {
                ))}
             </div>
             
-            <div className="space-y-4">
+            <div className="space-y-4 font-mono">
                <span className="text-[10px] font-black uppercase tracking-[0.6em] text-white/20 italic mb-6 block">Quick_Actions</span>
                <div className="text-[10px] font-black uppercase tracking-[0.8em] text-white/30 hover:text-white cursor-pointer transition-all">EXPORT_LOGS</div>
                <div className="text-[10px] font-black uppercase tracking-[0.8em] text-white/30 hover:text-white cursor-pointer transition-all">SYSTEM_SYNC</div>
             </div>
          </nav>
 
-         <div className="pt-10 border-t border-white/5 flex items-center gap-6">
-            <div className="w-12 h-12 bg-white/5 rounded-none border border-white/10 flex items-center justify-center">
+         <div className="pt-10 border-t border-white/5 flex items-center gap-6 font-mono">
+            <div className="w-12 h-12 bg-white/5 rounded-none border border-white/10 flex items-center justify-center shadow-xl">
                <Activity className="w-6 h-6 text-[#6366F1]" />
             </div>
             <div>
                <div className="text-[10px] font-black uppercase tracking-[0.4em] text-white">ADMIN_CORE</div>
-               <div className="text-[8px] font-black uppercase tracking-[0.4em] text-white/20">STATUS: ACTIVE</div>
+               <div className="text-[8px] font-black uppercase tracking-[0.4em] text-[#6366F1]">STATUS: ACTIVE</div>
             </div>
          </div>
       </aside>
@@ -91,10 +113,12 @@ export default function MetricFlowSPA() {
       <main className="flex-1 flex flex-col h-screen overflow-y-auto relative z-10 font-mono">
          
          {/* HEADER */}
-         <header className="px-12 py-10 flex justify-between items-center sticky top-0 z-30 bg-[#0A0A0A]/50 backdrop-blur-3xl border-b border-white/5">
+         <header className="px-12 py-10 flex justify-between items-center sticky top-0 z-30 bg-[#050505]/50 backdrop-blur-3xl border-b border-white/5">
             <div className="flex items-center gap-6">
                <Menu className="w-6 h-6 text-[#6366F1] lg:hidden" />
-               <h1 className="text-xl font-black tracking-[0.4em] text-white uppercase italic">{activeTab}<span className="text-white/20">_SNAPSHOT</span></h1>
+               <h1 className="text-xl font-black tracking-[0.4em] text-white uppercase italic">
+                  <TextScramble text={activeTab} /><span className="text-white/20">_SNAPSHOT</span>
+               </h1>
             </div>
             
             <div className="flex items-center gap-10">
@@ -117,15 +141,17 @@ export default function MetricFlowSPA() {
                      initial={{ opacity: 0, y: 20 }}
                      animate={{ opacity: 1, y: 0 }}
                      transition={{ duration: 0.5, delay: i * 0.1 }}
-                     className="bg-[#1A1A1A] border border-white/5 p-10 group hover:border-[#6366F1]/30 transition-all shadow-2xl relative overflow-hidden"
+                     className="bg-white/5 border border-white/5 p-10 group hover:border-[#6366F1]/30 transition-all shadow-2xl relative overflow-hidden"
                   >
                      <div className="flex justify-between items-start mb-10 relative z-10">
                         <div className="text-[10px] font-black uppercase tracking-[0.4em] text-white/20 italic">{kpi.title}</div>
-                        <div className={`text-[10px] font-black ${kpi.pos ? 'text-emerald-400' : 'text-red-400'} italic`}>
+                        <div className={`text-[10px] font-black ${kpi.pos ? 'text-[#6366F1]' : 'text-red-400'} italic`}>
                            {kpi.trend}
                         </div>
                      </div>
-                     <div className="text-5xl font-black italic uppercase tracking-tighter mb-10 relative z-10">{kpi.val}</div>
+                     <div className="text-5xl font-black italic uppercase tracking-tighter mb-10 relative z-10 text-white">
+                        <TextScramble text={kpi.val} />
+                     </div>
                      
                      {/* Mini Sparkline Chart */}
                      <div className="w-full h-16 flex items-end gap-2 opacity-20 group-hover:opacity-100 transition-opacity relative z-10">
@@ -149,7 +175,7 @@ export default function MetricFlowSPA() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.3 }}
-                  className="lg:col-span-2 bg-[#1A1A1A] border border-white/5 p-12 relative overflow-hidden"
+                  className="lg:col-span-2 bg-white/5 border border-white/5 p-12 relative overflow-hidden"
                >
                   <div className="flex justify-between items-center mb-16">
                      <h3 className="text-sm font-black tracking-[0.4em] text-white uppercase italic">REVENUE_GROWTH<span className="text-white/20">_LOG</span></h3>
@@ -192,7 +218,7 @@ export default function MetricFlowSPA() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.4 }}
-                  className="bg-[#1A1A1A] border border-white/5 p-12"
+                  className="bg-white/5 border border-white/5 p-12"
                >
                   <div className="flex justify-between items-center mb-12">
                      <h3 className="text-sm font-black tracking-[0.4em] text-white uppercase italic">LIVE_FEED<span className="text-white/20">_ACTIVE</span></h3>
@@ -202,27 +228,35 @@ export default function MetricFlowSPA() {
                   <div className="space-y-8">
                      {ACTIVITY.map((act, i) => (
                         <div key={i} className="flex items-center gap-6 p-6 border border-white/5 hover:border-[#6366F1]/30 hover:bg-white/[0.02] transition-all cursor-pointer group">
-                           <div className="w-10 h-10 border border-white/10 flex items-center justify-center shrink-0 group-hover:bg-[#6366F1] group-hover:border-transparent transition-all">
+                           <div className="w-10 h-10 border border-white/10 flex items-center justify-center shrink-0 group-hover:bg-[#6366F1] group-hover:border-transparent transition-all shadow-lg">
                               <div className="w-2 h-2 bg-[#6366F1] group-hover:bg-white rounded-full shadow-[0_0_10px_rgba(99,102,241,1)]" />
                            </div>
                            <div className="flex-1 overflow-hidden">
-                              <div className="text-[10px] font-black uppercase tracking-[0.2em] mb-2 truncate">{act.action}</div>
+                              <div className="text-[10px] font-black uppercase tracking-[0.2em] mb-2 truncate text-white">{act.action}</div>
                               <div className="text-[8px] text-white/20 font-black uppercase tracking-[0.2em]">{act.user} • {act.time}</div>
                            </div>
-                           <div className={`text-[10px] font-black italic ${act.amt.startsWith('+') ? 'text-emerald-400' : 'text-red-400'}`}>
+                           <div className={`text-[10px] font-black italic ${act.amt.startsWith('+') ? 'text-[#6366F1]' : 'text-red-400'}`}>
                               {act.amt}
                            </div>
                         </div>
                      ))}
                   </div>
                   
-                  <button className="w-full mt-12 py-5 border border-white/5 text-[10px] font-black uppercase tracking-[0.4em] text-white/20 hover:text-[#6366F1] hover:border-[#6366F1]/30 transition-all italic">
+                  <button className="w-full mt-12 py-5 border border-white/5 text-[10px] font-black uppercase tracking-[0.4em] text-white/20 hover:text-[#6366F1] hover:border-[#6366F1]/30 transition-all italic shadow-sm">
                      VIEW_FULL_LOGS_
                   </button>
                </motion.div>
             </div>
          </div>
       </main>
+      
+      {/* Decorative Dashboard HUD */}
+      <div className="fixed right-12 bottom-12 flex flex-col items-end gap-4 font-black text-[8px] uppercase tracking-[1em] text-[#6366F1]/20 hidden md:flex italic font-mono z-50">
+         <span>METRIC_SYNC: ACTIVE</span>
+         <div className="flex gap-1 h-12 items-end">
+            {[1, 2, 3, 4, 5].map(i => <motion.div key={i} animate={{ height: ['20%', '100%', '40%'] }} transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }} className="w-[1px] bg-[#6366F1]" />)}
+         </div>
+      </div>
     </div>
   );
 }
