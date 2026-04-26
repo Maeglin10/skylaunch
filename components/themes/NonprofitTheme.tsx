@@ -1,0 +1,155 @@
+"use client";
+
+import { motion } from "framer-motion";
+import type { SessionData } from "@/lib/sessions";
+import { ThemeWrapper } from "./ThemeWrapper";
+import { Reveal, Stagger, StaggerItem, MagneticButton } from "./AnimationHelpers";
+import { Heart, Globe, Users, Shield, ArrowRight, CheckCircle } from "lucide-react";
+
+export function NonprofitTheme({ session }: { session: SessionData }) {
+  const { formData, generatedContent: c } = session;
+  const brand = formData.brandColor || "#10b981";
+
+  return (
+    <ThemeWrapper session={session} dark={false}>
+      {/* Hero Section */}
+      <section className="relative min-h-[90vh] flex items-center pt-20">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+          <Reveal>
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-widest mb-10">
+              <Heart className="w-4 h-4 fill-current" /> Driven by Purpose
+            </div>
+            <h1 className="text-6xl md:text-8xl font-black mb-10 leading-[1] tracking-tighter text-slate-900">
+              {c?.heroHeadline}
+            </h1>
+            <p className="text-xl text-slate-500 max-w-lg mb-16 leading-relaxed font-light italic">
+              {c?.heroSubline}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-6">
+              <MagneticButton
+                style={{ background: brand, color: "#fff" }}
+                className="px-10 py-5 rounded-2xl font-bold text-lg shadow-xl shadow-emerald-500/20"
+              >
+                Donate Now
+              </MagneticButton>
+              <button className="px-10 py-5 rounded-2xl border border-slate-200 font-bold hover:bg-slate-50 transition-all">
+                Our Mission
+              </button>
+            </div>
+          </Reveal>
+          
+          <Reveal delay={0.2} className="relative">
+            <div className="aspect-square rounded-[60px] overflow-hidden shadow-2xl rotate-2 relative">
+              <img src={formData.heroImageUrl || "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=1200&q=80"} className="w-full h-full object-cover" />
+            </div>
+            <div className="absolute -bottom-10 -left-10 bg-white p-8 rounded-3xl shadow-xl border hidden md:block">
+              <div className="text-3xl font-black mb-1 text-slate-900">$1.2M+</div>
+              <div className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Raised for Impact</div>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* Impact Stats */}
+      <section className="py-24 bg-slate-50 mt-32 border-y">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-12 text-center">
+          {[
+            { icon: <Globe />, val: "15+", label: "Countries" },
+            { icon: <Users />, val: "50k+", label: "Lives Impacted" },
+            { icon: <Shield />, val: "100%", label: "Transparency" },
+            { icon: <Heart />, val: "12k", label: "Volunteers" },
+          ].map((m, i) => (
+            <Reveal key={i} delay={i * 0.1}>
+              <div className="flex flex-col items-center">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 bg-white text-slate-400" style={{ color: i === 3 ? brand : undefined }}>{m.icon}</div>
+                <div className="text-4xl font-black text-slate-900 mb-1">{m.val}</div>
+                <div className="text-[10px] uppercase font-bold tracking-widest text-slate-400">{m.label}</div>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* Focus Areas */}
+      <section className="py-32">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center max-w-3xl mx-auto mb-24">
+            <Reveal>
+              <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter mb-8 text-slate-900">Our Focus Areas</h2>
+              <p className="text-xl text-slate-500 font-light italic leading-relaxed">
+                Directing resources where they are needed most to create sustainable change.
+              </p>
+            </Reveal>
+          </div>
+
+          <Stagger className="grid grid-cols-1 md:grid-cols-3 gap-10">
+            {c?.services.map((s, i) => (
+              <StaggerItem key={i}>
+                <div className="group h-full p-10 bg-white border border-slate-100 rounded-[40px] hover:shadow-2xl hover:-translate-y-2 transition-all duration-500">
+                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-8 bg-slate-50 group-hover:bg-white group-hover:shadow-lg transition-all" style={{ color: brand }}>
+                    <CheckCircle className="w-8 h-8" />
+                  </div>
+                  <h3 className="text-2xl font-bold mb-4 text-slate-900">{s.title}</h3>
+                  <p className="text-slate-500 leading-relaxed mb-8">{s.description}</p>
+                  <button className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-400 group-hover:text-slate-900 transition-colors">
+                    Learn More <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </StaggerItem>
+            ))}
+          </Stagger>
+        </div>
+      </section>
+
+      {/* Testimonial / Story Section */}
+      <section className="py-32 bg-slate-900 text-white overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-32 items-center">
+          <Reveal>
+            <h2 className="text-5xl md:text-6xl font-black uppercase tracking-tighter mb-12 leading-[0.9] italic">Stories of <br/>Transformation.</h2>
+            <div className="relative p-12 bg-white/5 border border-white/10 rounded-[40px] backdrop-blur-xl">
+              <p className="text-2xl font-light italic leading-relaxed mb-12">
+                &quot;The support from {formData.businessName} didn&apos;t just provide a temporary fix; it gave us the tools to build a future.&quot;
+              </p>
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-slate-800" />
+                <div>
+                  <div className="font-bold">Sarah J.</div>
+                  <div className="text-xs font-bold uppercase tracking-widest text-slate-500">Community Leader</div>
+                </div>
+              </div>
+            </div>
+          </Reveal>
+          
+          <Reveal delay={0.2} className="grid grid-cols-2 gap-6">
+            <div className="aspect-[3/4] rounded-3xl overflow-hidden pt-12">
+              <img src="https://images.unsplash.com/photo-1542810634-71277d95dcbb?w=800&q=80" className="w-full h-full object-cover grayscale" />
+            </div>
+            <div className="aspect-[3/4] rounded-3xl overflow-hidden pb-12">
+              <img src="https://images.unsplash.com/photo-1593113598332-cd288d649433?w=800&q=80" className="w-full h-full object-cover grayscale" />
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section id="contact" className="py-48 bg-white text-center">
+        <div className="max-w-4xl mx-auto px-6">
+          <Reveal>
+            <h2 className="text-6xl md:text-[8vw] font-black uppercase tracking-tighter text-slate-900 leading-none mb-16 italic">Your Contribution <br/>Changes Everything.</h2>
+            <div className="flex flex-col items-center gap-12 mt-20">
+              <MagneticButton
+                style={{ background: brand, color: "#fff" }}
+                className="px-16 py-8 rounded-full font-black uppercase tracking-[0.3em] text-sm shadow-2xl"
+              >
+                Become a Partner
+              </MagneticButton>
+              <div className="text-xs font-black uppercase tracking-[0.5em] text-slate-300">
+                Small Acts // Huge Impact
+              </div>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+    </ThemeWrapper>
+  );
+}
