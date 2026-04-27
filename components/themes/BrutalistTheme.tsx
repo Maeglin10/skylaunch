@@ -5,7 +5,7 @@ import { useRef } from "react";
 import type { SessionData } from "@/lib/sessions";
 import { ThemeWrapper } from "./ThemeWrapper";
 import { Reveal, Stagger, StaggerItem } from "./AnimationHelpers";
-import { ArrowDown, ArrowUpRight, Plus, Hash } from "lucide-react";
+import { ArrowDown, ArrowUpRight, Plus, Hash, Activity, Terminal, HelpCircle, Cpu, Database, Network, Award, Star, Quote, Instagram, Phone, Mail, ArrowRight, X } from "lucide-react";
 
 export function BrutalistTheme({ session }: { session: SessionData }) {
   const { formData, generatedContent: c } = session;
@@ -111,6 +111,117 @@ export function BrutalistTheme({ session }: { session: SessionData }) {
               <div className="text-xs font-black mono uppercase mt-2">Design_System_Active</div>
             </div>
           </Reveal>
+        </div>
+      </section>
+
+      </section>
+
+      {/* ═══ SECTION 5: RAW STATS ═══ */}
+      <section className="py-24 bg-white border-b-[20px] border-black">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12 text-center">
+           {[
+             { val: "99.9", label: "AVAILABILITY" },
+             { val: "0.02ms", label: "LATENCY_CORE" },
+             { val: "512TB", label: "DATA_BANDWIDTH" },
+             { val: "∞", label: "SCALABILITY" },
+           ].map((s, i) => (
+             <Reveal key={i} delay={i * 0.1}>
+                <div className="text-6xl font-black text-black mb-2 italic tracking-tighter mono">{s.val}</div>
+                <div className="text-[10px] uppercase font-black tracking-widest text-black/20 mono">{s.label}</div>
+             </Reveal>
+           ))}
+        </div>
+      </section>
+
+      {/* ═══ SECTION 6: PROJECT GRID ═══ */}
+      <section className="py-40 bg-[#f0f0f0] border-b-[20px] border-black">
+        <div className="max-w-7xl mx-auto px-6">
+           <Reveal className="mb-24">
+              <h2 className="text-7xl font-black uppercase tracking-tighter italic">Output // Logs.</h2>
+           </Reveal>
+           <div className="grid grid-cols-1 md:grid-cols-3 gap-1">
+              {[
+                "https://images.unsplash.com/photo-1558655146-d09347e92766?w=800&q=80",
+                "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=80",
+                "https://images.unsplash.com/photo-1512403754473-27835f7b9984?w=800&q=80",
+              ].map((img, i) => (
+                <Reveal key={i} delay={i * 0.1}>
+                   <div className="aspect-square bg-black grayscale hover:grayscale-0 transition-all duration-700 cursor-cell group relative overflow-hidden">
+                      <img src={img} className="w-full h-full object-cover opacity-50 group-hover:opacity-100 transition-opacity" />
+                      <div className="absolute top-6 left-6 p-2 bg-black text-white text-[8px] mono font-black">REF_0x0{i}</div>
+                   </div>
+                </Reveal>
+              ))}
+           </div>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 7: FEEDBACK ═══ */}
+      <section className="py-40 bg-white border-b-[20px] border-black">
+        <div className="max-w-4xl mx-auto px-6">
+           <Reveal>
+              <Quote className="w-20 h-20 mb-16 text-black/10" />
+              <p className="text-4xl md:text-6xl font-black italic text-black leading-none uppercase tracking-tighter mb-20">
+                 &quot;The architecture is uncompromising. A masterclass in high-density engineering and visual impact.&quot;
+              </p>
+              <div className="flex gap-10 items-center">
+                 <div className="h-[2px] w-20 bg-black" />
+                 <div className="text-xl font-black uppercase italic mono text-black/40">MARCUS_VANE // LEAD_SYS</div>
+              </div>
+           </Reveal>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 8: ECOSYSTEM ═══ */}
+      <section className="py-32 bg-black text-white">
+        <div className="max-w-7xl mx-auto px-6 text-center">
+           <Reveal className="mb-20">
+              <span className="text-[10px] font-black uppercase tracking-[0.5em] text-white/20 mono">CONNECTED_NODES</span>
+           </Reveal>
+           <div className="flex flex-wrap justify-center gap-16 md:gap-32 opacity-20 grayscale hover:grayscale-0 transition-all duration-1000">
+              <div className="text-3xl font-black italic tracking-tighter uppercase mono">CORE_X</div>
+              <div className="text-3xl font-black italic tracking-tighter uppercase mono">NULL_V2</div>
+              <div className="text-3xl font-black italic tracking-tighter uppercase mono">ZENITH</div>
+              <div className="text-3xl font-black italic tracking-tighter uppercase mono">VOXEL</div>
+           </div>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 9: TECHNICAL FAQ ═══ */}
+      <section className="py-40 bg-[#f0f0f0] border-y-[20px] border-black">
+        <div className="max-w-4xl mx-auto px-6">
+           <Reveal className="text-center mb-24">
+              <h2 className="text-5xl font-black uppercase tracking-tighter italic mono">LOGS // FAQ</h2>
+           </Reveal>
+           <div className="space-y-4">
+              {[
+                { q: "STABILITY_PROTOCOL?", a: "Implemented via triple-redundant consensus clusters. Zero downtime for the last 14,000 cycles." },
+                { q: "OVERRIDE_ENABLED?", a: "Manual override is possible only through encrypted physical key injection at the core terminal." },
+                { q: "OUTPUT_RESOLUTION?", a: "Variable density scaling from 1:1 raw data to hyper-optimized consumer-grade interfaces." },
+              ].map((f, i) => (
+                <Reveal key={i} delay={i * 0.1}>
+                   <div className="p-12 border-[10px] border-black bg-white hover:translate-x-4 hover:-translate-y-4 transition-all shadow-[12px_12px_0_0_rgba(0,0,0,0.1)] group cursor-help">
+                      <div className="flex justify-between items-center mb-10">
+                         <span className="text-lg font-black uppercase tracking-tight mono italic">{f.q}</span>
+                         <Terminal className="w-6 h-6 text-black/10 group-hover:text-black transition-colors" />
+                      </div>
+                      <p className="text-sm font-bold opacity-60 leading-tight italic group-hover:opacity-100 transition-opacity mono">{f.a}</p>
+                   </div>
+                </Reveal>
+              ))}
+           </div>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 10: PARTNER LOGOS ═══ */}
+      <section className="py-24 bg-white border-b-[20px] border-black">
+        <div className="max-w-7xl mx-auto px-6 text-center">
+           <div className="flex flex-wrap justify-center gap-16 md:gap-32 opacity-10 grayscale hover:grayscale-0 transition-all duration-700">
+              <div className="text-2xl font-black italic tracking-tighter text-black uppercase mono">VULKAN</div>
+              <div className="text-2xl font-black italic tracking-tighter text-black uppercase mono">NVIDIA</div>
+              <div className="text-2xl font-black italic tracking-tighter text-black uppercase mono">AUTODESK</div>
+              <div className="text-2xl font-black italic tracking-tighter text-black uppercase mono">SIEMENS</div>
+           </div>
         </div>
       </section>
 

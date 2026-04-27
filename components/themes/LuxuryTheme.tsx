@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import type { SessionData } from "@/lib/sessions";
 import { ThemeWrapper } from "./ThemeWrapper";
 import { Reveal, Stagger, StaggerItem, MagneticButton } from "./AnimationHelpers";
-import { Star, ArrowRight, ShieldCheck, Globe, Award } from "lucide-react";
+import { Star, ArrowRight, ShieldCheck, Globe, Award, Quote, Instagram, Phone, Mail, Clock, MapPin } from "lucide-react";
 
 export function LuxuryTheme({ session }: { session: SessionData }) {
   const { formData, generatedContent: c } = session;
@@ -125,6 +125,99 @@ export function LuxuryTheme({ session }: { session: SessionData }) {
               </Reveal>
             ))}
           </div>
+        </div>
+      </section>
+
+      </section>
+
+      {/* ═══ SECTION 6: THE ATELIER ═══ */}
+      <section className="py-40 bg-[#050505] overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-32 items-center">
+           <Reveal className="relative aspect-square border border-white/5 p-4">
+              <img src="https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=800&q=80" className="w-full h-full object-cover grayscale opacity-40" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                 <div className="w-px h-60 bg-white/20" />
+              </div>
+           </Reveal>
+           <Reveal delay={0.2}>
+              <span className="text-[10px] inter text-white/20 uppercase tracking-[0.5em] mb-8 block">The Hands Behind</span>
+              <h2 className="text-5xl md:text-7xl bodoni text-white mb-12 italic leading-tight">Mastery of <br/>The Craft.</h2>
+              <p className="text-lg text-white/30 inter font-light leading-relaxed mb-16 italic">Every detail is hand-finished in our atelier, preserving centuries-old techniques for the modern vanguard.</p>
+              <button className="flex items-center gap-4 text-[10px] inter uppercase tracking-[0.4em] text-white/50 hover:text-white transition-colors group">
+                 Watch The Process <ArrowRight className="w-4 h-4 group-hover:translate-x-4 transition-transform" />
+              </button>
+           </Reveal>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 7: EDITORIAL TESTIMONIALS ═══ */}
+      <section className="py-60 bg-[#050505] border-y border-white/5">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+           <Reveal>
+              <Quote className="w-12 h-12 mx-auto mb-20 text-white/10" />
+              <p className="text-4xl md:text-6xl bodoni text-white italic leading-tight mb-20">
+                 &quot;To possess a piece from {formData.businessName} is to own a fragment of history, refined for the future.&quot;
+              </p>
+              <div className="inter text-[10px] uppercase tracking-[0.5em] text-white/40 italic">— HRH Princess Julianna von Berg</div>
+           </Reveal>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 8: BRAND HERITAGE ═══ */}
+      <section className="py-40 bg-[#050505]">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-32 items-center">
+           <Reveal>
+              <h2 className="text-5xl md:text-7xl bodoni text-white mb-12 italic">A Century of <br/>Refinement.</h2>
+              <div className="space-y-16">
+                 {[
+                   { year: "1926", title: "Atelier I", desc: "The foundation of our first workshop in the heart of Florence." },
+                   { year: "1974", title: "Global Mesh", desc: "Expanding our vision to the fashion capitals of the world." },
+                   { year: "2026", title: "The New Era", desc: "Redefining luxury for the digital and physical avant-garde." },
+                 ].map((h, i) => (
+                   <div key={i} className="flex gap-12 group">
+                      <div className="text-2xl bodoni italic text-white/10 group-hover:text-white transition-colors">{h.year}</div>
+                      <div>
+                         <h3 className="text-lg inter uppercase tracking-widest text-white mb-2">{h.title}</h3>
+                         <p className="text-sm inter text-white/30 font-light max-w-sm">{h.desc}</p>
+                      </div>
+                   </div>
+                 ))}
+              </div>
+           </Reveal>
+           <Reveal delay={0.2} className="relative aspect-[4/5] border border-white/5 p-4">
+              <img src="https://images.unsplash.com/photo-1441984904996-e0b6ba687e12?w=800&q=80" className="w-full h-full object-cover grayscale opacity-40" />
+           </Reveal>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 9: THE INNER CIRCLE ═══ */}
+      <section className="py-40 bg-[#050505] border-y border-white/5 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-20">
+           <Reveal className="max-w-xl">
+              <h2 className="text-5xl md:text-7xl bodoni text-white italic mb-10 leading-tight">The Inner Circle.</h2>
+              <p className="text-lg text-white/30 inter font-light mb-16 italic">Join our private registry for early access to limited collections and private viewing invites.</p>
+              <div className="flex border-b border-white/20 pb-4">
+                 <input type="email" placeholder="Private Email Address" className="bg-transparent inter text-sm outline-none flex-1 text-white placeholder:text-white/10" />
+                 <button className="inter text-[10px] font-black uppercase tracking-widest text-white hover:opacity-50">Apply</button>
+              </div>
+           </Reveal>
+           <Reveal delay={0.2} className="relative w-64 h-64 border border-white/5 p-8 flex flex-col items-center justify-center text-center">
+              <Award className="w-12 h-12 text-white/20 mb-6" />
+              <div className="text-[10px] inter text-white/50 uppercase tracking-[0.3em]">Bespoke <br/>Membership</div>
+           </Reveal>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 10: PRESS MENTIONS ═══ */}
+      <section className="py-24 bg-[#050505]">
+        <div className="max-w-7xl mx-auto px-6">
+           <div className="flex flex-wrap justify-center gap-20 opacity-10 grayscale hover:grayscale-0 transition-all duration-1000">
+              <div className="text-2xl bodoni italic text-white uppercase tracking-tighter">VOGUE</div>
+              <div className="text-2xl bodoni italic text-white uppercase tracking-tighter">ELLE_LUXE</div>
+              <div className="text-2xl bodoni italic text-white uppercase tracking-tighter">GQ_ELITE</div>
+              <div className="text-2xl bodoni italic text-white uppercase tracking-tighter">FORBES</div>
+              <div className="text-2xl bodoni italic text-white uppercase tracking-tighter">TATLER</div>
+           </div>
         </div>
       </section>
 

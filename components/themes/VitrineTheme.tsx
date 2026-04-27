@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import type { SessionData } from "@/lib/sessions";
 import { ThemeWrapper } from "./ThemeWrapper";
 import { Reveal, Stagger, StaggerItem, MagneticButton } from "./AnimationHelpers";
-import { CheckCircle2, ArrowRight, X, Maximize2, Shield, Users, Clock, Award } from "lucide-react";
+import { CheckCircle2, ArrowRight, X, Maximize2, Shield, Users, Clock, Award, HelpCircle, Activity, TrendingUp, Quote, Search, Mail, Instagram, Phone, Globe, Zap, Calendar } from "lucide-react";
 
 const GALLERY = [
   "https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&q=80",
@@ -214,6 +214,86 @@ export function VitrineTheme({ session }: { session: SessionData }) {
               </StaggerItem>
             ))}
           </Stagger>
+        </div>
+      </section>
+
+      </section>
+
+      {/* ═══ SECTION 8: THE PROCESS ═══ */}
+      <section className="py-32 bg-white border-y">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-32 items-center">
+           <Reveal>
+              <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter mb-12 leading-[0.85] italic">Our Proven <br/>Methodology.</h2>
+              <div className="space-y-12">
+                 {[
+                   { step: "01", title: "Discovery & Analysis", desc: "We begin by deconstructing your requirements to understand the core objectives." },
+                   { step: "02", title: "Strategy & Design", desc: "Constructing a tailored roadmap and visual framework that aligns with your vision." },
+                   { step: "03", title: "Implementation", desc: "Executing the strategy with high-precision craft and attention to detail." },
+                 ].map((p, i) => (
+                   <div key={i} className="flex gap-8 group">
+                      <div className="text-2xl font-black italic text-gray-200 group-hover:text-black transition-colors">{p.step}</div>
+                      <div>
+                         <h3 className="text-lg font-black uppercase tracking-tight text-black mb-2">{p.title}</h3>
+                         <p className="text-sm text-gray-400 max-w-sm leading-tight italic">{p.desc}</p>
+                      </div>
+                   </div>
+                ))}
+              </div>
+           </Reveal>
+           <Reveal delay={0.2} className="relative aspect-square border border-gray-100 p-4 bg-gray-50 rounded-[40px] overflow-hidden">
+              <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&q=80" className="w-full h-full object-cover grayscale opacity-20" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                 <Activity className="w-16 h-16 text-black/5 animate-pulse" />
+              </div>
+           </Reveal>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 9: RECOGNITION ═══ */}
+      <section className="py-32 bg-gray-50 border-b">
+        <div className="max-w-7xl mx-auto px-6">
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+              {[
+                { year: "2026", award: "Industry Excellence", rank: "Gold Medal" },
+                { year: "2025", award: "Client Choice", rank: "Top Rated" },
+                { year: "2024", award: "Innovation Award", rank: "Winner" },
+                { year: "2023", award: "Quality Seal", rank: "Certified" },
+              ].map((a, i) => (
+                <Reveal key={i} delay={i * 0.1}>
+                   <div className="p-10 border border-gray-100 bg-white hover:border-black transition-all group rounded-2xl">
+                      <div className="text-xs font-bold text-gray-300 mb-4">{a.year}</div>
+                      <h3 className="text-lg font-bold uppercase tracking-tight text-black mb-2">{a.award}</h3>
+                      <div className="text-[10px] uppercase font-bold tracking-widest text-gray-400 group-hover:text-black transition-colors">{a.rank}</div>
+                   </div>
+                </Reveal>
+              ))}
+           </div>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 10: FAQ ═══ */}
+      <section className="py-32 bg-white border-b">
+        <div className="max-w-4xl mx-auto px-6">
+           <Reveal className="text-center mb-24">
+              <h2 className="text-4xl font-black uppercase tracking-tighter italic">General Inquiries</h2>
+           </Reveal>
+           <div className="space-y-4">
+              {[
+                { q: "How do we get started?", a: "Simply schedule a consultation call. We'll discuss your goals and provide a preliminary roadmap within 48 hours." },
+                { q: "What is the typical project duration?", a: "Timeline varies based on scope, but most professional vitrine projects are completed within 4 to 8 weeks." },
+                { q: "Do you offer post-launch support?", a: "Yes, we provide tiered maintenance plans to ensure your digital presence remains optimal and secure." },
+              ].map((f, i) => (
+                <Reveal key={i} delay={i * 0.1}>
+                   <div className="p-10 border border-gray-100 hover:bg-gray-50 transition-all group cursor-pointer rounded-[2rem]">
+                      <div className="flex justify-between items-center mb-6">
+                         <span className="text-sm font-black uppercase tracking-widest text-gray-600 group-hover:text-black transition-colors">{f.q}</span>
+                         <HelpCircle className="w-5 h-5 text-gray-200 group-hover:text-black transition-colors" />
+                      </div>
+                      <p className="text-sm text-gray-400 leading-relaxed italic group-hover:text-gray-600 transition-colors">{f.a}</p>
+                   </div>
+                </Reveal>
+              ))}
+           </div>
         </div>
       </section>
 

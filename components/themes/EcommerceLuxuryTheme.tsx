@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import type { SessionData } from "@/lib/sessions";
 import { ThemeWrapper } from "./ThemeWrapper";
 import { Reveal, Stagger, StaggerItem, MagneticButton } from "./AnimationHelpers";
-import { ShoppingBag, X, Plus, Minus, Star, ShieldCheck, Truck, RotateCcw, ArrowRight } from "lucide-react";
+import { ShoppingBag, X, Plus, Minus, Star, ShieldCheck, Truck, RotateCcw, ArrowRight, Mail, MapPin, Phone, Award, HelpCircle, Zap, Clock, Shield, Instagram, Quote, PlayCircle } from "lucide-react";
 
 // --- Mock Data Generator ---
 const generateProducts = (businessType: string) => {
@@ -160,6 +160,274 @@ export function EcommerceLuxuryTheme({ session }: { session: SessionData }) {
               </StaggerItem>
             ))}
           </Stagger>
+        </div>
+      </section>
+
+      </section>
+
+      {/* ═══ SECTION 4: ARTISAN SPOTLIGHT ═══ */}
+      <section className="py-40 bg-[#050505] overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-32 items-center">
+           <Reveal className="relative aspect-square">
+              <img src="https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=800&q=80" className="w-full h-full object-cover grayscale opacity-60" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                 <div className="w-px h-60 bg-white/20" />
+              </div>
+           </Reveal>
+           <Reveal delay={0.2}>
+              <span className="text-[10px] luxury-sans text-white/20 uppercase tracking-[0.5em] mb-8 block">The Mastermind</span>
+              <h2 className="text-5xl luxury-text text-white mb-12 italic leading-tight">Craftsmanship <br/>Without Compromise.</h2>
+              <p className="text-lg text-white/30 luxury-sans font-light leading-relaxed mb-16 italic">
+                 Meet the artisans behind our collection. Each piece is hand-finished in our atelier, preserving centuries-old techniques for a modern era of luxury.
+              </p>
+              <button className="flex items-center gap-4 text-[10px] luxury-sans uppercase tracking-[0.4em] text-white/50 hover:text-white transition-colors group">
+                 Read The Full Story <ArrowRight className="w-4 h-4 group-hover:translate-x-4 transition-transform" />
+              </button>
+           </Reveal>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 5: COLLECTION LOOKBOOK ═══ */}
+      <section className="py-60 bg-[#050505] relative overflow-hidden">
+        <motion.div 
+           initial={{ y: 0 }}
+           whileInView={{ y: -100 }}
+           transition={{ duration: 20, repeat: Infinity, repeatType: "mirror" }}
+           className="absolute top-0 right-0 w-1/2 h-[200%] opacity-10 pointer-events-none"
+        >
+           <div className="text-[20vw] luxury-text text-white italic whitespace-nowrap">ETHEREAL // 2026 // COLLECTION</div>
+        </motion.div>
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
+           <Reveal className="text-center mb-40">
+              <h2 className="text-7xl luxury-text text-white italic">Ethereal Series</h2>
+           </Reveal>
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[
+                "https://images.unsplash.com/photo-1539109132381-31a1b973f0ea?w=400&q=80",
+                "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&q=80",
+                "https://images.unsplash.com/photo-1529139513055-119712d289b5?w=400&q=80",
+                "https://images.unsplash.com/photo-1509631179647-0177331693ae?w=400&q=80",
+              ].map((img, i) => (
+                <Reveal key={i} delay={i * 0.1}>
+                   <div className="aspect-[2/3] overflow-hidden grayscale hover:grayscale-0 transition-all duration-1000 border border-white/5">
+                      <img src={img} className="w-full h-full object-cover" />
+                   </div>
+                </Reveal>
+              ))}
+           </div>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 6: LUXURY BENEFITS ═══ */}
+      <section className="py-40 bg-[#080808] border-y border-white/5">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-20">
+           {[
+             { icon: <Truck />, title: "Concierge Delivery", desc: "Complimentary global shipping with white-glove assembly services." },
+             { icon: <ShieldCheck />, title: "Authenticity Safe", desc: "Digital ownership certificates secured by encrypted blockchain technology." },
+             { icon: <RotateCcw />, title: "Lifetime Service", desc: "Unlimited complimentary maintenance and refinishing for every piece." },
+           ].map((b, i) => (
+             <Reveal key={i} delay={i * 0.1} className="text-center group">
+                <div className="w-16 h-16 mx-auto mb-10 flex items-center justify-center border border-white/10 group-hover:border-white transition-all duration-700">
+                   <div style={{ color: brand }}>{b.icon}</div>
+                </div>
+                <h3 className="text-xl luxury-text text-white italic mb-6">{b.title}</h3>
+                <p className="text-sm luxury-sans text-white/30 font-light leading-relaxed px-10">{b.desc}</p>
+             </Reveal>
+           ))}
+        </div>
+      </section>
+
+      {/* ═══ SECTION 7: CLIENT TESTIMONIALS ═══ */}
+      <section className="py-60 bg-[#050505]">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+           <Reveal>
+              <Quote className="w-12 h-12 mx-auto mb-20 text-white/10" />
+              <p className="text-4xl md:text-6xl luxury-text text-white italic leading-tight mb-20">
+                 &quot;Possessing an {formData.businessName} piece is more than an acquisition; it is a legacy passed down through generations.&quot;
+              </p>
+              <div className="luxury-sans text-[10px] uppercase tracking-[0.5em] text-white/40 italic">— Countess Eleonora von Berg</div>
+           </Reveal>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 8: BRAND HERITAGE ═══ */}
+      <section className="py-40 bg-[#050505]">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-32 items-center">
+           <Reveal>
+              <h2 className="text-5xl luxury-text text-white mb-12 italic">A Century of <br/>Refinement.</h2>
+              <div className="space-y-16">
+                 {[
+                   { year: "1926", title: "Foundation", desc: "The first atelier opens in the heart of Florence." },
+                   { year: "1958", title: "Global Expansion", desc: "Boutiques established in Paris, New York, and Tokyo." },
+                   { year: "2026", title: "The New Era", desc: "Redefining luxury for the digital avant-garde." },
+                 ].map((h, i) => (
+                   <div key={i} className="flex gap-12 group">
+                      <div className="text-2xl luxury-text italic text-white/10 group-hover:text-white transition-colors">{h.year}</div>
+                      <div>
+                         <h3 className="text-lg luxury-sans uppercase tracking-widest text-white mb-2">{h.title}</h3>
+                         <p className="text-sm luxury-sans text-white/30 font-light max-w-sm">{h.desc}</p>
+                      </div>
+                   </div>
+                 ))}
+              </div>
+           </Reveal>
+           <Reveal delay={0.2} className="relative aspect-[4/5] border border-white/5 p-4 bg-zinc-900/50 backdrop-blur-xl">
+              <img src="https://images.unsplash.com/photo-1441984904996-e0b6ba687e12?w=800&q=80" className="w-full h-full object-cover grayscale opacity-40" />
+           </Reveal>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 9: THE INNER CIRCLE ═══ */}
+      <section className="py-40 bg-[#050505] border-y border-white/5 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-20">
+           <Reveal className="max-w-xl">
+              <h2 className="text-5xl luxury-text text-white italic mb-10 leading-tight">The Inner Circle.</h2>
+              <p className="text-lg text-white/30 luxury-sans font-light mb-16 italic">Join our private registry for early access to limited collections, private viewing invites, and bespoke tailoring services.</p>
+              <div className="flex border-b border-white/20 pb-4">
+                 <input type="email" placeholder="Your Private Email" className="bg-transparent luxury-sans text-sm outline-none flex-1 text-white placeholder:text-white/10" />
+                 <button className="luxury-sans text-[10px] font-black uppercase tracking-widest text-white hover:opacity-50">Apply</button>
+              </div>
+           </Reveal>
+           <Reveal delay={0.2} className="relative w-64 h-64 border border-white/5 p-8 flex flex-col items-center justify-center text-center">
+              <Award className="w-12 h-12 text-white/20 mb-6" />
+              <div className="text-[10px] luxury-sans text-white/50 uppercase tracking-[0.3em]">Exclusive <br/>Benefits</div>
+           </Reveal>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 10: PRESS MENTIONS ═══ */}
+      <section className="py-24 bg-[#050505]">
+        <div className="max-w-7xl mx-auto px-6">
+           <div className="flex flex-wrap justify-center gap-20 opacity-10 grayscale hover:grayscale-0 transition-all duration-1000">
+              <div className="text-2xl luxury-text italic text-white uppercase tracking-tighter">VOGUE</div>
+              <div className="text-2xl luxury-text italic text-white uppercase tracking-tighter">ELLE_LUXE</div>
+              <div className="text-2xl luxury-text italic text-white uppercase tracking-tighter">GQ_ELITE</div>
+              <div className="text-2xl luxury-text italic text-white uppercase tracking-tighter">FORBES</div>
+              <div className="text-2xl luxury-text italic text-white uppercase tracking-tighter">TATLER</div>
+           </div>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 11: INSTAGRAM WALL ═══ */}
+      <section className="py-40 bg-[#050505] overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6 mb-20 flex justify-between items-end">
+           <Reveal>
+              <h2 className="text-4xl luxury-text text-white italic">Seen in Public.</h2>
+           </Reveal>
+           <div className="luxury-sans text-[10px] uppercase tracking-widest text-white/20">@ {formData.businessName.replace(/\s+/g, '_').toLowerCase()}</div>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+           {[
+             "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80",
+             "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&q=80",
+             "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=400&q=80",
+             "https://images.unsplash.com/photo-1521119989659-a83eee488004?w=400&q=80",
+             "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&q=80",
+             "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=400&q=80",
+           ].map((img, i) => (
+             <Reveal key={i} delay={i * 0.05} className="aspect-square grayscale hover:grayscale-0 transition-all duration-700 cursor-pointer border border-white/5">
+                <img src={img} className="w-full h-full object-cover" />
+             </Reveal>
+           ))}
+        </div>
+      </section>
+
+      {/* ═══ SECTION 12: FAQ & CONCIERGE ═══ */}
+      <section className="py-40 bg-[#080808]">
+        <div className="max-w-4xl mx-auto px-6">
+           <Reveal className="text-center mb-24">
+              <h2 className="text-4xl luxury-text text-white italic mb-6">Concierge Support</h2>
+              <p className="luxury-sans text-[10px] uppercase tracking-widest text-white/20">Assisting your every need</p>
+           </Reveal>
+           <div className="space-y-4">
+              {[
+                { q: "Bespoke Personalization", a: "We offer tailored modifications for select pieces. Contact our concierge to discuss your vision." },
+                { q: "International Insurance", a: "Every acquisition is fully insured during transit through our Lloyd's of London partnership." },
+                { q: "Private Showings", a: "Book a digital or in-person viewing of our collection at your convenience." },
+              ].map((f, i) => (
+                <Reveal key={i} delay={i * 0.1}>
+                   <div className="p-12 border border-white/5 hover:border-white/10 transition-all group cursor-pointer">
+                      <div className="flex justify-between items-center mb-8">
+                         <span className="text-sm luxury-sans uppercase tracking-[0.3em] text-white/70 group-hover:text-white transition-colors">{f.q}</span>
+                         <HelpCircle className="w-4 h-4 text-white/10 group-hover:text-white transition-colors" />
+                      </div>
+                      <p className="text-sm luxury-sans text-white/20 font-light italic leading-relaxed group-hover:text-white/40 transition-colors">{f.a}</p>
+                   </div>
+                </Reveal>
+              ))}
+           </div>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 13: FLAGSHIP LOCATIONS ═══ */}
+      <section className="py-40 bg-[#050505] border-y border-white/5">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
+           <Reveal>
+              <h2 className="text-5xl luxury-text text-white italic mb-12">The Flagship.</h2>
+              <div className="space-y-12">
+                 <div>
+                    <div className="text-[10px] luxury-sans uppercase tracking-[0.5em] text-white/20 mb-4 font-black">Place Vendôme // Paris</div>
+                    <p className="text-xl luxury-text text-white italic">12 Rue de la Paix, <br/>75002 Paris, France</p>
+                 </div>
+                 <div className="flex gap-12 pt-12 border-t border-white/5">
+                    <div>
+                       <div className="text-[10px] luxury-sans uppercase tracking-[0.2em] text-white/20 mb-2">Mon — Fri</div>
+                       <div className="text-sm luxury-sans text-white">10:00 — 19:00</div>
+                    </div>
+                    <div>
+                       <div className="text-[10px] luxury-sans uppercase tracking-[0.2em] text-white/20 mb-2">Sat</div>
+                       <div className="text-sm luxury-sans text-white">11:00 — 18:00</div>
+                    </div>
+                 </div>
+              </div>
+           </Reveal>
+           <Reveal delay={0.2} className="relative aspect-video lg:aspect-square border border-white/5 p-4">
+              <img src="https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=800&q=80" className="w-full h-full object-cover grayscale opacity-40" />
+           </Reveal>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 14: PRE-FOOTER PROMO ═══ */}
+      <section className="py-60 bg-[#050505] relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10 blur-3xl pointer-events-none" style={{ background: `radial-gradient(circle at center, ${brand}20, transparent)` }} />
+        <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
+           <Reveal>
+              <h2 className="text-7xl luxury-text text-white italic mb-16 leading-[0.85]">The Future <br/>Of Rare Acquisitions<span style={{ color: brand }}>.</span></h2>
+              <button 
+                style={{ background: brand }}
+                className="px-20 py-8 luxury-sans text-[10px] uppercase font-black tracking-[0.6em] text-black shadow-[0_0_80px_rgba(201,168,76,0.3)] hover:scale-105 transition-transform"
+              >
+                 Enter The Archives
+              </button>
+           </Reveal>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 15: FINAL CTA / FOOTER ═══ */}
+      <section className="py-20 bg-[#050505] border-t border-white/5">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-20">
+           <div className="col-span-1 md:col-span-2">
+              <div className="text-3xl luxury-text text-white italic mb-8">{formData.businessName}</div>
+              <p className="text-sm luxury-sans text-white/30 font-light max-w-sm italic">{c?.heroSubline}</p>
+           </div>
+           <div>
+              <div className="text-[10px] luxury-sans uppercase tracking-[0.3em] text-white/50 mb-8 font-black">Private Line</div>
+              <div className="space-y-4 text-xs luxury-sans text-white/30">
+                 <div className="flex items-center gap-3"><Mail className="w-4 h-4 opacity-30" /> {formData.email}</div>
+                 <div className="flex items-center gap-3"><Phone className="w-4 h-4 opacity-30" /> {formData.phone || "Request Access"}</div>
+              </div>
+           </div>
+           <div>
+              <div className="text-[10px] luxury-sans uppercase tracking-[0.3em] text-white/50 mb-8 font-black">Global Offices</div>
+              <div className="space-y-4 text-xs luxury-sans text-white/30">
+                 <div>Paris // New York</div>
+                 <div>London // Tokyo</div>
+              </div>
+           </div>
+        </div>
+        <div className="max-w-7xl mx-auto mt-40 pt-8 border-t border-white/5 flex justify-between items-center text-[8px] luxury-sans text-white/10 uppercase tracking-[0.5em]">
+           <span>© 2026 {formData.businessName} // Rights Reserved</span>
+           <span>Luxury CMS // AeviaLaunch</span>
         </div>
       </section>
 

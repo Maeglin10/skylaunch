@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import type { SessionData } from "@/lib/sessions";
 import { ThemeWrapper } from "./ThemeWrapper";
 import { Reveal, Stagger, StaggerItem } from "./AnimationHelpers";
-import { X, ArrowRight, Minus, Plus } from "lucide-react";
+import { X, ArrowRight, Minus, Plus, Award, HelpCircle, Activity, CheckCircle, TrendingUp, Quote, Search, Mail, Instagram, Phone, Globe, Shield, Zap } from "lucide-react";
 
 // --- Mock Data Generator ---
 const generateProducts = (businessType: string) => {
@@ -111,6 +111,122 @@ export function EcommerceMinimalTheme({ session }: { session: SessionData }) {
               </div>
             </Reveal>
           </div>
+        </div>
+      </section>
+
+      </section>
+
+      {/* ═══ SECTION 5: EFFICIENCY STATS ═══ */}
+      <section className="py-24 bg-white border-y">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12 text-center">
+           {[
+             { val: "24h", label: "DISPATCH_CYCLE" },
+             { val: "0.02%", label: "FAILURE_RATE" },
+             { val: "100%", label: "SUSTAINABILITY" },
+             { val: "∞", label: "RECYCLABILITY" },
+           ].map((s, i) => (
+             <Reveal key={i} delay={i * 0.1}>
+                <div className="text-5xl font-black text-black mb-2 tracking-tighter italic">{s.val}</div>
+                <div className="text-[10px] uppercase font-bold tracking-widest text-gray-300">{s.label}</div>
+             </Reveal>
+           ))}
+        </div>
+      </section>
+
+      {/* ═══ SECTION 6: CURATED COLLECTIONS ═══ */}
+      <section className="py-40 bg-gray-50 border-b">
+        <div className="max-w-7xl mx-auto px-6">
+           <Reveal className="mb-24">
+              <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter italic">Batch // Selections.</h2>
+           </Reveal>
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-1 border border-black/5 bg-gray-200">
+              {[
+                { title: "The Raw Series", cat: "01 // Industrial", img: "https://images.unsplash.com/photo-1558655146-d09347e92766?w=800&q=80" },
+                { title: "The Mesh Protocol", cat: "02 // Structural", img: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=80" },
+              ].map((c, i) => (
+                <Reveal key={i} delay={i * 0.1}>
+                   <div className="relative aspect-video group cursor-pointer overflow-hidden bg-white">
+                      <img src={c.img} className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000" />
+                      <div className="absolute inset-0 p-12 flex flex-col justify-between">
+                         <div className="text-[10px] font-black uppercase tracking-widest text-black/20 group-hover:text-black transition-colors">{c.cat}</div>
+                         <h3 className="text-3xl font-black uppercase italic text-black leading-none">{c.title}</h3>
+                      </div>
+                   </div>
+                </Reveal>
+              ))}
+           </div>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 7: PRODUCTION PROCESS ═══ */}
+      <section className="py-40 bg-white">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-32 items-center">
+           <Reveal>
+              <h2 className="text-5xl font-black uppercase tracking-tighter mb-12 leading-[0.85] italic">The Origin <br/>Of Matter.</h2>
+              <div className="space-y-12">
+                 {[
+                   { step: "01", title: "Molecular Selection", desc: "Rigorous vetting of raw components for structural integrity." },
+                   { step: "02", title: "Precision Casting", desc: "High-density molding at our centralized fabrication hub." },
+                   { step: "03", title: "Neutral QC", desc: "Triple-layer quality control for zero-defect output." },
+                 ].map((p, i) => (
+                   <div key={i} className="flex gap-8 group">
+                      <div className="text-2xl font-black italic text-gray-200 group-hover:text-black transition-colors">{p.step}</div>
+                      <div>
+                         <h3 className="text-lg font-black uppercase tracking-tight text-black mb-2">{p.title}</h3>
+                         <p className="text-sm text-gray-400 max-w-sm leading-tight italic">{p.desc}</p>
+                      </div>
+                   </div>
+                 ))}
+              </div>
+           </Reveal>
+           <Reveal delay={0.2} className="relative aspect-square border border-black/5 p-4 bg-gray-50">
+              <img src="https://images.unsplash.com/photo-1551288049-bbda446b17ad?w=800&q=80" className="w-full h-full object-cover grayscale opacity-20" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                 <Activity className="w-20 h-20 text-black/5 animate-pulse" />
+              </div>
+           </Reveal>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 8: CLIENT FEEDBACK ═══ */}
+      <section className="py-40 bg-gray-50 border-y">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+           <Reveal>
+              <Quote className="w-16 h-16 mx-auto mb-16 text-gray-200" />
+              <p className="text-3xl md:text-5xl font-black italic text-black leading-tight mb-20 uppercase tracking-tighter">
+                 &quot;The objects possess an inherent weight. A purity of form that is rarely achieved in modern commerce.&quot;
+              </p>
+              <div className="text-[10px] font-black uppercase tracking-[0.5em] text-gray-300 italic">— Senior Architect // Collective Design</div>
+           </Reveal>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 9: RECOGNITION ═══ */}
+      <section className="py-24 bg-white border-b">
+        <div className="max-w-7xl mx-auto px-6 text-center">
+           <div className="flex flex-wrap justify-center gap-16 md:gap-32 opacity-10 grayscale hover:grayscale-0 transition-all duration-700">
+              <div className="text-2xl font-black italic tracking-tighter text-black uppercase">DESIGN_MUSEUM</div>
+              <div className="text-2xl font-black italic tracking-tighter text-black uppercase">ARCH_DAILY</div>
+              <div className="text-2xl font-black italic tracking-tighter text-black uppercase">DEZEEN_PRO</div>
+              <div className="text-2xl font-black italic tracking-tighter text-black uppercase">STIR_WORLD</div>
+           </div>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 10: NEWSLETTER ═══ */}
+      <section className="py-40 bg-white border-b text-center">
+        <div className="max-w-3xl mx-auto px-6">
+           <Reveal>
+              <div className="w-20 h-20 rounded-full border border-black/10 flex items-center justify-center mx-auto mb-12">
+                 <Mail className="w-8 h-8 text-black" />
+              </div>
+              <h2 className="text-5xl md:text-6xl font-black uppercase tracking-tighter mb-12 italic">Join The Ledger.</h2>
+              <p className="text-xl text-gray-400 mb-16 max-w-xl mx-auto italic font-medium">Be the first to access our quarterly release batches. No noise, just structural updates.</p>
+              <div className="flex border-b-2 border-black pb-4 max-w-md mx-auto group">
+                 <input type="email" placeholder="Email Address" className="bg-transparent font-black uppercase tracking-widest text-sm outline-none flex-1 text-black placeholder:text-gray-200" />
+                 <button className="font-black uppercase tracking-widest text-xs hover:opacity-50 transition-opacity">Apply</button>
+              </div>
+           </Reveal>
         </div>
       </section>
 

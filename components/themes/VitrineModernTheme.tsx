@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import type { SessionData } from "@/lib/sessions";
 import { ThemeWrapper } from "./ThemeWrapper";
 import { Reveal, Stagger, StaggerItem, MagneticButton } from "./AnimationHelpers";
-import { Sparkles, ArrowRight, Layers, Layout, MousePointer2, Smartphone } from "lucide-react";
+import { Sparkles, ArrowRight, Layers, Layout, MousePointer2, Smartphone, Activity, Cpu, Globe, Shield, Star, Award, HelpCircle, Quote, Instagram, Phone, Mail, Search, CheckCircle } from "lucide-react";
 
 export function VitrineModernTheme({ session }: { session: SessionData }) {
   const { formData, generatedContent: c } = session;
@@ -130,6 +130,143 @@ export function VitrineModernTheme({ session }: { session: SessionData }) {
               </div>
             </Reveal>
           </div>
+        </div>
+      </section>
+
+      </section>
+
+      {/* ═══ SECTION 5: DASHBOARD SHOWCASE ═══ */}
+      <section className="py-40 bg-gray-50 border-y border-white">
+        <div className="max-w-7xl mx-auto px-6">
+           <Reveal className="mb-24 text-center">
+              <h2 className="text-5xl font-black uppercase tracking-tighter italic">Unified Intelligence.</h2>
+           </Reveal>
+           <Reveal delay={0.2} className="p-8 bg-white/40 backdrop-blur-3xl rounded-[60px] border border-white shadow-2xl overflow-hidden group">
+              <div className="aspect-video bg-indigo-50 rounded-[40px] overflow-hidden flex items-center justify-center relative">
+                 <img src="https://images.unsplash.com/photo-1551288049-bbda446b17ad?w=1200&q=80" className="w-full h-full object-cover grayscale opacity-20" />
+                 <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
+                       {[1, 2, 3].map(i => (
+                         <div key={i} className="w-40 h-40 bg-white/80 backdrop-blur-xl rounded-3xl shadow-lg flex flex-col items-center justify-center p-6 border border-white">
+                            <Activity className="w-8 h-8 text-indigo-500 mb-4" />
+                            <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Node_0{i}</div>
+                         </div>
+                       ))}
+                    </div>
+                 </div>
+              </div>
+           </Reveal>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 6: GLASS STATS ═══ */}
+      <section className="py-32">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8">
+           {[
+             { val: "99.9%", label: "System Uptime" },
+             { val: "250ms", label: "Core Latency" },
+             { val: "1.2M", label: "Active Nodes" },
+             { val: "Secured", label: "Protocol V2" },
+           ].map((s, i) => (
+             <Reveal key={i} delay={i * 0.1}>
+                <div className="p-10 rounded-[32px] bg-white/20 backdrop-blur-xl border border-white text-center shadow-sm hover:shadow-xl transition-all group">
+                   <div className="text-4xl font-black text-black mb-2 group-hover:scale-110 transition-transform italic">{s.val}</div>
+                   <div className="text-[10px] uppercase font-black tracking-widest text-gray-400">{s.label}</div>
+                </div>
+             </Reveal>
+           ))}
+        </div>
+      </section>
+
+      {/* ═══ SECTION 7: CLIENT ECOSYSTEM ═══ */}
+      <section className="py-24 bg-white/50 backdrop-blur-sm border-y border-white">
+        <div className="max-w-7xl mx-auto px-6 text-center">
+           <div className="flex flex-wrap justify-center gap-16 md:gap-32 opacity-20 grayscale hover:grayscale-0 transition-all duration-700">
+              <div className="text-2xl font-black italic tracking-tighter text-black uppercase">ALPHA_TECH</div>
+              <div className="text-2xl font-black italic tracking-tighter text-black uppercase">VANTAGE_CO</div>
+              <div className="text-2xl font-black italic tracking-tighter text-black uppercase">ZEPHYR_LABS</div>
+              <div className="text-2xl font-black italic tracking-tighter text-black uppercase">ORION_SYS</div>
+           </div>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 8: JOURNEY TIMELINE ═══ */}
+      <section className="py-40 bg-white">
+        <div className="max-w-4xl mx-auto px-6">
+           <Reveal className="mb-24">
+              <h2 className="text-5xl font-black uppercase tracking-tighter italic text-center">The Evolution.</h2>
+           </Reveal>
+           <div className="space-y-4">
+              {[
+                { stage: "Phase 01", title: "Core Integration", desc: "Seamlessly connecting legacy systems with modern cloud infrastructure." },
+                { stage: "Phase 02", title: "Linear Scaling", desc: "Achieving horizontal scalability across distributed global clusters." },
+                { stage: "Phase 03", title: "Autonomous Ops", stageColor: brand, desc: "Implementing AI-driven orchestration for zero-touch maintenance." },
+              ].map((step, i) => (
+                <Reveal key={i} delay={i * 0.1}>
+                   <div className="p-12 bg-gray-50 border border-white hover:bg-white hover:shadow-2xl transition-all group flex flex-col md:flex-row justify-between items-start md:items-center gap-12 rounded-[3rem]">
+                      <div className="text-xl font-black italic text-gray-200 group-hover:text-black transition-colors">{step.stage}</div>
+                      <div className="flex-1">
+                         <h3 className="text-2xl font-black uppercase tracking-tight text-black mb-2">{step.title}</h3>
+                         <p className="text-sm text-gray-400 max-w-sm italic leading-tight">{step.desc}</p>
+                      </div>
+                      <div className="w-12 h-12 rounded-full border border-gray-100 flex items-center justify-center group-hover:bg-black group-hover:text-white transition-all">
+                         <ArrowRight className="w-5 h-5" />
+                      </div>
+                   </div>
+                </Reveal>
+              ))}
+           </div>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 9: CASE STUDIES ═══ */}
+      <section className="py-40 bg-gray-50 border-y border-white">
+        <div className="max-w-7xl mx-auto px-6">
+           <div className="flex flex-col md:flex-row justify-between items-end mb-24">
+              <Reveal>
+                 <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tighter italic">Proof of Scale.</h2>
+              </Reveal>
+              <div className="text-[10px] font-black text-gray-300 uppercase tracking-widest hidden md:block pb-2 italic">Live Implementations // 2026</div>
+           </div>
+           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {[1, 2, 3].map(i => (
+                <Reveal key={i} delay={i * 0.1}>
+                   <div className="group cursor-pointer">
+                      <div className="aspect-[4/3] rounded-[40px] overflow-hidden mb-8 border border-white shadow-lg">
+                         <img src={`https://images.unsplash.com/photo-${1500000000000 + i * 10000}?w=800&q=80`} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" />
+                      </div>
+                      <h3 className="text-2xl font-black uppercase tracking-tight mb-2 italic">Enterprise_{i}</h3>
+                      <div className="text-xs font-bold text-gray-400 uppercase tracking-widest">Digital Transformation</div>
+                   </div>
+                </Reveal>
+              ))}
+           </div>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 10: MODERN FAQ ═══ */}
+      <section className="py-40 bg-white">
+        <div className="max-w-4xl mx-auto px-6">
+           <Reveal className="text-center mb-24">
+              <h2 className="text-4xl font-black uppercase tracking-tighter italic">Common Queries</h2>
+           </Reveal>
+           <div className="space-y-4">
+              {[
+                { q: "How long is the integration process?", a: "Most enterprise systems are fully migrated within 4 to 6 weeks using our proprietary bridge-protocol." },
+                { q: "Is the architecture future-proof?", a: "Our platform utilizes a modular, micro-services based architecture that allows for hot-swapping core components as technology evolves." },
+                { q: "Do you offer global support?", a: "Yes, our engineering teams operate in follow-the-sun cycles across 3 continents to ensure 24/7 coverage." },
+              ].map((f, i) => (
+                <Reveal key={i} delay={i * 0.1}>
+                   <div className="p-10 border border-gray-100 hover:bg-gray-50 transition-all group cursor-pointer rounded-[2.5rem]">
+                      <div className="flex justify-between items-center mb-6">
+                         <span className="text-sm font-black uppercase tracking-widest text-gray-600 group-hover:text-black transition-colors">{f.q}</span>
+                         <HelpCircle className="w-5 h-5 text-gray-200 group-hover:text-black transition-colors" />
+                      </div>
+                      <p className="text-sm text-gray-400 leading-relaxed italic group-hover:text-gray-600 transition-colors">{f.a}</p>
+                   </div>
+                </Reveal>
+              ))}
+           </div>
         </div>
       </section>
 

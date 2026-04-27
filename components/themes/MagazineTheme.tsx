@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import type { SessionData } from "@/lib/sessions";
 import { ThemeWrapper } from "./ThemeWrapper";
 import { Reveal, Stagger, StaggerItem } from "./AnimationHelpers";
-import { ArrowRight, BookOpen, Clock, Tag, TrendingUp } from "lucide-react";
+import { ArrowRight, BookOpen, Clock, Tag, TrendingUp, PlayCircle, Search, Mic, Star, Award, HelpCircle, Quote, Instagram, Phone, Mail, Calendar } from "lucide-react";
 
 const ARTICLES = [
   { title: "The Future of Digital Ecosystems", cat: "Technology", date: "May 24, 2026", img: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=80" },
@@ -110,6 +110,127 @@ export function MagazineTheme({ session }: { session: SessionData }) {
               </StaggerItem>
             ))}
           </Stagger>
+        </div>
+      </section>
+
+      </section>
+
+      {/* ═══ SECTION 5: MULTIMEDIA FEATURE ═══ */}
+      <section className="py-40 bg-white border-y-4 border-black overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-32 items-center">
+           <Reveal className="relative group cursor-pointer">
+              <div className="aspect-video bg-gray-100 overflow-hidden relative border border-black/10">
+                 <img src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=1200&q=80" className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000" />
+                 <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-24 h-24 rounded-full bg-black text-white flex items-center justify-center group-hover:scale-110 transition-transform">
+                       <PlayCircle className="w-10 h-10" />
+                    </div>
+                 </div>
+              </div>
+           </Reveal>
+           <Reveal delay={0.2}>
+              <span className="text-[10px] font-black uppercase tracking-[0.5em] text-gray-400 mb-8 block">Cinematic // Issue 04</span>
+              <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tighter leading-none mb-12 italic">The Visual <br/>Manifesto.</h2>
+              <p className="text-xl text-gray-500 leading-relaxed italic mb-16">A deep dive into the aesthetic revolution of the mid-2020s. From neon-brutalism to organic minimalism, we explore the visions shaping our world.</p>
+              <button className="flex items-center gap-4 text-[10px] font-black uppercase tracking-[0.4em] text-black group">
+                 Watch The Documentary <ArrowRight className="w-4 h-4 group-hover:translate-x-4 transition-transform" />
+              </button>
+           </Reveal>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 6: EDITORS' PICKS ═══ */}
+      <section className="py-40 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-6">
+           <Reveal className="mb-24 flex justify-between items-end border-b border-black pb-8">
+              <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter italic">Editors' Picks</h2>
+              <div className="text-[10px] font-black uppercase tracking-widest text-gray-300">Staff Selection // May 2026</div>
+           </Reveal>
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-20">
+              {[
+                { title: "The New Vanguard: 10 Designers to Watch", cat: "Culture", img: "https://images.unsplash.com/photo-1554048612-b6a482bc67e5?w=800&q=80" },
+                { title: "Silicon vs Carbon: The Future of Neural Nets", cat: "Tech", img: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=800&q=80" },
+              ].map((p, i) => (
+                <Reveal key={i} delay={i * 0.1}>
+                   <div className="group cursor-pointer">
+                      <div className="aspect-[16/10] overflow-hidden mb-10 bg-gray-200">
+                         <img src={p.img} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000" />
+                      </div>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-gray-300 mb-4 block">{p.cat}</span>
+                      <h3 className="text-3xl font-black uppercase leading-tight group-hover:italic transition-all">{p.title}</h3>
+                   </div>
+                </Reveal>
+              ))}
+           </div>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 7: COMMUNITY ═══ */}
+      <section className="py-40 bg-white border-b-4 border-black">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+           <Reveal>
+              <Quote className="w-16 h-16 mx-auto mb-16 text-gray-100" />
+              <p className="text-3xl md:text-5xl font-black italic text-black leading-tight mb-20 uppercase tracking-tighter">
+                 &quot;{formData.businessName} has become the definitive source for those who reject the status quo and seek true intellectual depth.&quot;
+              </p>
+              <div className="text-[10px] font-black uppercase tracking-[0.5em] text-gray-300 italic">— Readers Union // New York Chapter</div>
+           </Reveal>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 8: BRAND PARTNERS ═══ */}
+      <section className="py-24 bg-gray-50 border-b border-black/10">
+        <div className="max-w-7xl mx-auto px-6">
+           <div className="flex flex-wrap justify-center gap-16 md:gap-32 opacity-20 grayscale hover:grayscale-0 transition-all duration-700">
+              <div className="text-2xl font-black italic tracking-tighter text-black uppercase">LEXUS_GLOBAL</div>
+              <div className="text-2xl font-black italic tracking-tighter text-black uppercase">ROLEX_ARCHIVE</div>
+              <div className="text-2xl font-black italic tracking-tighter text-black uppercase">APPLE_DESIGN</div>
+              <div className="text-2xl font-black italic tracking-tighter text-black uppercase">PRADA_MODE</div>
+           </div>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 9: ARCHIVE SEARCH ═══ */}
+      <section className="py-40 bg-white">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-32 items-center">
+           <Reveal>
+              <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tighter leading-none mb-12 italic">The Archive.</h2>
+              <p className="text-xl text-gray-500 leading-relaxed italic mb-16">Access over a decade of editorial excellence. Every issue, every interview, every manifesto ever published.</p>
+              <div className="flex border-b-4 border-black pb-4">
+                 <input type="text" placeholder="Search The Archive..." className="bg-transparent font-black uppercase tracking-widest text-sm outline-none flex-1 text-black placeholder:text-gray-300" />
+                 <Search className="w-6 h-6 text-black" />
+              </div>
+           </Reveal>
+           <Reveal delay={0.2} className="relative aspect-square border-4 border-black p-4">
+              <div className="grid grid-cols-3 gap-4 h-full">
+                 {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(i => (
+                   <div key={i} className="bg-gray-100 border border-black/5 flex items-center justify-center grayscale hover:grayscale-0 transition-all">
+                      <Calendar className="w-4 h-4 text-gray-300" />
+                   </div>
+                 ))}
+              </div>
+           </Reveal>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 10: PODCAST ═══ */}
+      <section className="py-40 bg-black text-white">
+        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-20">
+           <Reveal className="max-w-xl">
+              <div className="flex items-center gap-4 mb-10">
+                 <Mic className="w-8 h-8 text-rose-500" />
+                 <span className="text-[10px] font-black uppercase tracking-[0.4em] text-white/40">The Weekly frequency</span>
+              </div>
+              <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tighter leading-none mb-12 italic">On Air // <br/>The Frequency.</h2>
+              <p className="text-xl text-white/30 leading-relaxed italic mb-16">Conversations with the most disruptive minds in our network. New episodes every Tuesday morning.</p>
+              <button className="px-12 py-5 border border-white text-white font-black uppercase tracking-widest text-xs hover:bg-white hover:text-black transition-all">Listen On Spotify</button>
+           </Reveal>
+           <Reveal delay={0.2} className="relative w-80 h-80 border-4 border-white flex flex-col items-center justify-center">
+              <div className="text-8xl font-black italic text-white/10">MIC</div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                 <div className="w-20 h-[2px] bg-rose-500 animate-pulse" />
+              </div>
+           </Reveal>
         </div>
       </section>
 

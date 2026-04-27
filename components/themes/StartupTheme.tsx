@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import type { SessionData } from "@/lib/sessions";
 import { ThemeWrapper } from "./ThemeWrapper";
 import { Reveal, Stagger, StaggerItem, MagneticButton } from "./AnimationHelpers";
-import { Rocket, Zap, Shield, BarChart2, Globe, Users, TrendingUp, Check } from "lucide-react";
+import { Rocket, Zap, Shield, BarChart2, Globe, Users, TrendingUp, Check, Layout, Award, HelpCircle, Star, Quote, Instagram, Phone, Mail, ArrowRight, PlayCircle } from "lucide-react";
 
 export function StartupTheme({ session }: { session: SessionData }) {
   const { formData, generatedContent: c } = session;
@@ -127,6 +127,105 @@ export function StartupTheme({ session }: { session: SessionData }) {
               ))}
             </div>
           </Reveal>
+        </div>
+      </section>
+
+      </section>
+
+      {/* ═══ SECTION 6: PRODUCT ROADMAP ═══ */}
+      <section className="py-40 bg-[#050505] border-y border-white/5">
+        <div className="max-w-7xl mx-auto px-6">
+           <Reveal className="mb-24">
+              <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-white italic">The Roadmap.</h2>
+           </Reveal>
+           <div className="space-y-4">
+              {[
+                { phase: "Phase 01", title: "Core Protocol", status: "Completed", desc: "Launch of the foundational decentralized architecture and security layers." },
+                { phase: "Phase 02", title: "Ecosystem Expansion", status: "In Progress", desc: "Integrating third-party nodes and developing the global developer API." },
+                { phase: "Phase 03", title: "Mass Adoption", status: "Q4 2026", desc: "Full-scale rollout of the consumer-facing decentralized marketplace." },
+              ].map((step, i) => (
+                <Reveal key={i} delay={i * 0.1}>
+                   <div className="p-12 bg-zinc-900/30 border border-white/5 rounded-[40px] hover:bg-zinc-900/50 transition-all group flex flex-col md:flex-row justify-between items-start md:items-center gap-12">
+                      <div className="flex gap-12 items-center">
+                         <div className="text-2xl font-black text-white/10 group-hover:text-white transition-colors uppercase italic">{step.phase}</div>
+                         <div>
+                            <h3 className="text-2xl font-black uppercase tracking-tight text-white mb-2">{step.title}</h3>
+                            <p className="text-sm text-zinc-500 max-w-sm">{step.desc}</p>
+                         </div>
+                      </div>
+                      <div className="px-6 py-2 rounded-full border border-white/10 text-[10px] font-black uppercase tracking-widest text-zinc-400">{step.status}</div>
+                   </div>
+                </Reveal>
+              ))}
+           </div>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 7: INVESTORS ═══ */}
+      <section className="py-32 bg-[#050505]">
+        <div className="max-w-7xl mx-auto px-6 text-center">
+           <Reveal className="mb-16">
+              <span className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-600">Backed by the Boldest</span>
+           </Reveal>
+           <div className="flex flex-wrap justify-center gap-16 md:gap-32 opacity-20 grayscale hover:grayscale-0 transition-all duration-700">
+              <div className="text-2xl font-black italic tracking-tighter text-white uppercase">ANDREESSEN</div>
+              <div className="text-2xl font-black italic tracking-tighter text-white uppercase">SEQUOIA_CAP</div>
+              <div className="text-2xl font-black italic tracking-tighter text-white uppercase">Y_COMBINATOR</div>
+              <div className="text-2xl font-black italic tracking-tighter text-white uppercase">FOUNDERS_FUND</div>
+           </div>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 8: TESTIMONIALS ═══ */}
+      <section className="py-40 bg-zinc-950 border-y border-white/5">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+           <Reveal>
+              <Quote className="w-16 h-16 mx-auto mb-16 text-white/5" />
+              <p className="text-3xl md:text-5xl font-black italic text-white leading-tight mb-20 uppercase tracking-tighter">
+                 &quot;This startup is building the infrastructure that will define the next decade of the internet. A absolute game-changer.&quot;
+              </p>
+              <div className="flex flex-col items-center">
+                 <div className="font-black uppercase tracking-[0.4em] text-xs text-white/40 italic">— Sarah J. // Lead Architect @ META_STRUCTURE</div>
+              </div>
+           </Reveal>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 9: FAQ ═══ */}
+      <section className="py-40 bg-[#050505]">
+        <div className="max-w-4xl mx-auto px-6">
+           <Reveal className="text-center mb-24">
+              <h2 className="text-4xl font-black uppercase tracking-tighter italic text-white">Intellectual Ledger</h2>
+           </Reveal>
+           <div className="space-y-4">
+              {[
+                { q: "What makes this protocol unique?", a: "Unlike legacy systems, our architecture utilizes a proprietary sharding mechanism that allows for linear scalability without compromising security." },
+                { q: "How can I join the early access program?", a: "We are currently accepting applications for the closed beta phase. Our team reviews entries weekly based on ecosystem contribution potential." },
+                { q: "What is the primary token utility?", a: "The native token facilitates consensus validation and governs protocol parameters through our decentralized governance module." },
+              ].map((f, i) => (
+                <Reveal key={i} delay={i * 0.1}>
+                   <div className="p-10 border border-white/5 hover:bg-white/5 transition-all group cursor-pointer rounded-[2rem]">
+                      <div className="flex justify-between items-center mb-6">
+                         <span className="text-sm font-black uppercase tracking-widest text-zinc-400 group-hover:text-white transition-colors">{f.q}</span>
+                         <HelpCircle className="w-5 h-5 text-zinc-800 group-hover:text-white transition-colors" />
+                      </div>
+                      <p className="text-sm text-zinc-600 leading-relaxed italic group-hover:text-zinc-400 transition-colors">{f.a}</p>
+                   </div>
+                </Reveal>
+              ))}
+           </div>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 10: PARTNER LOGOS ═══ */}
+      <section className="py-24 bg-[#050505] border-b border-white/5">
+        <div className="max-w-7xl mx-auto px-6 text-center">
+           <div className="flex flex-wrap justify-center gap-16 md:gap-32 opacity-10 grayscale hover:grayscale-0 transition-all duration-700">
+              <div className="text-2xl font-black italic tracking-tighter text-white uppercase">OPEN_AI</div>
+              <div className="text-2xl font-black italic tracking-tighter text-white uppercase">STRIPE_DEV</div>
+              <div className="text-2xl font-black italic tracking-tighter text-white uppercase">CLOUD_FLARE</div>
+              <div className="text-2xl font-black italic tracking-tighter text-white uppercase">GITHUB_ENT</div>
+           </div>
         </div>
       </section>
 

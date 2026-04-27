@@ -5,7 +5,7 @@ import { useRef } from "react";
 import type { SessionData } from "@/lib/sessions";
 import { ThemeWrapper } from "./ThemeWrapper";
 import { Reveal, Stagger, StaggerItem, MagneticButton } from "./AnimationHelpers";
-import { ArrowUpRight, ArrowDown, ExternalLink } from "lucide-react";
+import { ArrowUpRight, ArrowDown, ExternalLink, Award, HelpCircle, Activity, Star, Quote, Instagram, Phone, Mail, ArrowRight, X, Layout, Layers, Terminal } from "lucide-react";
 
 const PROJECTS = [
   { title: "Metamorphosis", cat: "Art Direction", year: "2026", img: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1200&q=80" },
@@ -121,6 +121,131 @@ export function PortfolioTheme({ session }: { session: SessionData }) {
               </Reveal>
             ))}
           </div>
+        </div>
+      </section>
+
+      </section>
+
+      {/* ═══ SECTION 5: DISCIPLINE ═══ */}
+      <section className="py-40 bg-[#fafafa] border-y">
+        <div className="max-w-7xl mx-auto px-6">
+           <Reveal className="mb-24">
+              <h2 className="text-5xl font-black uppercase tracking-tighter italic">Discipline.</h2>
+           </Reveal>
+           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+              {[
+                { title: "Visual Design", desc: "Crafting digital experiences with a focus on typography and space." },
+                { title: "Motion Direction", desc: "Bringing static ideas to life through meaningful animation." },
+                { title: "Creative Tech", desc: "Bridging the gap between design and high-performance code." },
+              ].map((d, i) => (
+                <Reveal key={i} delay={i * 0.1}>
+                   <div className="p-12 bg-white border border-gray-100 rounded-[40px] hover:shadow-2xl transition-all group">
+                      <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center mb-8 group-hover:bg-black group-hover:text-white transition-all">
+                         <Layout className="w-5 h-5" />
+                      </div>
+                      <h3 className="text-2xl font-black uppercase mb-4 italic tracking-tight">{d.title}</h3>
+                      <p className="text-sm text-gray-400 leading-relaxed italic">{d.desc}</p>
+                   </div>
+                </Reveal>
+              ))}
+           </div>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 6: SKILLS MARQUEE ═══ */}
+      <section className="py-24 bg-white overflow-hidden border-b">
+        <div className="flex whitespace-nowrap">
+           <motion.div 
+             animate={{ x: ["0%", "-50%"] }}
+             transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+             className="flex gap-20 text-6xl md:text-8xl font-black uppercase tracking-tighter italic text-gray-100"
+           >
+              <span>Framer Motion // Next.js // TypeScript // WebGL // GSAP // Figma // Adobe Suite //</span>
+              <span>Framer Motion // Next.js // TypeScript // WebGL // GSAP // Figma // Adobe Suite //</span>
+           </motion.div>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 7: EXPERIENCE ═══ */}
+      <section className="py-40 bg-[#fafafa] border-b">
+        <div className="max-w-7xl mx-auto px-6">
+           <Reveal className="mb-24">
+              <h2 className="text-5xl font-black uppercase tracking-tighter italic">Experience.</h2>
+           </Reveal>
+           <div className="space-y-4">
+              {[
+                { year: "2024-Present", role: "Senior Creative", company: "Aevia Digital", desc: "Leading the design system for next-gen SAAS products." },
+                { year: "2021-2023", role: "Motion Designer", company: "Motion_Studio", desc: "Developed interactive campaign assets for global brands." },
+                { year: "2018-2020", role: "Junior Designer", company: "Start_Up_Inc", desc: "Focused on mobile-first interfaces and user flow optimization." },
+              ].map((exp, i) => (
+                <Reveal key={i} delay={i * 0.1}>
+                   <div className="p-10 border border-gray-100 hover:bg-white hover:shadow-xl transition-all group flex flex-col md:flex-row justify-between items-start md:items-center gap-12 rounded-[2rem]">
+                      <div className="text-xl font-black italic text-gray-300 group-hover:text-black transition-colors">{exp.year}</div>
+                      <div className="flex-1">
+                         <h3 className="text-2xl font-black uppercase tracking-tight text-black mb-1">{exp.role}</h3>
+                         <div className="text-xs font-bold text-gray-400 uppercase tracking-widest">{exp.company}</div>
+                      </div>
+                      <p className="text-sm text-gray-400 max-w-sm italic leading-tight">{exp.desc}</p>
+                   </div>
+                </Reveal>
+              ))}
+           </div>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 8: TESTIMONIALS ═══ */}
+      <section className="py-40 bg-white border-b">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+           <Reveal>
+              <Quote className="w-16 h-16 mx-auto mb-16 text-gray-100" />
+              <p className="text-3xl md:text-5xl font-black italic text-black leading-tight mb-20 uppercase tracking-tighter">
+                 &quot;An absolute visionary when it comes to the intersection of raw brutalism and modern interactive design.&quot;
+              </p>
+              <div className="text-[10px] font-black uppercase tracking-[0.5em] text-gray-300 italic">— Julian Vance // Creative Director</div>
+           </Reveal>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 9: AWARDS ═══ */}
+      <section className="py-40 bg-[#fafafa] border-b">
+        <div className="max-w-7xl mx-auto px-6">
+           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 text-center">
+              {[
+                { val: "12", label: "Awwwards SOTD" },
+                { val: "05", label: "FWA Wins" },
+                { val: "08", label: "CSSDA Awards" },
+                { val: "02", label: "Webby Nominees" },
+              ].map((a, i) => (
+                <Reveal key={i} delay={i * 0.1}>
+                   <div className="text-6xl font-black text-black mb-2 italic tracking-tighter">{a.val}</div>
+                   <div className="text-[10px] uppercase font-black tracking-widest text-gray-300">{a.label}</div>
+                </Reveal>
+              ))}
+           </div>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 10: INSTAGRAM FEED ═══ */}
+      <section className="py-40 bg-white border-b">
+        <div className="max-w-7xl mx-auto px-6 mb-24 flex justify-between items-end">
+           <Reveal>
+              <h2 className="text-5xl font-black uppercase tracking-tighter italic">Process // Logs.</h2>
+           </Reveal>
+           <div className="text-[10px] font-black uppercase tracking-widest text-gray-300">@ {formData.businessName.replace(/\s+/g, '_').toLowerCase()}</div>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-1">
+           {[
+             "https://images.unsplash.com/photo-1558655146-d09347e92766?w=400&q=80",
+             "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400&q=80",
+             "https://images.unsplash.com/photo-1512403754473-27835f7b9984?w=400&q=80",
+             "https://images.unsplash.com/photo-1551434678-e076c223a692?w=400&q=80",
+           ].map((img, i) => (
+             <Reveal key={i} delay={i * 0.1}>
+                <div className="aspect-square bg-gray-100 grayscale hover:grayscale-0 transition-all duration-700 cursor-crosshair group relative overflow-hidden">
+                   <img src={img} className="w-full h-full object-cover opacity-50 group-hover:opacity-100 transition-opacity" />
+                </div>
+             </Reveal>
+           ))}
         </div>
       </section>
 

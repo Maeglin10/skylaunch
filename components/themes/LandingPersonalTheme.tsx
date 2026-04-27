@@ -5,7 +5,7 @@ import { useRef } from "react";
 import type { SessionData } from "@/lib/sessions";
 import { ThemeWrapper } from "./ThemeWrapper";
 import { Reveal, Stagger, StaggerItem, MagneticButton } from "./AnimationHelpers";
-import { ArrowDown, Mail, Github, Linkedin, Twitter, MessageSquare, ExternalLink } from "lucide-react";
+import { ArrowDown, Mail, Github, Linkedin, Twitter, MessageSquare, ExternalLink, Award, HelpCircle, Activity, CheckCircle, TrendingUp, Quote, Search, Instagram, Phone, Globe, Shield, Zap, ArrowRight, PlayCircle } from "lucide-react";
 
 export function LandingPersonalTheme({ session }: { session: SessionData }) {
   const { formData, generatedContent: c } = session;
@@ -146,6 +146,111 @@ export function LandingPersonalTheme({ session }: { session: SessionData }) {
               </StaggerItem>
             ))}
           </Stagger>
+        </div>
+      </section>
+
+      </section>
+
+      {/* ═══ SECTION 5: PERSONAL STATS ═══ */}
+      <section className="py-24 bg-white border-y">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-12 text-center">
+           {[
+             { val: "8yr+", label: "EXPERIENCE" },
+             { val: "120+", label: "PROJECTS" },
+             { val: "15", label: "AWARDS" },
+             { val: "∞", label: "CURIOSITY" },
+           ].map((s, i) => (
+             <Reveal key={i} delay={i * 0.1}>
+                <div className="text-5xl font-black text-black mb-2 tracking-tighter italic">{s.val}</div>
+                <div className="text-[10px] font-black uppercase tracking-widest text-gray-300">{s.label}</div>
+             </Reveal>
+           ))}
+        </div>
+      </section>
+
+      {/* ═══ SECTION 6: TOOLBOX MARQUEE ═══ */}
+      <section className="py-20 bg-[#fafafa] overflow-hidden border-b">
+        <div className="flex whitespace-nowrap">
+           <motion.div 
+             animate={{ x: ["0%", "-50%"] }}
+             transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+             className="flex gap-20 text-4xl md:text-6xl font-black uppercase tracking-tighter italic text-gray-100"
+           >
+              <span>Product Design // Brand Identity // Motion Direction // Creative Strategy // Art Direction // Front-end //</span>
+              <span>Product Design // Brand Identity // Motion Direction // Creative Strategy // Art Direction // Front-end //</span>
+           </motion.div>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 7: WORKFLOW ═══ */}
+      <section className="py-40 bg-white">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-32 items-center">
+           <Reveal>
+              <h2 className="text-5xl font-black uppercase tracking-tighter mb-12 leading-[0.85] italic">The Workflow <br/>Of Intent.</h2>
+              <div className="space-y-12">
+                 {[
+                   { step: "01", title: "Discovery", desc: "Diving deep into the core problem to uncover hidden truths." },
+                   { step: "02", title: "Refinement", desc: "Iterating with precision until only the essential remains." },
+                   { step: "03", title: "Execution", desc: "Bringing the vision to life with high-performance craft." },
+                 ].map((p, i) => (
+                   <div key={i} className="flex gap-8 group">
+                      <div className="text-2xl font-black italic text-gray-200 group-hover:text-black transition-colors">{p.step}</div>
+                      <div>
+                         <h3 className="text-lg font-black uppercase tracking-tight text-black mb-2">{p.title}</h3>
+                         <p className="text-sm text-gray-400 max-w-sm leading-tight italic">{p.desc}</p>
+                      </div>
+                   </div>
+                ))}
+              </div>
+           </Reveal>
+           <Reveal delay={0.2} className="relative aspect-square border border-gray-100 p-4 bg-[#fafafa] rounded-[40px] overflow-hidden">
+              <img src="https://images.unsplash.com/photo-1558655146-d09347e92766?w=800&q=80" className="w-full h-full object-cover grayscale opacity-20" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                 <Activity className="w-16 h-16 text-black/5 animate-pulse" />
+              </div>
+           </Reveal>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 8: TESTIMONIALS ═══ */}
+      <section className="py-40 bg-[#fafafa] border-y">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+           <Reveal>
+              <Quote className="w-16 h-16 mx-auto mb-16 text-gray-200" />
+              <p className="text-3xl md:text-5xl font-black italic text-black leading-tight mb-20 uppercase tracking-tighter">
+                 &quot;Working with {formData.businessName.split(' ')[0]} was a turning point for our brand. A rare blend of strategic thinking and visual brilliance.&quot;
+              </p>
+              <div className="text-[10px] font-black uppercase tracking-[0.5em] text-gray-300 italic">— Marcus Vane // Head of Creative</div>
+           </Reveal>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 9: RECOGNITION ═══ */}
+      <section className="py-24 bg-white border-b">
+        <div className="max-w-7xl mx-auto px-6 text-center">
+           <div className="flex flex-wrap justify-center gap-16 md:gap-32 opacity-10 grayscale hover:grayscale-0 transition-all duration-700">
+              <div className="text-2xl font-black italic tracking-tighter text-black uppercase">AD_WEEK</div>
+              <div className="text-2xl font-black italic tracking-tighter text-black uppercase">BEHANCE_ELITE</div>
+              <div className="text-2xl font-black italic tracking-tighter text-black uppercase">DRIBBBLE_PRO</div>
+              <div className="text-2xl font-black italic tracking-tighter text-black uppercase">SITE_INSPIRE</div>
+           </div>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 10: JOURNAL SIGNUP ═══ */}
+      <section className="py-40 bg-white border-b text-center">
+        <div className="max-w-3xl mx-auto px-6">
+           <Reveal>
+              <div className="w-20 h-20 rounded-full border border-gray-100 flex items-center justify-center mx-auto mb-12">
+                 <Mail className="w-8 h-8 text-black" />
+              </div>
+              <h2 className="text-5xl md:text-6xl font-black uppercase tracking-tighter mb-12 italic">The Journal.</h2>
+              <p className="text-xl text-gray-400 mb-16 max-w-xl mx-auto italic font-medium">Occasional thoughts on design, tech, and the creative process. No spam, just substance.</p>
+              <div className="flex border-b-4 border-black pb-4 max-w-md mx-auto group">
+                 <input type="email" placeholder="Email Address" className="bg-transparent font-black uppercase tracking-widest text-sm outline-none flex-1 text-black placeholder:text-gray-200" />
+                 <button className="font-black uppercase tracking-widest text-xs hover:opacity-50 transition-opacity">Subscribe</button>
+              </div>
+           </Reveal>
         </div>
       </section>
 

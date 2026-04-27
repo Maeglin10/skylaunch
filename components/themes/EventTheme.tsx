@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import type { SessionData } from "@/lib/sessions";
 import { ThemeWrapper } from "./ThemeWrapper";
 import { Reveal, Stagger, StaggerItem, MagneticButton } from "./AnimationHelpers";
-import { Calendar, MapPin, Ticket, Users, Zap, Clock, Mic, Star } from "lucide-react";
+import { Calendar, MapPin, Ticket, Users, Zap, Clock, Mic, Star, Layout, Award, HelpCircle, Phone, Mail, Instagram, ArrowRight, PlayCircle, Quote, Map } from "lucide-react";
 
 export function EventTheme({ session }: { session: SessionData }) {
   const { formData, generatedContent: c } = session;
@@ -154,6 +154,140 @@ export function EventTheme({ session }: { session: SessionData }) {
               <div className="text-[10px] font-black uppercase tracking-widest text-white/30 mt-2">Performance Focus</div>
             </div>
           </Reveal>
+        </div>
+      </section>
+
+      </section>
+
+      {/* ═══ SECTION 6: EVENT SCHEDULE ═══ */}
+      <section className="py-40 bg-black">
+        <div className="max-w-7xl mx-auto px-6">
+           <Reveal className="mb-24">
+              <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-white italic">The Agenda.</h2>
+           </Reveal>
+           <div className="space-y-4">
+              {[
+                { time: "09:00 AM", title: "Opening Keynote", speaker: "Dr. Aris Thorne", type: "Main Stage" },
+                { time: "11:30 AM", title: "Quantum Computing Lab", speaker: "Elena Korr", type: "Workshop" },
+                { time: "02:00 PM", title: "The Future of Mesh", speaker: "Marcus Vane", type: "Panel" },
+                { time: "05:00 PM", title: "Networking Mixer", speaker: "All Attendees", type: "Social" },
+              ].map((row, i) => (
+                <Reveal key={i} delay={i * 0.1}>
+                   <div className="p-10 bg-zinc-900/30 border border-white/5 rounded-[40px] hover:bg-zinc-900/50 transition-all group flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
+                      <div className="text-2xl font-black text-white/10 group-hover:text-white transition-colors italic">{row.time}</div>
+                      <div className="flex-1">
+                         <h3 className="text-2xl font-black uppercase tracking-tight text-white mb-2">{row.title}</h3>
+                         <div className="text-xs font-bold text-white/30 uppercase tracking-widest">{row.speaker} // {row.type}</div>
+                      </div>
+                      <div className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
+                         <ArrowRight className="w-5 h-5" />
+                      </div>
+                   </div>
+                </Reveal>
+              ))}
+           </div>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 7: TICKET TIERS ═══ */}
+      <section className="py-40 bg-zinc-950 border-y border-white/5">
+        <div className="max-w-7xl mx-auto px-6">
+           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+              {[
+                { name: "Standard", price: "299", perks: ["Access to all talks", "Networking lunch", "Digital recordings"] },
+                { name: "VIP Elite", price: "899", perks: ["Priority seating", "Speaker dinner", "Backstage access", "Limited swag"] },
+                { name: "All Access", price: "1499", perks: ["Everything in VIP", "Personal concierge", "Lifetime recordings", "Workshop access"] },
+              ].map((tier, i) => (
+                <Reveal key={i} delay={i * 0.1}>
+                   <div className="p-12 border border-white/5 rounded-[40px] bg-black/50 backdrop-blur-xl hover:border-white/20 transition-all relative group overflow-hidden">
+                      {i === 1 && <div className="absolute top-0 right-0 px-6 py-2 bg-rose-500 text-white font-black text-[8px] uppercase tracking-widest">Most Popular</div>}
+                      <h3 className="text-2xl font-black uppercase text-white mb-8 italic">{tier.name}</h3>
+                      <div className="text-6xl font-black text-white mb-12 tracking-tighter italic">${tier.price}</div>
+                      <ul className="space-y-6 mb-12">
+                         {tier.perks.map((p, j) => (
+                           <li key={j} className="flex items-center gap-4 text-xs font-bold text-white/40 uppercase tracking-widest">
+                              <Zap className="w-3 h-3 text-white/20" /> {p}
+                           </li>
+                         ))}
+                      </ul>
+                      <button className="w-full py-5 border border-white/10 font-black uppercase text-[10px] tracking-widest group-hover:bg-white group-hover:text-black transition-all">Purchase Now</button>
+                   </div>
+                </Reveal>
+              ))}
+           </div>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 8: VENUE & LOCATION ═══ */}
+      <section className="py-40 bg-black overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-32 items-center">
+           <Reveal>
+              <h2 className="text-5xl font-black uppercase tracking-tighter mb-12 leading-[0.85] italic text-white">The Epicenter <br/>Of Innovation.</h2>
+              <div className="space-y-12">
+                 <div>
+                    <div className="text-[10px] font-black uppercase tracking-[0.5em] text-white/20 mb-4">The Grand Hall // {formData.city}</div>
+                    <p className="text-xl text-white/60 font-light leading-relaxed italic">12 Innovation Way, <br/>{formData.city}, TX 75001</p>
+                 </div>
+                 <div className="flex gap-12 pt-12 border-t border-white/5">
+                    <div className="flex items-center gap-4 group cursor-pointer">
+                       <div className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
+                          <Map className="w-5 h-5" />
+                       </div>
+                       <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Open Maps</span>
+                    </div>
+                    <div className="flex items-center gap-4 group cursor-pointer">
+                       <div className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
+                          <Phone className="w-5 h-5" />
+                       </div>
+                       <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Concierge</span>
+                    </div>
+                 </div>
+              </div>
+           </Reveal>
+           <Reveal delay={0.2} className="relative aspect-square">
+              <div className="absolute inset-0 bg-rose-500/10 rounded-full blur-[120px] animate-pulse" />
+              <div className="relative h-full w-full bg-zinc-900 rounded-[80px] overflow-hidden grayscale opacity-40 border border-white/10">
+                 <img src="https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=800&q=80" className="w-full h-full object-cover" />
+              </div>
+           </Reveal>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 9: FAQ ═══ */}
+      <section className="py-40 bg-zinc-950 border-y border-white/5">
+        <div className="max-w-4xl mx-auto px-6">
+           <Reveal className="text-center mb-24">
+              <h2 className="text-4xl font-black uppercase tracking-tighter italic text-white">Logistics Protocol</h2>
+           </Reveal>
+           <div className="space-y-4">
+              {[
+                { q: "Is on-site parking available?", a: "Yes, we provide complimentary valet parking for all VIP ticket holders and a dedicated shuttle service from the downtown core." },
+                { q: "What is the dress code?", a: "The event is business casual. However, we encourage expressive and futuristic attire for the evening mixers." },
+                { q: "Are international visas supported?", a: "Our concierge team can provide official invitation letters for visa applications after ticket purchase." },
+              ].map((f, i) => (
+                <Reveal key={i} delay={i * 0.1}>
+                   <div className="p-10 border border-white/5 hover:bg-white/5 transition-all group cursor-pointer rounded-[2rem]">
+                      <div className="flex justify-between items-center mb-6">
+                         <span className="text-sm font-black uppercase tracking-widest text-white/70 group-hover:text-white transition-colors">{f.q}</span>
+                         <HelpCircle className="w-5 h-5 text-white/10 group-hover:text-white transition-colors" />
+                      </div>
+                      <p className="text-sm text-white/20 leading-relaxed italic group-hover:text-white/40 transition-colors">{f.a}</p>
+                   </div>
+                </Reveal>
+              ))}
+           </div>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 10: SPONSORS ═══ */}
+      <section className="py-24 bg-black border-b border-white/5">
+        <div className="max-w-7xl mx-auto px-6 text-center">
+           <div className="flex flex-wrap justify-center gap-16 md:gap-32 opacity-20 grayscale hover:grayscale-0 transition-all duration-700">
+              <div className="text-2xl font-black italic tracking-tighter text-white uppercase">TECH_GLOBAL</div>
+              <div className="text-2xl font-black italic tracking-tighter text-white uppercase">FUTURE_LABS</div>
+              <div className="text-2xl font-black italic tracking-tighter text-white uppercase">VANTAGE_CO</div>
+              <div className="text-2xl font-black italic tracking-tighter text-white uppercase">ZEN_CORP</div>
+           </div>
         </div>
       </section>
 

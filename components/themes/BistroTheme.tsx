@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import type { SessionData } from "@/lib/sessions";
 import { ThemeWrapper } from "./ThemeWrapper";
 import { Reveal, Stagger, StaggerItem, MagneticButton } from "./AnimationHelpers";
-import { Coffee, MapPin, Clock, X, ChevronRight, Star } from "lucide-react";
+import { Coffee, MapPin, Clock, X, ChevronRight, Star, Utensils, Award, HelpCircle, Quote, Instagram, Phone, Mail, ArrowRight } from "lucide-react";
 
 export function BistroTheme({ session }: { session: SessionData }) {
   const { formData, generatedContent: c } = session;
@@ -146,6 +146,108 @@ export function BistroTheme({ session }: { session: SessionData }) {
               ))}
             </div>
           </Reveal>
+        </div>
+      </section>
+
+      </section>
+
+      {/* ═══ SECTION 6: SOURCING ═══ */}
+      <section className="py-32 bg-[#fdfcf9] border-y">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-32 items-center">
+           <Reveal className="order-2 lg:order-1">
+              <div className="aspect-video bg-zinc-100 rounded-[40px] overflow-hidden">
+                 <img src="https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=800&q=80" className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" />
+              </div>
+           </Reveal>
+           <Reveal delay={0.2} className="order-1 lg:order-2">
+              <h2 className="text-4xl font-black uppercase tracking-tighter mb-10 leading-tight italic">Rooted in <br/>Our Soil.</h2>
+              <p className="text-lg text-zinc-500 leading-relaxed italic mb-12">90% of our produce is sourced within a 50-mile radius. We partner with local farmers who share our commitment to organic and sustainable agriculture.</p>
+              <div className="flex gap-8">
+                 <div>
+                    <div className="text-3xl font-black mb-1">50+</div>
+                    <div className="text-[10px] uppercase font-black text-zinc-400">Local Farmers</div>
+                 </div>
+                 <div>
+                    <div className="text-3xl font-black mb-1">100%</div>
+                    <div className="text-[10px] uppercase font-black text-zinc-400">Organic</div>
+                 </div>
+              </div>
+           </Reveal>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 7: THE CHEF ═══ */}
+      <section className="py-32 bg-white">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-32 items-center">
+           <Reveal>
+              <h2 className="text-4xl font-black uppercase tracking-tighter mb-10 leading-tight italic">Crafted by <br/>Artisan Hands.</h2>
+              <p className="text-lg text-zinc-500 leading-relaxed italic mb-12">Chef Julian Vance brings 15 years of culinary expertise, blending traditional techniques with modern creativity to every plate.</p>
+              <div className="font-black uppercase tracking-widest text-sm text-zinc-900">— Julian Vance // Executive Chef</div>
+           </Reveal>
+           <Reveal delay={0.2} className="relative">
+              <div className="aspect-square bg-zinc-50 rounded-[100px] overflow-hidden">
+                 <img src="https://images.unsplash.com/photo-1577219491135-ce391730fb2c?w=800&q=80" className="w-full h-full object-cover grayscale" />
+              </div>
+              <div className="absolute -bottom-6 -right-6 p-8 bg-zinc-900 text-white font-black uppercase italic tracking-tighter rounded-full">
+                 Est. 2018
+              </div>
+           </Reveal>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 8: TESTIMONIALS ═══ */}
+      <section className="py-32 bg-[#fdfcf9]">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+           <Reveal>
+              <Quote className="w-12 h-12 mx-auto mb-16 text-zinc-100" />
+              <p className="text-3xl md:text-4xl font-black italic text-zinc-900 leading-tight mb-16 uppercase tracking-tighter">
+                 &quot;The atmosphere is just as incredible as the food. A true neighborhood staple that never disappoints.&quot;
+              </p>
+              <div className="flex flex-col items-center">
+                 <div className="flex gap-1 mb-4">
+                    {[1, 2, 3, 4, 5].map(i => <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />)}
+                 </div>
+                 <div className="font-black uppercase tracking-widest text-xs text-zinc-400">— Emma & Theo S. // Regulars</div>
+              </div>
+           </Reveal>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 9: FAQ ═══ */}
+      <section className="py-32 bg-white">
+        <div className="max-w-4xl mx-auto px-6">
+           <Reveal className="text-center mb-24">
+              <h2 className="text-4xl font-black uppercase tracking-tighter">Good to Know</h2>
+           </Reveal>
+           <div className="space-y-4">
+              {[
+                { q: "Do you offer vegan options?", a: "Absolutely. Most of our dishes can be modified for vegans, and we have dedicated vegan classics on every menu." },
+                { q: "Are reservations required?", a: "While we welcome walk-ins, we recommend booking on weekends to ensure you get a table." },
+                { q: "Is the bistro pet-friendly?", a: "Our outdoor terrace is pet-friendly! We even have water bowls and organic treats for your companions." },
+              ].map((f, i) => (
+                <Reveal key={i} delay={i * 0.1}>
+                   <div className="p-8 border border-zinc-100 hover:bg-[#fdfcf9] transition-all group cursor-pointer rounded-3xl">
+                      <div className="flex justify-between items-center mb-6">
+                         <span className="text-sm font-black uppercase tracking-widest">{f.q}</span>
+                         <HelpCircle className="w-5 h-5 text-zinc-300 group-hover:text-zinc-900 transition-colors" />
+                      </div>
+                      <p className="text-sm text-zinc-400 leading-relaxed italic group-hover:text-zinc-600 transition-colors">{f.a}</p>
+                   </div>
+                </Reveal>
+              ))}
+           </div>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 10: AWARDS & PARTNERS ═══ */}
+      <section className="py-24 bg-[#fdfcf9] border-y">
+        <div className="max-w-7xl mx-auto px-6">
+           <div className="flex flex-wrap justify-center gap-16 md:gap-32 opacity-10 grayscale hover:grayscale-0 transition-all duration-700">
+              <div className="text-2xl font-black italic tracking-tighter text-zinc-900 uppercase">MICHELIN_2026</div>
+              <div className="text-2xl font-black italic tracking-tighter text-zinc-900 uppercase">SLOW_FOOD</div>
+              <div className="text-2xl font-black italic tracking-tighter text-zinc-900 uppercase">BEST_BRUNCH</div>
+              <div className="text-2xl font-black italic tracking-tighter text-zinc-900 uppercase">LOCAL_FAVORITE</div>
+           </div>
         </div>
       </section>
 

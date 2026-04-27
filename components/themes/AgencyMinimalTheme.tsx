@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import type { SessionData } from "@/lib/sessions";
 import { ThemeWrapper } from "./ThemeWrapper";
 import { Reveal, Stagger, StaggerItem, MagneticButton } from "./AnimationHelpers";
-import { ArrowUpRight, Check, Users, Globe, Zap, ArrowRight } from "lucide-react";
+import { ArrowUpRight, Check, Users, Globe, Zap, ArrowRight, Award, HelpCircle, Activity, CheckCircle, TrendingUp, Quote, Search, Mail, Instagram, Phone, Shield, Calendar } from "lucide-react";
 
 export function AgencyMinimalTheme({ session }: { session: SessionData }) {
   const { formData, generatedContent: c } = session;
@@ -110,6 +110,119 @@ export function AgencyMinimalTheme({ session }: { session: SessionData }) {
               </Reveal>
             ))}
           </div>
+        </div>
+      </section>
+
+      </section>
+
+      {/* ═══ SECTION 5: AGENCY STATS ═══ */}
+      <section className="py-24 bg-white border-y">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-12 text-center">
+           {[
+             { val: "10yr", label: "Studio History" },
+             { val: "250+", label: "Success Nodes" },
+             { val: "15", label: "Industry Awards" },
+             { val: "Global", label: "Operations" },
+           ].map((s, i) => (
+             <Reveal key={i} delay={i * 0.1}>
+                <div className="text-5xl font-black text-black mb-2 tracking-tighter">{s.val}</div>
+                <div className="text-[10px] font-black uppercase tracking-widest text-gray-300">{s.label}</div>
+             </Reveal>
+           ))}
+        </div>
+      </section>
+
+      {/* ═══ SECTION 6: CLIENT LOGOS ═══ */}
+      <section className="py-24 bg-gray-50 border-b">
+        <div className="max-w-7xl mx-auto px-6 text-center">
+           <div className="flex flex-wrap justify-center gap-16 md:gap-32 opacity-20 grayscale hover:grayscale-0 transition-all duration-700">
+              <div className="text-2xl font-black italic tracking-tighter text-black uppercase">ALPHA_CORP</div>
+              <div className="text-2xl font-black italic tracking-tighter text-black uppercase">VERTEX_ARC</div>
+              <div className="text-2xl font-black italic tracking-tighter text-black uppercase">NEXUS_SYS</div>
+              <div className="text-2xl font-black italic tracking-tighter text-black uppercase">PRISM_LABS</div>
+           </div>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 7: THE PROCESS ═══ */}
+      <section className="py-40 bg-white">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-32 items-center">
+           <Reveal>
+              <h2 className="text-5xl font-black uppercase tracking-tighter mb-12 leading-[0.85] italic">The Studio <br/>Protocol.</h2>
+              <div className="space-y-12">
+                 {[
+                   { step: "01", title: "Strategic Audit", desc: "Deconstructing current challenges to define the new core objective." },
+                   { step: "02", title: "Creative Sprints", desc: "High-intensity design cycles focused on rapid prototyping and refinement." },
+                   { step: "03", title: "System Deployment", desc: "Final implementation of the architectural system across all touchpoints." },
+                 ].map((p, i) => (
+                   <div key={i} className="flex gap-8 group">
+                      <div className="text-2xl font-black italic text-gray-200 group-hover:text-black transition-colors">{p.step}</div>
+                      <div>
+                         <h3 className="text-lg font-black uppercase tracking-tight text-black mb-2">{p.title}</h3>
+                         <p className="text-sm text-gray-400 max-w-sm leading-tight italic">{p.desc}</p>
+                      </div>
+                   </div>
+                 ))}
+              </div>
+           </Reveal>
+           <Reveal delay={0.2} className="relative aspect-square border border-gray-100 p-4 bg-gray-50">
+              <img src="https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=800&q=80" className="w-full h-full object-cover grayscale opacity-20" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                 <Activity className="w-16 h-16 text-black/5 animate-pulse" />
+              </div>
+           </Reveal>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 8: TESTIMONIALS ═══ */}
+      <section className="py-40 bg-gray-50 border-y">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+           <Reveal>
+              <Quote className="w-16 h-16 mx-auto mb-16 text-gray-200" />
+              <p className="text-3xl md:text-5xl font-black italic text-black leading-tight mb-20 uppercase tracking-tighter">
+                 &quot;{formData.businessName.split(' ')[0]} doesn&apos;t just design interfaces; they construct architectural experiences that define industries.&quot;
+              </p>
+              <div className="text-[10px] font-black uppercase tracking-[0.5em] text-gray-300 italic">— Julian Vance // CTO @ ALPHA_SYSTEMS</div>
+           </Reveal>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 9: AWARDS ═══ */}
+      <section className="py-40 bg-white border-b">
+        <div className="max-w-7xl mx-auto px-6">
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+              {[
+                { year: "2026", award: "Webby Award", rank: "Best Agency" },
+                { year: "2025", award: "Red Dot", rank: "Interface Design" },
+                { year: "2024", award: "Awwwards", rank: "Site of the Year" },
+                { year: "2023", award: "FWA", rank: "Innovation" },
+              ].map((a, i) => (
+                <Reveal key={i} delay={i * 0.1}>
+                   <div className="p-10 border border-gray-100 hover:border-black transition-all group rounded-2xl">
+                      <div className="text-xs font-bold text-gray-300 mb-4">{a.year}</div>
+                      <h3 className="text-lg font-bold uppercase tracking-tight text-black mb-2">{a.award}</h3>
+                      <div className="text-[10px] uppercase font-bold tracking-widest text-gray-400 group-hover:text-black transition-colors">{a.rank}</div>
+                   </div>
+                </Reveal>
+              ))}
+           </div>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 10: STUDIO UPDATES ═══ */}
+      <section className="py-40 bg-white border-b text-center">
+        <div className="max-w-3xl mx-auto px-6">
+           <Reveal>
+              <div className="w-20 h-20 rounded-full border border-gray-100 flex items-center justify-center mx-auto mb-12">
+                 <Mail className="w-8 h-8 text-black" />
+              </div>
+              <h2 className="text-5xl md:text-6xl font-black uppercase tracking-tighter mb-12 italic">Studio Dispatch.</h2>
+              <p className="text-xl text-gray-400 mb-16 max-w-xl mx-auto italic font-medium">Monthly insights on architectural design, studio culture, and the evolution of the web.</p>
+              <div className="flex border-b-4 border-black pb-4 max-w-md mx-auto group">
+                 <input type="email" placeholder="Email Address" className="bg-transparent font-black uppercase tracking-widest text-sm outline-none flex-1 text-black placeholder:text-gray-200" />
+                 <button className="font-black uppercase tracking-widest text-xs hover:opacity-50 transition-opacity">Apply</button>
+              </div>
+           </Reveal>
         </div>
       </section>
 

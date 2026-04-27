@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import type { SessionData } from "@/lib/sessions";
 import { ThemeWrapper } from "./ThemeWrapper";
 import { Reveal, Stagger, StaggerItem, MagneticButton } from "./AnimationHelpers";
-import { Cpu, Zap, Shield, BarChart3, ChevronRight, Binary, Fingerprint } from "lucide-react";
+import { Cpu, Zap, Shield, BarChart3, ChevronRight, Binary, Fingerprint, Database, Network, Award, HelpCircle, Activity, Star, Quote, Instagram, Phone, Mail, ArrowRight } from "lucide-react";
 
 export function TechTheme({ session }: { session: SessionData }) {
   const { formData, generatedContent: c } = session;
@@ -129,6 +129,142 @@ export function TechTheme({ session }: { session: SessionData }) {
               </div>
             </div>
           </Reveal>
+        </div>
+      </section>
+
+      </section>
+
+      {/* ═══ SECTION 5: PROTOCOL STATS ═══ */}
+      <section className="py-24 relative z-10 border-y border-white/5">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-12 text-center">
+           {[
+             { val: "1.2ms", label: "Global Sync" },
+             { val: "100%", label: "Uptime SLA" },
+             { val: "Petabyte", label: "Scaleable" },
+             { val: "0.001%", label: "Failure Rate" },
+           ].map((s, i) => (
+             <Reveal key={i} delay={i * 0.1}>
+                <div className="text-4xl md:text-5xl font-black text-white mb-2 italic tracking-tighter">{s.val}</div>
+                <div className="text-[10px] uppercase font-black tracking-widest text-zinc-500">{s.label}</div>
+             </Reveal>
+           ))}
+        </div>
+      </section>
+
+      {/* ═══ SECTION 6: ARCHITECTURE ═══ */}
+      <section className="py-40 relative z-10 overflow-hidden bg-white/5 backdrop-blur-3xl">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-32 items-center">
+           <Reveal delay={0.2} className="relative order-2 lg:order-1">
+              <div className="aspect-square bg-zinc-950 rounded-[40px] border border-white/10 p-12 flex flex-col justify-center gap-12 overflow-hidden">
+                 <div className="absolute inset-0 opacity-10 bg-[url('https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=80')] bg-cover" />
+                 {[
+                   { label: "Application Layer", color: brand },
+                   { label: "Consensus Engine", color: "#f43f5e" },
+                   { label: "Persistent Storage", color: "#10b981" },
+                 ].map((layer, i) => (
+                   <div key={i} className="relative z-10 p-8 border border-white/10 rounded-2xl bg-black/40 backdrop-blur-md">
+                      <div className="text-[10px] font-black uppercase tracking-widest mb-2 opacity-40">{layer.label}</div>
+                      <div className="h-1 w-full bg-zinc-800 overflow-hidden"><motion.div animate={{ x: ["-100%", "100%"] }} transition={{ duration: 3, repeat: Infinity, ease: "linear" }} className="h-full w-1/2" style={{ background: layer.color }} /></div>
+                   </div>
+                 ))}
+              </div>
+           </Reveal>
+           <Reveal className="order-1 lg:order-2">
+              <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-white italic mb-10 leading-none">Modular <br/>Intelligence.</h2>
+              <p className="text-xl text-zinc-500 leading-relaxed italic mb-12">Our architecture is designed for extreme scalability, separating the application layer from the consensus engine for maximum performance.</p>
+              <button className="flex items-center gap-4 text-[10px] font-black uppercase tracking-[0.4em] text-white/40 hover:text-white transition-colors group">
+                 Review Specifications <ArrowRight className="w-4 h-4 group-hover:translate-x-4 transition-transform" />
+              </button>
+           </Reveal>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 7: TRUST & SECURITY ═══ */}
+      <section className="py-40 relative z-10 bg-[#050505]">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-32 items-center">
+           <Reveal>
+              <h2 className="text-5xl font-black uppercase tracking-tighter text-white italic mb-12 leading-[0.9]">Hardened <br/>Security.</h2>
+              <div className="space-y-12">
+                 {[
+                   { title: "Penetration Tested", desc: "Weekly audits by third-party cybersecurity specialists." },
+                   { title: "Quantum Shield", desc: "Post-quantum encryption standard across all endpoints." },
+                   { title: "Cold Core", desc: "Air-gapped transaction signing for high-value operations." },
+                 ].map((s, i) => (
+                   <div key={i} className="flex gap-8 group cursor-pointer">
+                      <div className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
+                         <Shield className="w-5 h-5" />
+                      </div>
+                      <div>
+                         <h3 className="text-lg font-black uppercase tracking-widest text-white mb-2">{s.title}</h3>
+                         <p className="text-sm text-zinc-500 max-w-sm leading-relaxed">{s.desc}</p>
+                      </div>
+                   </div>
+                 ))}
+              </div>
+           </Reveal>
+           <Reveal delay={0.2} className="relative aspect-square">
+              <div className="absolute inset-0 bg-blue-500/10 rounded-full blur-[100px] animate-pulse" />
+              <div className="relative h-full w-full flex items-center justify-center">
+                 <div className="w-64 h-64 border border-white/5 rounded-full flex items-center justify-center animate-spin-slow">
+                    <div className="w-32 h-32 border border-white/20 rounded-full flex items-center justify-center">
+                       <Fingerprint className="w-12 h-12 text-white opacity-40" />
+                    </div>
+                 </div>
+              </div>
+           </Reveal>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 8: ECOSYSTEM ═══ */}
+      <section className="py-32 relative z-10 border-y border-white/5 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6 text-center">
+           <Reveal className="mb-20">
+              <span className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-600">The Connected Network</span>
+           </Reveal>
+           <div className="flex flex-wrap justify-center gap-16 md:gap-32 opacity-10 grayscale hover:grayscale-0 transition-all duration-700">
+              <div className="text-2xl font-black italic tracking-tighter text-white uppercase">ETHER_NET</div>
+              <div className="text-2xl font-black italic tracking-tighter text-white uppercase">BLOCK_ONE</div>
+              <div className="text-2xl font-black italic tracking-tighter text-white uppercase">NEON_LABS</div>
+              <div className="text-2xl font-black italic tracking-tighter text-white uppercase">CYBER_SYS</div>
+           </div>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 9: FAQ ═══ */}
+      <section className="py-40 relative z-10">
+        <div className="max-w-4xl mx-auto px-6">
+           <Reveal className="text-center mb-24">
+              <h2 className="text-4xl font-black uppercase tracking-tighter italic text-white">Technical Protocols</h2>
+           </Reveal>
+           <div className="space-y-4">
+              {[
+                { q: "Is the protocol open source?", a: "The core engine is dual-licensed under GPLv3 and our Enterprise Commercial License for corporate deployments." },
+                { q: "What is the maximum throughput?", a: "Current benchmarks show sustained performance of 150k TPS across a distributed 100-node mesh." },
+                { q: "Do you offer on-premise installation?", a: "Yes, our engineers provide white-glove deployment for private cloud or air-gapped data centers." },
+              ].map((f, i) => (
+                <Reveal key={i} delay={i * 0.1}>
+                   <div className="p-10 border border-white/5 hover:bg-white/5 transition-all group cursor-pointer">
+                      <div className="flex justify-between items-center mb-6">
+                         <span className="text-sm font-black uppercase tracking-widest text-zinc-400 group-hover:text-white transition-colors">{f.q}</span>
+                         <HelpCircle className="w-5 h-5 text-zinc-800 group-hover:text-white transition-colors" />
+                      </div>
+                      <p className="text-sm text-zinc-600 leading-relaxed italic group-hover:text-zinc-400 transition-colors">{f.a}</p>
+                   </div>
+                </Reveal>
+              ))}
+           </div>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 10: PARTNER LOGOS ═══ */}
+      <section className="py-24 relative z-10 bg-zinc-950 border-b border-white/5">
+        <div className="max-w-7xl mx-auto px-6 text-center">
+           <div className="flex flex-wrap justify-center gap-16 md:gap-32 opacity-20 grayscale hover:grayscale-0 transition-all duration-700">
+              <div className="text-2xl font-black italic tracking-tighter text-white uppercase">AMD</div>
+              <div className="text-2xl font-black italic tracking-tighter text-white uppercase">INTEL_CO</div>
+              <div className="text-2xl font-black italic tracking-tighter text-white uppercase">CISCO_SYS</div>
+              <div className="text-2xl font-black italic tracking-tighter text-white uppercase">IBM_TECH</div>
+           </div>
         </div>
       </section>
 
