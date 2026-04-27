@@ -5,7 +5,7 @@ import { useRef } from "react";
 import type { SessionData } from "@/lib/sessions";
 import { ThemeWrapper } from "./ThemeWrapper";
 import { Reveal, Stagger, StaggerItem, MagneticButton } from "./AnimationHelpers";
-import { ArrowUpRight, Monitor, Palette, Code2, Layers, Users, Zap, Mail } from "lucide-react";
+import { ArrowUpRight, Monitor, Palette, Code2, Layers, Users, Zap, Mail, HelpCircle, Award, Shield } from "lucide-react";
 
 const PROJECTS = [
   { title: "Aether Labs", cat: "Web Ecosystem", img: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200&q=80", span: "md:col-span-2 md:row-span-2" },
@@ -147,6 +147,126 @@ export function AgencyTheme({ session }: { session: SessionData }) {
                   </Reveal>
                 ))}
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Services Grid */}
+        <section className="py-40 bg-zinc-950 border-y border-white/5">
+          <div className="max-w-7xl mx-auto px-6">
+            <Reveal className="mb-24">
+              <span className="text-[10px] uppercase tracking-[0.4em] text-white/30 block mb-6 font-black font-mono">Capabilities // Services</span>
+              <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tighter text-white">What We Do<span style={{ color: brand }}>.</span></h2>
+            </Reveal>
+            <Stagger className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {(c?.services || [
+                { title: "Web Design", description: "Crafting immersive digital experiences that captivate and convert." },
+                { title: "Brand Identity", description: "Building memorable brand systems from strategy to visual execution." },
+                { title: "Development", description: "High-performance code powering seamless, scalable products." },
+              ]).map((s, i) => (
+                <StaggerItem key={i}>
+                  <div className="group p-10 border border-white/5 hover:border-white/20 transition-all h-full bg-black/30">
+                    <div className="text-5xl font-black mb-8 italic tracking-tighter" style={{ color: brand }}>0{i+1}</div>
+                    <h3 className="text-xl font-black uppercase text-white mb-6 tracking-tight">{s.title}</h3>
+                    <p className="text-white/40 leading-relaxed">{s.description}</p>
+                  </div>
+                </StaggerItem>
+              ))}
+            </Stagger>
+          </div>
+        </section>
+
+        {/* Testimonials */}
+        <section className="py-40 bg-black">
+          <div className="max-w-7xl mx-auto px-6">
+            <Reveal className="mb-24">
+              <h2 className="text-5xl font-black uppercase tracking-tighter text-white">Client Voices<span style={{ color: brand }}>.</span></h2>
+            </Reveal>
+            <Stagger className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {(c?.testimonials || [
+                { name: "Alex M.", role: "CTO, NovaTech", text: "They didn't just build a website — they built an experience.", rating: 5 },
+                { name: "Sarah K.", role: "Founder, Pulse", text: "Best agency decision we've made. Our conversions tripled.", rating: 5 },
+                { name: "David L.", role: "CEO, Vertex", text: "Pure craftsmanship. Every pixel has purpose.", rating: 5 },
+              ]).map((t, i) => (
+                <StaggerItem key={i}>
+                  <div className="p-10 border border-white/5 h-full flex flex-col">
+                    <p className="text-xl italic text-white/50 leading-relaxed mb-8 flex-1">&ldquo;{t.text}&rdquo;</p>
+                    <div>
+                      <div className="font-bold text-white">{t.name}</div>
+                      <div className="text-xs text-white/30 uppercase tracking-widest">{t.role}</div>
+                    </div>
+                  </div>
+                </StaggerItem>
+              ))}
+            </Stagger>
+          </div>
+        </section>
+
+        </section>
+
+        {/* Client Logos */}
+        <section className="py-24 bg-black border-y border-white/5 overflow-hidden">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="flex flex-wrap justify-center gap-16 md:gap-32 opacity-20 grayscale hover:grayscale-0 transition-all duration-700">
+               <div className="text-2xl font-black italic tracking-tighter uppercase">NEXUS</div>
+               <div className="text-2xl font-black italic tracking-tighter uppercase">ORACLE</div>
+               <div className="text-2xl font-black italic tracking-tighter uppercase">PRISME</div>
+               <div className="text-2xl font-black italic tracking-tighter uppercase">AETHER</div>
+               <div className="text-2xl font-black italic tracking-tighter uppercase">ZENITH</div>
+            </div>
+          </div>
+        </section>
+
+        {/* Awards & Recognition */}
+        <section className="py-40 bg-zinc-950">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center">
+              <Reveal>
+                <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tighter text-white leading-tight italic">Industry <br/>Recognition<span style={{ color: brand }}>.</span></h2>
+              </Reveal>
+              <div className="space-y-12">
+                 {[
+                   { year: "2026", title: "Agency of the Year", org: "Digital Trends" },
+                   { year: "2025", title: "Best UI/UX Design", org: "Awwwards" },
+                   { year: "2024", title: "Innovation Award", org: "FWA" },
+                 ].map((a, i) => (
+                   <Reveal key={i} delay={i * 0.1}>
+                     <div className="flex justify-between items-end border-b border-white/10 pb-8 group hover:border-white transition-colors">
+                        <div>
+                           <div className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-2">{a.year} // {a.org}</div>
+                           <h3 className="text-2xl font-black uppercase text-white group-hover:translate-x-4 transition-transform">{a.title}</h3>
+                        </div>
+                        <Award className="w-8 h-8 text-white/10 group-hover:text-white transition-colors" />
+                     </div>
+                   </Reveal>
+                 ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* FAQ Section */}
+        <section className="py-40 bg-black">
+          <div className="max-w-4xl mx-auto px-6">
+            <Reveal className="mb-24 text-center">
+              <h2 className="text-5xl font-black uppercase tracking-tighter text-white">Common Inquiries<span style={{ color: brand }}>.</span></h2>
+            </Reveal>
+            <div className="space-y-8">
+               {[
+                 { q: "How long does a typical project take?", a: "Depending on the scope, most projects range from 8 to 16 weeks from discovery to final deployment." },
+                 { q: "Do you offer post-launch support?", a: "Absolutely. We provide comprehensive maintenance packages and strategic support to ensure your product continues to evolve." },
+                 { q: "Can you work with our existing team?", a: "Yes, we often integrate with internal design and engineering teams to augment capabilities and accelerate delivery." },
+               ].map((f, i) => (
+                 <Reveal key={i} delay={i * 0.1}>
+                   <div className="p-10 border border-white/5 hover:border-white/20 transition-all group cursor-pointer">
+                      <div className="flex justify-between items-center mb-6">
+                         <span className="text-sm font-black uppercase tracking-[0.2em] text-white">{f.q}</span>
+                         <HelpCircle className="w-5 h-5 text-white/20 group-hover:text-white transition-colors" />
+                      </div>
+                      <p className="text-white/40 leading-relaxed italic group-hover:text-white/60 transition-colors">{f.a}</p>
+                   </div>
+                 </Reveal>
+               ))}
             </div>
           </div>
         </section>

@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import type { SessionData } from "@/lib/sessions";
 import { ThemeWrapper } from "./ThemeWrapper";
 import { Reveal, Stagger, StaggerItem, MagneticButton } from "./AnimationHelpers";
-import { Award, Target, TrendingUp, Users, CheckCircle2, MessageSquare, ArrowRight, Shield } from "lucide-react";
+import { Award, Target, TrendingUp, Users, CheckCircle2, MessageSquare, ArrowRight, Shield, Calendar, HelpCircle, Briefcase, FileText } from "lucide-react";
 
 export function ConsultantTheme({ session }: { session: SessionData }) {
   const { formData, generatedContent: c } = session;
@@ -141,6 +141,139 @@ export function ConsultantTheme({ session }: { session: SessionData }) {
               <div className="font-black uppercase tracking-widest text-slate-900">David Henderson</div>
               <div className="text-[10px] uppercase font-bold text-slate-400 mt-2">CEO, Nexus Solutions</div>
             </div>
+          </Reveal>
+        </div>
+      </section>
+
+      </section>
+
+      {/* ═══ SECTION 6: PARTNER LOGOS ═══ */}
+      <section className="py-20 bg-slate-50 border-y border-slate-100 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex flex-wrap justify-center gap-16 md:gap-32 opacity-20 grayscale hover:grayscale-0 transition-all duration-700">
+             <div className="text-2xl font-black italic tracking-tighter text-slate-900 uppercase">GOLDMAN</div>
+             <div className="text-2xl font-black italic tracking-tighter text-slate-900 uppercase">MCKINSEY</div>
+             <div className="text-2xl font-black italic tracking-tighter text-slate-900 uppercase">DELOITTE</div>
+             <div className="text-2xl font-black italic tracking-tighter text-slate-900 uppercase">BOSTON</div>
+             <div className="text-2xl font-black italic tracking-tighter text-slate-900 uppercase">BAIN_CO</div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 7: METHODOLOGY ═══ */}
+      <section className="py-32 bg-white">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
+            <Reveal>
+               <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter mb-12 italic leading-none text-slate-900">The Strategic <br/>Framework.</h2>
+               <div className="space-y-12">
+                  {[
+                    { step: "01", title: "Diagnostic", desc: "In-depth audit of current systems and market positioning." },
+                    { step: "02", title: "Architecture", desc: "Designing scalable frameworks tailored to your unique goals." },
+                    { step: "03", title: "Execution", desc: "Rigorous implementation with continuous feedback loops." },
+                  ].map((s, i) => (
+                    <Reveal key={i} delay={i * 0.1} className="flex gap-8 group">
+                       <div className="text-3xl font-black text-slate-200 group-hover:text-slate-900 transition-colors">{s.step}</div>
+                       <div>
+                          <h3 className="text-xl font-bold uppercase tracking-tight text-slate-900 mb-2">{s.title}</h3>
+                          <p className="text-slate-500 text-sm leading-relaxed max-w-sm">{s.desc}</p>
+                       </div>
+                    </Reveal>
+                  ))}
+               </div>
+            </Reveal>
+            <Reveal delay={0.2} className="relative aspect-square bg-slate-900 rounded-[60px] overflow-hidden p-20 flex items-center justify-center">
+               <div className="absolute inset-0 opacity-10 bg-[url('https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&q=80')] bg-cover" />
+               <div className="relative z-10 grid grid-cols-2 gap-4 w-full">
+                  {[1, 2, 3, 4].map(i => (
+                    <motion.div 
+                       key={i} 
+                       animate={{ scale: [1, 1.05, 1] }} 
+                       transition={{ duration: 3, repeat: Infinity, delay: i * 0.5 }}
+                       className="aspect-square bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-white"
+                    >
+                       <Shield className="w-8 h-8 opacity-20" />
+                    </motion.div>
+                  ))}
+               </div>
+            </Reveal>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 8: CASE STUDIES ═══ */}
+      <section className="py-32 bg-slate-50">
+        <div className="max-w-7xl mx-auto px-6">
+          <Reveal className="mb-20">
+             <h2 className="text-4xl font-black uppercase tracking-tighter text-slate-900">Proven Outcomes</h2>
+          </Reveal>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+             {[
+               { title: "FinTech Scale-up", results: "300% Revenue Increase", tag: "Strategy" },
+               { title: "Global Logistics", results: "25% Efficiency Gain", tag: "Ops" },
+             ].map((c, i) => (
+               <Reveal key={i} delay={i * 0.1}>
+                 <div className="p-12 bg-white rounded-[40px] border border-slate-100 shadow-sm hover:shadow-2xl transition-all group cursor-pointer">
+                    <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-6">{c.tag} // Result_Verified</div>
+                    <h3 className="text-3xl font-black uppercase tracking-tighter text-slate-900 mb-8">{c.title}</h3>
+                    <div className="text-5xl font-black text-slate-900 italic tracking-tighter group-hover:translate-x-4 transition-transform">{c.results}</div>
+                    <div className="mt-12 flex justify-end">
+                       <div className="w-12 h-12 rounded-full bg-slate-900 text-white flex items-center justify-center"><ArrowRight className="w-5 h-5" /></div>
+                    </div>
+                 </div>
+               </Reveal>
+             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 9: FAQ ═══ */}
+      <section className="py-32 bg-white">
+        <div className="max-w-3xl mx-auto px-6">
+          <Reveal className="text-center mb-24">
+             <h2 className="text-4xl font-black uppercase tracking-tighter text-slate-900 mb-6">Concierge Advisory</h2>
+             <p className="text-slate-500 italic">Clarifying our engagement process and strategic approach.</p>
+          </Reveal>
+          <div className="space-y-6">
+             {[
+               { q: "What is the typical engagement length?", a: "Engagements typically range from 3 to 12 months, depending on the complexity of the transformation and the scale of the organization." },
+               { q: "How do you measure success?", a: "We define clear KPIs at the diagnostic phase, ranging from revenue growth and market share to operational cost reduction." },
+               { q: "Do you work with startups?", a: "We primarily work with Series B+ companies and established enterprises, but we have a dedicated track for high-potential early-stage ventures." },
+             ].map((f, i) => (
+               <Reveal key={i} delay={i * 0.1}>
+                 <div className="p-8 border border-slate-100 rounded-3xl hover:bg-slate-50 transition-colors group cursor-pointer">
+                    <div className="flex justify-between items-center mb-4">
+                       <span className="text-sm font-black uppercase tracking-widest text-slate-900">{f.q}</span>
+                       <HelpCircle className="w-4 h-4 text-slate-300 group-hover:text-slate-900 transition-colors" />
+                    </div>
+                    <p className="text-sm text-slate-500 leading-relaxed italic group-hover:text-slate-700 transition-colors">{f.a}</p>
+                 </div>
+               </Reveal>
+             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 10: CALENDAR INTEGRATION ═══ */}
+      <section className="py-32 bg-slate-900 text-white overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-20">
+          <Reveal className="max-w-xl">
+             <h2 className="text-5xl font-black uppercase tracking-tighter mb-8 italic">Ready to Begin?</h2>
+             <p className="text-xl text-slate-400 leading-relaxed mb-12">Select a time that works best for your team to discuss our potential partnership.</p>
+             <div className="flex gap-6 items-center">
+                <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white"><Calendar className="w-6 h-6" /></div>
+                <div className="text-sm font-black uppercase tracking-widest">Available Next Week</div>
+             </div>
+          </Reveal>
+          <Reveal delay={0.2} className="w-full md:w-[400px] bg-white text-slate-900 p-10 rounded-[40px] shadow-2xl">
+             <div className="text-xs font-black uppercase tracking-widest text-slate-400 mb-8 border-b pb-4">May 2026</div>
+             <div className="grid grid-cols-7 gap-4 text-center mb-8">
+                {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map(d => <div key={d} className="text-[10px] font-bold opacity-30">{d}</div>)}
+                {Array.from({ length: 31 }).map((_, i) => (
+                  <div key={i} className={`text-xs font-bold p-2 rounded-lg cursor-pointer transition-colors ${i+1 === 12 ? 'bg-slate-900 text-white' : 'hover:bg-slate-50'}`}>{i+1}</div>
+                ))}
+             </div>
+             <button className="w-full py-5 bg-slate-900 text-white font-black uppercase text-[10px] tracking-widest rounded-xl hover:scale-105 transition-all">Confirm Time</button>
           </Reveal>
         </div>
       </section>

@@ -187,6 +187,36 @@ export function VitrineTheme({ session }: { session: SessionData }) {
         )}
       </AnimatePresence>
 
+      {/* Testimonials Section */}
+      <section className="py-32 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-6">
+          <Reveal className="text-center mb-20">
+            <h2 className="text-4xl font-black uppercase tracking-tighter mb-6">Trusted by Professionals</h2>
+            <div className="w-16 h-1 mx-auto" style={{ background: brand }} />
+          </Reveal>
+          <Stagger className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {(c?.testimonials || [
+              { name: "Marie D.", role: "Business Owner", text: "Outstanding professionalism. They delivered beyond our expectations.", rating: 5 },
+              { name: "Lucas P.", role: "Director", text: "The quality of work is exceptional. A true partner for growth.", rating: 5 },
+              { name: "Anna K.", role: "Entrepreneur", text: "Transformed our vision into reality with incredible attention to detail.", rating: 5 },
+            ]).map((t, i) => (
+              <StaggerItem key={i}>
+                <div className="p-8 bg-white border rounded-3xl hover:shadow-xl transition-all h-full flex flex-col">
+                  <p className="text-lg italic text-gray-600 leading-relaxed mb-8 flex-1">&ldquo;{t.text}&rdquo;</p>
+                  <div className="flex gap-1 mb-4">
+                    {Array.from({ length: t.rating }).map((_, j) => (
+                      <span key={j} className="text-amber-400">★</span>
+                    ))}
+                  </div>
+                  <div className="font-bold">{t.name}</div>
+                  <div className="text-xs text-gray-400">{t.role}</div>
+                </div>
+              </StaggerItem>
+            ))}
+          </Stagger>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section id="contact" className="py-32 bg-zinc-900 text-white text-center">
         <div className="max-w-3xl mx-auto px-6">

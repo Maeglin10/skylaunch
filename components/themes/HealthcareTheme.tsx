@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import type { SessionData } from "@/lib/sessions";
 import { ThemeWrapper } from "./ThemeWrapper";
 import { Reveal, Stagger, StaggerItem, MagneticButton } from "./AnimationHelpers";
-import { Shield, Clock, Heart, Users, Activity, PlusCircle, CheckCircle2 } from "lucide-react";
+import { Shield, Clock, Heart, Users, Activity, PlusCircle, CheckCircle2, Stethoscope, Award, HelpCircle, MapPin, Star, ArrowRight, Quote } from "lucide-react";
 
 export function HealthcareTheme({ session }: { session: SessionData }) {
   const { formData, generatedContent: c } = session;
@@ -135,6 +135,104 @@ export function HealthcareTheme({ session }: { session: SessionData }) {
               ))}
             </div>
           </Reveal>
+        </div>
+      </section>
+
+      </section>
+
+      {/* ═══ SECTION 7: DEPARTMENTS ═══ */}
+      <section className="py-32 bg-slate-50 border-y">
+        <div className="max-w-7xl mx-auto px-6">
+          <Reveal className="mb-20 text-center">
+             <h2 className="text-4xl font-black uppercase tracking-tighter text-slate-900 mb-6">Our Departments</h2>
+             <div className="w-16 h-1 mx-auto" style={{ background: brand }} />
+          </Reveal>
+          <Stagger className="grid grid-cols-2 md:grid-cols-4 gap-8">
+             {[
+               { title: "Cardiology", icon: <Heart /> },
+               { title: "Neurology", icon: <Activity /> },
+               { title: "Pediatrics", icon: <PlusCircle /> },
+               { title: "Orthopedics", icon: <Shield /> },
+             ].map((d, i) => (
+               <StaggerItem key={i}>
+                 <div className="p-10 bg-white rounded-3xl text-center border border-slate-100 hover:shadow-xl transition-all cursor-pointer group">
+                    <div className="w-12 h-12 mx-auto mb-6 flex items-center justify-center rounded-2xl bg-slate-50 group-hover:scale-110 transition-transform" style={{ color: brand }}>{d.icon}</div>
+                    <div className="font-black uppercase tracking-tight text-sm text-slate-900">{d.title}</div>
+                 </div>
+               </StaggerItem>
+             ))}
+          </Stagger>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 8: MEDICAL TEAM ═══ */}
+      <section className="py-32 bg-white">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex flex-col md:flex-row justify-between items-end mb-24 gap-8">
+            <Reveal>
+               <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-slate-900">Expert Specialists</h2>
+            </Reveal>
+            <button className="flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-slate-900 transition-colors">
+               Meet Entire Staff <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+             {[
+               { name: "Dr. Sarah Miller", role: "Chief Cardiologist", img: "https://images.unsplash.com/photo-1559839734-2b71f1536783?w=400&q=80" },
+               { name: "Dr. James Wilson", role: "Neurologist", img: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=400&q=80" },
+               { name: "Dr. Elena Korr", role: "Pediatric Lead", img: "https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=400&q=80" },
+             ].map((dr, i) => (
+               <Reveal key={i} delay={i * 0.1}>
+                 <div className="group relative rounded-[40px] overflow-hidden aspect-[4/5]">
+                    <img src={dr.img} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-80" />
+                    <div className="absolute bottom-10 left-10 text-white">
+                       <h3 className="text-2xl font-black italic uppercase tracking-tighter mb-2">{dr.name}</h3>
+                       <p className="text-xs uppercase tracking-widest text-slate-400">{dr.role}</p>
+                    </div>
+                 </div>
+               </Reveal>
+             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 9: PATIENT TESTIMONIALS ═══ */}
+      <section className="py-32 bg-slate-900 text-white overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-32 items-center">
+          <Reveal>
+             <h2 className="text-5xl font-black uppercase tracking-tighter mb-12 italic leading-tight">Lives <br/>Changed.</h2>
+             <p className="text-xl text-slate-400 font-light leading-relaxed max-w-md italic mb-16">
+                Hear directly from our patients about their experiences and the quality of care they received at our facility.
+             </p>
+             <div className="flex gap-4">
+                {[1, 2, 3, 4, 5].map(i => <Star key={i} className="w-6 h-6 fill-amber-400 text-amber-400" />)}
+             </div>
+          </Reveal>
+          <div className="relative">
+             <Reveal className="p-12 bg-white/5 border border-white/10 rounded-[60px] backdrop-blur-3xl">
+                <Quote className="w-12 h-12 text-white/10 mb-8" />
+                <p className="text-2xl font-light italic leading-relaxed mb-10 text-slate-300">
+                   &quot;The attention to detail and compassion shown by the staff was beyond anything I expected. They truly saved my life.&quot;
+                </p>
+                <div className="font-black uppercase tracking-widest text-sm">— Mark Henderson</div>
+             </Reveal>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 10: PARTNERS & INSURANCE ═══ */}
+      <section className="py-24 bg-white border-b">
+        <div className="max-w-7xl mx-auto px-6 text-center">
+          <Reveal className="mb-16">
+             <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-300">Accepted Insurance Partners</span>
+          </Reveal>
+          <div className="flex flex-wrap justify-center gap-16 md:gap-32 opacity-20 grayscale hover:grayscale-0 transition-all duration-700">
+             <div className="text-2xl font-black italic tracking-tighter text-slate-900 uppercase">AETNA</div>
+             <div className="text-2xl font-black italic tracking-tighter text-slate-900 uppercase">CIGNA</div>
+             <div className="text-2xl font-black italic tracking-tighter text-slate-900 uppercase">BLUE_CROSS</div>
+             <div className="text-2xl font-black italic tracking-tighter text-slate-900 uppercase">KAISER</div>
+          </div>
         </div>
       </section>
 

@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import type { SessionData } from "@/lib/sessions";
 import { ThemeWrapper } from "./ThemeWrapper";
 import { Reveal, Stagger, StaggerItem, MagneticButton } from "./AnimationHelpers";
-import { Code2, Zap, Shield, BarChart2, Github, Slack, Figma, Database } from "lucide-react";
+import { Code2, Zap, Shield, BarChart2, Github, Slack, Figma, Database, Award, ShieldCheck, HelpCircle, Activity } from "lucide-react";
 
 export function SaasTheme({ session }: { session: SessionData }) {
   const { formData, generatedContent: c } = session;
@@ -142,6 +142,132 @@ export function SaasTheme({ session }: { session: SessionData }) {
                 </div>
               </Reveal>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="py-32 bg-[#0a0a0a] border-y border-white/5">
+        <div className="max-w-7xl mx-auto px-6">
+          <Reveal className="text-center mb-20">
+            <h2 className="text-4xl font-black text-white uppercase tracking-tighter">Loved by Developers</h2>
+          </Reveal>
+          <Stagger className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {(c?.testimonials || [
+              { name: "Jake R.", role: "Lead Engineer", text: "Finally a platform that respects developer workflows. The CLI is incredible.", rating: 5 },
+              { name: "Nina S.", role: "VP Engineering", text: "We migrated our entire stack in a weekend. Zero downtime.", rating: 5 },
+              { name: "Omar K.", role: "Indie Hacker", text: "Shipped my SaaS 3x faster. The integrations just work.", rating: 5 },
+            ]).map((t, i) => (
+              <StaggerItem key={i}>
+                <div className="p-8 rounded-2xl border border-white/5 bg-zinc-900/50 h-full flex flex-col">
+                  <div className="flex gap-1 mb-4">{Array.from({ length: t.rating }).map((_, j) => <span key={j} className="text-amber-400 text-sm">★</span>)}</div>
+                  <p className="text-zinc-400 leading-relaxed mb-8 flex-1 italic">&ldquo;{t.text}&rdquo;</p>
+                  <div className="font-bold text-white text-sm">{t.name}</div>
+                  <div className="text-[10px] text-zinc-500 uppercase tracking-widest">{t.role}</div>
+                </div>
+              </StaggerItem>
+            ))}
+          </Stagger>
+        </div>
+      </section>
+
+      {/* Pricing */}
+      <section className="py-32 bg-[#0a0a0a]">
+        <div className="max-w-5xl mx-auto px-6 text-center">
+          <Reveal className="mb-20">
+            <h2 className="text-4xl font-black text-white uppercase tracking-tighter mb-4">Simple Pricing</h2>
+            <p className="text-zinc-500">Start free. Scale as you grow.</p>
+          </Reveal>
+          <Stagger className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              { name: "Starter", price: "Free", features: ["1,000 API calls", "Community support", "Basic analytics"] },
+              { name: "Pro", price: "$49/mo", features: ["Unlimited API calls", "Priority support", "Advanced analytics", "Custom domain"], popular: true },
+              { name: "Enterprise", price: "Custom", features: ["Dedicated infra", "SLA guarantee", "SSO & SAML", "24/7 support"] },
+            ].map((plan, i) => (
+              <StaggerItem key={i}>
+                <div className={`p-10 rounded-2xl border h-full flex flex-col text-left ${plan.popular ? 'border-2 bg-zinc-900 relative' : 'border-white/5'}`} style={plan.popular ? { borderColor: brand } : {}}>
+                  {plan.popular && <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-white" style={{ background: brand }}>Popular</div>}
+                  <div className="text-xs font-black uppercase tracking-widest text-zinc-500 mb-2">{plan.name}</div>
+                  <div className="text-3xl font-black text-white mb-8">{plan.price}</div>
+                  <ul className="space-y-3 mb-10 flex-1">
+                    {plan.features.map((f, j) => (
+                      <li key={j} className="flex items-center gap-3 text-sm text-zinc-400">
+                        <div className="w-1.5 h-1.5 rounded-full" style={{ background: brand }} /> {f}
+                      </li>
+                    ))}
+                  </ul>
+                  <button className={`w-full py-4 rounded-xl font-bold uppercase text-xs tracking-widest transition-all ${plan.popular ? 'text-white' : 'border border-white/10 text-zinc-400 hover:bg-white/5'}`} style={plan.popular ? { background: brand } : {}}>
+                    Get Started
+                  </button>
+                </div>
+              </StaggerItem>
+            ))}
+          </Stagger>
+        </div>
+      </section>
+
+      </section>
+
+      {/* Client Logos */}
+      <section className="py-24 bg-[#0a0a0a] border-y border-white/5 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex flex-wrap justify-center gap-16 md:gap-32 opacity-20 grayscale hover:grayscale-0 transition-all duration-700">
+             <div className="text-2xl font-black italic tracking-tighter text-white uppercase">NEXUS</div>
+             <div className="text-2xl font-black italic tracking-tighter text-white uppercase">ORACLE</div>
+             <div className="text-2xl font-black italic tracking-tighter text-white uppercase">PRISME</div>
+             <div className="text-2xl font-black italic tracking-tighter text-white uppercase">AETHER</div>
+             <div className="text-2xl font-black italic tracking-tighter text-white uppercase">ZENITH</div>
+          </div>
+        </div>
+      </section>
+
+      {/* Security & Trust */}
+      <section className="py-32 bg-[#0a0a0a]">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
+          <Reveal>
+            <h2 className="text-4xl md:text-6xl font-black text-white uppercase tracking-tighter leading-tight italic">Enterprise-Grade <br/>Security.</h2>
+          </Reveal>
+          <div className="grid grid-cols-2 gap-8">
+             {[
+               { icon: <ShieldCheck />, title: "SOC2 Type II", desc: "Certified security standards." },
+               { icon: <Award />, title: "ISO 27001", desc: "Global information safety." },
+               { icon: <Activity />, title: "99.9% SLA", desc: "Guaranteed system uptime." },
+               { icon: <Shield />, title: "GDPR Ready", desc: "Full data privacy compliance." },
+             ].map((s, i) => (
+               <Reveal key={i} delay={i * 0.1}>
+                 <div className="p-8 bg-zinc-900 border border-white/5 rounded-2xl group hover:border-white/20 transition-all">
+                    <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-6 bg-white/5 text-white group-hover:scale-110 transition-transform" style={{ color: brand }}>{s.icon}</div>
+                    <h3 className="text-white font-black text-sm uppercase tracking-widest mb-2">{s.title}</h3>
+                    <p className="text-zinc-500 text-xs leading-relaxed">{s.desc}</p>
+                 </div>
+               </Reveal>
+             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-32 bg-[#0a0a0a] border-t border-white/5">
+        <div className="max-w-4xl mx-auto px-6">
+          <Reveal className="text-center mb-24">
+            <h2 className="text-4xl font-black text-white uppercase tracking-tighter">Frequently Asked<br/>Questions.</h2>
+          </Reveal>
+          <div className="space-y-6">
+             {[
+               { q: "Is there a limit on API calls?", a: "Limits vary by plan. Our Pro plan offers unlimited calls, while the Starter plan is capped at 10,000 per month." },
+               { q: "How do you handle data security?", a: "All data is encrypted at rest and in transit. We undergo regular third-party audits to ensure compliance with the highest standards." },
+               { q: "Can I cancel my subscription anytime?", a: "Yes, you can cancel or downgrade your plan at any time from your dashboard. No long-term contracts required." },
+             ].map((f, i) => (
+               <Reveal key={i} delay={i * 0.1}>
+                 <div className="p-10 border border-white/5 hover:bg-zinc-900 transition-all group cursor-pointer rounded-2xl">
+                    <div className="flex justify-between items-center mb-6">
+                       <span className="text-sm font-black uppercase tracking-widest text-white">{f.q}</span>
+                       <HelpCircle className="w-5 h-5 text-zinc-500 group-hover:text-white transition-colors" />
+                    </div>
+                    <p className="text-zinc-500 leading-relaxed italic group-hover:text-zinc-300 transition-colors">{f.a}</p>
+                 </div>
+               </Reveal>
+             ))}
           </div>
         </div>
       </section>

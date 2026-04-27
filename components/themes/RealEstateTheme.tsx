@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import type { SessionData } from "@/lib/sessions";
 import { ThemeWrapper } from "./ThemeWrapper";
 import { Reveal, Stagger, StaggerItem, MagneticButton } from "./AnimationHelpers";
-import { MapPin, Home, Maximize2, BedDouble, Bath, ArrowUpRight, Search } from "lucide-react";
+import { MapPin, Home, Maximize2, BedDouble, Bath, ArrowUpRight, Search, Building, Star, Award, ShieldCheck, Quote, Instagram, Phone, Mail } from "lucide-react";
 
 const PROPERTIES = [
   { name: "The Skyline Penthouse", price: "$4,500,000", beds: 4, baths: 5, sqft: 4200, img: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&q=80" },
@@ -156,6 +156,92 @@ export function RealEstateTheme({ session }: { session: SessionData }) {
               <img src="https://images.unsplash.com/photo-1600566753190-17f0bb2a6c3e?w=800&q=80" className="w-full h-full object-cover" />
             </div>
           </Reveal>
+        </div>
+      </section>
+
+      </section>
+
+      {/* ═══ SECTION 7: STATS COUNTER ═══ */}
+      <section className="py-24 bg-white border-y border-slate-100">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-12 text-center">
+           {[
+             { val: "$2.4B+", label: "Total Sales" },
+             { val: "1500+", label: "Properties Sold" },
+             { val: "12yr", label: "Market Experience" },
+             { val: "100%", label: "Privacy Guaranteed" },
+           ].map((s, i) => (
+             <Reveal key={i} delay={i * 0.1}>
+                <div className="text-4xl md:text-5xl font-black text-slate-900 mb-2 italic tracking-tighter">{s.val}</div>
+                <div className="text-[10px] uppercase font-black tracking-widest text-slate-300">{s.label}</div>
+             </Reveal>
+           ))}
+        </div>
+      </section>
+
+      {/* ═══ SECTION 8: NEIGHBORHOODS ═══ */}
+      <section className="py-32 bg-slate-50 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6 mb-20 flex justify-between items-end">
+           <Reveal>
+              <h2 className="text-4xl font-black uppercase tracking-tighter text-slate-900">Elite Locations</h2>
+              <p className="text-slate-400 mt-4 uppercase text-[10px] font-bold tracking-widest italic">Where lifestyle meets legacy</p>
+           </Reveal>
+        </div>
+        <div className="flex gap-8 px-6 overflow-x-auto no-scrollbar pb-10">
+           {[
+             { name: "Downtown Core", img: "https://images.unsplash.com/photo-1449156001533-cb39c7314260?w=600&q=80" },
+             { name: "Emerald Hills", img: "https://images.unsplash.com/photo-1500382017468-9049fee74a62?w=600&q=80" },
+             { name: "Harbor View", img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&q=80" },
+             { name: "West Side", img: "https://images.unsplash.com/photo-1444723121867-7a241cacace9?w=600&q=80" },
+           ].map((n, i) => (
+             <div key={i} className="min-w-[300px] h-[400px] rounded-[32px] overflow-hidden relative group cursor-pointer shadow-xl">
+                <img src={n.img} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 grayscale group-hover:grayscale-0" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                <div className="absolute bottom-8 left-8">
+                   <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter">{n.name}</h3>
+                   <div className="text-[10px] text-white/50 font-black uppercase tracking-widest mt-2">Explore Listings</div>
+                </div>
+             </div>
+           ))}
+        </div>
+      </section>
+
+      {/* ═══ SECTION 9: TESTIMONIALS ═══ */}
+      <section className="py-32 bg-white">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-32 items-center">
+          <Reveal>
+             <div className="w-20 h-20 rounded-full bg-slate-900 flex items-center justify-center text-white mb-12 shadow-2xl">
+                <Quote className="w-8 h-8" />
+             </div>
+             <p className="text-3xl md:text-5xl font-light italic text-slate-900 leading-tight mb-12 uppercase tracking-tighter">
+                &quot;The most seamless real estate experience we&apos;ve ever had. Their market insight is unparalleled.&quot;
+             </p>
+             <div className="flex flex-col">
+                <div className="font-black uppercase tracking-widest text-slate-900">Julianna & Victor Thorne</div>
+                <div className="text-[10px] uppercase font-bold text-slate-400 mt-2">Sellers // Skyline Penthouse</div>
+             </div>
+          </Reveal>
+          <Reveal delay={0.2} className="relative aspect-square">
+             <div className="absolute inset-0 bg-slate-900 rounded-[80px] rotate-3" />
+             <div className="absolute inset-0 bg-white border border-slate-100 rounded-[80px] -rotate-3 p-16 flex flex-col justify-center">
+                <div className="flex gap-2 mb-8">
+                   {[1, 2, 3, 4, 5].map(i => <Star key={i} className="w-5 h-5 fill-slate-900 text-slate-900" />)}
+                </div>
+                <h4 className="text-2xl font-black uppercase italic mb-6">Concierge Excellence</h4>
+                <p className="text-slate-500 leading-relaxed italic">Our dedicated concierge team handles every detail, from professional staging to international marketing, ensuring your property gets the attention it deserves.</p>
+             </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ═══ SECTION 10: PARTNER LOGOS ═══ */}
+      <section className="py-24 bg-slate-50 border-y border-slate-100 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex flex-wrap justify-center gap-16 md:gap-32 opacity-20 grayscale hover:grayscale-0 transition-all duration-700">
+             <div className="text-2xl font-black italic tracking-tighter text-slate-900 uppercase">CHRISTIES</div>
+             <div className="text-2xl font-black italic tracking-tighter text-slate-900 uppercase">SOTHEBYS</div>
+             <div className="text-2xl font-black italic tracking-tighter text-slate-900 uppercase">SAVILLS</div>
+             <div className="text-2xl font-black italic tracking-tighter text-slate-900 uppercase">KNIGHT_FRANK</div>
+          </div>
         </div>
       </section>
 
