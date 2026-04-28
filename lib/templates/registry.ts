@@ -5,6 +5,8 @@ export interface TemplateMetadata {
   category: "Tech" | "Luxury" | "Editorial" | "Creative" | "Minimal" | "Free";
   style: "Dark" | "Light" | "Vibrant";
   tags: string[];
+  tier: "Essentiel" | "Pro" | "Premium";
+  sections: number;
 }
 
 export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
@@ -15,6 +17,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Creative",
     style: "Dark",
     tags: ["Agency", "Vitrine", "Multi-Section", "Animated"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-02",
@@ -23,6 +27,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Creative",
     style: "Dark",
     tags: ["Portfolio", "Photography", "Masonry", "Modal"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-03",
@@ -31,6 +37,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Luxury",
     style: "Light",
     tags: ["E-commerce", "Luxury", "3D Tilt", "Cart"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-04",
@@ -39,6 +47,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Luxury",
     style: "Dark",
     tags: ["Restaurant", "Vitrine", "Menu", "Reservation"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-05",
@@ -47,6 +57,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Tech",
     style: "Dark",
     tags: ["SaaS", "Pricing", "Timeline", "Marketplace"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-06",
@@ -55,6 +67,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Creative",
     style: "Vibrant",
     tags: ["Fluid", "Organic", "Glassmorphism"],
+    tier: "Pro",
+    sections: 10,
   },
   {
     id: "impact-07",
@@ -63,6 +77,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Creative",
     style: "Dark",
     tags: ["Kinetic", "Typography", "Interactive"],
+    tier: "Pro",
+    sections: 10,
   },
   {
     id: "impact-08",
@@ -71,6 +87,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Tech",
     style: "Dark",
     tags: ["HUD", "Glassmorphism", "Data"],
+    tier: "Pro",
+    sections: 10,
   },
   {
     id: "impact-09",
@@ -79,6 +97,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Editorial",
     style: "Light",
     tags: ["Split", "Editorial", "Minimal"],
+    tier: "Pro",
+    sections: 10,
   },
   {
     id: "impact-10",
@@ -87,6 +107,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Minimal",
     style: "Dark",
     tags: ["Typography", "Impact", "B&W"],
+    tier: "Pro",
+    sections: 10,
   },
   {
     id: "impact-11",
@@ -95,6 +117,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Tech",
     style: "Dark",
     tags: ["Slider", "HUD", "Cinematic"],
+    tier: "Pro",
+    sections: 10,
   },
   {
     id: "impact-12",
@@ -103,6 +127,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Minimal",
     style: "Light",
     tags: ["Grid", "Brutalist", "Portfolio"],
+    tier: "Pro",
+    sections: 10,
   },
   {
     id: "impact-13",
@@ -111,6 +137,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Creative",
     style: "Dark",
     tags: ["Horizontal", "Drag", "Fluid"],
+    tier: "Pro",
+    sections: 10,
   },
   {
     id: "impact-14",
@@ -119,6 +147,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Creative",
     style: "Dark",
     tags: ["One-Page", "Parallax", "Story"],
+    tier: "Pro",
+    sections: 10,
   },
   {
     id: "impact-15",
@@ -127,6 +157,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Tech",
     style: "Dark",
     tags: ["E-commerce", "HUD", "Product"],
+    tier: "Pro",
+    sections: 10,
   },
   {
     id: "impact-16",
@@ -135,6 +167,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Luxury",
     style: "Dark",
     tags: ["Special FX", "Nature", "Cinematic"],
+    tier: "Pro",
+    sections: 10,
   },
   {
     id: "impact-17",
@@ -143,6 +177,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Minimal",
     style: "Light",
     tags: ["Portfolio", "Archive", "Grid"],
+    tier: "Pro",
+    sections: 10,
   },
   {
     id: "impact-18",
@@ -151,6 +187,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Creative",
     style: "Vibrant",
     tags: ["Carousel", "Fluid", "Interactive"],
+    tier: "Pro",
+    sections: 10,
   },
   {
     id: "impact-19",
@@ -159,6 +197,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Creative",
     style: "Dark",
     tags: ["One-Page", "Agency", "Landing"],
+    tier: "Pro",
+    sections: 10,
   },
   {
     id: "impact-20",
@@ -167,6 +207,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Luxury",
     style: "Dark",
     tags: ["E-commerce", "Luxury", "Gold"],
+    tier: "Pro",
+    sections: 10,
   },
   {
     id: "impact-21",
@@ -175,6 +217,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Minimal",
     style: "Light",
     tags: ["E-commerce", "Minimal", "Product"],
+    tier: "Pro",
+    sections: 10,
   },
   {
     id: "impact-22",
@@ -183,6 +227,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Tech",
     style: "Dark",
     tags: ["Carousel", "Split", "Tech"],
+    tier: "Pro",
+    sections: 10,
   },
   {
     id: "impact-23",
@@ -191,6 +237,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Creative",
     style: "Dark",
     tags: ["One-Page", "Film Noir", "Story"],
+    tier: "Pro",
+    sections: 10,
   },
   {
     id: "impact-24",
@@ -199,6 +247,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Creative",
     style: "Dark",
     tags: ["Portfolio", "Circular", "Radial"],
+    tier: "Pro",
+    sections: 10,
   },
   {
     id: "impact-25",
@@ -207,6 +257,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Tech",
     style: "Dark",
     tags: ["HUD", "Interactive", "3D"],
+    tier: "Pro",
+    sections: 10,
   },
   {
     id: "impact-26",
@@ -215,6 +267,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Luxury",
     style: "Dark",
     tags: ["E-commerce", "Glass", "Shop"],
+    tier: "Pro",
+    sections: 10,
   },
   {
     id: "impact-27",
@@ -223,6 +277,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Creative",
     style: "Dark",
     tags: ["Carousel", "3D", "Perspective"],
+    tier: "Pro",
+    sections: 10,
   },
   {
     id: "impact-28",
@@ -231,6 +287,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Minimal",
     style: "Light",
     tags: ["One-Page", "Architecture", "Minimal"],
+    tier: "Pro",
+    sections: 10,
   },
   {
     id: "impact-29",
@@ -807,6 +865,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Minimal",
     style: "Light",
     tags: ["Minimal", "Product", "Technical"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-101",
@@ -815,6 +875,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Luxury",
     style: "Dark",
     tags: ["Luxury", "Tech", "3D"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-102",
@@ -823,6 +885,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Creative",
     style: "Dark",
     tags: ["Creative", "Portfolio", "Interactive"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-103",
@@ -831,6 +895,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Luxury",
     style: "Dark",
     tags: ["E-commerce", "Luxury", "Glassmorphism"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-104",
@@ -839,6 +905,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Luxury",
     style: "Dark",
     tags: ["Food", "Menu", "Luxury"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-105",
@@ -847,6 +915,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Luxury",
     style: "Dark",
     tags: ["Real Estate", "Slider", "Luxury"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-106",
@@ -855,6 +925,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Creative",
     style: "Light",
     tags: ["Portfolio", "Masonry", "Creative"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-107",
@@ -863,6 +935,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Creative",
     style: "Dark",
     tags: ["Storytelling", "Parallax", "Creative"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-108",
@@ -871,6 +945,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Creative",
     style: "Dark",
     tags: ["Hero", "Agency", "Creative"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-109",
@@ -879,6 +955,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Creative",
     style: "Light",
     tags: ["Photography", "Horizontal", "Creative"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-110",
@@ -887,6 +965,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Tech",
     style: "Dark",
     tags: ["Space", "Hero", "Parallax"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-111",
@@ -895,6 +975,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Tech",
     style: "Dark",
     tags: ["Countdown", "Product Drop", "Tech"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-112",
@@ -903,6 +985,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Minimal",
     style: "Light",
     tags: ["E-commerce", "Minimal", "Artisan"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-113",
@@ -911,6 +995,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Tech",
     style: "Dark",
     tags: ["SaaS", "Landing", "Tech"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-114",
@@ -919,6 +1005,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Creative",
     style: "Dark",
     tags: ["Slider", "Curtain Reveal", "Creative"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-115",
@@ -927,6 +1015,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Creative",
     style: "Dark",
     tags: ["Gallery", "Parallax", "Creative"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-116",
@@ -935,6 +1025,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Luxury",
     style: "Light",
     tags: ["Food", "Japanese", "Luxury"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-117",
@@ -943,6 +1035,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Creative",
     style: "Dark",
     tags: ["Carousel", "Expanding", "Creative"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-118",
@@ -951,6 +1045,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Minimal",
     style: "Dark",
     tags: ["Architecture", "Blueprint", "Minimal"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-119",
@@ -959,6 +1055,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Creative",
     style: "Dark",
     tags: ["Fitness", "Grid", "Vibrant"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-120",
@@ -967,6 +1065,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Luxury",
     style: "Dark",
     tags: ["Beauty", "Luxury", "Scroll Reveal"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-121",
@@ -975,6 +1075,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Creative",
     style: "Light",
     tags: ["Portfolio", "Mousetrap", "Creative"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-122",
@@ -983,6 +1085,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Editorial",
     style: "Light",
     tags: ["Editorial", "Storytelling", "Long Read"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-123",
@@ -991,6 +1095,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Luxury",
     style: "Dark",
     tags: ["Fashion", "Editorial", "Split"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-124",
@@ -999,6 +1105,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Creative",
     style: "Light",
     tags: ["Hero", "Morphing", "Creative"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-125",
@@ -1007,6 +1115,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Creative",
     style: "Dark",
     tags: ["Hero", "Interactive", "Cursor"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-126",
@@ -1015,6 +1125,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Luxury",
     style: "Dark",
     tags: ["Food", "Menu", "Italian"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-127",
@@ -1023,6 +1135,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Creative",
     style: "Dark",
     tags: ["Events", "Neon", "Creative"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-128",
@@ -1031,6 +1145,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Minimal",
     style: "Light",
     tags: ["Real Estate", "Grid", "Minimal"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-129",
@@ -1039,6 +1155,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Tech",
     style: "Dark",
     tags: ["Tech", "Canvas", "Particles"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-130",
@@ -1047,6 +1165,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Creative",
     style: "Dark",
     tags: ["Slider", "Split", "Creative"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-131",
@@ -1055,6 +1175,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Luxury",
     style: "Dark",
     tags: ["Wine", "Luxury", "Showcase"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-132",
@@ -1063,6 +1185,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Minimal",
     style: "Light",
     tags: ["Portfolio", "Alternating", "Minimal"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-133",
@@ -1071,6 +1195,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Creative",
     style: "Dark",
     tags: ["Hero", "Zoom", "Creative"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-134",
@@ -1079,6 +1205,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Luxury",
     style: "Light",
     tags: ["Beauty", "E-commerce", "Luxury"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-135",
@@ -1087,6 +1215,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Tech",
     style: "Dark",
     tags: ["Fintech", "Dashboard", "Tech"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-136",
@@ -1095,6 +1225,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Creative",
     style: "Dark",
     tags: ["Scroll Reveal", "Text Mask", "Creative"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-137",
@@ -1103,6 +1235,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Minimal",
     style: "Light",
     tags: ["Coffee", "One-Page", "Minimal"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-138",
@@ -1111,6 +1245,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Tech",
     style: "Dark",
     tags: ["Analytics", "Dashboard", "Tech"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-139",
@@ -1119,6 +1255,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Luxury",
     style: "Dark",
     tags: ["Automotive", "Luxury", "Hero"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-140",
@@ -1127,6 +1265,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Minimal",
     style: "Dark",
     tags: ["Travel", "Hero", "Minimal"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-141",
@@ -1135,6 +1275,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Creative",
     style: "Dark",
     tags: ["Music", "Player", "Creative"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-142",
@@ -1143,6 +1285,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Minimal",
     style: "Light",
     tags: ["Sustainability", "Eco", "Minimal"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-143",
@@ -1151,6 +1295,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Luxury",
     style: "Light",
     tags: ["Interior", "Slider", "Luxury"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-144",
@@ -1159,6 +1305,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Creative",
     style: "Dark",
     tags: ["Typography", "Marquee", "Creative"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-145",
@@ -1167,6 +1315,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Creative",
     style: "Dark",
     tags: ["Podcast", "Landing", "Creative"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-146",
@@ -1175,6 +1325,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Tech",
     style: "Dark",
     tags: ["FinTech", "Crypto", "Glassmorphism"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-147",
@@ -1183,6 +1335,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Minimal",
     style: "Light",
     tags: ["Architecture", "Portfolio", "B&W"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-148",
@@ -1191,6 +1345,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Luxury",
     style: "Light",
     tags: ["Skincare", "Storytelling", "Luxury"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-149",
@@ -1199,6 +1355,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Luxury",
     style: "Dark",
     tags: ["Furniture", "3D", "Premium"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-150",
@@ -1207,6 +1365,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Tech",
     style: "Dark",
     tags: ["Cyberpunk", "Apparel", "E-commerce"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-151",
@@ -1215,6 +1375,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Luxury",
     style: "Dark",
     tags: ["Watch", "Technical", "Luxury"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-152",
@@ -1223,6 +1385,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Editorial",
     style: "Light",
     tags: ["Magazine", "Travel", "Editorial"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-153",
@@ -1231,6 +1395,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Tech",
     style: "Dark",
     tags: ["Team", "Startup", "Interactive"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-154",
@@ -1239,6 +1405,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Creative",
     style: "Dark",
     tags: ["Agency", "Services", "Creative"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-155",
@@ -1247,6 +1415,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Creative",
     style: "Dark",
     tags: ["Art", "Gallery", "Scroll Reveal"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-156",
@@ -1255,6 +1425,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Minimal",
     style: "Light",
     tags: ["Sustainability", "Architecture", "Minimal"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-157",
@@ -1263,6 +1435,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Luxury",
     style: "Dark",
     tags: ["Jewelry", "E-commerce", "Luxury"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-158",
@@ -1271,6 +1445,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Editorial",
     style: "Light",
     tags: ["Brutalist", "Editorial", "News"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-159",
@@ -1279,6 +1455,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Tech",
     style: "Dark",
     tags: ["Event", "Tech", "Countdown"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-160",
@@ -1287,6 +1465,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Minimal",
     style: "Light",
     tags: ["Fashion", "Lookbook", "Minimal"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-161",
@@ -1295,6 +1475,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Free",
     style: "Light",
     tags: ["SaaS", "Landing", "Free"],
+    tier: "Essentiel",
+    sections: 7,
   },
   {
     id: "impact-162",
@@ -1303,6 +1485,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Free",
     style: "Light",
     tags: ["Local Business", "Food", "Free"],
+    tier: "Essentiel",
+    sections: 7,
   },
   {
     id: "impact-163",
@@ -1311,6 +1495,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Free",
     style: "Light",
     tags: ["Blog", "Personal", "Free"],
+    tier: "Essentiel",
+    sections: 7,
   },
   {
     id: "impact-164",
@@ -1319,6 +1505,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Free",
     style: "Dark",
     tags: ["Agency", "Portfolio", "Free"],
+    tier: "Essentiel",
+    sections: 7,
   },
   {
     id: "impact-165",
@@ -1327,6 +1515,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Free",
     style: "Light",
     tags: ["App", "Promo", "Free"],
+    tier: "Essentiel",
+    sections: 7,
   },
   {
     id: "impact-166",
@@ -1335,6 +1525,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Free",
     style: "Dark",
     tags: ["Photography", "Portfolio", "Free"],
+    tier: "Essentiel",
+    sections: 7,
   },
   {
     id: "impact-167",
@@ -1343,6 +1535,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Free",
     style: "Light",
     tags: ["Real Estate", "Listing", "Free"],
+    tier: "Essentiel",
+    sections: 7,
   },
   {
     id: "impact-168",
@@ -1351,6 +1545,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Free",
     style: "Light",
     tags: ["E-commerce", "Shop", "Free"],
+    tier: "Essentiel",
+    sections: 7,
   },
   {
     id: "impact-169",
@@ -1359,6 +1555,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Free",
     style: "Light",
     tags: ["Newsletter", "Landing", "Free"],
+    tier: "Essentiel",
+    sections: 7,
   },
   {
     id: "impact-170",
@@ -1367,6 +1565,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Free",
     style: "Light",
     tags: ["CV", "Resume", "Free"],
+    tier: "Essentiel",
+    sections: 7,
   },
   {
     id: "impact-171",
@@ -1375,6 +1575,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Free",
     style: "Light",
     tags: ["Medical", "Health", "Free"],
+    tier: "Essentiel",
+    sections: 7,
   },
   {
     id: "impact-172",
@@ -1383,6 +1585,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Free",
     style: "Light",
     tags: ["Law", "Corporate", "Free"],
+    tier: "Essentiel",
+    sections: 7,
   },
   {
     id: "impact-173",
@@ -1391,6 +1595,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Free",
     style: "Dark",
     tags: ["Construction", "Industrial", "Free"],
+    tier: "Essentiel",
+    sections: 7,
   },
   {
     id: "impact-174",
@@ -1399,6 +1605,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Free",
     style: "Dark",
     tags: ["Fitness", "Gym", "Free"],
+    tier: "Essentiel",
+    sections: 7,
   },
   {
     id: "impact-175",
@@ -1407,6 +1615,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Free",
     style: "Vibrant",
     tags: ["Event", "Conference", "Free"],
+    tier: "Essentiel",
+    sections: 7,
   },
   {
     id: "impact-176",
@@ -1415,6 +1625,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Free",
     style: "Light",
     tags: ["Dashboard", "SaaS", "Free"],
+    tier: "Essentiel",
+    sections: 7,
   },
   {
     id: "impact-177",
@@ -1423,6 +1635,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Free",
     style: "Dark",
     tags: ["Podcast", "Media", "Free"],
+    tier: "Essentiel",
+    sections: 7,
   },
   {
     id: "impact-178",
@@ -1431,6 +1645,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Free",
     style: "Light",
     tags: ["Service", "Local Business", "Free"],
+    tier: "Essentiel",
+    sections: 7,
   },
   {
     id: "impact-179",
@@ -1439,6 +1655,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Free",
     style: "Light",
     tags: ["Charity", "Non-profit", "Free"],
+    tier: "Essentiel",
+    sections: 7,
   },
   {
     id: "impact-180",
@@ -1447,6 +1665,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Free",
     style: "Dark",
     tags: ["Salon", "Barber", "Free"],
+    tier: "Essentiel",
+    sections: 7,
   },
   {
     id: "impact-181",
@@ -1455,6 +1675,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Tech",
     style: "Vibrant",
     tags: ["Web3", "Crypto", "DeFi"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-182",
@@ -1463,6 +1685,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Luxury",
     style: "Light",
     tags: ["Hotel", "Travel", "Elegant"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-183",
@@ -1471,6 +1695,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Tech",
     style: "Dark",
     tags: ["AI", "SaaS", "Dashboard"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-184",
@@ -1479,6 +1705,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Creative",
     style: "Light",
     tags: ["Museum", "Art", "Brutalist"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-185",
@@ -1487,6 +1715,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Editorial",
     style: "Light",
     tags: ["Fashion", "Lookbook", "Oversized Text"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-186",
@@ -1495,6 +1725,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Minimal",
     style: "Dark",
     tags: ["Architecture", "Studio", "Grayscale"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-187",
@@ -1503,6 +1735,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Tech",
     style: "Dark",
     tags: ["FinTech", "App", "Gradients"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-188",
@@ -1511,6 +1745,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Creative",
     style: "Dark",
     tags: ["Film", "Production", "Horizontal Scroll"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-189",
@@ -1519,6 +1755,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Luxury",
     style: "Dark",
     tags: ["Restaurant", "Dining", "Romantic"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-190",
@@ -1527,6 +1765,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Tech",
     style: "Dark",
     tags: ["Gaming", "Cyberpunk", "Neon"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-191",
@@ -1535,6 +1775,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Luxury",
     style: "Light",
     tags: ["Interior", "Architecture", "Minimal"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-192",
@@ -1543,6 +1785,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Luxury",
     style: "Dark",
     tags: ["Fragrance", "Luxury", "Parallax"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-193",
@@ -1551,6 +1795,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Creative",
     style: "Vibrant",
     tags: ["Event", "Festival", "Vibrant"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-194",
@@ -1559,6 +1805,8 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Creative",
     style: "Dark",
     tags: ["Agency", "Portfolio", "Grid"],
+    tier: "Premium",
+    sections: 15,
   },
   {
     id: "impact-195",
@@ -1567,5 +1815,7 @@ export const TEMPLATES_REGISTRY: TemplateMetadata[] = [
     category: "Luxury",
     style: "Light",
     tags: ["Food", "Bakery", "Artisanal"],
+    tier: "Premium",
+    sections: 15,
   },
 ];
