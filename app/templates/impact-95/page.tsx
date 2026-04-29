@@ -1,197 +1,198 @@
-"use client";
+'use client';
 
-import { motion, AnimatePresence, useScroll, useTransform, useMotionValue, useSpring, useInView } from "framer-motion";
-import { useState, useRef, useEffect } from "react";
-import Image from "next/image";
-import { Menu, X, ChevronDown, Zap } from "lucide-react";
-import Link from "next/link";
+import { motion, AnimatePresence, useScroll, useTransform, useMotionValue, useSpring, useInView } from 'framer-motion';
+import { useState, useRef, useEffect } from 'react';
+import Image from 'next/image';
+import { Menu, X, Sun, Zap, ChevronDown, Leaf, TrendingUp } from 'lucide-react';
+import Link from 'next/link';
 
-const Reveal = ({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) => {
+/* === UTILITY COMPONENTS === */
+
+const Reveal = ({ children, delay = 0 }) => {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-60px" });
+  const isInView = useInView(ref, { once: true, margin: '-60px' });
   return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 30 }}
-      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-      transition={{ duration: 0.6, delay }}
-    >
+    <motion.div ref={ref} initial={{ opacity: 0, y: 30 }} animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }} transition={{ duration: 0.6, delay }}>
       {children}
     </motion.div>
   );
 };
 
-const Counter = ({ target, label, suffix = "" }: { target: number; label: string; suffix?: string }) => {
+const Counter = ({ target, label, suffix = '' }) => {
   const [count, setCount] = useState(0);
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-60px" });
+  const isInView = useInView(ref, { once: true, margin: '-60px' });
 
   useEffect(() => {
     if (!isInView) return;
-    const interval = setInterval(() => {
-      setCount((prev) => (prev < target ? prev + Math.ceil(target / 50) : target));
+    let start = 0;
+    const timer = setInterval(() => {
+      start += target / 30;
+      if (start >= target) {
+        setCount(target);
+        clearInterval(timer);
+      } else {
+        setCount(Math.floor(start));
+      }
     }, 30);
-    return () => clearInterval(interval);
+    return () => clearInterval(timer);
   }, [isInView, target]);
 
   return (
     <div ref={ref} className="text-center">
-      <div className="text-5xl font-bold" style={{ color: "#f59e0b" }}>
-        {count}
-        {suffix}
+      <div className="text-5xl font-black" style={{ color: '#f59e0b' }}>
+        {count}{suffix}
       </div>
-      <p className="text-sm uppercase tracking-wide mt-2" style={{ color: "#fff" }}>
+      <p className="text-sm uppercase tracking-widest mt-2 text-[#0ea5e9]" style={{ letterSpacing: '2px' }}>
         {label}
       </p>
     </div>
   );
 };
 
-const MagneticBtn = ({ children }: { children: React.ReactNode }) => {
+const MagneticBtn = ({ children, onClick }) => {
   const ref = useRef(null);
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const xSpring = useSpring(x, { stiffness: 200, damping: 20 });
   const ySpring = useSpring(y, { stiffness: 200, damping: 20 });
 
-  const handleMouse = (event: React.MouseEvent<HTMLDivElement>) => {
+  const handleMouse = (e) => {
     if (!ref.current) return;
-    const rect = (ref.current as HTMLElement).getBoundingClientRect();
-    x.set(event.clientX - (rect.left + rect.width / 2));
-    y.set(event.clientY - (rect.top + rect.height / 2));
+    const rect = ref.current.getBoundingClientRect();
+    x.set(e.clientX - (rect.left + rect.width / 2));
+    y.set(e.clientY - (rect.top + rect.height / 2));
+  };
+
+  const handleMouseLeave = () => {
+    x.set(0);
+    y.set(0);
   };
 
   return (
     <motion.button
       ref={ref}
       onMouseMove={handleMouse}
-      onMouseLeave={() => { x.set(0); y.set(0); }}
+      onMouseLeave={handleMouseLeave}
       style={{ x: xSpring, y: ySpring }}
-      className="px-8 py-3 rounded-full font-bold uppercase text-sm"
-      style={{ color: "#060a0f", backgroundColor: "#f59e0b" } as any}
+      onClick={onClick}
+      className="px-8 py-3 rounded-lg font-black uppercase text-sm transition-all bg-[#f59e0b] text-[#060a0f] hover:bg-[#fbbf24] tracking-widest"
     >
       {children}
     </motion.button>
   );
 };
 
-const Marquee = ({ items }: { items: string[] }) => {
-  return (
-    <div style={{ overflow: "hidden", display: "flex", width: "100%" }}>
-      <motion.div
-        animate={{ x: [0, -1000] }}
-        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-        className="flex gap-8 whitespace-nowrap"
-      >
-        {[...items, ...items].map((item, i) => (
-          <span key={i} className="text-lg font-bold text-white">
-            {item} •
-          </span>
-        ))}
-      </motion.div>
-    </div>
-  );
-};
+const Accordion = ({ title, content, isOpen, onClick }) => (
+  <div style={{ borderBottom: '1px solid #f59e0b40' }}>
+    <button onClick={onClick} className="w-full py-4 px-6 flex justify-between items-center hover:bg-white/5">
+      <span className="font-bold text-white uppercase text-sm tracking-wide">{title}</span>
+      <ChevronDown style={{ color: '#f59e0b', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s' }} />
+    </button>
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden">
+          <p className="px-6 pb-4 text-white/70">{content}</p>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  </div>
+);
 
-const AccordionItem = ({ title, content, isOpen, onClick }: { title: string; content: string; isOpen: boolean; onClick: () => void }) => {
-  return (
-    <div style={{ borderBottom: "1px solid #f59e0b40" }}>
-      <button
-        onClick={onClick}
-        className="w-full py-4 px-6 flex justify-between items-center hover:bg-white/5 transition-colors"
-      >
-        <span className="font-bold text-white">{title}</span>
-        <ChevronDown
-          style={{
-            color: "#f59e0b",
-            transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
-            transition: "transform 0.3s",
-          }}
-        />
-      </button>
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="overflow-hidden"
-          >
-            <p className="px-6 pb-4 text-white/70">{content}</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-};
+const Marquee = ({ items }) => (
+  <div style={{ overflow: 'hidden', display: 'flex', width: '100%' }}>
+    <motion.div animate={{ x: [0, -1400] }} transition={{ duration: 30, repeat: Infinity, ease: 'linear' }} className="flex gap-12 whitespace-nowrap">
+      {[...items, ...items].map((item, i) => (
+        <span key={i} className="text-lg font-black uppercase tracking-wider text-[#f59e0b]">
+          {item} •
+        </span>
+      ))}
+    </motion.div>
+  </div>
+);
+
+/* === MAIN COMPONENT === */
 
 export default function SolarisEnergy() {
   const containerRef = useRef(null);
   const { scrollYProgress } = useScroll({ target: containerRef });
-  const parallaxY = useTransform(scrollYProgress, [0, 1], ["0%", "40%"]);
-  const rotationY = useTransform(scrollYProgress, [0, 1], [0, 360]);
+  const parallaxY = useTransform(scrollYProgress, [0, 1], ['0%', '40%']);
+  const rotateZ = useTransform(scrollYProgress, [0, 1], [0, 360]);
 
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [activeSolution, setActiveSolution] = useState(0);
-  const [openAccordion, setOpenAccordion] = useState<number | null>(null);
-  const [quoteModalOpen, setQuoteModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('Residential');
+  const [openAccordion, setOpenAccordion] = useState(null);
+  const [sliderValue, setSliderValue] = useState(250);
+  const [showQuoteDialog, setShowQuoteDialog] = useState(false);
 
-  const solutions = [
-    { name: "Residential", desc: "Home Solar Systems", savings: "70% on energy bills", specs: ["4-8 kW", "25+ year warranty", "Battery storage optional"] },
-    { name: "Commercial", desc: "Business Solutions", savings: "50% on operating costs", specs: ["10-100 kW", "Custom design", "ROI in 5-7 years"] },
-    { name: "Industrial", desc: "Large Scale", savings: "60% reduction", specs: ["100+ kW", "Ground mounted", "24/7 monitoring"] },
-    { name: "Utility", desc: "Grid Scale", savings: "Wholesale pricing", specs: ["1-100+ MW", "Turnkey", "Grid-tied"] },
-  ];
+  const solutions = {
+    Residential: { desc: 'Perfect for homes. Average 25-year savings: $25,000+', savings: '$25K+', co2: '500K lbs' },
+    Commercial: { desc: 'Scale for businesses. Immediate ROI and tax credits.', savings: '$150K+', co2: '3M lbs' },
+    Industrial: { desc: 'Heavy-duty systems for manufacturers and warehouses.', savings: '$500K+', co2: '10M lbs' },
+    'Utility-Scale': { desc: 'Mega farms powering entire communities with clean energy.', savings: '2M+', co2: '50M lbs' },
+  };
 
   const timeline = [
-    { step: 1, title: "Consultation", desc: "Free site assessment" },
-    { step: 2, title: "Design", desc: "Custom system plan" },
-    { step: 3, title: "Permitting", desc: "License & permits" },
-    { step: 4, title: "Installation", desc: "3-5 day install" },
-    { step: 5, title: "Activation", desc: "Live & producing" },
+    { step: 1, title: 'Site Assessment', desc: 'Solar analysis and energy audit' },
+    { step: 2, title: 'Design', desc: 'Custom system layout' },
+    { step: 3, title: 'Permitting', desc: 'All government approvals' },
+    { step: 4, title: 'Installation', desc: 'Professional installation' },
+    { step: 5, title: 'Activation', desc: 'System goes live' },
+  ];
+
+  const incentives = [
+    { title: 'Federal Tax Credit', content: '30% ITC federal tax credit on all eligible equipment and installation costs.' },
+    { title: 'State Rebates', content: 'Additional state-level rebates vary by location. Up to $10K in some states.' },
+    { title: 'Net Metering', content: 'Sell excess power back to the grid. Many utilities offer full retail rates.' },
+    { title: 'Financing Options', content: 'Zero-down loans, PPAs, and lease options make solar accessible to everyone.' },
+  ];
+
+  const caseStudies = [
+    { name: 'Family Home, CA', savings: '$28,000', co2: '480,000 lbs', kw: '8.5 kW' },
+    { name: 'Tech Campus, TX', savings: '$450,000', co2: '6.2M lbs', kw: '150 kW' },
+    { name: 'Manufacturing, OH', savings: '$1.2M', co2: '15M lbs', kw: '400 kW' },
+  ];
+
+  const testimonials = [
+    { name: 'John Smith', quote: 'Solaris made going solar so easy. My electric bill dropped 90%.' },
+    { name: 'Sarah Chen', quote: 'Best investment we ever made for our business. Paying for itself in 5 years.' },
+    { name: 'Mike Torres', quote: 'Professional, efficient, and they explained everything clearly.' },
+    { name: 'Emma Davis', quote: 'Helping the planet while saving money. Win-win!' },
   ];
 
   const faqs = [
-    { title: "What if my roof is old?", content: "We can replace your roof during installation at a discounted rate." },
-    { title: "How long is installation?", content: "Residential systems typically take 3-5 days from start to full operation." },
-    { title: "Do you offer financing?", content: "Yes! 0% APR for 10 years, plus 26% federal tax credit." },
-    { title: "What's the maintenance cost?", content: "Minimal. Annual inspections are $99. No moving parts to maintain." },
+    { title: 'How much can I save with solar?', content: 'Most residential customers save $10K-40K over 25 years. Commercial systems save 30-50% on energy costs.' },
+    { title: 'What is the 30% federal tax credit?', content: 'The Investment Tax Credit (ITC) allows you to deduct 30% of installation costs from your federal taxes.' },
+    { title: 'How does net metering work?', content: 'Excess power flows back to the grid, spinning your meter backward and earning bill credits.' },
+    { title: 'Do I need a battery system?', content: 'Batteries are optional. Most homeowners rely on grid connection for reliability and cost savings.' },
   ];
 
-  const utilities = ["PG&E", "Edison", "SoCal Water", "Descanso", "Burbank Water"];
+  const annualSavings = (sliderValue / 100) * 1200; // Approximate savings calculation
 
   return (
-    <div ref={containerRef} style={{ backgroundColor: "#060a0f", color: "#fff", minHeight: "100vh" }}>
-      {/* Header */}
-      <header style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 50, backgroundColor: "#060a0fdd", backdropFilter: "blur(10px)", borderBottom: "1px solid #f59e0b20" }} className="py-4 px-6 md:px-12 flex justify-between items-center">
-        <h1 style={{ color: "#f59e0b" }} className="text-2xl font-bold flex items-center gap-2">
-          <Zap size={28} /> SOLARIS
+    <div ref={containerRef} style={{ backgroundColor: '#060a0f', color: '#ffffff', minHeight: '100vh' }}>
+      {/* HEADER */}
+      <header style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, backgroundColor: '#060a0fdd', backdropFilter: 'blur(10px)', borderBottom: '1px solid #f59e0b30' }} className="py-4 px-6 md:px-12 flex justify-between items-center">
+        <h1 style={{ color: '#f59e0b', fontSize: '1.5rem', fontWeight: 'black', letterSpacing: '2px' }} className="uppercase">
+          SOLARIS
         </h1>
         <nav className="hidden md:flex gap-8">
-          {["Solutions", "Timeline", "Partners", "FAQ"].map((item) => (
-            <Link key={item} href="#" style={{ color: "#fff" }} className="hover:text-[#f59e0b] transition-colors">
+          {['Solutions', 'Savings', 'Incentives', 'FAQ'].map((item) => (
+            <Link key={item} href="#" className="hover:text-[#f59e0b] transition-colors uppercase font-bold text-xs tracking-wide">
               {item}
             </Link>
           ))}
         </nav>
         <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden">
-          {mobileOpen ? <X size={24} style={{ color: "#f59e0b" }} /> : <Menu size={24} style={{ color: "#f59e0b" }} />}
+          {mobileOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </header>
 
-      {/* Mobile Menu */}
       <AnimatePresence>
         {mobileOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            style={{ backgroundColor: "#1a1a1a", zIndex: 40, marginTop: "60px" }}
-            className="md:hidden py-4 px-6 border-b border-[#f59e0b20]"
-          >
-            {["Solutions", "Timeline", "Partners", "FAQ"].map((item) => (
-              <p key={item} style={{ color: "#fff" }} className="py-2">
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} style={{ backgroundColor: '#060a0f', zIndex: 40, marginTop: '60px' }} className="md:hidden py-4 px-6 border-b border-[#f59e0b30]">
+            {['Solutions', 'Savings', 'Incentives', 'FAQ'].map((item) => (
+              <p key={item} className="py-2 text-white uppercase font-bold text-xs tracking-wide">
                 {item}
               </p>
             ))}
@@ -199,373 +200,276 @@ export default function SolarisEnergy() {
         )}
       </AnimatePresence>
 
-      {/* Rotating Sun Hero */}
-      <section style={{ position: "relative", height: "100vh", overflow: "hidden", marginTop: "60px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      {/* HERO WITH ROTATING SUN */}
+      <section style={{ position: 'relative', height: '100vh', overflow: 'hidden', marginTop: '60px', background: 'linear-gradient(135deg, #060a0f, #0a0f1a)' }}>
         <motion.div style={{ y: parallaxY }}>
-          <Image
-            src="https://images.unsplash.com/photo-1509391366360-2e938616c5eb?q=80&w=1200&auto=format&fit=crop"
-            alt="Solar Field"
-            fill
-            unoptimized
-            style={{ objectFit: "cover" }}
-          />
+          <Image src="https://images.unsplash.com/photo-1508841307935-29c51e541908?q=80&w=1200" alt="Solar Farm" fill unoptimized style={{ objectFit: 'cover', opacity: 0.15 }} />
         </motion.div>
-        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(6,10,15,0.3), rgba(6,10,15,0.8))" }} />
-
-        {/* Rotating Sun Animation */}
-        <motion.div
-          style={{
-            position: "absolute",
-            width: "200px",
-            height: "200px",
-            borderRadius: "50%",
-            background: "radial-gradient(circle, #f59e0b, #ff7f00)",
-            top: "10%",
-            right: "10%",
-            rotateZ: rotationY,
-            boxShadow: "0 0 100px rgba(245, 158, 11, 0.5)",
-          }}
-        />
-
-        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", textAlign: "center", zIndex: 10 }}>
+        {/* Rotating Sun */}
+        <motion.div style={{ position: 'absolute', top: '5%', right: '10%', zIndex: 5, rotateZ }} className="w-32 h-32 md:w-48 md:h-48">
+          <Sun size={200} color="#f59e0b" strokeWidth={0.5} />
+        </motion.div>
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', zIndex: 10 }}>
           <Reveal delay={0.1}>
-            <h2 style={{ fontSize: "clamp(2.5rem, 8vw, 5rem)", fontWeight: "bold", marginBottom: "1rem", color: "#f59e0b" }}>
-              CLEAN POWER
+            <h2 style={{ fontSize: 'clamp(2.5rem, 10vw, 6rem)', fontWeight: 'black', marginBottom: '1rem', color: '#ffffff', letterSpacing: '-2px' }}>
+              HARNESS THE SUN
             </h2>
           </Reveal>
           <Reveal delay={0.2}>
-            <p style={{ fontSize: "1.25rem", marginBottom: "2rem" }}>
-              500K homes powered. 2M tons CO2 saved.
-            </p>
+            <p style={{ fontSize: '1.25rem', marginBottom: '2rem', color: '#0ea5e9', fontWeight: 'bold' }}>Clean Energy. Massive Savings. 25-Year Guarantee.</p>
           </Reveal>
           <Reveal delay={0.3}>
-            <MagneticBtn>Get Free Quote</MagneticBtn>
+            <motion.div className="flex gap-4">
+              <MagneticBtn onClick={() => setShowQuoteDialog(true)}>Get Quote</MagneticBtn>
+              <motion.button whileHover={{ scale: 1.05 }} style={{ padding: '0.75rem 2rem', border: '2px solid #f59e0b', color: '#f59e0b', backgroundColor: 'transparent', borderRadius: '0.5rem', fontWeight: 'black', letterSpacing: '1px' }}>
+                Learn More
+              </motion.button>
+            </motion.div>
           </Reveal>
         </div>
       </section>
 
-      {/* Solution Tabs */}
-      <section style={{ padding: "6rem 1.5rem", maxWidth: "1200px", margin: "0 auto" }}>
+      {/* SOLUTIONS - TABS */}
+      <section style={{ padding: '6rem 1.5rem', maxWidth: '1200px', margin: '0 auto' }}>
         <Reveal>
-          <h3 style={{ fontSize: "2rem", fontWeight: "bold", marginBottom: "2rem", textAlign: "center", color: "#f59e0b" }}>
-            Solutions For Every Scale
+          <h3 style={{ fontSize: '2.5rem', fontWeight: 'black', marginBottom: '3rem', textAlign: 'center', color: '#f59e0b', letterSpacing: '1px' }}>
+            TAILORED SOLUTIONS
           </h3>
         </Reveal>
-        <div style={{ display: "flex", gap: "1rem", marginBottom: "3rem", flexWrap: "wrap", justifyContent: "center" }}>
-          {solutions.map((sol, idx) => (
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '3rem', flexWrap: 'wrap' }}>
+          {Object.keys(solutions).map((sol) => (
             <motion.button
-              key={idx}
-              onClick={() => setActiveSolution(idx)}
+              key={sol}
               whileHover={{ scale: 1.05 }}
+              onClick={() => setActiveTab(sol)}
               style={{
-                padding: "0.75rem 1.5rem",
-                border: `2px solid ${activeSolution === idx ? "#f59e0b" : "#f59e0b40"}`,
-                borderRadius: "30px",
-                backgroundColor: activeSolution === idx ? "#f59e0b" : "transparent",
-                color: activeSolution === idx ? "#060a0f" : "#f59e0b",
-                cursor: "pointer",
-                fontWeight: "bold",
+                padding: '0.75rem 1.5rem',
+                backgroundColor: activeTab === sol ? '#f59e0b' : 'transparent',
+                color: activeTab === sol ? '#060a0f' : '#f59e0b',
+                border: `2px solid ${activeTab === sol ? '#f59e0b' : '#f59e0b40'}`,
+                borderRadius: '0.5rem',
+                fontWeight: 'black',
+                cursor: 'pointer',
               }}
             >
-              {sol.name}
+              {sol}
             </motion.button>
           ))}
         </div>
-        <motion.div
-          key={activeSolution}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          style={{
-            padding: "2rem",
-            backgroundColor: "#1a1a1a",
-            borderRadius: "1rem",
-            border: "2px solid #f59e0b",
-          }}
-        >
-          <h4 style={{ fontSize: "1.5rem", fontWeight: "bold", color: "#f59e0b", marginBottom: "0.5rem" }}>
-            {solutions[activeSolution].name}
-          </h4>
-          <p style={{ marginBottom: "1rem" }}>{solutions[activeSolution].desc}</p>
-          <p style={{ marginBottom: "1.5rem", color: "#0ea5e9" }}>Savings: {solutions[activeSolution].savings}</p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "1rem" }}>
-            {solutions[activeSolution].specs.map((spec, i) => (
-              <div key={i} style={{ padding: "1rem", backgroundColor: "#0a0a0a", borderRadius: "0.5rem", borderLeft: "3px solid #f59e0b" }}>
-                {spec}
+        <Reveal>
+          <div style={{ backgroundColor: '#0f1419', padding: '3rem', borderRadius: '1rem', border: '1px solid #f59e0b30', textAlign: 'center' }}>
+            <p style={{ fontSize: '1.25rem', marginBottom: '2rem', color: '#ffffff' }}>{solutions[activeTab].desc}</p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '2rem' }}>
+              <div>
+                <p style={{ fontSize: '2.5rem', fontWeight: 'black', color: '#f59e0b' }}>{solutions[activeTab].savings}</p>
+                <p style={{ color: '#0ea5e9', fontWeight: 'bold' }}>25-Year Savings</p>
               </div>
-            ))}
+              <div>
+                <p style={{ fontSize: '2.5rem', fontWeight: 'black', color: '#0ea5e9' }}>{solutions[activeTab].co2}</p>
+                <p style={{ color: '#f59e0b', fontWeight: 'bold' }}>CO2 Eliminated</p>
+              </div>
+            </div>
           </div>
-        </motion.div>
+        </Reveal>
       </section>
 
-      {/* Savings Calculator */}
-      <section style={{ padding: "6rem 1.5rem", backgroundColor: "#1a1a1a" }}>
-        <div style={{ maxWidth: "600px", margin: "0 auto", textAlign: "center" }}>
-          <Reveal>
-            <h3 style={{ fontSize: "2rem", fontWeight: "bold", marginBottom: "2rem", color: "#f59e0b" }}>
-              Calculate Your Savings
-            </h3>
-          </Reveal>
+      {/* SAVINGS CALCULATOR - SLIDER */}
+      <section style={{ padding: '6rem 1.5rem', backgroundColor: '#0f1419', maxWidth: '900px', margin: '0 auto' }}>
+        <Reveal>
+          <h3 style={{ fontSize: '2.5rem', fontWeight: 'black', marginBottom: '3rem', textAlign: 'center', color: '#f59e0b' }}>
+            CALCULATE YOUR SAVINGS
+          </h3>
+        </Reveal>
+        <div style={{ backgroundColor: '#060a0f', padding: '3rem', borderRadius: '1rem', border: '1px solid #f59e0b30' }}>
           <Reveal delay={0.1}>
-            <div style={{ display: "flex", gap: "1rem", marginBottom: "2rem" }}>
+            <div style={{ marginBottom: '2rem' }}>
+              <label style={{ display: 'block', marginBottom: '1rem', fontWeight: 'black', color: 'white' }}>
+                Home Size: {sliderValue} m²
+              </label>
               <input
-                type="number"
-                placeholder="Monthly bill ($)"
+                type="range"
+                min="50"
+                max="500"
+                value={sliderValue}
+                onChange={(e) => setSliderValue(parseInt(e.target.value))}
                 style={{
-                  flex: 1,
-                  padding: "0.75rem",
-                  borderRadius: "0.5rem",
-                  border: "2px solid #f59e0b",
-                  backgroundColor: "#0a0a0a",
-                  color: "#fff",
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '10px',
+                  background: `linear-gradient(to right, #f59e0b 0%, #f59e0b ${(sliderValue / 500) * 100}%, #f59e0b30 ${(sliderValue / 500) * 100}%, #f59e0b30 100%)`,
+                  outline: 'none',
+                  cursor: 'pointer',
                 }}
               />
-              <button
-                style={{
-                  padding: "0.75rem 1.5rem",
-                  backgroundColor: "#f59e0b",
-                  color: "#060a0f",
-                  borderRadius: "0.5rem",
-                  fontWeight: "bold",
-                  cursor: "pointer",
-                  border: "none",
-                }}
-              >
-                Calculate
-              </button>
             </div>
           </Reveal>
           <Reveal delay={0.2}>
-            <div style={{ padding: "2rem", backgroundColor: "#0a0a0a", borderRadius: "1rem", border: "2px solid #f59e0b" }}>
-              <p style={{ color: "#0ea5e9", marginBottom: "0.5rem" }}>Est. Annual Savings</p>
-              <h4 style={{ fontSize: "2rem", fontWeight: "bold", color: "#f59e0b" }}>$1,200+</h4>
-              <p style={{ marginTop: "0.5rem", fontSize: "0.875rem" }}>with 26% federal tax credit</p>
-            </div>
+            <motion.div initial={{ scale: 0.8, opacity: 0 }} whileInView={{ scale: 1, opacity: 1 }} transition={{ duration: 0.3 }}>
+              <p style={{ fontSize: '1rem', color: '#ffffff80', marginBottom: '1rem' }}>Annual Savings</p>
+              <div style={{ fontSize: '3rem', fontWeight: 'black', color: '#f59e0b', marginBottom: '1rem' }}>
+                ${annualSavings.toLocaleString()}
+              </div>
+              <p style={{ fontSize: '0.9rem', color: '#ffffff80' }}>Over 25 years: ${(annualSavings * 25).toLocaleString()}</p>
+            </motion.div>
           </Reveal>
         </div>
       </section>
 
-      {/* Installation Timeline */}
-      <section style={{ padding: "6rem 1.5rem", maxWidth: "1200px", margin: "0 auto" }}>
+      {/* INSTALLATION TIMELINE - PROGRESS */}
+      <section style={{ padding: '6rem 1.5rem', maxWidth: '1000px', margin: '0 auto' }}>
         <Reveal>
-          <h3 style={{ fontSize: "2rem", fontWeight: "bold", marginBottom: "3rem", textAlign: "center", color: "#f59e0b" }}>
-            From Quote to Power
+          <h3 style={{ fontSize: '2.5rem', fontWeight: 'black', marginBottom: '3rem', textAlign: 'center', color: '#f59e0b' }}>
+            INSTALLATION PROCESS
           </h3>
         </Reveal>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "1rem" }}>
-          {timeline.map((item, idx) => (
-            <Reveal key={idx} delay={idx * 0.1}>
-              <motion.div
-                whileHover={{ y: -10 }}
-                style={{
-                  padding: "1.5rem",
-                  backgroundColor: "#1a1a1a",
-                  borderRadius: "1rem",
-                  border: "2px solid #f59e0b",
-                  textAlign: "center",
-                }}
-              >
-                <div style={{ fontSize: "2rem", fontWeight: "bold", color: "#0ea5e9", marginBottom: "0.5rem" }}>
-                  {item.step}
+        <div style={{ position: 'relative' }}>
+          {/* Progress Bar */}
+          <motion.div initial={{ width: 0 }} whileInView={{ width: '100%' }} transition={{ duration: 1 }} style={{ position: 'absolute', top: '24px', left: '0', height: '4px', backgroundColor: '#f59e0b', borderRadius: '2px', zIndex: 0 }} />
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '2rem', position: 'relative', zIndex: 1 }}>
+            {timeline.map((item, idx) => (
+              <Reveal key={idx} delay={idx * 0.1}>
+                <div style={{ backgroundColor: '#0f1419', padding: '2rem', borderRadius: '1rem', textAlign: 'center', border: '1px solid #f59e0b30' }}>
+                  <div style={{ width: '50px', height: '50px', backgroundColor: '#f59e0b', borderRadius: '50%', margin: '0 auto 1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#060a0f', fontWeight: 'black', fontSize: '1.5rem', border: '4px solid #0f1419' }}>
+                    {item.step}
+                  </div>
+                  <h4 style={{ fontWeight: 'black', marginBottom: '0.5rem', color: 'white' }}>{item.title}</h4>
+                  <p style={{ color: '#ffffff60', fontSize: '0.9rem' }}>{item.desc}</p>
                 </div>
-                <h4 style={{ fontWeight: "bold", marginBottom: "0.5rem", color: "#f59e0b" }}>{item.title}</h4>
-                <p style={{ fontSize: "0.875rem" }}>{item.desc}</p>
-              </motion.div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* STATS COUNTER */}
+      <section style={{ padding: '6rem 1.5rem', backgroundColor: '#0f1419' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '3rem' }}>
+          <Counter target={10} label="GW Installed" suffix="+" />
+          <Counter target={500} label="Thousand Homes" suffix="K+" />
+          <Counter target={2} label="Million Tons CO2" suffix="M" />
+          <Counter target={98} label="Uptime Guarantee" suffix="%" />
+        </div>
+      </section>
+
+      {/* MARQUEE */}
+      <section style={{ padding: '3rem 0', backgroundColor: '#060a0f', overflow: 'hidden' }}>
+        <Marquee items={['25-Year Warranty', '30% Tax Credit', 'Zero Installation Cost', 'Grid-Tied Systems', 'Battery Backup']} />
+      </section>
+
+      {/* GOVERNMENT INCENTIVES - ACCORDION */}
+      <section style={{ padding: '6rem 1.5rem', maxWidth: '900px', margin: '0 auto' }}>
+        <Reveal>
+          <h3 style={{ fontSize: '2.5rem', fontWeight: 'black', marginBottom: '2rem', textAlign: 'center', color: '#f59e0b' }}>
+            GOVERNMENT INCENTIVES
+          </h3>
+        </Reveal>
+        {incentives.map((incentive, idx) => (
+          <Reveal key={idx} delay={idx * 0.1}>
+            <Accordion
+              title={incentive.title}
+              content={incentive.content}
+              isOpen={openAccordion === `incentive-${idx}`}
+              onClick={() => setOpenAccordion(openAccordion === `incentive-${idx}` ? null : `incentive-${idx}`)}
+            />
+          </Reveal>
+        ))}
+      </section>
+
+      {/* CASE STUDIES - CAROUSEL */}
+      <section style={{ padding: '6rem 1.5rem', backgroundColor: '#0f1419', maxWidth: '1000px', margin: '0 auto' }}>
+        <Reveal>
+          <h3 style={{ fontSize: '2.5rem', fontWeight: 'black', marginBottom: '3rem', textAlign: 'center', color: '#f59e0b' }}>
+            REAL RESULTS
+          </h3>
+        </Reveal>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem' }}>
+          {caseStudies.map((study, idx) => (
+            <Reveal key={idx} delay={idx * 0.1}>
+              <div style={{ backgroundColor: '#060a0f', padding: '2rem', borderRadius: '1rem', border: '1px solid #f59e0b30' }}>
+                <h4 style={{ fontWeight: 'black', marginBottom: '1.5rem', color: '#f59e0b' }}>{study.name}</h4>
+                <div style={{ marginBottom: '1rem' }}>
+                  <p style={{ color: '#ffffff80', fontSize: '0.9rem', marginBottom: '0.5rem' }}>System Size</p>
+                  <p style={{ color: 'white', fontWeight: 'bold', fontSize: '1.25rem' }}>{study.kw}</p>
+                </div>
+                <div style={{ marginBottom: '1rem' }}>
+                  <p style={{ color: '#ffffff80', fontSize: '0.9rem', marginBottom: '0.5rem' }}>25-Year Savings</p>
+                  <p style={{ color: '#f59e0b', fontWeight: 'black', fontSize: '1.5rem' }}>{study.savings}</p>
+                </div>
+                <div>
+                  <p style={{ color: '#ffffff80', fontSize: '0.9rem', marginBottom: '0.5rem' }}>CO2 Eliminated</p>
+                  <p style={{ color: '#0ea5e9', fontWeight: 'bold' }}>{study.co2}</p>
+                </div>
+              </div>
             </Reveal>
           ))}
         </div>
       </section>
 
-      {/* Stats */}
-      <section style={{ padding: "6rem 1.5rem", backgroundColor: "#1a1a1a" }}>
-        <div style={{ maxWidth: "1200px", margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "3rem" }}>
-          <Counter target={10} label="GW Installed" suffix="GW" />
-          <Counter target={500} label="K Homes Powered" suffix="K" />
-          <Counter target={2} label="M Tons CO2 Saved" suffix="M" />
-          <Counter target={98} label="Uptime Guarantee" suffix="%" />
-        </div>
-      </section>
-
-      {/* Partner Utilities Marquee */}
-      <section style={{ padding: "3rem 0", overflow: "hidden" }}>
-        <p style={{ textAlign: "center", marginBottom: "1.5rem", color: "#0ea5e9", fontWeight: "bold" }}>
-          TRUSTED BY MAJOR UTILITIES
-        </p>
-        <Marquee items={utilities} />
-      </section>
-
-      {/* Incentives */}
-      <section style={{ padding: "6rem 1.5rem", maxWidth: "800px", margin: "0 auto" }}>
+      {/* TESTIMONIALS */}
+      <section style={{ padding: '6rem 1.5rem', maxWidth: '1000px', margin: '0 auto' }}>
         <Reveal>
-          <h3 style={{ fontSize: "2rem", fontWeight: "bold", marginBottom: "2rem", textAlign: "center", color: "#f59e0b" }}>
-            Government Incentives
+          <h3 style={{ fontSize: '2.5rem', fontWeight: 'black', marginBottom: '3rem', textAlign: 'center', color: '#f59e0b' }}>
+            WHAT OUR CUSTOMERS SAY
           </h3>
         </Reveal>
-        {[
-          { title: "Federal Tax Credit", content: "26% of installation cost back as federal income tax credit" },
-          { title: "State Rebates", content: "Up to $3,000 from California State programs" },
-          { title: "Net Metering", content: "Get paid for excess energy exported to grid" },
-          { title: "Performance Credits", content: "Utility bill credits for clean energy generation" },
-        ].map((faq, idx) => (
-          <Reveal key={idx} delay={idx * 0.1}>
-            <AccordionItem title={faq.title} content={faq.content} isOpen={openAccordion === idx} onClick={() => setOpenAccordion(openAccordion === idx ? null : idx)} />
-          </Reveal>
-        ))}
-      </section>
-
-      {/* Case Studies */}
-      <section style={{ padding: "6rem 1.5rem", backgroundColor: "#1a1a1a", maxWidth: "1200px", margin: "0 auto" }}>
-        <Reveal>
-          <h3 style={{ fontSize: "2rem", fontWeight: "bold", marginBottom: "3rem", textAlign: "center", color: "#f59e0b" }}>
-            Real Results
-          </Reveal>
-        </Reveal>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "2rem" }}>
-          {[
-            { home: "Mountain Home, CA", power: "8 kW", savings: "$1,800/year", co2: "10 tons" },
-            { home: "Urban Condo, LA", power: "5 kW", savings: "$1,200/year", co2: "6 tons" },
-            { home: "Ranch House, SD", power: "12 kW", savings: "$2,400/year", co2: "15 tons" },
-          ].map((study, idx) => (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '2rem' }}>
+          {testimonials.map((testimonial, idx) => (
             <Reveal key={idx} delay={idx * 0.1}>
-              <motion.div
-                whileHover={{ y: -10 }}
-                style={{
-                  padding: "1.5rem",
-                  backgroundColor: "#0a0a0a",
-                  borderRadius: "1rem",
-                  border: "2px solid #f59e0b",
-                }}
-              >
-                <h4 style={{ fontWeight: "bold", marginBottom: "1rem", color: "#0ea5e9" }}>{study.home}</h4>
-                <div style={{ display: "grid", gap: "0.5rem" }}>
-                  <p>
-                    <span style={{ color: "#f59e0b" }}>System:</span> {study.power}
-                  </p>
-                  <p>
-                    <span style={{ color: "#f59e0b" }}>Annual Savings:</span> {study.savings}
-                  </p>
-                  <p>
-                    <span style={{ color: "#f59e0b" }}>CO2 Offset:</span> {study.co2}/year
-                  </p>
-                </div>
-              </motion.div>
+              <div style={{ backgroundColor: '#0f1419', padding: '2rem', borderRadius: '1rem', border: '1px solid #f59e0b30' }}>
+                <p style={{ color: '#f59e0b', marginBottom: '1rem', fontStyle: 'italic', fontWeight: 'bold' }}>"{testimonial.quote}"</p>
+                <p style={{ fontWeight: 'black', color: 'white' }}>{testimonial.name}</p>
+              </div>
             </Reveal>
           ))}
         </div>
       </section>
 
       {/* FAQ */}
-      <section style={{ padding: "6rem 1.5rem", maxWidth: "800px", margin: "0 auto" }}>
+      <section style={{ padding: '6rem 1.5rem', maxWidth: '800px', margin: '0 auto' }}>
         <Reveal>
-          <h3 style={{ fontSize: "2rem", fontWeight: "bold", marginBottom: "2rem", textAlign: "center", color: "#f59e0b" }}>
-            Common Questions
+          <h3 style={{ fontSize: '2.5rem', fontWeight: 'black', marginBottom: '2rem', textAlign: 'center', color: '#f59e0b' }}>
+            FAQ
           </h3>
         </Reveal>
         {faqs.map((faq, idx) => (
           <Reveal key={idx} delay={idx * 0.1}>
-            <AccordionItem title={faq.title} content={faq.content} isOpen={openAccordion === idx + 100} onClick={() => setOpenAccordion(openAccordion === idx + 100 ? null : idx + 100)} />
+            <Accordion title={faq.title} content={faq.content} isOpen={openAccordion === `faq-${idx}`} onClick={() => setOpenAccordion(openAccordion === `faq-${idx}` ? null : `faq-${idx}`)} />
           </Reveal>
         ))}
       </section>
 
       {/* CTA */}
-      <section style={{ padding: "6rem 1.5rem", textAlign: "center", backgroundColor: "#f59e0b" }}>
+      <section style={{ padding: '6rem 1.5rem', backgroundColor: '#0f1419', color: '#060a0f', textAlign: 'center' }}>
         <Reveal>
-          <h3 style={{ fontSize: "2rem", fontWeight: "bold", marginBottom: "1rem", color: "#060a0f" }}>
-            Go Solar Today
-          </h3>
+          <h3 style={{ fontSize: '2.5rem', fontWeight: 'black', marginBottom: '1rem', letterSpacing: '1px', color: '#f59e0b' }}>READY TO GO SOLAR?</h3>
         </Reveal>
         <Reveal delay={0.1}>
-          <p style={{ marginBottom: "2rem", color: "#060a0f" }}>Free consultation, no obligation</p>
+          <p style={{ marginBottom: '2rem', fontSize: '1.1rem', fontWeight: 'bold', color: 'white' }}>Join 500K+ homeowners saving thousands with Solaris Energy</p>
         </Reveal>
         <Reveal delay={0.2}>
-          <button
-            onClick={() => setQuoteModalOpen(true)}
-            style={{
-              padding: "1rem 2rem",
-              backgroundColor: "#060a0f",
-              color: "#f59e0b",
-              borderRadius: "0.5rem",
-              fontWeight: "bold",
-              cursor: "pointer",
-              border: "none",
-              fontSize: "1rem",
-            }}
-          >
-            Request Quote
-          </button>
+          <MagneticBtn onClick={() => setShowQuoteDialog(true)}>Get Your Quote Today</MagneticBtn>
         </Reveal>
       </section>
 
-      {/* Quote Modal */}
+      {/* QUOTE DIALOG */}
       <AnimatePresence>
-        {quoteModalOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setQuoteModalOpen(false)}
-            style={{
-              position: "fixed",
-              inset: 0,
-              backgroundColor: "#00000080",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              zIndex: 60,
-            }}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                backgroundColor: "#060a0f",
-                padding: "2rem",
-                borderRadius: "1rem",
-                maxWidth: "400px",
-                width: "90%",
-                border: "2px solid #f59e0b",
-              }}
-            >
-              <h4 style={{ fontSize: "1.5rem", fontWeight: "bold", marginBottom: "1.5rem", color: "#f59e0b" }}>
-                Free Solar Quote
-              </h4>
-              <input type="text" placeholder="Full Name" style={{ width: "100%", padding: "0.75rem", marginBottom: "1rem", borderRadius: "0.5rem", border: "2px solid #f59e0b", color: "#060a0f" }} />
-              <input type="email" placeholder="Email" style={{ width: "100%", padding: "0.75rem", marginBottom: "1rem", borderRadius: "0.5rem", border: "2px solid #f59e0b", color: "#060a0f" }} />
-              <input type="tel" placeholder="Phone" style={{ width: "100%", padding: "0.75rem", marginBottom: "1rem", borderRadius: "0.5rem", border: "2px solid #f59e0b", color: "#060a0f" }} />
-              <button
-                onClick={() => setQuoteModalOpen(false)}
-                style={{
-                  width: "100%",
-                  padding: "0.75rem",
-                  backgroundColor: "#f59e0b",
-                  color: "#060a0f",
-                  borderRadius: "0.5rem",
-                  fontWeight: "bold",
-                  cursor: "pointer",
-                  border: "none",
-                }}
-              >
-                Get Quote
-              </button>
-              <button
-                onClick={() => setQuoteModalOpen(false)}
-                style={{
-                  width: "100%",
-                  padding: "0.75rem",
-                  marginTop: "1rem",
-                  backgroundColor: "transparent",
-                  border: "2px solid #f59e0b",
-                  color: "#f59e0b",
-                  borderRadius: "0.5rem",
-                  fontWeight: "bold",
-                  cursor: "pointer",
-                }}
-              >
-                Close
-              </button>
+        {showQuoteDialog && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowQuoteDialog(false)} style={{ position: 'fixed', inset: 0, backgroundColor: '#00000080', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 60 }}>
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} onClick={(e) => e.stopPropagation()} style={{ backgroundColor: '#0f1419', padding: '2rem', borderRadius: '1rem', maxWidth: '400px', width: '90%', border: '1px solid #f59e0b30' }}>
+              <h4 style={{ fontSize: '1.5rem', fontWeight: 'black', marginBottom: '1.5rem', color: '#f59e0b' }}>Get Your Free Quote</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}>
+                <input type="text" placeholder="Full Name" style={{ padding: '0.75rem', backgroundColor: '#060a0f', color: 'white', borderRadius: '0.5rem', border: '1px solid #f59e0b30' }} />
+                <input type="email" placeholder="Email Address" style={{ padding: '0.75rem', backgroundColor: '#060a0f', color: 'white', borderRadius: '0.5rem', border: '1px solid #f59e0b30' }} />
+                <input type="tel" placeholder="Phone Number" style={{ padding: '0.75rem', backgroundColor: '#060a0f', color: 'white', borderRadius: '0.5rem', border: '1px solid #f59e0b30' }} />
+              </div>
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <motion.button whileHover={{ scale: 1.05 }} onClick={() => setShowQuoteDialog(false)} style={{ flex: 1, padding: '0.75rem', backgroundColor: '#f59e0b', color: '#060a0f', borderRadius: '0.5rem', fontWeight: 'black', cursor: 'pointer' }}>
+                  Get Quote
+                </motion.button>
+                <motion.button whileHover={{ scale: 1.05 }} onClick={() => setShowQuoteDialog(false)} style={{ flex: 1, padding: '0.75rem', backgroundColor: 'transparent', border: '2px solid #f59e0b', color: '#f59e0b', borderRadius: '0.5rem', fontWeight: 'black', cursor: 'pointer' }}>
+                  Close
+                </motion.button>
+              </div>
             </motion.div>
           </motion.div>
         )}

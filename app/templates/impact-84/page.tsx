@@ -1,138 +1,122 @@
-"use client";
+"use client"
 
-import { motion, AnimatePresence, useScroll, useTransform, useInView, useMotionValue, useSpring } from "framer-motion";
-import { useState, useRef, useEffect } from "react";
-import Image from "next/image";
-import Link from "next/link";
-import { X, Menu, PieChart, TrendingUp, Lock, Shield, Check, Star, ArrowRight, ChevronDown, Apple, Smartphone } from "lucide-react";
+import { motion, useScroll, useTransform, useInView, AnimatePresence, useMotionValue, useSpring } from "framer-motion"
+import { useState, useRef, useEffect, useCallback } from "react"
+import Image from "next/image"
+import Link from "next/link"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
+import { Progress } from "@/components/ui/progress"
+import { X, Menu, ChevronDown, ArrowRight, PieChart, TrendingUp, Lock, Shield, Check, Star, Apple, Smartphone } from "lucide-react"
 
-// REVEAL COMPONENT
-const Reveal = ({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) => {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-60px" });
+function Reveal({ children, delay=0 }: { children: React.ReactNode; delay?: number }) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: "-60px" })
   return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 30 }}
-      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-      transition={{ duration: 0.8, delay }}
-    >
+    <motion.div ref={ref} initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, delay }} >
       {children}
     </motion.div>
-  );
-};
+  )
+}
 
-// COUNTER COMPONENT
-const Counter = ({ target, duration = 2, prefix = "", suffix = "" }: { target: number; duration?: number; prefix?: string; suffix?: string }) => {
-  const [count, setCount] = useState(0);
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-60px" });
-
+function Counter({ target, suffix="" }: { target: number; suffix?: string }) {
+  const [count, setCount] = useState(0)
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true })
   useEffect(() => {
-    if (!isInView) return;
-    const increment = target / (duration * 100);
-    let current = 0;
-    const interval = setInterval(() => {
-      current += increment;
-      if (current >= target) {
-        setCount(target);
-        clearInterval(interval);
-      } else {
-        setCount(Math.floor(current));
-      }
-    }, 10);
-    return () => clearInterval(interval);
-  }, [isInView, target, duration]);
+    if (!inView) return
+    const step = Math.ceil(target / 60)
+    const t = setInterval(() => setCount(c => Math.min(c + step, target)), 16)
+    return () => clearInterval(t)
+  }, [inView, target])
+  return <span ref={ref}>{count.toLocaleString()}{suffix}</span>
+}
 
-  return (
-    <span ref={ref}>
-      {prefix}
-      {count.toLocaleString()}
-      {suffix}
-    </span>
-  );
-};
+function MagneticBtn({ children, className="" }: { children: React.ReactNode; className?: string }) {
+  const x = useMotionValue(0); const y = useMotionValue(0)
+  const sx = useSpring(x, { stiffness: 500, damping: 25 })
+  const sy = useSpring(y, { stiffness: 500, damping: 25 })
+  const ref = useRef<HTMLButtonElement>(null)
+  const handleMouse = (e: React.MouseEvent) => {
+    const r = ref.current!.getBoundingClientRect()
+    x.set((e.clientX - r.left - r.width/2) * 0.35)
+    y.set((e.clientY - r.top - r.height/2) * 0.35)
+  }
+  return <motion.button ref={ref} style={{ x: sx, y: sy }} onMouseMove={handleMouse} onMouseLeave={() => { x.set(0); y.set(0) }} className={className}>{children}</motion.button>
+}
 
-// MAGNETIC BUTTON COMPONENT
-const MagneticBtn = ({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) => {
-  const ref = useRef<HTMLButtonElement>(null);
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  const xSpring = useSpring(x, { damping: 3, stiffness: 100 });
-  const ySpring = useSpring(y, { damping: 3, stiffness: 100 });
+const integrations = [
+  { name: "Stripe", logo: "💳" },
+  { name: "Plaid", logo: "🔗" },
+  { name: "TaxJar", logo: "📊" },
+  { name: "Coinbase", logo: "₿" },
+  { name: "Wise", logo: "🌍" },
+  { name: "Nasdaq", logo: "📈" },
+]
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    const rect = ref.current?.getBoundingClientRect();
-    if (rect) {
-      x.set(e.clientX - (rect.left + rect.width / 2));
-      y.set(e.clientY - (rect.top + rect.height / 2));
-    }
-  };
-
-  const handleMouseLeave = () => {
-    x.set(0);
-    y.set(0);
-  };
-
-  return (
-    <motion.button
-      ref={ref}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      onClick={onClick}
-      style={{ x: xSpring, y: ySpring }}
-      className="px-8 py-3 bg-[#0891b2] text-white font-black uppercase text-sm tracking-wider rounded hover:bg-[#0e7490] transition-colors"
-    >
-      {children}
-    </motion.button>
-  );
-};
+const faqs = [
+  { q: "How secure is my data?", a: "Military-grade 256-bit encryption, SOC2 certification, FDIC insurance, and zero-knowledge architecture ensure your data is safer than a bank." },
+  { q: "What are the fees?", a: "Starter: free. Pro: $7.99/mo with unlimited features. Family: $14.99/mo for up to 5 members." },
+  { q: "Can I sync multiple banks?", a: "Yes. Unlimited bank accounts across all institutions. Real-time sync with Plaid integration." },
+  { q: "How does tax optimization work?", a: "AI analyzes your transactions to identify deductions, tax-loss harvesting opportunities, and filing strategies." },
+]
 
 export default function ClearpathFinance() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("budget");
-  const [pricingPlan, setPricingPlan] = useState("pro");
-  const { scrollY } = useScroll();
-  const heroY = useTransform(scrollY, [0, 500], [0, 150]);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState("budget")
+  const [selectedPlan, setSelectedPlan] = useState("pro")
+  const [email, setEmail] = useState("")
+  const { scrollY } = useScroll()
+  const heroY = useTransform(scrollY, [0, 500], [0, 150])
 
   const tabs = [
-    { id: "budget", name: "Budget", icon: <PieChart size={24} />, desc: "Real-time spending insights" },
-    { id: "invest", name: "Invest", icon: <TrendingUp size={24} />, desc: "Portfolio management & growth" },
-    { id: "plan", name: "Plan", icon: <TrendingUp size={24} />, desc: "Retirement & goal planning" },
-    { id: "tax", name: "Tax", icon: <Shield size={24} />, desc: "Tax optimization strategies" },
-  ];
+    { id: "budget", name: "Budget", icon: PieChart, desc: "Real-time spending insights & analytics" },
+    { id: "invest", name: "Invest", icon: TrendingUp, desc: "Portfolio tracking & growth strategies" },
+    { id: "plan", name: "Plan", icon: TrendingUp, desc: "Retirement & milestone goal planning" },
+    { id: "tax", name: "Tax", icon: Shield, desc: "Tax optimization & filing strategies" },
+  ]
+
+  const plans = [
+    { name: "Starter", price: "Free", features: ["Budget tracking", "Bank sync", "Basic insights", "Limited to 1 account"] },
+    { name: "Pro", price: "$7.99", period: "/mo", features: ["Everything in Starter", "Unlimited accounts", "Investment tracking", "Tax tools", "Priority support", "Advanced analytics"] },
+    { name: "Family", price: "$14.99", period: "/mo", features: ["Everything in Pro", "Up to 5 members", "Shared budgets", "Family analytics", "Inheritance planning"] },
+  ]
 
   return (
     <div style={{ backgroundColor: "#050d14", color: "#ffffff", minHeight: "100vh" }}>
       {/* NAV */}
-      <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 50, backgroundColor: "rgba(5,13,20,0.95)", backdropFilter: "blur(12px)", borderBottom: "1px solid #0891b240" }}>
-        <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 50, backgroundColor: "rgba(5,13,20,0.97)", backdropFilter: "blur(12px)", borderBottom: "1px solid #0891b230" }}>
+        <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "1rem 2rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <h1 style={{ fontSize: "1.5rem", fontWeight: "900", color: "#0891b2", letterSpacing: "-0.02em" }}>CLEARPATH</h1>
-          <div style={{ display: "none", gap: "2rem" }} className="md:flex">
+          <div style={{ display: "none", gap: "2.5rem" }} className="md:flex">
             {["Features", "Security", "Pricing", "App"].map((item) => (
-              <a key={item} href="#" style={{ fontSize: "0.875rem", fontWeight: "600", textDecoration: "none", color: "#ffffff", opacity: 0.7 }}>
+              <a key={item} href="#" style={{ fontSize: "0.85rem", fontWeight: "600", color: "#ffffff", opacity: 0.7, textDecoration: "none" }}>
                 {item}
               </a>
             ))}
           </div>
-          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} style={{ cursor: "pointer", background: "none", border: "none", color: "#0891b2" }}>
-            <Menu size={24} />
-          </button>
+          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+            <SheetTrigger asChild>
+              <button style={{ display: "none", cursor: "pointer", background: "none", border: "none", padding: 0 }} className="md:hidden">
+                <Menu size={24} color="#0891b2" />
+              </button>
+            </SheetTrigger>
+            <SheetContent side="right" style={{ backgroundColor: "#050d14" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", marginTop: "2rem" }}>
+                {["Features", "Security", "Pricing", "App"].map((item) => (
+                  <a key={item} href="#" style={{ fontSize: "1rem", fontWeight: "600", color: "#0891b2", textDecoration: "none" }}>{item}</a>
+                ))}
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </nav>
-
-      {/* MOBILE MENU */}
-      <AnimatePresence>
-        {mobileMenuOpen && (
-          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} style={{ position: "fixed", top: "60px", left: 0, right: 0, backgroundColor: "#050d14", zIndex: 40, padding: "2rem", borderBottom: "1px solid #0891b240" }}>
-            {["Features", "Security", "Pricing", "App"].map((item, i) => (
-              <motion.a key={item} href="#" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }} style={{ display: "block", padding: "0.75rem 0", fontSize: "1rem", fontWeight: "600", color: "#ffffff", textDecoration: "none", borderBottom: "1px solid #0f172a" }}>
-                {item}
-              </motion.a>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* HERO */}
       <motion.section style={{ height: "100vh", position: "relative", overflow: "hidden", marginTop: "60px" }}>
@@ -141,23 +125,23 @@ export default function ClearpathFinance() {
         </motion.div>
         <div style={{ position: "relative", height: "100%", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", textAlign: "center", padding: "2rem" }}>
           <Reveal>
-            <motion.span style={{ fontSize: "0.875rem", fontWeight: "900", letterSpacing: "0.1em", color: "#38bdf8", textTransform: "uppercase", marginBottom: "1rem" }}>
-              Personal Finance
+            <motion.span style={{ fontSize: "0.85rem", fontWeight: "900", letterSpacing: "0.12em", color: "#38bdf8", textTransform: "uppercase", marginBottom: "1rem", display: "block" }}>
+              Personal Finance Platform
             </motion.span>
           </Reveal>
           <Reveal delay={0.2}>
-            <h2 style={{ fontSize: "clamp(3rem, 12vw, 8rem)", fontWeight: "900", lineHeight: 1, marginBottom: "2rem", maxWidth: "900px" }}>
+            <h2 style={{ fontSize: "clamp(2.5rem, 12vw, 7rem)", fontWeight: "900", lineHeight: 1.1, marginBottom: "1.5rem", maxWidth: "900px" }}>
               Your Money, <span style={{ color: "#0891b2" }}>Simplified</span>
             </h2>
           </Reveal>
           <Reveal delay={0.4}>
-            <p style={{ fontSize: "1.25rem", opacity: 0.7, marginBottom: "3rem", maxWidth: "600px" }}>
-              Budget, invest, plan, and optimize taxes—all in one app. 2M users trust us with $50B.
+            <p style={{ fontSize: "1.1rem", opacity: 0.7, marginBottom: "3rem", maxWidth: "650px" }}>
+              Budget, invest, plan, and optimize taxes—all in one beautiful app. Trusted by 2M+ users managing $50B in assets.
             </p>
           </Reveal>
           <Reveal delay={0.6}>
-            <motion.div animate={{ y: [0, 10, 0] }} transition={{ duration: 2, repeat: Infinity }}>
-              <ChevronDown size={32} style={{ color: "#0891b2" }} />
+            <motion.div animate={{ y: [0, 12, 0] }} transition={{ duration: 2.5, repeat: Infinity }}>
+              <ChevronDown size={28} style={{ color: "#0891b2" }} />
             </motion.div>
           </Reveal>
         </div>
@@ -167,67 +151,64 @@ export default function ClearpathFinance() {
       <section style={{ padding: "6rem 2rem" }}>
         <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
           <Reveal>
-            <h2 style={{ fontSize: "2.5rem", fontWeight: "900", marginBottom: "3rem", textAlign: "center" }}>Features</h2>
+            <h2 style={{ fontSize: "2.2rem", fontWeight: "900", marginBottom: "3rem", textAlign: "center" }}>Core Features</h2>
           </Reveal>
 
-          {/* TAB BUTTONS */}
-          <div style={{ display: "flex", gap: "1rem", marginBottom: "3rem", justifyContent: "center", flexWrap: "wrap" }}>
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                style={{
-                  padding: "1rem 1.5rem",
-                  backgroundColor: activeTab === tab.id ? "#0891b2" : "transparent",
-                  color: activeTab === tab.id ? "white" : "#ffffff",
-                  border: `2px solid ${activeTab === tab.id ? "#0891b2" : "#1e293b"}`,
-                  borderRadius: "0.75rem",
-                  fontWeight: "600",
-                  cursor: "pointer",
-                  display: "flex",
-                  gap: "0.75rem",
-                  alignItems: "center",
-                  transition: "all 0.3s ease",
-                  opacity: activeTab === tab.id ? 1 : 0.7,
-                }}
-              >
-                {tab.icon}
-                {tab.name}
-              </button>
-            ))}
-          </div>
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList style={{ display: "flex", justifyContent: "center", gap: "1rem", backgroundColor: "transparent", padding: "1rem", flexWrap: "wrap" }}>
+              {tabs.map((tab) => {
+                const IconComp = tab.icon
+                return (
+                  <TabsTrigger key={tab.id} value={tab.id} style={{ padding: "0.75rem 1.5rem", borderRadius: "0.35rem" }}>
+                    <IconComp size={18} style={{ marginRight: "0.5rem" }} />
+                    {tab.name}
+                  </TabsTrigger>
+                )
+              })}
+            </TabsList>
 
-          {/* TAB CONTENT */}
-          <AnimatePresence mode="wait">
             {tabs.map((tab) => (
-              activeTab === tab.id && (
+              <TabsContent key={tab.id} value={tab.id}>
                 <motion.div
-                  key={tab.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3 }}
                   style={{
                     padding: "3rem",
                     backgroundColor: "#0f172a",
                     borderRadius: "1rem",
                     border: "1px solid #1e293b",
                     textAlign: "center",
+                    marginTop: "2rem",
                   }}
                 >
-                  <h3 style={{ fontSize: "2rem", fontWeight: "900", marginBottom: "1rem" }}>{tab.name}</h3>
+                  <h3 style={{ fontSize: "1.8rem", fontWeight: "900", marginBottom: "1rem", color: "#0891b2" }}>{tab.name}</h3>
                   <p style={{ opacity: 0.8, marginBottom: "2rem", maxWidth: "600px", margin: "0 auto 2rem" }}>
                     {tab.desc}
                   </p>
-                  <div style={{ width: "100%", height: "300px", backgroundColor: "#050d14", borderRadius: "0.75rem", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <motion.div animate={{ y: [0, 10, 0] }} transition={{ duration: 2, repeat: Infinity }}>
-                      {tab.icon}
-                    </motion.div>
+                  <div style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+                    gap: "2rem",
+                    marginBottom: "2rem",
+                  }}>
+                    {[
+                      "Real-time sync",
+                      "AI insights",
+                      "Custom alerts",
+                      "Export data",
+                    ].map((feature, i) => (
+                      <Reveal key={i} delay={i * 0.1}>
+                        <div style={{ padding: "1.5rem", backgroundColor: "#050d14", borderRadius: "0.5rem", border: "1px solid #1e293b" }}>
+                          <Check size={24} style={{ color: "#0891b2", marginBottom: "0.5rem" }} />
+                          <p style={{ fontWeight: "600", fontSize: "0.95rem" }}>{feature}</p>
+                        </div>
+                      </Reveal>
+                    ))}
                   </div>
                 </motion.div>
-              )
+              </TabsContent>
             ))}
-          </AnimatePresence>
+          </Tabs>
         </div>
       </section>
 
@@ -235,53 +216,56 @@ export default function ClearpathFinance() {
       <section style={{ padding: "6rem 2rem", backgroundColor: "#0f172a" }}>
         <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
           <Reveal>
-            <h2 style={{ fontSize: "2.5rem", fontWeight: "900", marginBottom: "3rem", textAlign: "center" }}>Bank-Grade Security</h2>
+            <h2 style={{ fontSize: "2.2rem", fontWeight: "900", marginBottom: "3rem", textAlign: "center" }}>Bank-Grade Security</h2>
           </Reveal>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "2rem" }}>
             {[
-              { name: "Bank-grade encryption", icon: <Lock size={32} /> },
-              { name: "SOC2 Certified", icon: <Shield size={32} /> },
-              { name: "FDIC Insured", icon: <Check size={32} /> },
-              { name: "2FA Protection", icon: <Shield size={32} /> },
-            ].map((badge, i) => (
-              <Reveal key={i} delay={i * 0.1}>
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  style={{
-                    padding: "2rem",
-                    backgroundColor: "#050d14",
-                    borderRadius: "1rem",
-                    border: "1px solid #1e293b",
-                    textAlign: "center",
-                    cursor: "pointer",
-                  }}
-                >
-                  <div style={{ color: "#0891b2", marginBottom: "1rem", display: "flex", justifyContent: "center" }}>
-                    {badge.icon}
-                  </div>
-                  <p style={{ fontWeight: "700" }}>{badge.name}</p>
-                </motion.div>
-              </Reveal>
-            ))}
+              { name: "256-Bit Encryption", icon: Lock, desc: "Military-grade data protection" },
+              { name: "SOC2 Type II", icon: Shield, desc: "Third-party audited security" },
+              { name: "FDIC Insured", icon: Check, desc: "Your money is protected" },
+              { name: "2FA Protection", icon: Shield, desc: "Multi-factor authentication" },
+            ].map((badge, i) => {
+              const IconComp = badge.icon
+              return (
+                <Reveal key={i} delay={i * 0.1}>
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    style={{
+                      padding: "2rem",
+                      backgroundColor: "#050d14",
+                      borderRadius: "0.75rem",
+                      border: "1px solid #1e293b",
+                      textAlign: "center",
+                    }}
+                  >
+                    <div style={{ color: "#0891b2", marginBottom: "1rem", display: "flex", justifyContent: "center" }}>
+                      <IconComp size={32} />
+                    </div>
+                    <p style={{ fontWeight: "700", marginBottom: "0.5rem" }}>{badge.name}</p>
+                    <p style={{ fontSize: "0.85rem", opacity: 0.6 }}>{badge.desc}</p>
+                  </motion.div>
+                </Reveal>
+              )
+            })}
           </div>
         </div>
       </section>
 
       {/* STATS */}
-      <section style={{ padding: "6rem 2rem" }}>
+      <section style={{ padding: "5rem 2rem" }}>
         <div style={{ maxWidth: "1400px", margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "3rem" }}>
           {[
-            { label: "Users", value: 2, suffix: "M" },
-            { label: "Assets Tracked", value: 50, suffix: "B" },
+            { label: "Active Users", value: 2, suffix: "M" },
+            { label: "Assets Managed", value: 50, suffix: "B" },
             { label: "Uptime", value: 99.9, suffix: "%" },
-            { label: "Rating", value: 4.9, suffix: "★" },
+            { label: "App Rating", value: 4.9, suffix: "★" },
           ].map((stat, i) => (
             <Reveal key={i} delay={i * 0.1}>
               <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: "3rem", fontWeight: "900", marginBottom: "0.5rem", color: "#0891b2" }}>
+                <div style={{ fontSize: "2.8rem", fontWeight: "900", marginBottom: "0.5rem", color: "#0891b2" }}>
                   <Counter target={stat.value} suffix={stat.suffix} />
                 </div>
-                <p style={{ fontSize: "0.875rem", opacity: 0.8, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                <p style={{ fontSize: "0.8rem", opacity: 0.7, textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: "600" }}>
                   {stat.label}
                 </p>
               </div>
@@ -290,40 +274,36 @@ export default function ClearpathFinance() {
         </div>
       </section>
 
-      {/* PRICING */}
+      {/* PRICING CARDS */}
       <section style={{ padding: "6rem 2rem", backgroundColor: "#0f172a" }}>
         <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
           <Reveal>
-            <h2 style={{ fontSize: "2.5rem", fontWeight: "900", marginBottom: "3rem", textAlign: "center" }}>Simple Pricing</h2>
+            <h2 style={{ fontSize: "2.2rem", fontWeight: "900", marginBottom: "3rem", textAlign: "center" }}>Simple, Transparent Pricing</h2>
           </Reveal>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "2rem" }}>
-            {[
-              { name: "Starter", price: "Free", features: ["Budget tracking", "Spending insights", "Basic reports"] },
-              { name: "Pro", price: "$7.99", period: "/month", features: ["Everything in Starter", "Investment tracking", "Tax optimization", "Priority support"] },
-              { name: "Family", price: "$14.99", period: "/month", features: ["Everything in Pro", "5 family members", "Shared budgets", "Premium analytics"] },
-            ].map((plan, i) => (
+            {plans.map((plan, i) => (
               <Reveal key={i} delay={i * 0.1}>
                 <motion.div
                   whileHover={{ y: -8 }}
-                  onClick={() => setPricingPlan(plan.name.toLowerCase())}
+                  onClick={() => setSelectedPlan(plan.name.toLowerCase())}
                   style={{
-                    padding: "2rem",
-                    backgroundColor: pricingPlan === plan.name.toLowerCase() ? "#0891b2" : "#050d14",
-                    borderRadius: "1rem",
-                    border: `2px solid ${pricingPlan === plan.name.toLowerCase() ? "#0891b2" : "#1e293b"}`,
+                    padding: "2.5rem",
+                    backgroundColor: selectedPlan === plan.name.toLowerCase() ? "#0891b2" : "#050d14",
+                    borderRadius: "0.75rem",
+                    border: selectedPlan === plan.name.toLowerCase() ? "2px solid #0891b2" : "2px solid #1e293b",
                     cursor: "pointer",
                     transition: "all 0.3s ease",
                   }}
                 >
                   <h3 style={{ fontSize: "1.5rem", fontWeight: "900", marginBottom: "1rem" }}>{plan.name}</h3>
                   <div style={{ fontSize: "2.5rem", fontWeight: "900", marginBottom: "0.5rem" }}>
-                    {plan.price} <span style={{ fontSize: "0.875rem", opacity: 0.8 }}>{plan.period}</span>
+                    {plan.price} <span style={{ fontSize: "0.85rem", opacity: 0.8 }}>{plan.period}</span>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", marginTop: "2rem" }}>
                     {plan.features.map((feature, j) => (
-                      <div key={j} style={{ display: "flex", gap: "0.75rem", alignItems: "center", fontSize: "0.875rem" }}>
-                        <Check size={16} />
-                        {feature}
+                      <div key={j} style={{ display: "flex", gap: "0.75rem", alignItems: "flex-start", fontSize: "0.9rem" }}>
+                        <Check size={18} style={{ marginTop: "0.1rem", flexShrink: 0 }} />
+                        <span>{feature}</span>
                       </div>
                     ))}
                   </div>
@@ -334,59 +314,206 @@ export default function ClearpathFinance() {
         </div>
       </section>
 
-      {/* TESTIMONIALS */}
+      {/* INTEGRATIONS */}
       <section style={{ padding: "6rem 2rem" }}>
-        <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
+        <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
           <Reveal>
-            <h2 style={{ fontSize: "2.5rem", fontWeight: "900", marginBottom: "3rem", textAlign: "center" }}>Trusted by Millions</h2>
+            <h2 style={{ fontSize: "2.2rem", fontWeight: "900", marginBottom: "1rem", textAlign: "center" }}>Connect Anything</h2>
           </Reveal>
-          <motion.div
-            initial={{ opacity: 0, x: 50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            style={{
-              padding: "2rem",
-              backgroundColor: "#0f172a",
-              borderRadius: "1rem",
-              borderLeft: "4px solid #0891b2",
-            }}
-          >
-            <div style={{ display: "flex", gap: "0.25rem", marginBottom: "1rem" }}>
-              {[...Array(5)].map((_, i) => (
-                <Star key={i} size={16} fill="#0891b2" color="#0891b2" />
-              ))}
-            </div>
-            <p style={{ fontSize: "1.1rem", marginBottom: "1rem" }}>
-              "Clearpath made managing my finances effortless. The tax optimization alone saves me thousands every year."
-            </p>
-            <p style={{ fontWeight: "700", color: "#0891b2" }}>— James Park, Business Owner</p>
+          <Reveal delay={0.1}>
+            <p style={{ fontSize: "1rem", opacity: 0.6, textAlign: "center", marginBottom: "3rem" }}>Works with all major financial institutions and apps</p>
+          </Reveal>
+
+          <motion.div style={{ display: "flex", gap: "2rem", justifyContent: "center", flexWrap: "wrap" }}>
+            {integrations.map((int, i) => (
+              <Reveal key={i} delay={i * 0.08}>
+                <motion.div
+                  whileHover={{ scale: 1.1 }}
+                  style={{
+                    padding: "1.5rem 2rem",
+                    backgroundColor: "#0f172a",
+                    borderRadius: "0.5rem",
+                    border: "1px solid #1e293b",
+                    textAlign: "center",
+                    minWidth: "120px",
+                  }}
+                >
+                  <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>{int.logo}</div>
+                  <p style={{ fontSize: "0.9rem", fontWeight: "700" }}>{int.name}</p>
+                </motion.div>
+              </Reveal>
+            ))}
           </motion.div>
         </div>
       </section>
 
-      {/* APP DOWNLOAD CTA */}
+      {/* TESTIMONIALS */}
+      <section style={{ padding: "6rem 2rem", backgroundColor: "#0f172a" }}>
+        <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+          <Reveal>
+            <h2 style={{ fontSize: "2.2rem", fontWeight: "900", marginBottom: "3rem", textAlign: "center" }}>Trusted by Millions</h2>
+          </Reveal>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "2rem" }}>
+            {[
+              { quote: "Clearpath saved me $8,000 in taxes last year. The AI recommendations are incredible.", author: "James Park", role: "Business Owner", rating: 5 },
+              { quote: "Finally, a financial app that just works. The UI is beautiful and the insights are actionable.", author: "Sarah Chen", role: "Software Engineer", rating: 5 },
+              { quote: "Switched from 3 different apps to Clearpath. One dashboard for everything.", author: "Michael Rodriguez", role: "Investor", rating: 5 },
+            ].map((t, i) => (
+              <Reveal key={i} delay={i * 0.15}>
+                <motion.div
+                  whileHover={{ y: -4 }}
+                  style={{
+                    padding: "2rem",
+                    backgroundColor: "#050d14",
+                    borderLeft: "3px solid #0891b2",
+                    borderRadius: "0.25rem",
+                  }}
+                >
+                  <div style={{ display: "flex", gap: "0.25rem", marginBottom: "1rem" }}>
+                    {[...Array(t.rating)].map((_, j) => (
+                      <Star key={j} size={16} fill="#0891b2" color="#0891b2" />
+                    ))}
+                  </div>
+                  <p style={{ fontSize: "1rem", marginBottom: "1.5rem", lineHeight: 1.6 }}>
+                    "{t.quote}"
+                  </p>
+                  <div>
+                    <p style={{ fontWeight: "900", fontSize: "0.95rem" }}>— {t.author}</p>
+                    <p style={{ fontSize: "0.85rem", opacity: 0.5 }}>{t.role}</p>
+                  </div>
+                </motion.div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section style={{ padding: "6rem 2rem" }}>
+        <div style={{ maxWidth: "800px", margin: "0 auto" }}>
+          <Reveal>
+            <h2 style={{ fontSize: "2.2rem", fontWeight: "900", marginBottom: "3rem", textAlign: "center" }}>Common Questions</h2>
+          </Reveal>
+
+          <Accordion type="single" collapsible>
+            {faqs.map((faq, i) => (
+              <AccordionItem key={i} value={`faq-${i}`}>
+                <AccordionTrigger style={{ fontSize: "1rem", fontWeight: "700", padding: "1.25rem", color: "white" }}>
+                  {faq.q}
+                </AccordionTrigger>
+                <AccordionContent style={{ padding: "0 1.25rem 1.25rem", fontSize: "0.95rem", opacity: 0.8, color: "rgba(255,255,255,0.8)" }}>
+                  {faq.a}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
+      </section>
+
+      {/* APP DOWNLOAD */}
       <section style={{ padding: "6rem 2rem", backgroundColor: "#0f172a" }}>
         <div style={{ maxWidth: "1000px", margin: "0 auto", textAlign: "center" }}>
           <Reveal>
-            <h2 style={{ fontSize: "2.5rem", fontWeight: "900", marginBottom: "2rem" }}>Download Clearpath</h2>
+            <h2 style={{ fontSize: "2.2rem", fontWeight: "900", marginBottom: "1rem" }}>Get Clearpath Today</h2>
           </Reveal>
-          <Reveal delay={0.2}>
-            <p style={{ fontSize: "1.1rem", opacity: 0.8, marginBottom: "3rem" }}>
-              Available on iOS and Android
+          <Reveal delay={0.1}>
+            <p style={{ fontSize: "1rem", opacity: 0.7, marginBottom: "3rem" }}>
+              Available on iOS and Android. Start free, upgrade anytime.
             </p>
           </Reveal>
-          <Reveal delay={0.4}>
-            <div style={{ display: "flex", gap: "2rem", justifyContent: "center", flexWrap: "wrap" }}>
-              <button style={{ padding: "0.75rem 2rem", backgroundColor: "#0891b2", color: "white", fontWeight: "700", borderRadius: "0.5rem", border: "none", cursor: "pointer", display: "flex", gap: "0.75rem", alignItems: "center" }}>
+          <Reveal delay={0.2}>
+            <div style={{ display: "flex", gap: "1.5rem", justifyContent: "center", flexWrap: "wrap" }}>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                style={{
+                  padding: "0.9rem 2rem",
+                  backgroundColor: "#0891b2",
+                  color: "white",
+                  fontWeight: "700",
+                  borderRadius: "0.35rem",
+                  border: "none",
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  gap: "0.75rem",
+                  alignItems: "center",
+                }}
+              >
                 <Apple size={20} /> App Store
-              </button>
-              <button style={{ padding: "0.75rem 2rem", backgroundColor: "#0891b2", color: "white", fontWeight: "700", borderRadius: "0.5rem", border: "none", cursor: "pointer", display: "flex", gap: "0.75rem", alignItems: "center" }}>
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                style={{
+                  padding: "0.9rem 2rem",
+                  backgroundColor: "#0891b2",
+                  color: "white",
+                  fontWeight: "700",
+                  borderRadius: "0.35rem",
+                  border: "none",
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  gap: "0.75rem",
+                  alignItems: "center",
+                }}
+              >
                 <Smartphone size={20} /> Google Play
-              </button>
+              </motion.button>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* FINAL CTA */}
+      <section style={{ padding: "6rem 2rem" }}>
+        <div style={{ maxWidth: "1000px", margin: "0 auto", textAlign: "center" }}>
+          <Reveal>
+            <h2 style={{ fontSize: "2.2rem", fontWeight: "900", marginBottom: "1rem" }}>Start Your Financial Journey</h2>
+          </Reveal>
+          <Reveal delay={0.1}>
+            <p style={{ fontSize: "1rem", opacity: 0.7, marginBottom: "2.5rem", maxWidth: "500px", margin: "0 auto 2.5rem" }}>
+              Join 2M+ users who've taken control of their finances. No credit card required.
+            </p>
+          </Reveal>
+          <Reveal delay={0.2}>
+            <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                style={{
+                  padding: "0.9rem 2.25rem",
+                  backgroundColor: "#0891b2",
+                  color: "white",
+                  fontWeight: "900",
+                  fontSize: "0.9rem",
+                  borderRadius: "0.35rem",
+                  border: "none",
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  gap: "0.75rem",
+                  alignItems: "center",
+                  textTransform: "uppercase",
+                }}
+              >
+                Start Free <ArrowRight size={18} />
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                style={{
+                  padding: "0.9rem 2.25rem",
+                  backgroundColor: "transparent",
+                  color: "#0891b2",
+                  fontWeight: "700",
+                  fontSize: "0.9rem",
+                  border: "2px solid #0891b2",
+                  borderRadius: "0.35rem",
+                  cursor: "pointer",
+                  textTransform: "uppercase",
+                }}
+              >
+                Book Demo
+              </motion.button>
             </div>
           </Reveal>
         </div>
       </section>
     </div>
-  );
+  )
 }
