@@ -1,232 +1,376 @@
-"use client";
+"use client"
 
-import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
-import Image from "next/image";
-import { X, Menu, Search, Award, Zap, Activity, Globe, Shield, Command, Plus, ArrowUpRight, Maximize2, MoveRight, Layers, Box, Compass, Sparkles, MoveVertical, Target, Radio, CheckCircle2, Leaf, Recycle } from "lucide-react";
-import "../premium.css";
+import { motion, useScroll, useTransform, useInView, AnimatePresence, useMotionValue, useSpring } from "framer-motion"
+import { useState, useRef, useEffect } from "react"
+import Image from "next/image"
+import Link from "next/link"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
+import { Progress } from "@/components/ui/progress"
+import { Separator } from "@/components/ui/separator"
+import { Building2, TrendingUp, Award, Globe, FileText, ChevronDown, ArrowRight, Lock } from "lucide-react"
 
-const MISSIONS = [
-  { id: 1, title: "CORE_VERDANT", cat: "Ecology", value: "Verified", img: "https://images.unsplash.com/photo-1473448912268-2022ce9509d8?q=80&w=1000&auto=format&fit=crop" },
-  { id: 2, title: "VOID_FOREST", cat: "Botany", value: "Active", img: "https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?q=80&w=1000&auto=format&fit=crop" },
-  { id: 3, title: "NEON_SHELL", cat: "Climate", value: "Locked", img: "https://images.unsplash.com/photo-1502082553048-f009c37129b9?q=80&w=1000&auto=format&fit=crop" },
-];
+const SERVICES = [
+  { name: "Wealth Planning", description: "Strategic asset allocation & retirement optimization", min: "€2.5M+" },
+  { name: "Investments", description: "Global equities, alternatives & direct deals", min: "€2.5M+" },
+  { name: "Tax Optimization", description: "International tax structuring & efficiency", min: "€2.5M+" },
+  { name: "Estate Planning", description: "Multi-generational wealth transfer", min: "€2.5M+" },
+  { name: "Philanthropy", description: "Impact investing & charitable structures", min: "€1.0M+" },
+]
 
-export default function VerdantSustainableSPA() {
-  const [view, setView] = useState<"verdant" | "mission" | "logic">("verdant");
-  const [activeItem, setActiveItem] = useState(0);
+const TEAM_MEMBERS = [
+  { name: "Marcus Rothschild", role: "CFA, Founder", aum: "€2.1B", img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200" },
+  { name: "Elena Rossi", role: "CFP, Senior Advisor", aum: "€1.8B", img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200" },
+  { name: "James Chen", role: "CFA, Portfolio Manager", aum: "€1.5B", img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200" },
+  { name: "Sophie Laurent", role: "CFP, Estate Specialist", aum: "€1.2B", img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200" },
+]
+
+const TESTIMONIALS = [
+  { text: "Exceptional wealth management across 5 continents. Turned complexity into clarity.", company: "Luxury Retail" },
+  { text: "25 years of consistent outperformance. These advisors understand true wealth.", company: "Manufacturing" },
+  { text: "Estate planning saved us millions. Professional, discreet, exceptional.", company: "Family Office" },
+]
+
+const Reveal = ({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) => {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: "-60px" })
+  return (
+    <motion.div ref={ref}
+      initial={{ opacity: 0, y: 24 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.55, delay, ease: [0.25, 0.46, 0.45, 0.94] }}
+    >{children}</motion.div>
+  )
+}
+
+const Counter = ({ target, suffix = "", prefix = "" }: { target: number; suffix?: string; prefix?: string }) => {
+  const [count, setCount] = useState(0)
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true })
+  useEffect(() => {
+    if (!inView) return
+    const step = target / 90
+    const t = setInterval(() => setCount(c => { const n = c + step; if (n >= target) { clearInterval(t); return target; } return n; }), 16)
+    return () => clearInterval(t)
+  }, [inView, target])
+  return <span ref={ref}>{prefix}{Math.floor(count).toLocaleString()}{suffix}</span>
+}
+
+const MagneticBtn = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => {
+  const x = useMotionValue(0); const y = useMotionValue(0)
+  const sx = useSpring(x, { stiffness: 400, damping: 20 })
+  const sy = useSpring(y, { stiffness: 400, damping: 20 })
+  const ref = useRef<HTMLButtonElement>(null)
+  const handleMouse = (e: React.MouseEvent) => {
+    const r = ref.current!.getBoundingClientRect()
+    x.set((e.clientX - r.left - r.width/2) * 0.3)
+    y.set((e.clientY - r.top - r.height/2) * 0.3)
+  }
+  return <motion.button ref={ref} style={{ x: sx, y: sy }} onMouseMove={handleMouse}
+    onMouseLeave={() => { x.set(0); y.set(0) }} className={`cursor-pointer ${className}`}>{children}</motion.button>
+}
+
+export default function AurumFinance() {
+  const [activeTab, setActiveTab] = useState("wealth")
+  const [openConsult, setOpenConsult] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const { scrollYProgress } = useScroll({ target: containerRef })
+  const opacity = useTransform(scrollYProgress, [0, 0.3], [1, 0.8])
 
   return (
-    <div className="premium-theme bg-[#f4f7f0] text-[#1a2e1a] min-h-screen selection:bg-green-600 selection:text-white font-sans overflow-x-hidden">
-      
-      {/* Background HUD Layers */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[45vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase">
-           VERDANT
+    <div ref={containerRef} style={{ overflowX: 'hidden', scrollBehavior: 'smooth' }} className="bg-gradient-to-b from-[#070d14] via-[#0a1120] to-[#070d14] text-white min-h-screen font-sans">
+      {/* Parallax Hero */}
+      <motion.div style={{ opacity }} className="relative h-screen flex items-center overflow-hidden">
+        <Image
+          src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1200"
+          alt="Wealth Management"
+          fill
+          className="object-cover opacity-20"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#070d14] via-transparent to-[#070d14]" />
+
+        <div className="relative z-10 max-w-6xl mx-auto px-6 md:px-12 w-full">
+          <Reveal>
+            <h1 className="text-6xl md:text-7xl font-black mb-6" style={{ color: '#d4af37' }}>
+              AURUM<br />WEALTH
+            </h1>
+          </Reveal>
+          <Reveal delay={0.2}>
+            <p className="text-xl md:text-2xl text-slate-300 max-w-2xl mb-8 font-light">
+              Private wealth management for discerning clients. €5B+ in assets under management across 200 ultra-high-net-worth families.
+            </p>
+          </Reveal>
+          <Reveal delay={0.4}>
+            <MagneticBtn className="px-8 py-4 bg-[#d4af37] text-[#070d14] font-bold rounded-lg hover:shadow-2xl hover:shadow-[#d4af37]/50 transition-all">
+              Schedule Consultation
+            </MagneticBtn>
+          </Reveal>
         </div>
-        <div className="absolute inset-x-0 top-0 bottom-0 left-1/2 -translate-x-1/2 w-[1px] bg-black/5" />
-        <div className="absolute inset-0 bg-[#f4f7f0]/40 backdrop-blur-[2px]" />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.05] mix-blend-multiply" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#f4f7f0_100%)] opacity-80" />
-      </div>
+      </motion.div>
 
-      {/* Editorial HUD Nav */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-center bg-transparent backdrop-blur-3xl border-b border-green-900/10 font-mono text-black">
-        <div className="flex gap-12 items-center">
-           <button onClick={() => setView("verdant")} className="text-xl font-black italic tracking-tighter hover:text-green-800 transition-colors flex items-center gap-4 text-green-700">
-              VERDANT_OS&trade;
-           </button>
-           <div className="hidden lg:flex gap-8 text-[10px] font-black uppercase tracking-widest opacity-20 italic">
-              Status: Ecology_Sync_Active
-              <span className="text-black">Ref: 0x142</span>
-           </div>
-        </div>
-        <div className="hidden md:flex gap-12 text-[10px] font-black uppercase tracking-[0.4em] opacity-30">
-           <button onClick={() => setView("verdant")} className={`hover:opacity-100 transition-opacity ${view === 'verdant' ? 'text-black opacity-100 underline decoration-black underline-offset-8 italic' : ''}`}>THE_VERDANT</button>
-           <button onClick={() => setView("logic")} className={`hover:opacity-100 transition-opacity ${view === 'logic' ? 'text-black opacity-100 underline decoration-black underline-offset-8 italic' : ''}`}>THE_LOGIC</button>
-        </div>
-        <div className="flex items-center gap-8 text-black">
-           <Search className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-           <Menu className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-        </div>
-      </nav>
+      {/* Service Tabs */}
+      <section className="py-24 px-6 md:px-12 max-w-6xl mx-auto">
+        <Reveal>
+          <h2 className="text-5xl font-black mb-4" style={{ color: '#d4af37' }}>Our Services</h2>
+          <p className="text-slate-400 mb-12 text-lg">Comprehensive wealth solutions tailored to your needs</p>
+        </Reveal>
 
-      <AnimatePresence mode="wait">
-        
-        {/* THE VERDANT VIEW (LANDING) */}
-        {view === "verdant" && (
-          <motion.div key="verdant" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-48 pb-32 px-12 max-w-[1800px] mx-auto min-h-screen flex flex-col justify-center relative z-10 font-sans">
-             <header className="mb-24 border-b border-green-900/20 pb-12 flex flex-col md:flex-row justify-between items-end gap-12 text-[#1a2e1a]">
-                <div>
-                   <span className="text-[10px] uppercase font-black tracking-[1em] opacity-40 mb-4 block underline decoration-green-900/10 underline-offset-8 italic font-mono text-green-700">Visual_Capture // Series_142</span>
-                   <h1 className="text-7xl md:text-[12vw] font-black italic uppercase tracking-tighter leading-[0.75]">PURE. <br/> <span className="text-transparent" style={{ WebkitTextStroke: "2px rgba(22,101,52,0.6)" }}>GREEN.</span></h1>
-                </div>
-                <div className="text-right flex flex-col items-end">
-                   <div className="text-3xl font-black mb-4 tracking-tighter uppercase opacity-10 italic font-mono text-green-600">Dynamic_Sync</div>
-                   <div className="w-64 h-[2px] bg-black/5 rounded-none overflow-hidden">
-                      <motion.div animate={{ width: ['20%', '90%', '40%', '75%'] }} transition={{ duration: 4, repeat: Infinity }} className="h-full bg-green-700" />
-                   </div>
-                </div>
-             </header>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 gap-2 bg-[#1e2d40]/50 p-2 rounded-lg mb-8">
+            {SERVICES.map((svc) => (
+              <TabsTrigger
+                key={svc.name}
+                value={svc.name.toLowerCase().replace(" ", "")}
+                className="text-xs md:text-sm font-bold"
+              >
+                {svc.name.split(" ")[0]}
+              </TabsTrigger>
+            ))}
+          </TabsList>
 
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {MISSIONS.map((p, i) => (
-                  <motion.div 
-                    key={p.id} initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                    className="group relative h-[60vh] rounded-none overflow-hidden border border-green-900/10 hover:border-green-900/40 transition-all cursor-pointer shadow-2xl bg-white/5"
-                    onClick={() => { setActiveItem(i); setView("mission"); }}
-                  >
-                     <Image src={p.img} alt={p.title} fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[2s] group-hover:scale-110" />
-                     <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 to-transparent" />
-                     <div className="absolute inset-0 bg-green-500/10 group-hover:bg-transparent transition-colors duration-1000" />
-                     
-                     <div className="absolute inset-10 flex flex-col justify-between">
-                        <div className="flex justify-between items-start text-white">
-                           <div className="p-4 bg-white/10 border border-white/20 rounded-none opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Leaf className="w-5 h-5" />
-                           </div>
-                           <div className="text-[10px] font-black uppercase tracking-widest opacity-20 italic">UNIT_0x{i+142}</div>
-                        </div>
-                        <div className="text-white">
-                           <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-2 block italic text-green-300">{p.cat} // {p.value}</span>
-                           <h3 className="text-5xl font-black italic uppercase tracking-tighter leading-none transition-all group-hover:tracking-widest">{p.title}</h3>
-                        </div>
-                     </div>
-                  </motion.div>
-                ))}
-             </div>
-          </motion.div>
-        )}
-
-        {/* THE MISSION VIEW (DETAIL) */}
-        {view === "mission" && (
-          <motion.div key="mission" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen">
-             <button onClick={() => setView("verdant")} className="fixed top-12 left-12 z-[60] bg-black text-white p-5 rounded-none hover:scale-110 transition-transform shadow-2xl">
-                <X className="w-6 h-6" />
-             </button>
-
-             <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen pt-24 lg:pt-0">
-                <div className="lg:col-span-12 relative flex items-center justify-center p-8 md:p-32 overflow-hidden h-screen bg-[#f4f7f0]">
-                   <div className="absolute inset-0 opacity-10">
-                      <Image src={MISSIONS[activeItem].img} alt="Background" fill className="object-cover grayscale" />
-                   </div>
-                   <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[40vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase text-green-500 font-sans">
-                      MISSION
-                   </div>
-                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#f4f7f0_100%)]" />
-                   
-                   <div className="max-w-[1500px] w-full grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10 font-sans text-[#1a2e1a]">
-                      <motion.div initial={{ scale: 1.1, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1 }} className="relative aspect-square w-full rounded-none overflow-hidden border border-green-900/20 group bg-neutral-900 shadow-2xl">
-                         <Image src={MISSIONS[activeItem].img} alt="Spec" fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[3s] opacity-80" priority />
-                         <div className="absolute top-12 left-12 p-4 bg-black/60 backdrop-blur-3xl rounded-none border-2 border-white/10 z-20">
-                            <Layers className="w-6 h-6 text-green-400 animate-pulse" />
-                         </div>
-                      </motion.div>
-
-                      <div className="flex flex-col justify-center space-y-12">
-                         <div className="space-y-6">
-                            <span className="text-[10px] uppercase tracking-[1em] font-black opacity-30 mb-8 block underline decoration-black decoration-4 underline-offset-8 italic font-mono text-green-700">Dynamic_Sync // {MISSIONS[activeItem].cat}</span>
-                            <h1 className="text-7xl md:text-[8vw] font-black italic uppercase tracking-tighter leading-none">{MISSIONS[activeItem].title}</h1>
-                            <div className="text-4xl font-black italic tracking-tighter opacity-10 italic text-green-600">State: {MISSIONS[activeItem].value}</div>
-                         </div>
-
-                         <p className="text-3xl font-light italic leading-relaxed uppercase tracking-tight opacity-40 leading-relaxed">
-                            Structural allocation for mission {MISSIONS[activeItem].title}. System integrity at 100%. Thermal load nominal at 32C. Every coordinate synchronized.
-                         </p>
-
-                         <div className="grid grid-cols-2 gap-12 py-12 border-y border-black/10 font-mono text-green-800">
-                            {[
-                              { icon: <Recycle className="w-5 h-5" />, l: "Logic", v: "Phase_Shift" },
-                              { icon: <Zap className="w-5 h-5" />, l: "Power", v: "Solar_Max" },
-                              { icon: <Shield className="w-5 h-5" />, l: "Security", v: "High_Impact" },
-                              { icon: <Activity className="w-5 h-5" />, l: "Status", v: "Verified" },
-                            ].map((s, i) => (
-                              <div key={i} className="flex gap-6 items-center">
-                                 <div className="opacity-20">{s.icon}</div>
-                                 <div className="text-left">
-                                    <div className="text-[10px] font-black opacity-30 uppercase tracking-widest mb-1 italic text-[#1a2e1a]">{s.l}</div>
-                                    <div className="text-sm font-black uppercase italic tracking-tighter text-[#1a2e1a]">{s.v}</div>
-                                 </div>
-                              </div>
-                            ))}
-                         </div>
-
-                         <div className="flex gap-6 pt-8 font-mono">
-                            <button onClick={() => setView("verdant")} className="flex-grow py-8 bg-green-800 text-white font-black uppercase text-xs tracking-[1em] hover:bg-green-700 transition-all shadow-2xl">
-                               Return_to_Verdant
-                            </button>
-                            <button className="px-12 py-8 border border-black/20 text-[10px] font-black uppercase tracking-[0.5em] hover:scale-105 transition-all text-black">
-                               PDF_Spec
-                            </button>
-                         </div>
+          {SERVICES.map((svc) => (
+            <TabsContent key={svc.name} value={svc.name.toLowerCase().replace(" ", "")} className="space-y-6">
+              <Reveal>
+                <Card className="bg-[#1e2d40]/50 border-[#d4af37]/30 overflow-hidden group cursor-pointer hover:border-[#d4af37] transition-all duration-300">
+                  <CardContent className="p-8">
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <h3 className="text-2xl font-bold mb-2">{svc.name}</h3>
+                        <p className="text-slate-400">{svc.description}</p>
                       </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
+                      <Badge className="bg-[#d4af37] text-[#070d14] font-bold">Min. {svc.min}</Badge>
+                    </div>
+                    <div className="pt-4 border-t border-[#d4af37]/20">
+                      <ul className="space-y-2 text-sm text-slate-300">
+                        <li className="flex items-center gap-2"><ArrowRight className="w-4 h-4" style={{ color: '#d4af37' }} /> Strategic allocation</li>
+                        <li className="flex items-center gap-2"><ArrowRight className="w-4 h-4" style={{ color: '#d4af37' }} /> Risk management</li>
+                        <li className="flex items-center gap-2"><ArrowRight className="w-4 h-4" style={{ color: '#d4af37' }} /> Tax optimization</li>
+                      </ul>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Reveal>
+            </TabsContent>
+          ))}
+        </Tabs>
+      </section>
 
-        {/* THE LOGIC VIEW (INFO) */}
-        {view === "logic" && (
-          <motion.div key="logic" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen flex flex-col justify-center">
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center text-[#1a2e1a] font-sans">
-                <div className="space-y-16">
-                   <span className="text-[10px] uppercase font-black tracking-[1.5em] opacity-30 block underline decoration-green-800 decoration-2 underline-offset-8 italic font-mono text-green-700">The_Logic_Protocol</span>
-                   <h2 className="text-7xl md:text-[10vw] font-black italic tracking-tighter leading-none uppercase">The <br/> Truth.</h2>
-                   <p className="text-3xl md:text-4xl font-light italic opacity-60 leading-relaxed uppercase tracking-tight font-sans">
-                      We treat architecture as code. Every structure is a function of its environmental variables and tectonic intent. 100% precision. Zero noise.
-                   </p>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t border-black/10 font-mono text-green-700">
-                      {[
-                        { icon: <Sparkles className="w-6 h-6" />, t: "Adaptive Flow", v: "Dynamic Load Sync" },
-                        { icon: <Plus className="w-6 h-6" />, t: "Structural Sync", v: "Deep_Material_ID" },
-                      ].map((item, i) => (
-                        <div key={i} className="flex gap-8 group">
-                           <div className="w-16 h-16 rounded-none border border-[#1a2e1a] flex items-center justify-center text-[#1a2e1a] group-hover:bg-[#1a2e1a] group-hover:text-white transition-all shadow-xl">
-                              {item.icon}
-                           </div>
-                           <div className="text-left text-[#1a2e1a]">
-                              <h4 className="text-2xl font-black uppercase italic tracking-tighter leading-none mb-2">{item.t}</h4>
-                              <p className="text-[10px] opacity-30 uppercase tracking-[0.3em] font-black leading-relaxed text-green-600/40 text-green-700">{item.v}</p>
-                           </div>
-                        </div>
-                      ))}
-                   </div>
+      {/* Portfolio Allocation */}
+      <section className="py-24 px-6 md:px-12 max-w-6xl mx-auto">
+        <Reveal>
+          <h2 className="text-5xl font-black mb-4" style={{ color: '#d4af37' }}>Portfolio Allocation</h2>
+        </Reveal>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
+          {[
+            { name: "Equities", value: 35 },
+            { name: "Fixed Income", value: 28 },
+            { name: "Alternatives", value: 22 },
+            { name: "Real Assets", value: 15 },
+          ].map((item, idx) => (
+            <Reveal key={item.name} delay={idx * 0.1}>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="font-semibold text-lg">{item.name}</span>
+                  <span className="text-[#d4af37] font-bold">{item.value}%</span>
                 </div>
-                <div className="relative aspect-square bg-green-900/10 rounded-none p-12 overflow-hidden border border-green-900/20 group shadow-2xl">
-                   <Image src="https://images.unsplash.com/photo-1541829070764-84a7d30dee62?q=80&w=1000&auto=format&fit=crop" alt="The Archive" fill className="object-cover opacity-20 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-[3s]" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-80" />
-                   <div className="absolute inset-x-0 bottom-12 flex justify-center font-mono">
-                      <div className="px-12 py-6 bg-green-800 text-white text-[10px] font-black uppercase tracking-widest italic animate-bounce cursor-pointer hover:bg-green-700 transition-all rounded-none font-mono">
-                         Establish_Handshake
+                <Progress value={item.value} className="h-2 bg-[#1e2d40]" />
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* Team */}
+      <section className="py-24 px-6 md:px-12 max-w-6xl mx-auto">
+        <Reveal>
+          <h2 className="text-5xl font-black mb-4" style={{ color: '#d4af37' }}>Our Team</h2>
+          <p className="text-slate-400 mb-12 text-lg">Industry veterans with 25+ years average experience</p>
+        </Reveal>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {TEAM_MEMBERS.map((member, idx) => (
+            <Reveal key={member.name} delay={idx * 0.1}>
+              <Card className="bg-[#1e2d40]/50 border-[#d4af37]/30 hover:border-[#d4af37] transition-all group cursor-pointer">
+                <CardContent className="p-6">
+                  <Avatar className="w-12 h-12 mb-4 border-2 border-[#d4af37]">
+                    <AvatarImage src={member.img} />
+                    <AvatarFallback>{member.name.split(" ")[0][0]}</AvatarFallback>
+                  </Avatar>
+                  <h3 className="font-bold text-lg mb-1">{member.name}</h3>
+                  <p className="text-xs text-[#d4af37] mb-3">{member.role}</p>
+                  <p className="text-sm text-slate-400">AUM: {member.aum}</p>
+                </CardContent>
+              </Card>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* Stats Counter */}
+      <section className="py-24 px-6 md:px-12 max-w-6xl mx-auto">
+        <Reveal>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            {[
+              { label: "AUM", value: 5, suffix: "B", prefix: "€" },
+              { label: "Clients", value: 200 },
+              { label: "Years Experience", value: 25 },
+              { label: "Performance", value: 1, suffix: "%", prefix: "Top " },
+            ].map((stat, idx) => (
+              <Reveal key={stat.label} delay={idx * 0.1}>
+                <div className="text-center p-6 bg-[#1e2d40]/30 rounded-lg border border-[#d4af37]/20">
+                  <div className="text-4xl font-black mb-2" style={{ color: '#d4af37' }}>
+                    <Counter target={stat.value} prefix={stat.prefix} suffix={stat.suffix} />
+                  </div>
+                  <p className="text-slate-400">{stat.label}</p>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </Reveal>
+      </section>
+
+      {/* Onboarding Process */}
+      <section className="py-24 px-6 md:px-12 max-w-6xl mx-auto">
+        <Reveal>
+          <h2 className="text-5xl font-black mb-12" style={{ color: '#d4af37' }}>Client Onboarding</h2>
+        </Reveal>
+
+        <Accordion type="single" collapsible className="w-full space-y-4">
+          {[
+            { step: "1. Initial Consultation", desc: "Confidential meeting to understand goals & assets" },
+            { step: "2. Wealth Analysis", desc: "Comprehensive review of current portfolio & tax position" },
+            { step: "3. Strategy Development", desc: "Custom wealth plan with 10-year projections" },
+            { step: "4. Implementation", desc: "Execution of strategy with ongoing monitoring" },
+            { step: "5. Quarterly Reviews", desc: "Regular updates and rebalancing as needed" },
+          ].map((item, idx) => (
+            <Reveal key={item.step} delay={idx * 0.1}>
+              <AccordionItem value={`item-${idx}`} className="border-[#d4af37]/30">
+                <AccordionTrigger className="hover:text-[#d4af37] transition-colors">
+                  <span className="font-bold text-lg">{item.step}</span>
+                </AccordionTrigger>
+                <AccordionContent className="text-slate-400">
+                  {item.desc}
+                </AccordionContent>
+              </AccordionItem>
+            </Reveal>
+          ))}
+        </Accordion>
+      </section>
+
+      {/* Testimonials Carousel */}
+      <section className="py-24 px-6 md:px-12 max-w-6xl mx-auto">
+        <Reveal>
+          <h2 className="text-5xl font-black mb-12" style={{ color: '#d4af37' }}>Client Testimonials</h2>
+        </Reveal>
+
+        <Carousel opts={{ align: "start", loop: true }} className="w-full">
+          <CarouselContent>
+            {TESTIMONIALS.map((testimonial, idx) => (
+              <CarouselItem key={idx} className="md:basis-1/2 lg:basis-1/3">
+                <Card className="bg-[#1e2d40]/50 border-[#d4af37]/30 h-full">
+                  <CardContent className="p-8 flex flex-col justify-between h-full">
+                    <div>
+                      <div className="flex gap-1 mb-4">
+                        {[...Array(5)].map((_, i) => (
+                          <Award key={i} className="w-4 h-4" style={{ color: '#d4af37' }} />
+                        ))}
                       </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
+                      <p className="text-slate-300 italic mb-4">"{testimonial.text}"</p>
+                    </div>
+                    <Badge className="w-fit bg-[#d4af37]/20 text-[#d4af37] border-[#d4af37]/50">{testimonial.company}</Badge>
+                  </CardContent>
+                </Card>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious />
+          <CarouselNext />
+        </Carousel>
+      </section>
 
-      </AnimatePresence>
+      {/* Regulatory Badges */}
+      <section className="py-24 px-6 md:px-12 max-w-6xl mx-auto">
+        <Reveal>
+          <h2 className="text-5xl font-black mb-4" style={{ color: '#d4af37' }}>Regulatory Excellence</h2>
+          <p className="text-slate-400 mb-12">Trusted by regulators worldwide</p>
+        </Reveal>
 
-      {/* Global Status HUD */}
-      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em] italic text-green-700 leading-none font-mono">
-         <div className="flex gap-12 text-green-700">
-            <span>Verdant_OS_Alpha</span>
-            <span>Uptime: 99.9%</span>
-         </div>
-         <div className="flex gap-4 items-end text-green-700">
-            <div className="text-right leading-tight italic">
-               Archival_Control <br /> v4.0.142
-            </div>
-            <div className="flex gap-[4px] h-4">
-               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-full bg-[#1a2e1a] opacity-${i*20}`}></div>)}
-            </div>
-         </div>
-      </footer>
+        <div className="flex flex-wrap gap-4">
+          {["FSA Regulated", "SEC Registered", "MAS Approved", "FINRA Member"].map((badge, idx) => (
+            <Reveal key={badge} delay={idx * 0.1}>
+              <Badge variant="outline" className="px-4 py-2 border-[#d4af37]/50 text-[#d4af37]">
+                {badge}
+              </Badge>
+            </Reveal>
+          ))}
+        </div>
+      </section>
 
-      <style>{`
-        ::-webkit-scrollbar { width: 0px; }
-      `}</style>
+      {/* FAQ */}
+      <section className="py-24 px-6 md:px-12 max-w-6xl mx-auto">
+        <Reveal>
+          <h2 className="text-5xl font-black mb-12" style={{ color: '#d4af37' }}>FAQ</h2>
+        </Reveal>
+
+        <Accordion type="single" collapsible className="w-full space-y-4">
+          {[
+            { q: "What is the minimum to get started?", a: "Our typical minimum is €2.5M, though we work with selected clients from €1M." },
+            { q: "How are fees structured?", a: "Tiered fee structure: 0.85% on first €10M, 0.65% on €10-50M, 0.45% above €50M." },
+            { q: "How often do you rebalance?", a: "Quarterly reviews with rebalancing as market conditions warrant, minimum annually." },
+            { q: "Where is my money held?", a: "With our custodian partners - global banks, never with us. Full segregation & insurance." },
+          ].map((item, idx) => (
+            <Reveal key={item.q} delay={idx * 0.1}>
+              <AccordionItem value={`faq-${idx}`} className="border-[#d4af37]/30">
+                <AccordionTrigger className="hover:text-[#d4af37] transition-colors">
+                  {item.q}
+                </AccordionTrigger>
+                <AccordionContent className="text-slate-400">
+                  {item.a}
+                </AccordionContent>
+              </AccordionItem>
+            </Reveal>
+          ))}
+        </Accordion>
+      </section>
+
+      {/* Consultation CTA */}
+      <section className="py-24 px-6 md:px-12 max-w-6xl mx-auto text-center">
+        <Reveal>
+          <h2 className="text-5xl font-black mb-6" style={{ color: '#d4af37' }}>Ready to Grow Your Wealth?</h2>
+          <p className="text-slate-400 mb-8 text-lg max-w-2xl mx-auto">
+            Our wealth advisors are standing by to discuss your financial goals.
+          </p>
+          <MagneticBtn
+            onClick={() => setOpenConsult(true)}
+            className="px-10 py-4 bg-[#d4af37] text-[#070d14] font-bold rounded-lg hover:shadow-2xl hover:shadow-[#d4af37]/50 transition-all"
+          >
+            Schedule Private Consultation
+          </MagneticBtn>
+        </Reveal>
+      </section>
+
+      <Dialog open={openConsult} onOpenChange={setOpenConsult}>
+        <DialogContent className="bg-[#1e2d40] border-[#d4af37]/30">
+          <DialogHeader>
+            <DialogTitle style={{ color: '#d4af37' }}>Schedule a Consultation</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <input placeholder="Full Name" className="w-full px-4 py-2 bg-[#070d14] border border-[#d4af37]/30 rounded text-white placeholder-slate-500" />
+            <input placeholder="Email" type="email" className="w-full px-4 py-2 bg-[#070d14] border border-[#d4af37]/30 rounded text-white placeholder-slate-500" />
+            <input placeholder="Assets Under Management" className="w-full px-4 py-2 bg-[#070d14] border border-[#d4af37]/30 rounded text-white placeholder-slate-500" />
+            <button className="w-full py-3 bg-[#d4af37] text-[#070d14] font-bold rounded hover:opacity-90 transition-opacity">
+              Request Meeting
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
-  );
+  )
 }
