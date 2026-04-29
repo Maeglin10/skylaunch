@@ -1,230 +1,392 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect } from "react";
+import { motion, AnimatePresence, useScroll, useTransform, useInView, useMotionValue, useSpring } from "framer-motion";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { X, Menu, Search, Utensils, Zap, Activity, Globe, Shield, Command, Plus, ArrowUpRight, Maximize2, MoveRight, Layers, Box, Compass, Sparkles, MoveVertical } from "lucide-react";
-import "../premium.css";
+import Link from "next/link";
+import { X, Menu, PieChart, TrendingUp, Lock, Shield, Check, Star, ArrowRight, ChevronDown, Apple, Smartphone } from "lucide-react";
 
-const DISHES = [
-  { id: 1, title: "NEURAL_SALT", cat: "Entrée", value: "Prime", img: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=1000&auto=format&fit=crop" },
-  { id: 2, title: "SILICON_SEA", cat: "Poisson", value: "Fresh", img: "https://images.unsplash.com/photo-1567620905732-2d1ec7bb7445?q=80&w=1000&auto=format&fit=crop" },
-  { id: 3, title: "CARBON_RIB", cat: "Viande", value: "Aged", img: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?q=80&w=1000&auto=format&fit=crop" },
-  { id: 4, title: "GLASS_FOAM", cat: "Dessert", value: "Cryo", img: "https://images.unsplash.com/photo-1482049016688-2d3e1b311543?q=80&w=1000&auto=format&fit=crop" },
-];
+// REVEAL COMPONENT
+const Reveal = ({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) => {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-60px" });
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 30 }}
+      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+      transition={{ duration: 0.8, delay }}
+    >
+      {children}
+    </motion.div>
+  );
+};
 
-export default function FluxKitchenSPA() {
-  const [view, setView] = useState<"drift" | "dish" | "protocol">("drift");
-  const [activeItem, setActiveItem] = useState(0);
+// COUNTER COMPONENT
+const Counter = ({ target, duration = 2, prefix = "", suffix = "" }: { target: number; duration?: number; prefix?: string; suffix?: string }) => {
+  const [count, setCount] = useState(0);
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-60px" });
+
+  useEffect(() => {
+    if (!isInView) return;
+    const increment = target / (duration * 100);
+    let current = 0;
+    const interval = setInterval(() => {
+      current += increment;
+      if (current >= target) {
+        setCount(target);
+        clearInterval(interval);
+      } else {
+        setCount(Math.floor(current));
+      }
+    }, 10);
+    return () => clearInterval(interval);
+  }, [isInView, target, duration]);
 
   return (
-    <div className="premium-theme bg-[#f8f8f8] text-[#1a1a1a] min-h-screen selection:bg-black selection:text-white font-mono overflow-x-hidden">
-      
-      {/* Background HUD Layers */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#f8f8f8_100%)] opacity-80" />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.02] mix-blend-multiply" />
-      </div>
+    <span ref={ref}>
+      {prefix}
+      {count.toLocaleString()}
+      {suffix}
+    </span>
+  );
+};
 
-      {/* Editorial HUD Nav */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-center bg-white/40 backdrop-blur-3xl border-b border-black/5">
-        <div className="flex gap-12 items-center">
-           <button onClick={() => setView("drift")} className="text-xl font-black italic tracking-tighter hover:scale-105 transition-transform font-serif uppercase">
-              FLUX_KITCHEN&trade;
-           </button>
-           <div className="hidden lg:flex gap-8 text-[10px] font-black uppercase tracking-widest opacity-20 italic">
-              Status: Culinary_Sync
-              <span className="text-black">Ref: 0x84_F</span>
-           </div>
-        </div>
-        <div className="hidden md:flex gap-12 text-[10px] font-black uppercase tracking-[0.4em] opacity-30">
-           <button onClick={() => setView("drift")} className={`hover:opacity-100 transition-opacity ${view === 'drift' ? 'text-black opacity-100 underline decoration-black decoration-2 underline-offset-8 italic' : ''}`}>THE_DRIFT</button>
-           <button onClick={() => setView("protocol")} className={`hover:opacity-100 transition-opacity ${view === 'protocol' ? 'text-black opacity-100 underline decoration-black decoration-2 underline-offset-8 italic' : ''}`}>THE_PROTOCOL</button>
-        </div>
-        <div className="flex items-center gap-8">
-           <Search className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-           <Menu className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
+// MAGNETIC BUTTON COMPONENT
+const MagneticBtn = ({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) => {
+  const ref = useRef<HTMLButtonElement>(null);
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const xSpring = useSpring(x, { damping: 3, stiffness: 100 });
+  const ySpring = useSpring(y, { damping: 3, stiffness: 100 });
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    const rect = ref.current?.getBoundingClientRect();
+    if (rect) {
+      x.set(e.clientX - (rect.left + rect.width / 2));
+      y.set(e.clientY - (rect.top + rect.height / 2));
+    }
+  };
+
+  const handleMouseLeave = () => {
+    x.set(0);
+    y.set(0);
+  };
+
+  return (
+    <motion.button
+      ref={ref}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      onClick={onClick}
+      style={{ x: xSpring, y: ySpring }}
+      className="px-8 py-3 bg-[#0891b2] text-white font-black uppercase text-sm tracking-wider rounded hover:bg-[#0e7490] transition-colors"
+    >
+      {children}
+    </motion.button>
+  );
+};
+
+export default function ClearpathFinance() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("budget");
+  const [pricingPlan, setPricingPlan] = useState("pro");
+  const { scrollY } = useScroll();
+  const heroY = useTransform(scrollY, [0, 500], [0, 150]);
+
+  const tabs = [
+    { id: "budget", name: "Budget", icon: <PieChart size={24} />, desc: "Real-time spending insights" },
+    { id: "invest", name: "Invest", icon: <TrendingUp size={24} />, desc: "Portfolio management & growth" },
+    { id: "plan", name: "Plan", icon: <TrendingUp size={24} />, desc: "Retirement & goal planning" },
+    { id: "tax", name: "Tax", icon: <Shield size={24} />, desc: "Tax optimization strategies" },
+  ];
+
+  return (
+    <div style={{ backgroundColor: "#050d14", color: "#ffffff", minHeight: "100vh" }}>
+      {/* NAV */}
+      <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 50, backgroundColor: "rgba(5,13,20,0.95)", backdropFilter: "blur(12px)", borderBottom: "1px solid #0891b240" }}>
+        <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <h1 style={{ fontSize: "1.5rem", fontWeight: "900", color: "#0891b2", letterSpacing: "-0.02em" }}>CLEARPATH</h1>
+          <div style={{ display: "none", gap: "2rem" }} className="md:flex">
+            {["Features", "Security", "Pricing", "App"].map((item) => (
+              <a key={item} href="#" style={{ fontSize: "0.875rem", fontWeight: "600", textDecoration: "none", color: "#ffffff", opacity: 0.7 }}>
+                {item}
+              </a>
+            ))}
+          </div>
+          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} style={{ cursor: "pointer", background: "none", border: "none", color: "#0891b2" }}>
+            <Menu size={24} />
+          </button>
         </div>
       </nav>
 
-      <AnimatePresence mode="wait">
-        
-        {/* THE DRIFT VIEW (LANDING) */}
-        {view === "drift" && (
-          <motion.div key="drift" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-48 pb-32 px-12 max-w-[1800px] mx-auto min-h-screen flex flex-col justify-center relative z-10">
-             <header className="mb-24 border-b-2 border-black/20 pb-12 flex flex-col md:flex-row justify-between items-end gap-12">
-                <div>
-                   <span className="text-[10px] uppercase font-black tracking-[1em] opacity-40 mb-4 block underline decoration-black/10 underline-offset-8 italic">Culinary_Flow // Series_084</span>
-                   <h1 className="text-7xl md:text-[12vw] font-black italic uppercase tracking-tighter leading-[0.75] font-serif">TASTE. <br/> <span className="text-rose-600">MOTION.</span></h1>
-                </div>
-                <div className="text-right flex flex-col items-end">
-                   <div className="text-3xl font-black mb-4 tracking-tighter uppercase opacity-10 italic">Secure_Sync</div>
-                   <div className="w-64 h-2 bg-black/5 rounded-full overflow-hidden">
-                      <motion.div animate={{ width: ['20%', '90%', '40%', '75%'] }} transition={{ duration: 4, repeat: Infinity }} className="h-full bg-black" />
-                   </div>
-                </div>
-             </header>
-
-             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                {DISHES.map((p, i) => (
-                  <motion.div 
-                    key={p.id} initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                    className="group relative h-[60vh] rounded-[3.5rem] overflow-hidden border-8 border-white shadow-2xl bg-neutral-100 cursor-pointer"
-                    onClick={() => { setActiveItem(i); setView("dish"); }}
-                  >
-                     <Image src={p.img} alt={p.title} fill className="object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-[2s]" />
-                     <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
-                     
-                     <div className="absolute inset-10 flex flex-col justify-between">
-                        <div className="flex justify-between items-start">
-                           <div className="p-4 bg-white/80 backdrop-blur-xl rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Plus className="w-5 h-5 text-black" />
-                           </div>
-                           <div className="text-[10px] font-black uppercase tracking-widest opacity-20 group-hover:opacity-100 transition-opacity italic">REF_0x{p.id}</div>
-                        </div>
-                        <div className="text-white mix-blend-difference">
-                           <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-2 block italic">{p.cat}</span>
-                           <h3 className="text-5xl font-black italic uppercase tracking-tighter leading-none">{p.title}</h3>
-                        </div>
-                     </div>
-                  </motion.div>
-                ))}
-             </div>
-
-             <div className="mt-24 flex items-center gap-6 opacity-20 font-black text-[10px] uppercase tracking-[1em] italic">
-                Drifting_Through_Molecular_Gastronomy <MoveVertical className="w-6 h-6 animate-bounce" />
-             </div>
+      {/* MOBILE MENU */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} style={{ position: "fixed", top: "60px", left: 0, right: 0, backgroundColor: "#050d14", zIndex: 40, padding: "2rem", borderBottom: "1px solid #0891b240" }}>
+            {["Features", "Security", "Pricing", "App"].map((item, i) => (
+              <motion.a key={item} href="#" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }} style={{ display: "block", padding: "0.75rem 0", fontSize: "1rem", fontWeight: "600", color: "#ffffff", textDecoration: "none", borderBottom: "1px solid #0f172a" }}>
+                {item}
+              </motion.a>
+            ))}
           </motion.div>
         )}
-
-        {/* THE DISH VIEW (DEEP DIVE) */}
-        {view === "dish" && (
-          <motion.div key="dish" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen">
-             <button onClick={() => setView("drift")} className="fixed top-12 left-12 z-[60] bg-black text-white p-5 rounded-full hover:scale-110 transition-transform shadow-2xl">
-                <X className="w-6 h-6" />
-             </button>
-
-             <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen pt-24 lg:pt-0">
-                <div className="lg:col-span-12 relative flex items-center justify-center p-8 md:p-32 overflow-hidden h-screen bg-[#f8f8f8]">
-                   <div className="absolute inset-0 opacity-10">
-                      <Image src={DISHES[activeItem].img} alt="Background" fill className="object-cover grayscale" />
-                   </div>
-                   <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[40vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center font-serif uppercase">
-                      PLATE
-                   </div>
-                   
-                   <div className="max-w-[1500px] w-full grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10">
-                      <motion.div initial={{ scale: 1.1, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1 }} className="relative aspect-square w-full rounded-[4rem] overflow-hidden border-8 border-white bg-white shadow-2xl group">
-                         <Image src={DISHES[activeItem].img} alt="Gourmet" fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[3s] opacity-80" priority />
-                         <div className="absolute top-12 left-12 p-4 bg-white/80 backdrop-blur-xl rounded-2xl border border-black/5">
-                            <Layers className="w-6 h-6 text-black animate-pulse" />
-                         </div>
-                      </motion.div>
-
-                      <div className="flex flex-col justify-center space-y-12">
-                         <div className="space-y-6">
-                            <span className="text-[10px] uppercase tracking-[1em] font-black opacity-30 mb-8 block underline decoration-black decoration-4 underline-offset-8 italic">Culinary_Sync // {DISHES[activeItem].cat}</span>
-                            <h1 className="text-7xl md:text-[10vw] font-black italic uppercase tracking-tighter leading-none text-black font-serif">{DISHES[activeItem].title}</h1>
-                            <div className="text-4xl font-black italic tracking-tighter opacity-10 italic">Allocation: SYNCHRONIZED</div>
-                         </div>
-
-                         <p className="text-3xl font-light italic leading-relaxed uppercase tracking-tight opacity-40 text-black leading-relaxed font-serif">
-                            Molecular allocation for {DISHES[activeItem].title}. Every texture was computed to maximize olfactory impact and minimize metabolic friction.
-                         </p>
-
-                         <div className="grid grid-cols-2 gap-12 py-12 border-y border-black/10">
-                            {[
-                              { icon: <Globe className="w-5 h-5" />, l: "Origin", v: "Global_East" },
-                              { icon: <Zap className="w-5 h-5" />, l: "Logic", v: "Class_A" },
-                              { icon: <Shield className="w-5 h-5" />, l: "Purity", v: "High_Impact" },
-                              { icon: <Activity className="w-5 h-5" />, l: "Status", v: DISHES[activeItem].value },
-                            ].map((s, i) => (
-                              <div key={i} className="flex gap-6 items-center text-black">
-                                 <div className="opacity-20">{s.icon}</div>
-                                 <div className="text-left">
-                                    <div className="text-[10px] font-black opacity-30 uppercase tracking-widest mb-1 italic">{s.l}</div>
-                                    <div className="text-sm font-black uppercase italic tracking-tighter">{s.v}</div>
-                                 </div>
-                              </div>
-                            ))}
-                         </div>
-
-                         <div className="flex gap-6 pt-8">
-                            <button onClick={() => setView("drift")} className="flex-grow py-8 bg-black text-white font-black uppercase text-xs tracking-[1em] hover:bg-rose-600 transition-all shadow-2xl">
-                               Return_to_Drift
-                            </button>
-                            <button className="px-12 py-8 border border-black/20 text-[10px] font-black uppercase tracking-[0.5em] hover:scale-105 transition-all text-black">
-                               PDF_Spec
-                            </button>
-                         </div>
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
-        {/* THE PROTOCOL VIEW (ABOUT) */}
-        {view === "protocol" && (
-          <motion.div key="protocol" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen flex flex-col justify-center">
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center text-black">
-                <div className="space-y-16">
-                   <span className="text-[10px] uppercase font-black tracking-[1.5em] opacity-30 block underline decoration-black decoration-2 underline-offset-8 italic">The_Inquiry_Protocol</span>
-                   <h2 className="text-7xl md:text-[10vw] font-black italic tracking-tighter leading-none uppercase font-serif">The <br/> Truth.</h2>
-                   <p className="text-3xl md:text-4xl font-light italic opacity-60 leading-relaxed uppercase tracking-tight text-black/60 font-serif">
-                      We treat flavor as code. Every recipe is a function of its molecular variables and gastronomic intent. 100% precision. Zero noise.
-                   </p>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t border-black/10">
-                      {[
-                        { icon: <Utensils className="w-6 h-6" />, t: "E2E Rendering", v: "Molecular Accuracy" },
-                        { icon: <Plus className="w-6 h-6" />, t: "Palate Sync", v: "Deep_Material_ID" },
-                      ].map((item, i) => (
-                        <div key={i} className="flex gap-8 group">
-                           <div className="w-16 h-16 rounded-full border border-black flex items-center justify-center text-black group-hover:bg-black group-hover:text-white transition-all shadow-xl">
-                              {item.icon}
-                           </div>
-                           <div className="text-left">
-                              <h4 className="text-2xl font-black uppercase italic tracking-tighter leading-none mb-2">{item.t}</h4>
-                              <p className="text-[10px] opacity-30 uppercase tracking-[0.3em] font-black leading-relaxed text-black/40">{item.v}</p>
-                           </div>
-                        </div>
-                      ))}
-                   </div>
-                </div>
-                <div className="relative aspect-square bg-[#ddd] rounded-[4rem] p-12 overflow-hidden border-8 border-white group shadow-2xl">
-                   <Image src="https://images.unsplash.com/photo-1541829070764-84a7d30dee62?q=80&w=1000&auto=format&fit=crop" alt="The Protocol" fill className="object-cover opacity-20 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-[2s]" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-80" />
-                   <div className="absolute inset-x-0 bottom-12 flex justify-center">
-                      <div className="px-12 py-6 bg-black text-white text-[10px] font-black uppercase tracking-widest italic animate-bounce cursor-pointer hover:bg-rose-600 transition-all">
-                         Establish_Handshake
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
       </AnimatePresence>
 
-      {/* Global Status HUD */}
-      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em] italic text-black">
-         <div className="flex gap-12 text-black">
-            <span>Flux_Kitchen_Alpha</span>
-            <span>Uptime: 99.9%</span>
-         </div>
-         <div className="flex gap-4 items-end text-black">
-            <div className="text-right leading-tight italic">
-               Inventory_Control <br /> v4.0.21
-            </div>
-            <div className="flex gap-[4px] h-4">
-               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-full bg-black opacity-${i*20}`}></div>)}
-            </div>
-         </div>
-      </footer>
+      {/* HERO */}
+      <motion.section style={{ height: "100vh", position: "relative", overflow: "hidden", marginTop: "60px" }}>
+        <motion.div style={{ position: "absolute", inset: 0, y: heroY }}>
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, #0891b215 0%, #38bdf815 100%)" }} />
+        </motion.div>
+        <div style={{ position: "relative", height: "100%", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", textAlign: "center", padding: "2rem" }}>
+          <Reveal>
+            <motion.span style={{ fontSize: "0.875rem", fontWeight: "900", letterSpacing: "0.1em", color: "#38bdf8", textTransform: "uppercase", marginBottom: "1rem" }}>
+              Personal Finance
+            </motion.span>
+          </Reveal>
+          <Reveal delay={0.2}>
+            <h2 style={{ fontSize: "clamp(3rem, 12vw, 8rem)", fontWeight: "900", lineHeight: 1, marginBottom: "2rem", maxWidth: "900px" }}>
+              Your Money, <span style={{ color: "#0891b2" }}>Simplified</span>
+            </h2>
+          </Reveal>
+          <Reveal delay={0.4}>
+            <p style={{ fontSize: "1.25rem", opacity: 0.7, marginBottom: "3rem", maxWidth: "600px" }}>
+              Budget, invest, plan, and optimize taxes—all in one app. 2M users trust us with $50B.
+            </p>
+          </Reveal>
+          <Reveal delay={0.6}>
+            <motion.div animate={{ y: [0, 10, 0] }} transition={{ duration: 2, repeat: Infinity }}>
+              <ChevronDown size={32} style={{ color: "#0891b2" }} />
+            </motion.div>
+          </Reveal>
+        </div>
+      </motion.section>
 
-      <style>{`
-        ::-webkit-scrollbar { width: 0px; }
-      `}</style>
+      {/* FEATURE TABS */}
+      <section style={{ padding: "6rem 2rem" }}>
+        <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
+          <Reveal>
+            <h2 style={{ fontSize: "2.5rem", fontWeight: "900", marginBottom: "3rem", textAlign: "center" }}>Features</h2>
+          </Reveal>
+
+          {/* TAB BUTTONS */}
+          <div style={{ display: "flex", gap: "1rem", marginBottom: "3rem", justifyContent: "center", flexWrap: "wrap" }}>
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                style={{
+                  padding: "1rem 1.5rem",
+                  backgroundColor: activeTab === tab.id ? "#0891b2" : "transparent",
+                  color: activeTab === tab.id ? "white" : "#ffffff",
+                  border: `2px solid ${activeTab === tab.id ? "#0891b2" : "#1e293b"}`,
+                  borderRadius: "0.75rem",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  display: "flex",
+                  gap: "0.75rem",
+                  alignItems: "center",
+                  transition: "all 0.3s ease",
+                  opacity: activeTab === tab.id ? 1 : 0.7,
+                }}
+              >
+                {tab.icon}
+                {tab.name}
+              </button>
+            ))}
+          </div>
+
+          {/* TAB CONTENT */}
+          <AnimatePresence mode="wait">
+            {tabs.map((tab) => (
+              activeTab === tab.id && (
+                <motion.div
+                  key={tab.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                  style={{
+                    padding: "3rem",
+                    backgroundColor: "#0f172a",
+                    borderRadius: "1rem",
+                    border: "1px solid #1e293b",
+                    textAlign: "center",
+                  }}
+                >
+                  <h3 style={{ fontSize: "2rem", fontWeight: "900", marginBottom: "1rem" }}>{tab.name}</h3>
+                  <p style={{ opacity: 0.8, marginBottom: "2rem", maxWidth: "600px", margin: "0 auto 2rem" }}>
+                    {tab.desc}
+                  </p>
+                  <div style={{ width: "100%", height: "300px", backgroundColor: "#050d14", borderRadius: "0.75rem", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <motion.div animate={{ y: [0, 10, 0] }} transition={{ duration: 2, repeat: Infinity }}>
+                      {tab.icon}
+                    </motion.div>
+                  </div>
+                </motion.div>
+              )
+            ))}
+          </AnimatePresence>
+        </div>
+      </section>
+
+      {/* SECURITY BADGES */}
+      <section style={{ padding: "6rem 2rem", backgroundColor: "#0f172a" }}>
+        <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
+          <Reveal>
+            <h2 style={{ fontSize: "2.5rem", fontWeight: "900", marginBottom: "3rem", textAlign: "center" }}>Bank-Grade Security</h2>
+          </Reveal>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "2rem" }}>
+            {[
+              { name: "Bank-grade encryption", icon: <Lock size={32} /> },
+              { name: "SOC2 Certified", icon: <Shield size={32} /> },
+              { name: "FDIC Insured", icon: <Check size={32} /> },
+              { name: "2FA Protection", icon: <Shield size={32} /> },
+            ].map((badge, i) => (
+              <Reveal key={i} delay={i * 0.1}>
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  style={{
+                    padding: "2rem",
+                    backgroundColor: "#050d14",
+                    borderRadius: "1rem",
+                    border: "1px solid #1e293b",
+                    textAlign: "center",
+                    cursor: "pointer",
+                  }}
+                >
+                  <div style={{ color: "#0891b2", marginBottom: "1rem", display: "flex", justifyContent: "center" }}>
+                    {badge.icon}
+                  </div>
+                  <p style={{ fontWeight: "700" }}>{badge.name}</p>
+                </motion.div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* STATS */}
+      <section style={{ padding: "6rem 2rem" }}>
+        <div style={{ maxWidth: "1400px", margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "3rem" }}>
+          {[
+            { label: "Users", value: 2, suffix: "M" },
+            { label: "Assets Tracked", value: 50, suffix: "B" },
+            { label: "Uptime", value: 99.9, suffix: "%" },
+            { label: "Rating", value: 4.9, suffix: "★" },
+          ].map((stat, i) => (
+            <Reveal key={i} delay={i * 0.1}>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: "3rem", fontWeight: "900", marginBottom: "0.5rem", color: "#0891b2" }}>
+                  <Counter target={stat.value} suffix={stat.suffix} />
+                </div>
+                <p style={{ fontSize: "0.875rem", opacity: 0.8, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  {stat.label}
+                </p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* PRICING */}
+      <section style={{ padding: "6rem 2rem", backgroundColor: "#0f172a" }}>
+        <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
+          <Reveal>
+            <h2 style={{ fontSize: "2.5rem", fontWeight: "900", marginBottom: "3rem", textAlign: "center" }}>Simple Pricing</h2>
+          </Reveal>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "2rem" }}>
+            {[
+              { name: "Starter", price: "Free", features: ["Budget tracking", "Spending insights", "Basic reports"] },
+              { name: "Pro", price: "$7.99", period: "/month", features: ["Everything in Starter", "Investment tracking", "Tax optimization", "Priority support"] },
+              { name: "Family", price: "$14.99", period: "/month", features: ["Everything in Pro", "5 family members", "Shared budgets", "Premium analytics"] },
+            ].map((plan, i) => (
+              <Reveal key={i} delay={i * 0.1}>
+                <motion.div
+                  whileHover={{ y: -8 }}
+                  onClick={() => setPricingPlan(plan.name.toLowerCase())}
+                  style={{
+                    padding: "2rem",
+                    backgroundColor: pricingPlan === plan.name.toLowerCase() ? "#0891b2" : "#050d14",
+                    borderRadius: "1rem",
+                    border: `2px solid ${pricingPlan === plan.name.toLowerCase() ? "#0891b2" : "#1e293b"}`,
+                    cursor: "pointer",
+                    transition: "all 0.3s ease",
+                  }}
+                >
+                  <h3 style={{ fontSize: "1.5rem", fontWeight: "900", marginBottom: "1rem" }}>{plan.name}</h3>
+                  <div style={{ fontSize: "2.5rem", fontWeight: "900", marginBottom: "0.5rem" }}>
+                    {plan.price} <span style={{ fontSize: "0.875rem", opacity: 0.8 }}>{plan.period}</span>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", marginTop: "2rem" }}>
+                    {plan.features.map((feature, j) => (
+                      <div key={j} style={{ display: "flex", gap: "0.75rem", alignItems: "center", fontSize: "0.875rem" }}>
+                        <Check size={16} />
+                        {feature}
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* TESTIMONIALS */}
+      <section style={{ padding: "6rem 2rem" }}>
+        <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
+          <Reveal>
+            <h2 style={{ fontSize: "2.5rem", fontWeight: "900", marginBottom: "3rem", textAlign: "center" }}>Trusted by Millions</h2>
+          </Reveal>
+          <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            style={{
+              padding: "2rem",
+              backgroundColor: "#0f172a",
+              borderRadius: "1rem",
+              borderLeft: "4px solid #0891b2",
+            }}
+          >
+            <div style={{ display: "flex", gap: "0.25rem", marginBottom: "1rem" }}>
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} size={16} fill="#0891b2" color="#0891b2" />
+              ))}
+            </div>
+            <p style={{ fontSize: "1.1rem", marginBottom: "1rem" }}>
+              "Clearpath made managing my finances effortless. The tax optimization alone saves me thousands every year."
+            </p>
+            <p style={{ fontWeight: "700", color: "#0891b2" }}>— James Park, Business Owner</p>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* APP DOWNLOAD CTA */}
+      <section style={{ padding: "6rem 2rem", backgroundColor: "#0f172a" }}>
+        <div style={{ maxWidth: "1000px", margin: "0 auto", textAlign: "center" }}>
+          <Reveal>
+            <h2 style={{ fontSize: "2.5rem", fontWeight: "900", marginBottom: "2rem" }}>Download Clearpath</h2>
+          </Reveal>
+          <Reveal delay={0.2}>
+            <p style={{ fontSize: "1.1rem", opacity: 0.8, marginBottom: "3rem" }}>
+              Available on iOS and Android
+            </p>
+          </Reveal>
+          <Reveal delay={0.4}>
+            <div style={{ display: "flex", gap: "2rem", justifyContent: "center", flexWrap: "wrap" }}>
+              <button style={{ padding: "0.75rem 2rem", backgroundColor: "#0891b2", color: "white", fontWeight: "700", borderRadius: "0.5rem", border: "none", cursor: "pointer", display: "flex", gap: "0.75rem", alignItems: "center" }}>
+                <Apple size={20} /> App Store
+              </button>
+              <button style={{ padding: "0.75rem 2rem", backgroundColor: "#0891b2", color: "white", fontWeight: "700", borderRadius: "0.5rem", border: "none", cursor: "pointer", display: "flex", gap: "0.75rem", alignItems: "center" }}>
+                <Smartphone size={20} /> Google Play
+              </button>
+            </div>
+          </Reveal>
+        </div>
+      </section>
     </div>
   );
 }

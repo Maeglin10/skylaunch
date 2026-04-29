@@ -1,231 +1,495 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence, useScroll, useTransform, useMotionValue, useSpring, useInView } from "framer-motion";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { X, Menu, Search, Cpu, Zap, Activity, Globe, Shield, Command, Plus, ArrowUpRight, Maximize2, MoveRight, Layers, Box, Compass, Sparkles, MoveVertical, Network } from "lucide-react";
-import "../premium.css";
+import { Menu, X, ChevronDown, ExternalLink } from "lucide-react";
+import Link from "next/link";
 
-const NODES = [
-  { id: 1, title: "CORE_MESH", cat: "Infrastructure", value: "Locked", img: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=1000&auto=format&fit=crop" },
-  { id: 2, title: "DATA_DRYAD", cat: "Neural", value: "Active", img: "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1000&auto=format&fit=crop" },
-  { id: 3, title: "VOID_LINK", cat: "Strategic", value: "Verified", img: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1000&auto=format&fit=crop" },
-];
+const Reveal = ({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) => {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-60px" });
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 30 }}
+      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+      transition={{ duration: 0.6, delay }}
+    >
+      {children}
+    </motion.div>
+  );
+};
 
-export default function NeuralMeshSPA() {
-  const [view, setView] = useState<"mesh" | "synapse" | "topology">("mesh");
-  const [activeItem, setActiveItem] = useState(0);
+const Counter = ({ target, label }: { target: number; label: string }) => {
+  const [count, setCount] = useState(0);
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-60px" });
+
+  useEffect(() => {
+    if (!isInView) return;
+    const interval = setInterval(() => {
+      setCount((prev) => (prev < target ? prev + Math.ceil(target / 50) : target));
+    }, 30);
+    return () => clearInterval(interval);
+  }, [isInView, target]);
 
   return (
-    <div className="premium-theme bg-[#05050f] text-[#0066ff] min-h-screen selection:bg-[#0066ff] selection:text-white font-mono overflow-x-hidden">
-      
-      {/* Background HUD Layers */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_#0066ff05_0%,_transparent_70%)] opacity-40" />
-        <div 
-          className="absolute inset-0 opacity-[0.05]"
-          style={{ backgroundImage: `linear-gradient(#0066ff10 1px, transparent 1px), linear-gradient(90deg, #0066ff10 1px, transparent 1px)`, backgroundSize: '80px 80px' }}
-        />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-screen" />
+    <div ref={ref} className="text-center">
+      <div className="text-5xl font-bold" style={{ color: "#b91c1c" }}>
+        {count}
+        {label.includes("K") ? "K" : label.includes("★") ? "★" : ""}
       </div>
+      <p className="text-sm uppercase tracking-wide mt-2" style={{ color: "#f5f0e8" }}>
+        {label.replace(/K|★/g, "")}
+      </p>
+    </div>
+  );
+};
 
-      {/* Editorial HUD Nav */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-center bg-black/40 backdrop-blur-3xl border-b border-[#0066ff]/10">
-        <div className="flex gap-12 items-center">
-           <button onClick={() => setView("mesh")} className="text-xl font-black italic tracking-tighter hover:text-white transition-colors flex items-center gap-4">
-              <Network className="w-6 h-6 animate-pulse" /> NEURAL_OS&trade;
-           </button>
-           <div className="hidden lg:flex gap-8 text-[10px] font-black uppercase tracking-widest opacity-20 italic">
-              Status: Mesh_Integrity_Active
-              <span className="text-white">Ref: 0x94_N</span>
-           </div>
-        </div>
-        <div className="hidden md:flex gap-12 text-[10px] font-black uppercase tracking-[0.4em] opacity-30">
-           <button onClick={() => setView("mesh")} className={`hover:opacity-100 transition-opacity ${view === 'mesh' ? 'text-white opacity-100 underline decoration-white underline-offset-8 italic' : ''}`}>THE_MESH</button>
-           <button onClick={() => setView("topology")} className={`hover:opacity-100 transition-opacity ${view === 'topology' ? 'text-white opacity-100 underline decoration-white underline-offset-8 italic' : ''}`}>THE_TOPOLOGY</button>
-        </div>
-        <div className="flex items-center gap-8">
-           <Search className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-           <Menu className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-        </div>
-      </nav>
+const MagneticBtn = ({ children }: { children: React.ReactNode }) => {
+  const ref = useRef(null);
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const xSpring = useSpring(x, { stiffness: 200, damping: 20 });
+  const ySpring = useSpring(y, { stiffness: 200, damping: 20 });
 
-      <AnimatePresence mode="wait">
-        
-        {/* THE MESH VIEW (LANDING) */}
-        {view === "mesh" && (
-          <motion.div key="mesh" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-48 pb-32 px-12 max-w-[1800px] mx-auto min-h-screen flex flex-col justify-center relative z-10">
-             <header className="mb-24 border-b-2 border-[#0066ff]/20 pb-12 flex flex-col md:flex-row justify-between items-end gap-12">
-                <div>
-                   <span className="text-[10px] uppercase font-black tracking-[1em] text-[#0066ff] opacity-40 mb-4 block underline decoration-[#0066ff]/10 underline-offset-8 italic">Neural_Deployment // Series_094</span>
-                   <h1 className="text-7xl md:text-[12vw] font-black italic uppercase tracking-tighter leading-[0.75] text-white">THE. <br/> <span className="text-[#0066ff]">MESH.</span></h1>
-                </div>
-                <div className="text-right flex flex-col items-end">
-                   <div className="text-3xl font-black mb-4 tracking-tighter uppercase opacity-10 italic">Secure_Sync</div>
-                   <div className="w-64 h-1 bg-white/5 rounded-full overflow-hidden">
-                      <motion.div animate={{ width: ['20%', '90%', '40%', '75%'] }} transition={{ duration: 4, repeat: Infinity }} className="h-full bg-[#0066ff]" />
-                   </div>
-                </div>
-             </header>
+  const handleMouse = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!ref.current) return;
+    const rect = (ref.current as HTMLElement).getBoundingClientRect();
+    x.set(event.clientX - (rect.left + rect.width / 2));
+    y.set(event.clientY - (rect.top + rect.height / 2));
+  };
 
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {NODES.map((p, i) => (
-                  <motion.div 
-                    key={p.id} initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                    className="group relative h-[60vh] rounded-[3rem] overflow-hidden border border-[#0066ff]/10 hover:border-[#0066ff]/40 transition-all cursor-pointer shadow-2xl bg-white/5"
-                    onClick={() => { setActiveItem(i); setView("synapse"); }}
-                  >
-                     <Image src={p.img} alt={p.title} fill className="object-cover grayscale opacity-20 group-hover:opacity-40 transition-all duration-[2s] group-hover:scale-110" />
-                     <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                     
-                     <div className="absolute inset-10 flex flex-col justify-between">
-                        <div className="flex justify-between items-start">
-                           <div className="p-4 bg-white/5 border border-white/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Zap className="w-5 h-5 text-[#0066ff]" />
-                           </div>
-                           <div className="text-[10px] font-black uppercase tracking-widest opacity-20 group-hover:opacity-100 transition-opacity text-[#0066ff]">REF_0x{p.id}</div>
-                        </div>
-                        <div>
-                           <span className="text-[10px] uppercase font-black tracking-widest text-[#0066ff]/40 mb-2 block italic">{p.cat} // {p.value}</span>
-                           <h3 className="text-5xl font-black italic uppercase tracking-tighter text-white group-hover:text-[#0066ff] transition-colors">{p.title}</h3>
-                        </div>
-                     </div>
-                  </motion.div>
-                ))}
-             </div>
+  const handleMouseLeave = () => {
+    x.set(0);
+    y.set(0);
+  };
+
+  return (
+    <motion.button
+      ref={ref}
+      onMouseMove={handleMouse}
+      onMouseLeave={handleMouseLeave}
+      style={{ x: xSpring, y: ySpring }}
+      className="px-8 py-3 rounded-full font-bold uppercase text-sm"
+      style={{ color: "#0a0a0a", backgroundColor: "#b91c1c" } as any}
+    >
+      {children}
+    </motion.button>
+  );
+};
+
+const AccordionItem = ({ title, content, isOpen, onClick }: { title: string; content: string; isOpen: boolean; onClick: () => void }) => {
+  return (
+    <div style={{ borderBottom: "1px solid #b91c1c40" }}>
+      <button
+        onClick={onClick}
+        className="w-full py-4 px-6 flex justify-between items-center hover:bg-white/5 transition-colors"
+      >
+        <span className="font-bold" style={{ color: "#f5f0e8" }}>
+          {title}
+        </span>
+        <ChevronDown
+          style={{
+            color: "#b91c1c",
+            transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
+            transition: "transform 0.3s",
+          }}
+        />
+      </button>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="overflow-hidden"
+          >
+            <p className="px-6 pb-4" style={{ color: "#f5f0e880" }}>
+              {content}
+            </p>
           </motion.div>
         )}
+      </AnimatePresence>
+    </div>
+  );
+};
 
-        {/* THE SYNAPSE VIEW (DETAIL) */}
-        {view === "synapse" && (
-          <motion.div key="synapse" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen">
-             <button onClick={() => setView("mesh")} className="fixed top-12 left-12 z-[60] bg-white text-black p-5 rounded-full hover:scale-110 transition-transform shadow-2xl">
-                <X className="w-6 h-6" />
-             </button>
+export default function InkSoul() {
+  const containerRef = useRef(null);
+  const { scrollYProgress } = useScroll({ target: containerRef });
+  const parallaxY = useTransform(scrollYProgress, [0, 1], ["0%", "40%"]);
 
-             <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen pt-24 lg:pt-0">
-                <div className="lg:col-span-12 relative flex items-center justify-center p-8 md:p-32 overflow-hidden h-screen bg-[#05050f]">
-                   <div className="absolute inset-0 opacity-10">
-                      <Image src={NODES[activeItem].img} alt="Background" fill className="object-cover grayscale" />
-                   </div>
-                   <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[40vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase text-[#0066ff]">
-                      SYNAPSE
-                   </div>
-                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#05050f_100%)]" />
-                   
-                   <div className="max-w-[1500px] w-full grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10">
-                      <motion.div initial={{ scale: 1.1, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1 }} className="relative aspect-square w-full rounded-[4rem] overflow-hidden border border-[#0066ff]/10 group bg-white/5 shadow-2xl">
-                         <Image src={NODES[activeItem].img} alt="Spec" fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[3s] opacity-80" priority />
-                         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                         <div className="absolute top-12 left-12 p-4 bg-black/60 backdrop-blur-3xl rounded-2xl border border-white/10">
-                            <Layers className="w-6 h-6 text-white animate-pulse" />
-                         </div>
-                      </motion.div>
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [activeFilter, setActiveFilter] = useState("All");
+  const [selectedArtwork, setSelectedArtwork] = useState<number | null>(null);
+  const [openAccordion, setOpenAccordion] = useState<number | null>(null);
+  const [bookingStep, setBookingStep] = useState(0);
 
-                      <div className="flex flex-col justify-center space-y-12">
-                         <div className="space-y-6">
-                            <span className="text-[10px] uppercase tracking-[1em] font-black text-[#0066ff]/40 mb-8 block underline decoration-white decoration-4 underline-offset-8 italic">Phased_Sync // {NODES[activeItem].cat}</span>
-                            <h1 className="text-7xl md:text-[10vw] font-black italic uppercase tracking-tighter leading-none text-white">{NODES[activeItem].title}</h1>
-                            <div className="text-4xl font-black italic tracking-tighter opacity-10 italic text-[#0066ff]">State: SYNCHRONIZED</div>
-                         </div>
+  const filters = ["All", "Traditional", "Japanese", "Blackwork", "Realism", "Geometric"];
+  const artworks = Array.from({ length: 12 }, (_, i) => ({
+    id: i + 1,
+    name: `Tattoo ${i + 1}`,
+    style: filters[Math.floor(Math.random() * (filters.length - 1)) + 1],
+    img: `https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=500&auto=format&fit=crop`,
+  }));
 
-                         <p className="text-3xl font-light italic leading-relaxed uppercase tracking-tight opacity-40 text-white leading-relaxed">
-                            Structural allocation for {NODES[activeItem].title}. System integrity at 100%. Thermal load nominal at 32C. Every coordinate synchronized.
-                         </p>
+  const artists = [
+    { id: 1, name: "Marcus Steel", specialty: "Blackwork & Realism", instagram: "@marcus_steel" },
+    { id: 2, name: "Yuki Tanaka", specialty: "Japanese Traditional", instagram: "@yuki_ink" },
+    { id: 3, name: "Sofia Rossi", specialty: "Geometric & Fine Line", instagram: "@sofia_geometric" },
+    { id: 4, name: "Alex Chen", specialty: "Color & Realism", instagram: "@alex_chen_ink" },
+  ];
 
-                         <div className="grid grid-cols-2 gap-12 py-12 border-y border-[#0066ff]/10 text-[#0066ff]">
-                            {[
-                              { icon: <Globe className="w-5 h-5" />, l: "Region", v: "Global_East" },
-                              { icon: <Zap className="w-5 h-5" />, l: "Logic", v: "Phase_Shift" },
-                              { icon: <Shield className="w-5 h-5" />, l: "Security", v: "High_Impact" },
-                              { icon: <Activity className="w-5 h-5" />, l: "Sync", v: NODES[activeItem].value },
-                            ].map((s, i) => (
-                              <div key={i} className="flex gap-6 items-center">
-                                 <div className="opacity-20">{s.icon}</div>
-                                 <div className="text-left">
-                                    <div className="text-[10px] font-black opacity-30 uppercase tracking-widest mb-1 italic">{s.l}</div>
-                                    <div className="text-sm font-black uppercase italic tracking-tighter text-white">{s.v}</div>
-                                 </div>
-                              </div>
-                            ))}
-                         </div>
+  const faqs = [
+    { title: "What's your healing process?", content: "Keep tattoo clean and dry. Apply antibacterial ointment 3x daily for 2 weeks." },
+    { title: "How long is the consultation?", content: "Initial consultations are 30 minutes and completely free." },
+    { title: "Can I get a custom design?", content: "Yes! We specialize in custom designs. Talk with your artist about your vision." },
+    { title: "Do you use sterile needles?", content: "100% sterile, single-use needles. We exceed all health & safety standards." },
+  ];
 
-                         <div className="flex gap-6 pt-8">
-                            <button onClick={() => setView("mesh")} className="flex-grow py-8 bg-white text-black font-black uppercase text-xs tracking-[1em] hover:bg-white/80 transition-all shadow-2xl">
-                               Return_to_Mesh
-                            </button>
-                            <button className="px-12 py-8 border border-[#0066ff]/20 text-[10px] font-black uppercase tracking-[0.5em] hover:scale-105 transition-all text-[#0066ff]">
-                               PDF_Spec
-                            </button>
-                         </div>
-                      </div>
-                   </div>
-                </div>
-             </div>
+  return (
+    <div ref={containerRef} style={{ backgroundColor: "#0a0a0a", color: "#f5f0e8", minHeight: "100vh" }}>
+      {/* Header */}
+      <header style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 50, backgroundColor: "#0a0a0add", backdropFilter: "blur(10px)", borderBottom: "1px solid #b91c1c20" }} className="py-4 px-6 md:px-12 flex justify-between items-center">
+        <h1 style={{ color: "#b91c1c" }} className="text-2xl font-bold">
+          INK & SOUL
+        </h1>
+        <nav className="hidden md:flex gap-8">
+          {["Portfolio", "Artists", "Booking", "FAQ"].map((item) => (
+            <Link key={item} href="#" style={{ color: "#f5f0e8" }} className="hover:text-[#b91c1c] transition-colors">
+              {item}
+            </Link>
+          ))}
+        </nav>
+        <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden">
+          {mobileOpen ? <X size={24} style={{ color: "#b91c1c" }} /> : <Menu size={24} style={{ color: "#b91c1c" }} />}
+        </button>
+      </header>
+
+      {/* Mobile Menu */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            style={{ backgroundColor: "#1a1a1a", zIndex: 40, marginTop: "60px" }}
+            className="md:hidden py-4 px-6 border-b border-[#b91c1c20]"
+          >
+            {["Portfolio", "Artists", "Booking", "FAQ"].map((item) => (
+              <p key={item} style={{ color: "#f5f0e8" }} className="py-2">
+                {item}
+              </p>
+            ))}
           </motion.div>
         )}
-
-        {/* THE TOPOLOGY VIEW (INFO) */}
-        {view === "topology" && (
-          <motion.div key="topology" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen flex flex-col justify-center">
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center text-white">
-                <div className="space-y-16">
-                   <span className="text-[10px] uppercase font-black tracking-[1.5em] text-[#0066ff] opacity-60 block underline decoration-[#0066ff]/20 underline-offset-8 italic">The_Inquiry_Protocol</span>
-                   <h2 className="text-7xl md:text-[10vw] font-black italic tracking-tighter leading-none text-white uppercase">The <br/> Truth.</h2>
-                   <p className="text-3xl md:text-4xl font-light italic opacity-60 leading-relaxed uppercase tracking-tight text-[#0066ff]/60">
-                      We treat architecture as code. Every structure is a function of its environmental variables and tectonic intent. 100% precision. Zero noise.
-                   </p>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t border-[#0066ff]/20 text-[#0066ff]">
-                      {[
-                        { icon: <Activity className="w-6 h-6" />, t: "Adaptive Flow", v: "Dynamic Load Sync" },
-                        { icon: <Plus className="w-6 h-6" />, t: "Structural Sync", v: "Deep_Material_ID" },
-                      ].map((item, i) => (
-                        <div key={i} className="flex gap-8 group">
-                           <div className="w-16 h-16 rounded-full border border-[#0066ff] flex items-center justify-center text-[#0066ff] group-hover:bg-[#0066ff] group-hover:text-black transition-all shadow-xl">
-                              {item.icon}
-                           </div>
-                           <div className="text-left">
-                              <h4 className="text-2xl font-black uppercase italic tracking-tighter text-white leading-none mb-2">{item.t}</h4>
-                              <p className="text-[10px] opacity-30 uppercase tracking-[0.3em] font-black leading-relaxed text-[#0066ff]/40">{item.v}</p>
-                           </div>
-                        </div>
-                      ))}
-                   </div>
-                </div>
-                <div className="relative aspect-square bg-[#1a1a1a] rounded-[4rem] p-12 overflow-hidden border border-[#0066ff]/10 group shadow-2xl">
-                   <Image src="https://images.unsplash.com/photo-1541829070764-84a7d30dee62?q=80&w=1000&auto=format&fit=crop" alt="The Archive" fill className="object-cover opacity-20 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-[2s]" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                   <div className="absolute inset-x-0 bottom-12 flex justify-center">
-                      <div className="px-12 py-6 border border-[#0066ff] text-[#0066ff] text-[10px] font-black uppercase tracking-widest italic animate-bounce cursor-pointer hover:bg-[#0066ff] hover:text-black transition-all">
-                         Establish_Handshake
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
       </AnimatePresence>
 
-      {/* Global Status HUD */}
-      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em] italic text-[#0066ff] leading-none">
-         <div className="flex gap-12 text-[#0066ff]">
-            <span>Neural_Mesh_Alpha</span>
-            <span>Uptime: 99.9%</span>
-         </div>
-         <div className="flex gap-4 items-end text-[#0066ff]">
-            <div className="text-right leading-tight italic">
-               Topology_Control <br /> v4.0.21
-            </div>
-            <div className="flex gap-[4px] h-4">
-               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-full bg-[#0066ff] opacity-${i*20}`}></div>)}
-            </div>
-         </div>
-      </footer>
+      {/* Parallax Hero */}
+      <section style={{ position: "relative", height: "100vh", overflow: "hidden", marginTop: "60px" }}>
+        <motion.div style={{ y: parallaxY }}>
+          <Image
+            src="https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=1200&auto=format&fit=crop"
+            alt="Tattoo Studio"
+            fill
+            unoptimized
+            style={{ objectFit: "cover" }}
+          />
+        </motion.div>
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #0a0a0a, transparent)" }} />
+        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", textAlign: "center", zIndex: 10 }}>
+          <Reveal delay={0.1}>
+            <h2 style={{ fontSize: "clamp(2.5rem, 8vw, 5rem)", fontWeight: "bold", marginBottom: "1rem", color: "#b91c1c" }}>
+              PERMANENT ART
+            </h2>
+          </Reveal>
+          <Reveal delay={0.2}>
+            <p style={{ fontSize: "1.25rem", marginBottom: "2rem" }}>15 years. 8 artists. 40K tattoos. Counting.</p>
+          </Reveal>
+          <Reveal delay={0.3}>
+            <MagneticBtn>Book Consultation</MagneticBtn>
+          </Reveal>
+        </div>
+      </section>
 
-      <style>{`
-        ::-webkit-scrollbar { width: 0px; }
-      `}</style>
+      {/* Portfolio */}
+      <section style={{ padding: "6rem 1.5rem", maxWidth: "1400px", margin: "0 auto" }}>
+        <Reveal>
+          <h3 style={{ fontSize: "2rem", fontWeight: "bold", marginBottom: "2rem", textAlign: "center", color: "#b91c1c" }}>
+            Portfolio Gallery
+          </h3>
+        </Reveal>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginBottom: "3rem", justifyContent: "center" }}>
+          {filters.map((filter) => (
+            <motion.button
+              key={filter}
+              onClick={() => setActiveFilter(filter)}
+              whileHover={{ scale: 1.05 }}
+              style={{
+                padding: "0.5rem 1.5rem",
+                border: `2px solid ${activeFilter === filter ? "#b91c1c" : "#b91c1c40"}`,
+                borderRadius: "30px",
+                backgroundColor: activeFilter === filter ? "#b91c1c" : "transparent",
+                color: activeFilter === filter ? "#0a0a0a" : "#b91c1c",
+                cursor: "pointer",
+                fontWeight: "bold",
+              }}
+            >
+              {filter}
+            </motion.button>
+          ))}
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1.5rem" }}>
+          {artworks.map((artwork, idx) => (
+            <Reveal key={artwork.id} delay={idx * 0.05}>
+              <motion.div
+                whileHover={{ y: -5 }}
+                onClick={() => setSelectedArtwork(artwork.id)}
+                style={{ cursor: "pointer", position: "relative" }}
+              >
+                <div style={{ position: "relative", aspectRatio: "1", borderRadius: "0.5rem", overflow: "hidden", marginBottom: "0.5rem", border: "2px solid #b91c1c" }}>
+                  <Image src={artwork.img} alt={artwork.name} fill unoptimized style={{ objectFit: "cover" }} />
+                  <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0)", opacity: 0 } as any} className="hover:opacity-60 transition-opacity" />
+                </div>
+                <h4 style={{ fontWeight: "bold", color: "#b91c1c" }}>{artwork.style}</h4>
+              </motion.div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* Artists Roster */}
+      <section style={{ padding: "6rem 1.5rem", backgroundColor: "#1a1a1a" }}>
+        <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+          <Reveal>
+            <h3 style={{ fontSize: "2rem", fontWeight: "bold", marginBottom: "3rem", textAlign: "center", color: "#b91c1c" }}>
+              Meet Our Artists
+            </h3>
+          </Reveal>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "2rem" }}>
+            {artists.map((artist, idx) => (
+              <Reveal key={artist.id} delay={idx * 0.1}>
+                <motion.div whileHover={{ y: -10 }} style={{ textAlign: "center" }}>
+                  <div style={{ aspectRatio: "1", borderRadius: "1rem", overflow: "hidden", marginBottom: "1.5rem", border: "2px solid #b91c1c" }}>
+                    <Image src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=500&auto=format&fit=crop" alt={artist.name} fill unoptimized style={{ objectFit: "cover" }} />
+                  </div>
+                  <h4 style={{ fontSize: "1.25rem", fontWeight: "bold", marginBottom: "0.5rem" }}>{artist.name}</h4>
+                  <p style={{ color: "#b91c1c", marginBottom: "1rem" }}>{artist.specialty}</p>
+                  <a href={`https://instagram.com/${artist.instagram.replace("@", "")}`} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", color: "#b91c1c", textDecoration: "none" }}>
+                    {artist.instagram}
+                    <ExternalLink size={16} />
+                  </a>
+                </motion.div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Stats */}
+      <section style={{ padding: "6rem 1.5rem", backgroundColor: "#0a0a0a" }}>
+        <div style={{ maxWidth: "1200px", margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "3rem" }}>
+          <Counter target={15} label="Years Experience" />
+          <Counter target={8} label="Master Artists" />
+          <Counter target={40} label="K Tattoos" />
+          <Counter target={4.9} label="Average Rating★" />
+        </div>
+      </section>
+
+      {/* Guide Accordion */}
+      <section style={{ padding: "6rem 1.5rem", maxWidth: "800px", margin: "0 auto" }}>
+        <Reveal>
+          <h3 style={{ fontSize: "2rem", fontWeight: "bold", marginBottom: "2rem", textAlign: "center", color: "#b91c1c" }}>
+            Tattoo Care Guide
+          </h3>
+        </Reveal>
+        {faqs.map((faq, idx) => (
+          <Reveal key={idx} delay={idx * 0.1}>
+            <AccordionItem title={faq.title} content={faq.content} isOpen={openAccordion === idx} onClick={() => setOpenAccordion(openAccordion === idx ? null : idx)} />
+          </Reveal>
+        ))}
+      </section>
+
+      {/* Booking Flow Modal */}
+      <AnimatePresence>
+        {selectedArtwork && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSelectedArtwork(null)}
+            style={{
+              position: "fixed",
+              inset: 0,
+              backgroundColor: "#00000080",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              zIndex: 60,
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                backgroundColor: "#0a0a0a",
+                padding: "2rem",
+                borderRadius: "1rem",
+                maxWidth: "500px",
+                width: "90%",
+                border: "2px solid #b91c1c",
+              }}
+            >
+              <h4 style={{ fontSize: "1.5rem", fontWeight: "bold", marginBottom: "1.5rem", color: "#b91c1c" }}>
+                Book Your Tattoo
+              </h4>
+              {bookingStep === 0 && (
+                <div>
+                  <p style={{ marginBottom: "1.5rem" }}>Select your preferred style:</p>
+                  {["Traditional", "Japanese", "Blackwork", "Realism", "Geometric"].map((style) => (
+                    <button
+                      key={style}
+                      onClick={() => setBookingStep(1)}
+                      style={{
+                        display: "block",
+                        width: "100%",
+                        padding: "0.75rem",
+                        marginBottom: "0.5rem",
+                        backgroundColor: "#b91c1c",
+                        color: "#0a0a0a",
+                        borderRadius: "0.5rem",
+                        fontWeight: "bold",
+                        cursor: "pointer",
+                        border: "none",
+                      }}
+                    >
+                      {style}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {bookingStep === 1 && (
+                <div>
+                  <p style={{ marginBottom: "1.5rem" }}>Choose your artist:</p>
+                  {artists.map((artist) => (
+                    <button
+                      key={artist.id}
+                      onClick={() => setBookingStep(2)}
+                      style={{
+                        display: "block",
+                        width: "100%",
+                        padding: "0.75rem",
+                        marginBottom: "0.5rem",
+                        backgroundColor: "#b91c1c",
+                        color: "#0a0a0a",
+                        borderRadius: "0.5rem",
+                        fontWeight: "bold",
+                        cursor: "pointer",
+                        border: "none",
+                      }}
+                    >
+                      {artist.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {bookingStep === 2 && (
+                <div>
+                  <p style={{ marginBottom: "1.5rem" }}>Select a date:</p>
+                  <input type="date" style={{ width: "100%", padding: "0.75rem", marginBottom: "1rem", color: "#0a0a0a" }} />
+                  <button
+                    onClick={() => setSelectedArtwork(null)}
+                    style={{
+                      width: "100%",
+                      padding: "0.75rem",
+                      backgroundColor: "#b91c1c",
+                      color: "#0a0a0a",
+                      borderRadius: "0.5rem",
+                      fontWeight: "bold",
+                      cursor: "pointer",
+                      border: "none",
+                    }}
+                  >
+                    Confirm Booking
+                  </button>
+                </div>
+              )}
+              <button
+                onClick={() => (bookingStep > 0 ? setBookingStep(bookingStep - 1) : setSelectedArtwork(null))}
+                style={{
+                  width: "100%",
+                  padding: "0.75rem",
+                  marginTop: "1rem",
+                  backgroundColor: "transparent",
+                  border: "2px solid #b91c1c",
+                  color: "#b91c1c",
+                  borderRadius: "0.5rem",
+                  fontWeight: "bold",
+                  cursor: "pointer",
+                }}
+              >
+                {bookingStep > 0 ? "Back" : "Close"}
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Flash Sale */}
+      <section style={{ padding: "6rem 1.5rem", backgroundColor: "#1a1a1a" }}>
+        <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+          <Reveal>
+            <h3 style={{ fontSize: "2rem", fontWeight: "bold", marginBottom: "3rem", textAlign: "center", color: "#b91c1c" }}>
+              Flash Design Sale
+            </h3>
+          </Reveal>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "1.5rem" }}>
+            {Array.from({ length: 8 }, (_, i) => (
+              <Reveal key={i} delay={i * 0.05}>
+                <motion.div whileHover={{ y: -5 }} style={{ position: "relative", borderRadius: "0.5rem", overflow: "hidden", aspectRatio: "1", border: "2px solid #b91c1c" }}>
+                  <Image src="https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=500&auto=format&fit=crop" alt="Flash Design" fill unoptimized style={{ objectFit: "cover" }} />
+                  <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #0a0a0a, transparent)", display: "flex", justifyContent: "center", alignItems: "flex-end", padding: "1rem" }}>
+                    <span style={{ color: "#b91c1c", fontWeight: "bold" }}>$50 Only Today</span>
+                  </div>
+                </motion.div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section style={{ padding: "6rem 1.5rem", textAlign: "center", backgroundColor: "#b91c1c" }}>
+        <Reveal>
+          <h3 style={{ fontSize: "2rem", fontWeight: "bold", marginBottom: "1rem", color: "#0a0a0a" }}>
+            Ready for Ink?
+          </h3>
+        </Reveal>
+        <Reveal delay={0.1}>
+          <p style={{ marginBottom: "2rem", color: "#0a0a0a" }}>Book a free consultation with one of our artists</p>
+        </Reveal>
+        <Reveal delay={0.2}>
+          <button
+            style={{
+              padding: "1rem 2rem",
+              backgroundColor: "#0a0a0a",
+              color: "#b91c1c",
+              borderRadius: "0.5rem",
+              fontWeight: "bold",
+              cursor: "pointer",
+              border: "none",
+              fontSize: "1rem",
+            }}
+          >
+            Schedule Now
+          </button>
+        </Reveal>
+      </section>
     </div>
   );
 }

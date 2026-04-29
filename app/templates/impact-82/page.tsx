@@ -1,235 +1,510 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { motion, AnimatePresence, useScroll, useTransform, useInView, useMotionValue, useSpring } from "framer-motion";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { X, Menu, Search, Cog, Zap, Activity, Globe, Shield, Command, Plus, ArrowUpRight, Maximize2, MoveRight, LayoutGrid, Box, Compass, Cpu } from "lucide-react";
-import "../premium.css";
+import Link from "next/link";
+import { X, Menu, MapPin, Calendar, Users, Globe, ArrowRight, ChevronDown } from "lucide-react";
 
-const SPECS = [
-  { id: 1, title: "CORE_ROTOR", cat: "Mechanics", value: "24k_RPM", img: "https://images.unsplash.com/photo-1558223175-0b41517ae1bb?q=80&w=1000&auto=format&fit=crop" },
-  { id: 2, title: "THERMAL_SYNC", cat: "Interface", value: "Optimal", img: "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1000&auto=format&fit=crop" },
-  { id: 3, title: "STATIC_VOID", cat: "Security", value: "Locked", img: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=1000&auto=format&fit=crop" },
-];
+// REVEAL COMPONENT
+const Reveal = ({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) => {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-60px" });
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 30 }}
+      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+      transition={{ duration: 0.8, delay }}
+    >
+      {children}
+    </motion.div>
+  );
+};
 
-export default function BlueprintAssemblySPA() {
-  const [view, setView] = useState<"assembly" | "spec" | "link">("assembly");
-  const [activeItem, setActiveItem] = useState(0);
+// COUNTER COMPONENT
+const Counter = ({ target, duration = 2 }: { target: number; duration?: number }) => {
+  const [count, setCount] = useState(0);
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-60px" });
+
+  useEffect(() => {
+    if (!isInView) return;
+    const increment = target / (duration * 100);
+    let current = 0;
+    const interval = setInterval(() => {
+      current += increment;
+      if (current >= target) {
+        setCount(target);
+        clearInterval(interval);
+      } else {
+        setCount(Math.floor(current));
+      }
+    }, 10);
+    return () => clearInterval(interval);
+  }, [isInView, target, duration]);
+
+  return <span ref={ref}>{count.toLocaleString()}</span>;
+};
+
+// MAGNETIC BUTTON COMPONENT
+const MagneticBtn = ({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) => {
+  const ref = useRef<HTMLButtonElement>(null);
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const xSpring = useSpring(x, { damping: 3, stiffness: 100 });
+  const ySpring = useSpring(y, { damping: 3, stiffness: 100 });
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    const rect = ref.current?.getBoundingClientRect();
+    if (rect) {
+      x.set(e.clientX - (rect.left + rect.width / 2));
+      y.set(e.clientY - (rect.top + rect.height / 2));
+    }
+  };
+
+  const handleMouseLeave = () => {
+    x.set(0);
+    y.set(0);
+  };
 
   return (
-    <div className="premium-theme bg-[#050505] text-[#00ff9d] min-h-screen selection:bg-[#00ff9d] selection:text-black font-mono overflow-x-hidden">
-      
-      {/* Background HUD Layers */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_#00ff9d05_0%,_transparent_70%)] opacity-40" />
-        <div 
-          className="absolute inset-0 opacity-[0.1]"
-          style={{ backgroundImage: `linear-gradient(#00ff9d10 1px, transparent 1px), linear-gradient(90deg, #00ff9d10 1px, transparent 1px)`, backgroundSize: '80px 80px' }}
-        />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-screen" />
-      </div>
+    <motion.button
+      ref={ref}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      onClick={onClick}
+      style={{ x: xSpring, y: ySpring }}
+      className="px-8 py-3 bg-[#c0392b] text-white font-black uppercase text-sm tracking-wider rounded hover:bg-[#a93221] transition-colors"
+    >
+      {children}
+    </motion.button>
+  );
+};
 
-      {/* Editorial HUD Nav */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-center bg-black/40 backdrop-blur-xl border-b border-[#00ff9d]/10">
-        <div className="flex gap-12 items-center">
-           <button onClick={() => setView("assembly")} className="text-xl font-black italic tracking-tighter hover:text-white transition-colors flex items-center gap-4">
-              <Cog className="w-6 h-6 animate-spin-slow" /> BLUEPRINT_OS&trade;
-           </button>
-           <div className="hidden lg:flex gap-8 text-[10px] font-black uppercase tracking-widest opacity-20 italic">
-              Status: Assembly_Verified
-              <span className="text-white">Ref: 0x82_B</span>
-           </div>
-        </div>
-        <div className="hidden md:flex gap-12 text-[10px] font-black uppercase tracking-[0.4em] opacity-30">
-           <button onClick={() => setView("assembly")} className={`hover:opacity-100 transition-opacity ${view === 'assembly' ? 'text-white opacity-100 underline decoration-white underline-offset-8 italic' : ''}`}>THE_ASSEMBLY</button>
-           <button onClick={() => setView("link")} className={`hover:opacity-100 transition-opacity ${view === 'link' ? 'text-white opacity-100 underline decoration-white underline-offset-8 italic' : ''}`}>THE_LINK</button>
-        </div>
-        <div className="flex items-center gap-8">
-           <Search className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-           <Menu className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
+// DATA
+const artists = [
+  { id: 1, name: "Elena Rossi", category: "Painting", img: "https://images.unsplash.com/photo-1579783902614-e3fb5141b0cb?q=80&w=600&auto=format&fit=crop" },
+  { id: 2, name: "Marcus Chen", category: "Sculpture", img: "https://images.unsplash.com/photo-1561070791-2526d30994b5?q=80&w=600&auto=format&fit=crop" },
+  { id: 3, name: "Sophia Wells", category: "Photography", img: "https://images.unsplash.com/photo-1552053831-71594a27c62d?q=80&w=600&auto=format&fit=crop" },
+  { id: 4, name: "David Park", category: "Digital", img: "https://images.unsplash.com/photo-1511379938547-c1f69b13d835?q=80&w=600&auto=format&fit=crop" },
+  { id: 5, name: "Amara Okafor", category: "Painting", img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=600&auto=format&fit=crop" },
+  { id: 6, name: "James Mitchell", category: "Sculpture", img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=600&auto=format&fit=crop" },
+  { id: 7, name: "Lucia Moretti", category: "Photography", img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=600&auto=format&fit=crop" },
+  { id: 8, name: "Jin Zhang", category: "Digital", img: "https://images.unsplash.com/photo-1517070213202-1332aab541fe?q=80&w=600&auto=format&fit=crop" },
+];
+
+const faqs = [
+  { q: "How do I purchase artwork?", a: "All pieces are available through our online gallery. Click 'Inquire' on any artwork to begin the acquisition process." },
+  { q: "Is there a VIP preview?", a: "Yes! Join our VIP circle for early access to new collections and private viewings." },
+  { q: "What about international shipping?", a: "We ship globally with white-glove insurance and climate-controlled transport for all pieces." },
+  { q: "Can I commission work?", a: "Many of our artists accept commissions. Ask our team for artist-specific commission information." },
+];
+
+export default function MeridianArtFair() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedArtist, setSelectedArtist] = useState<typeof artists[0] | null>(null);
+  const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
+  const [showVipModal, setShowVipModal] = useState(false);
+  const { scrollY } = useScroll();
+  const heroY = useTransform(scrollY, [0, 500], [0, 150]);
+
+  const categories = ["All", "Painting", "Sculpture", "Digital", "Photography"];
+  const filteredArtists = selectedCategory === "All" ? artists : artists.filter(a => a.category === selectedCategory);
+
+  return (
+    <div style={{ backgroundColor: "#ffffff", color: "#1e293b", minHeight: "100vh" }}>
+      {/* NAV */}
+      <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 50, backgroundColor: "rgba(255,255,255,0.95)", backdropFilter: "blur(12px)", borderBottom: "1px solid #e2e8f0" }}>
+        <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <h1 style={{ fontSize: "1.5rem", fontWeight: "900", letterSpacing: "-0.02em" }}>MERIDIAN</h1>
+          <div style={{ display: "none", gap: "2rem" }} className="md:flex">
+            {["Gallery", "Schedule", "Artists", "Contact"].map((item) => (
+              <a key={item} href="#" style={{ fontSize: "0.875rem", fontWeight: "600", textDecoration: "none", color: "#1e293b", opacity: 0.7 }}>
+                {item}
+              </a>
+            ))}
+          </div>
+          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} style={{ cursor: "pointer", background: "none", border: "none" }}>
+            <Menu size={24} />
+          </button>
         </div>
       </nav>
 
-      <AnimatePresence mode="wait">
-        
-        {/* THE ASSEMBLY VIEW (LANDING) */}
-        {view === "assembly" && (
-          <motion.div key="assembly" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-48 pb-32 px-12 max-w-[1800px] mx-auto min-h-screen flex flex-col justify-center">
-             <header className="mb-24 border-b-2 border-[#00ff9d]/20 pb-12 flex flex-col md:flex-row justify-between items-end gap-12">
-                <div>
-                   <span className="text-[10px] uppercase font-black tracking-[1em] text-[#00ff9d] opacity-40 mb-4 block underline decoration-[#00ff9d]/10 underline-offset-8 italic">Unit_Deployment // Series_082</span>
-                   <h1 className="text-7xl md:text-[12vw] font-black italic uppercase tracking-tighter leading-[0.75] text-white">THE. <br/> <span className="text-[#00ff9d]">BUILD.</span></h1>
-                </div>
-                <div className="text-right flex flex-col items-end">
-                   <div className="text-3xl font-black mb-4 tracking-tighter uppercase opacity-10 italic">Secure_Sync</div>
-                   <div className="w-64 h-1 bg-white/5 rounded-full overflow-hidden">
-                      <motion.div animate={{ width: ['20%', '90%', '40%', '75%'] }} transition={{ duration: 4, repeat: Infinity }} className="h-full bg-[#00ff9d]" />
-                   </div>
-                </div>
-             </header>
-
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {SPECS.map((p, i) => (
-                  <motion.div 
-                    key={p.id} initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                    className="group relative h-[60vh] rounded-[3rem] overflow-hidden border border-[#00ff9d]/10 hover:border-[#00ff9d]/40 transition-all cursor-pointer shadow-2xl"
-                    onClick={() => { setActiveItem(i); setView("spec"); }}
-                  >
-                     <Image src={p.img} alt={p.title} fill className="object-cover grayscale opacity-20 group-hover:opacity-40 transition-all duration-[2s] group-hover:scale-110" />
-                     <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                     
-                     <div className="absolute inset-10 flex flex-col justify-between">
-                        <div className="flex justify-between items-start">
-                           <div className="p-4 bg-white/5 border border-white/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Plus className="w-5 h-5 text-[#00ff9d]" />
-                           </div>
-                           <div className="text-[10px] font-black uppercase tracking-widest opacity-20 group-hover:opacity-100 transition-opacity text-[#00ff9d]">REF_0x{p.id}</div>
-                        </div>
-                        <div>
-                           <span className="text-[10px] uppercase font-black tracking-widest text-[#00ff9d]/40 mb-2 block italic">{p.cat}</span>
-                           <h3 className="text-5xl font-black italic uppercase tracking-tighter text-white group-hover:text-[#00ff9d] transition-colors">{p.title}</h3>
-                        </div>
-                     </div>
-                  </motion.div>
-                ))}
-             </div>
+      {/* MOBILE MENU */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} style={{ position: "fixed", top: "60px", left: 0, right: 0, backgroundColor: "white", zIndex: 40, padding: "2rem", borderBottom: "1px solid #e2e8f0" }}>
+            {["Gallery", "Schedule", "Artists", "Contact"].map((item, i) => (
+              <motion.a key={item} href="#" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }} style={{ display: "block", padding: "0.75rem 0", fontSize: "1rem", fontWeight: "600", color: "#1e293b", textDecoration: "none", borderBottom: "1px solid #f1f5f9" }}>
+                {item}
+              </motion.a>
+            ))}
           </motion.div>
         )}
-
-        {/* THE SPEC VIEW (DETAIL) */}
-        {view === "spec" && (
-          <motion.div key="spec" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen">
-             <button onClick={() => setView("assembly")} className="fixed top-12 left-12 z-[60] bg-white text-black p-5 rounded-full hover:scale-110 transition-transform shadow-2xl">
-                <X className="w-6 h-6" />
-             </button>
-
-             <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen pt-24 lg:pt-0">
-                <div className="lg:col-span-12 relative flex items-center justify-center p-8 md:p-32 overflow-hidden h-screen bg-[#050505]">
-                   <div className="absolute inset-0 opacity-10">
-                      <Image src={SPECS[activeItem].img} alt="Background" fill className="object-cover grayscale" />
-                   </div>
-                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#050505_100%)]" />
-                   
-                   <div className="max-w-[1500px] w-full grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10">
-                      <motion.div initial={{ scale: 1.1, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1 }} className="relative aspect-square w-full rounded-[4rem] overflow-hidden border border-[#00ff9d]/10 group bg-white/5 shadow-2xl">
-                         <Image src={SPECS[activeItem].img} alt="Spec" fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[3s] opacity-80" priority />
-                         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                         <div className="absolute top-12 left-12 p-4 bg-black/60 backdrop-blur-3xl rounded-2xl border border-white/10">
-                            <Layers className="w-6 h-6 text-white animate-pulse" />
-                         </div>
-                      </motion.div>
-
-                      <div className="flex flex-col justify-center space-y-12">
-                         <div className="space-y-6">
-                            <span className="text-[10px] uppercase tracking-[1em] font-black text-[#00ff9d]/40 mb-8 block underline decoration-white decoration-4 underline-offset-8 italic">Sync_Active // {SPECS[activeItem].cat}</span>
-                            <h1 className="text-7xl md:text-[10vw] font-black italic uppercase tracking-tighter leading-none text-white">{SPECS[activeItem].title}</h1>
-                            <div className="text-4xl font-black italic tracking-tighter opacity-10 italic text-[#00ff9d]">State: SYNCHRONIZED</div>
-                         </div>
-
-                         <p className="text-3xl font-light italic leading-relaxed uppercase tracking-tight opacity-40 text-white leading-relaxed">
-                            Structural allocation for {SPECS[activeItem].title}. System integrity at 100%. Thermal load nominal at 32C. Every coordinate synchronized.
-                         </p>
-
-                         <div className="grid grid-cols-2 gap-12 py-12 border-y border-[#00ff9d]/10 text-[#00ff9d]">
-                            {[
-                              { icon: <Compass className="w-5 h-5" />, l: "Vector", v: "Class_A" },
-                              { icon: <Zap className="w-5 h-5" />, l: "Logic", v: "Phase_Shift" },
-                              { icon: <Shield className="w-5 h-5" />, l: "Security", v: "High_Impact" },
-                              { icon: <Activity className="w-5 h-5" />, l: "Sync", v: SPECS[activeItem].value },
-                            ].map((s, i) => (
-                              <div key={i} className="flex gap-6 items-center">
-                                 <div className="opacity-20">{s.icon}</div>
-                                 <div className="text-left">
-                                    <div className="text-[10px] font-black opacity-30 uppercase tracking-widest mb-1 italic">{s.l}</div>
-                                    <div className="text-sm font-black uppercase italic tracking-tighter text-white">{s.v}</div>
-                                 </div>
-                              </div>
-                            ))}
-                         </div>
-
-                         <div className="flex gap-6 pt-8">
-                            <button onClick={() => setView("assembly")} className="flex-grow py-8 bg-white text-black font-black uppercase text-xs tracking-[1em] hover:bg-white/80 transition-all shadow-2xl">
-                               Establish_Link
-                            </button>
-                            <button className="px-12 py-8 border border-[#00ff9d]/20 text-[10px] font-black uppercase tracking-[0.5em] hover:scale-105 transition-all text-[#00ff9d]">
-                               PDF_Spec
-                            </button>
-                         </div>
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
-        {/* THE LINK VIEW (INFO) */}
-        {view === "link" && (
-          <motion.div key="link" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen flex flex-col justify-center">
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center text-white">
-                <div className="space-y-16">
-                   <span className="text-[10px] uppercase font-black tracking-[1.5em] text-[#00ff9d] opacity-60 block underline decoration-[#00ff9d]/20 underline-offset-8 italic">The_Identity_Protocol</span>
-                   <h2 className="text-7xl md:text-[10vw] font-black italic tracking-tighter leading-none text-white uppercase">The <br/> Truth.</h2>
-                   <p className="text-3xl md:text-4xl font-light italic opacity-60 leading-relaxed uppercase tracking-tight text-[#00ff9d]/60">
-                      We treat architecture as code. Every structure is a function of its environmental variables and tectonic intent. 100% precision. Zero noise.
-                   </p>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t border-[#00ff9d]/20 text-[#00ff9d]">
-                      {[
-                        { icon: <Cpu className="w-6 h-6" />, t: "Adaptive Flow", v: "Dynamic Load Sync" },
-                        { icon: <Plus className="w-6 h-6" />, t: "Structural Sync", v: "Deep_Material_ID" },
-                      ].map((item, i) => (
-                        <div key={i} className="flex gap-8 group">
-                           <div className="w-16 h-16 rounded-full border border-[#00ff9d] flex items-center justify-center text-[#00ff9d] group-hover:bg-[#00ff9d] group-hover:text-black transition-all shadow-xl">
-                              {item.icon}
-                           </div>
-                           <div className="text-left">
-                              <h4 className="text-2xl font-black uppercase italic tracking-tighter text-white leading-none mb-2">{item.t}</h4>
-                              <p className="text-[10px] opacity-30 uppercase tracking-[0.3em] font-black leading-relaxed text-[#00ff9d]/40">{item.v}</p>
-                           </div>
-                        </div>
-                      ))}
-                   </div>
-                </div>
-                <div className="relative aspect-square bg-white/5 rounded-[4rem] p-12 overflow-hidden border border-[#00ff9d]/10 group shadow-2xl">
-                   <Image src="https://images.unsplash.com/photo-1541829070764-84a7d30dee62?q=80&w=1000&auto=format&fit=crop" alt="The Network" fill className="object-cover opacity-20 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-[2s]" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                   <div className="absolute inset-x-0 bottom-12 flex justify-center">
-                      <div className="px-12 py-6 border border-[#00ff9d] text-[#00ff9d] text-[10px] font-black uppercase tracking-widest italic animate-bounce cursor-pointer hover:bg-[#00ff9d] hover:text-black transition-all">
-                         Establish_Handshake
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
       </AnimatePresence>
 
-      {/* Global Status HUD */}
-      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em] italic text-[#00ff9d]">
-         <div className="flex gap-12 text-[#00ff9d]">
-            <span>Blueprint_OS_Alpha</span>
-            <span>Uptime: 99.9%</span>
-         </div>
-         <div className="flex gap-4 items-end text-[#00ff9d]">
-            <div className="text-right leading-tight italic">
-               Inventory_Control <br /> v4.0.21
-            </div>
-            <div className="flex gap-[4px] h-4">
-               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-full bg-[#00ff9d] opacity-${i*20}`}></div>)}
-            </div>
-         </div>
-      </footer>
+      {/* HERO */}
+      <motion.section style={{ height: "100vh", position: "relative", overflow: "hidden", marginTop: "60px" }}>
+        <motion.div style={{ position: "absolute", inset: 0, y: heroY }}>
+          <Image src="https://images.unsplash.com/photo-1633356122544-f134324ef6db?q=80&w=1600&auto=format&fit=crop" alt="Art Fair" fill style={{ objectFit: "cover" }} unoptimized priority />
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.6) 100%)" }} />
+        </motion.div>
+        <div style={{ position: "relative", height: "100%", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", textAlign: "center", padding: "2rem" }}>
+          <Reveal>
+            <motion.span style={{ fontSize: "0.875rem", fontWeight: "900", letterSpacing: "0.1em", color: "#c0392b", textTransform: "uppercase", marginBottom: "1rem" }}>
+              International Art Event
+            </motion.span>
+          </Reveal>
+          <Reveal delay={0.2}>
+            <h2 style={{ fontSize: "clamp(3rem, 12vw, 8rem)", fontWeight: "900", lineHeight: 1, marginBottom: "2rem", maxWidth: "900px" }}>
+              Where <span style={{ color: "#c0392b" }}>Art</span> Meets <span style={{ color: "#c0392b" }}>Passion</span>
+            </h2>
+          </Reveal>
+          <Reveal delay={0.4}>
+            <p style={{ fontSize: "1.25rem", opacity: 0.7, marginBottom: "3rem", maxWidth: "600px" }}>
+              Discover works from 200 artists across 40 countries. 15 years of cultural excellence.
+            </p>
+          </Reveal>
+          <Reveal delay={0.6}>
+            <motion.div animate={{ y: [0, 10, 0] }} transition={{ duration: 2, repeat: Infinity }}>
+              <ChevronDown size={32} style={{ color: "#c0392b" }} />
+            </motion.div>
+          </Reveal>
+        </div>
+      </motion.section>
 
-      <style>{`
-        ::-webkit-scrollbar { width: 0px; }
-        @keyframes spin-slow {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        .animate-spin-slow {
-          animation: spin-slow 10s linear infinite;
-        }
-      `}</style>
+      {/* STATS */}
+      <section style={{ padding: "6rem 2rem", backgroundColor: "#1e293b", color: "#ffffff" }}>
+        <div style={{ maxWidth: "1400px", margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "3rem" }}>
+          {[
+            { label: "Artists", value: 200 },
+            { label: "Countries", value: 40 },
+            { label: "Visitors", value: 12000 },
+            { label: "Years", value: 15 },
+          ].map((stat, i) => (
+            <Reveal key={i} delay={i * 0.1}>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: "3rem", fontWeight: "900", marginBottom: "0.5rem", color: "#c0392b" }}>
+                  <Counter target={stat.value} />
+                  {stat.label === "Visitors" ? "K" : ""}
+                </div>
+                <p style={{ fontSize: "0.875rem", opacity: 0.8, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  {stat.label}
+                </p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* ARTIST GRID */}
+      <section style={{ padding: "6rem 2rem" }}>
+        <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
+          <Reveal>
+            <h2 style={{ fontSize: "2.5rem", fontWeight: "900", marginBottom: "3rem", textAlign: "center" }}>Featured Artists</h2>
+          </Reveal>
+
+          {/* CATEGORY FILTER */}
+          <div style={{ display: "flex", gap: "1rem", marginBottom: "3rem", overflowX: "auto", justifyContent: "center", flexWrap: "wrap" }}>
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                style={{
+                  padding: "0.75rem 1.5rem",
+                  backgroundColor: selectedCategory === cat ? "#c0392b" : "transparent",
+                  color: selectedCategory === cat ? "white" : "#1e293b",
+                  border: `2px solid ${selectedCategory === cat ? "#c0392b" : "#e2e8f0"}`,
+                  borderRadius: "9999px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  transition: "all 0.3s ease",
+                }}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
+          {/* ARTISTS */}
+          <motion.div layout style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "2rem" }}>
+            <AnimatePresence mode="wait">
+              {filteredArtists.map((artist, i) => (
+                <motion.div
+                  key={artist.id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ delay: i * 0.05 }}
+                  onClick={() => setSelectedArtist(artist)}
+                  style={{
+                    position: "relative",
+                    cursor: "pointer",
+                    borderRadius: "0.75rem",
+                    overflow: "hidden",
+                    aspectRatio: "1",
+                    group: "group",
+                  }}
+                >
+                  <Image src={artist.img} alt={artist.name} fill style={{ objectFit: "cover", filter: "grayscale(100%)", transition: "all 0.4s ease" }} className="group-hover:grayscale-0 group-hover:scale-110" unoptimized />
+                  <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, transparent 0%, rgba(30,41,59,0.8) 100%)" }} />
+                  <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "2rem", color: "white" }}>
+                    <h3 style={{ fontSize: "1.25rem", fontWeight: "900", marginBottom: "0.25rem" }}>{artist.name}</h3>
+                    <p style={{ fontSize: "0.875rem", opacity: 0.8 }}>{artist.category}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* EVENT SCHEDULE TABS */}
+      <section style={{ padding: "6rem 2rem", backgroundColor: "#f8fafc" }}>
+        <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
+          <Reveal>
+            <h2 style={{ fontSize: "2.5rem", fontWeight: "900", marginBottom: "3rem", textAlign: "center" }}>Event Schedule</h2>
+          </Reveal>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "2rem" }}>
+            {[
+              { name: "Preview Night", date: "May 16", time: "6PM - 9PM", guests: "VIP Only" },
+              { name: "Opening", date: "May 17", time: "10AM - 10PM", guests: "All Welcome" },
+              { name: "Weekend", date: "May 18-19", time: "9AM - 6PM", guests: "All Welcome" },
+              { name: "Closing", date: "May 20", time: "10AM - 5PM", guests: "Final Day" },
+            ].map((event, i) => (
+              <Reveal key={i} delay={i * 0.1}>
+                <motion.div
+                  whileHover={{ y: -8 }}
+                  style={{
+                    padding: "2rem",
+                    backgroundColor: "white",
+                    borderRadius: "1rem",
+                    border: "1px solid #e2e8f0",
+                    cursor: "pointer",
+                    transition: "all 0.3s ease",
+                  }}
+                >
+                  <h3 style={{ fontSize: "1.25rem", fontWeight: "900", marginBottom: "0.5rem" }}>{event.name}</h3>
+                  <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem", fontSize: "0.875rem", opacity: 0.7 }}>
+                    <span style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                      <Calendar size={16} /> {event.date}
+                    </span>
+                  </div>
+                  <p style={{ marginBottom: "0.5rem", fontWeight: "600" }}>{event.time}</p>
+                  <p style={{ fontSize: "0.875rem", opacity: 0.7 }}>{event.guests}</p>
+                </motion.div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* TESTIMONIALS CAROUSEL */}
+      <section style={{ padding: "6rem 2rem" }}>
+        <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
+          <Reveal>
+            <h2 style={{ fontSize: "2.5rem", fontWeight: "900", marginBottom: "3rem", textAlign: "center" }}>Collector Stories</h2>
+          </Reveal>
+          <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            style={{
+              padding: "3rem",
+              backgroundColor: "#f8fafc",
+              borderRadius: "1rem",
+              borderLeft: "4px solid #c0392b",
+              textAlign: "center",
+            }}
+          >
+            <p style={{ fontSize: "1.25rem", marginBottom: "2rem", fontStyle: "italic" }}>
+              "Meridian introduced me to artists who changed my perspective on contemporary art. The curation is exceptional."
+            </p>
+            <p style={{ fontWeight: "900", fontSize: "1rem" }}>— Victoria Chen, Collector</p>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* FAQ ACCORDION */}
+      <section style={{ padding: "6rem 2rem", backgroundColor: "#1e293b", color: "white" }}>
+        <div style={{ maxWidth: "800px", margin: "0 auto" }}>
+          <Reveal>
+            <h2 style={{ fontSize: "2.5rem", fontWeight: "900", marginBottom: "3rem", textAlign: "center" }}>Questions?</h2>
+          </Reveal>
+          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            {faqs.map((faq, i) => (
+              <Reveal key={i} delay={i * 0.1}>
+                <motion.button
+                  onClick={() => setExpandedFaq(expandedFaq === i ? null : i)}
+                  style={{
+                    padding: "1.5rem",
+                    backgroundColor: expandedFaq === i ? "#c0392b" : "transparent",
+                    border: `1px solid ${expandedFaq === i ? "#c0392b" : "#475569"}`,
+                    borderRadius: "0.75rem",
+                    color: "white",
+                    cursor: "pointer",
+                    textAlign: "left",
+                    fontWeight: "700",
+                    transition: "all 0.3s ease",
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span>{faq.q}</span>
+                    <motion.div animate={{ rotate: expandedFaq === i ? 180 : 0 }} transition={{ duration: 0.3 }}>
+                      <ChevronDown size={20} />
+                    </motion.div>
+                  </div>
+                  <AnimatePresence>
+                    {expandedFaq === i && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3 }}
+                        style={{ marginTop: "1rem", fontSize: "0.95rem", opacity: 0.9 }}
+                      >
+                        {faq.a}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.button>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* VIP MODAL */}
+      <AnimatePresence>
+        {showVipModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowVipModal(false)}
+            style={{
+              position: "fixed",
+              inset: 0,
+              backgroundColor: "rgba(0,0,0,0.5)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 60,
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                backgroundColor: "white",
+                borderRadius: "1rem",
+                padding: "2rem",
+                maxWidth: "500px",
+                width: "90vw",
+                position: "relative",
+              }}
+            >
+              <button onClick={() => setShowVipModal(false)} style={{ position: "absolute", top: "1rem", right: "1rem", background: "none", border: "none", cursor: "pointer" }}>
+                <X size={24} />
+              </button>
+              <h3 style={{ fontSize: "1.75rem", fontWeight: "900", marginBottom: "1rem" }}>VIP Preview Access</h3>
+              <p style={{ opacity: 0.7, marginBottom: "2rem" }}>Join our exclusive circle for early access to new collections and private viewings.</p>
+              <input type="email" placeholder="your@email.com" style={{ width: "100%", padding: "0.75rem", marginBottom: "1rem", border: "1px solid #e2e8f0", borderRadius: "0.5rem" }} />
+              <button style={{ width: "100%", padding: "0.75rem", backgroundColor: "#c0392b", color: "white", fontWeight: "700", borderRadius: "0.5rem", border: "none", cursor: "pointer" }}>
+                Join VIP Circle
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ARTIST MODAL */}
+      <AnimatePresence>
+        {selectedArtist && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSelectedArtist(null)}
+            style={{
+              position: "fixed",
+              inset: 0,
+              backgroundColor: "rgba(0,0,0,0.7)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 60,
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                backgroundColor: "white",
+                borderRadius: "1rem",
+                overflow: "hidden",
+                maxWidth: "600px",
+                width: "90vw",
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+              }}
+            >
+              <div style={{ position: "relative", aspectRatio: "1" }}>
+                <Image src={selectedArtist.img} alt={selectedArtist.name} fill style={{ objectFit: "cover" }} unoptimized />
+              </div>
+              <div style={{ padding: "2rem", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                <button onClick={() => setSelectedArtist(null)} style={{ alignSelf: "flex-end", background: "none", border: "none", cursor: "pointer" }}>
+                  <X size={24} />
+                </button>
+                <div>
+                  <p style={{ fontSize: "0.875rem", opacity: 0.7, textTransform: "uppercase", fontWeight: "600", marginBottom: "0.5rem" }}>
+                    {selectedArtist.category}
+                  </p>
+                  <h3 style={{ fontSize: "2rem", fontWeight: "900", marginBottom: "1rem" }}>{selectedArtist.name}</h3>
+                  <p style={{ opacity: 0.7, marginBottom: "1.5rem" }}>International artist specializing in contemporary {selectedArtist.category.toLowerCase()}. Featured in major galleries worldwide.</p>
+                </div>
+                <MagneticBtn>View Portfolio</MagneticBtn>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* CTA FOOTER */}
+      <section style={{ padding: "6rem 2rem", backgroundColor: "#1e293b", color: "white" }}>
+        <div style={{ maxWidth: "1000px", margin: "0 auto", textAlign: "center" }}>
+          <Reveal>
+            <h2 style={{ fontSize: "2.5rem", fontWeight: "900", marginBottom: "2rem" }}>Ready to Discover?</h2>
+          </Reveal>
+          <Reveal delay={0.2}>
+            <button
+              onClick={() => setShowVipModal(true)}
+              style={{
+                padding: "1rem 2.5rem",
+                backgroundColor: "#c0392b",
+                color: "white",
+                fontWeight: "900",
+                fontSize: "1rem",
+                borderRadius: "0.5rem",
+                border: "none",
+                cursor: "pointer",
+                display: "inline-flex",
+                gap: "0.75rem",
+                alignItems: "center",
+              }}
+            >
+              Join VIP Preview <ArrowRight size={20} />
+            </button>
+          </Reveal>
+        </div>
+      </section>
     </div>
   );
 }

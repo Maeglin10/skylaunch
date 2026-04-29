@@ -1,229 +1,603 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { motion, AnimatePresence, useScroll, useTransform, useInView, useMotionValue, useSpring } from "framer-motion";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { X, Menu, Search, Camera, Zap, Activity, Globe, Shield, Command, Plus, ArrowUpRight, Maximize2, MoveRight, Layers, Box, Compass, Sparkles } from "lucide-react";
-import "../premium.css";
+import Link from "next/link";
+import { X, Menu, Heart, Tree, Leaf, Award, ArrowRight, ChevronDown, Search, Package } from "lucide-react";
 
-const PORTRAITS = [
-  { id: 1, title: "LUMINA_A", cat: "Portrait", value: "High_Res", img: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=1000&auto=format&fit=crop" },
-  { id: 2, title: "VOID_B", cat: "Conceptual", value: "Duo_Tone", img: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=1000&auto=format&fit=crop" },
-  { id: 3, title: "AETHER_C", cat: "Experimental", value: "Locked", img: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?q=80&w=1000&auto=format&fit=crop" },
-];
+// REVEAL COMPONENT
+const Reveal = ({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) => {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-60px" });
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 30 }}
+      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+      transition={{ duration: 0.8, delay }}
+    >
+      {children}
+    </motion.div>
+  );
+};
 
-export default function DuoPortraitSPA() {
-  const [view, setView] = useState<"duo" | "lens" | "pulse">("duo");
-  const [activeItem, setActiveItem] = useState(0);
+// COUNTER COMPONENT
+const Counter = ({ target, duration = 2, prefix = "", suffix = "" }: { target: number; duration?: number; prefix?: string; suffix?: string }) => {
+  const [count, setCount] = useState(0);
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-60px" });
+
+  useEffect(() => {
+    if (!isInView) return;
+    const increment = target / (duration * 100);
+    let current = 0;
+    const interval = setInterval(() => {
+      current += increment;
+      if (current >= target) {
+        setCount(target);
+        clearInterval(interval);
+      } else {
+        setCount(Math.floor(current));
+      }
+    }, 10);
+    return () => clearInterval(interval);
+  }, [isInView, target, duration]);
 
   return (
-    <div className="premium-theme bg-[#050505] text-[#f43f5e] min-h-screen selection:bg-[#f43f5e] selection:text-white font-mono overflow-x-hidden">
-      
-      {/* Background HUD Layers */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_#f43f5e05_0%,_transparent_70%)] opacity-40" />
-        <div 
-          className="absolute inset-0 opacity-[0.05]"
-          style={{ backgroundImage: `linear-gradient(#f43f5e10 1px, transparent 1px), linear-gradient(90deg, #f43f5e10 1px, transparent 1px)`, backgroundSize: '80px 80px' }}
-        />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-screen" />
-      </div>
+    <span ref={ref}>
+      {prefix}
+      {count.toLocaleString()}
+      {suffix}
+    </span>
+  );
+};
 
-      {/* Editorial HUD Nav */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-center bg-black/40 backdrop-blur-xl border-b border-[#f43f5e]/10">
-        <div className="flex gap-12 items-center">
-           <button onClick={() => setView("duo")} className="text-xl font-black italic tracking-tighter hover:text-white transition-colors flex items-center gap-4">
-              <Camera className="w-6 h-6 animate-pulse" /> DUO_OS&trade;
-           </button>
-           <div className="hidden lg:flex gap-8 text-[10px] font-black uppercase tracking-widest opacity-20 italic">
-              Status: Lens_Verified
-              <span className="text-white">Ref: 0x86_D</span>
-           </div>
-        </div>
-        <div className="hidden md:flex gap-12 text-[10px] font-black uppercase tracking-[0.4em] opacity-30">
-           <button onClick={() => setView("duo")} className={`hover:opacity-100 transition-opacity ${view === 'duo' ? 'text-white opacity-100 underline decoration-white underline-offset-8 italic' : ''}`}>THE_DUO</button>
-           <button onClick={() => setView("pulse")} className={`hover:opacity-100 transition-opacity ${view === 'pulse' ? 'text-white opacity-100 underline decoration-white underline-offset-8 italic' : ''}`}>THE_PULSE</button>
-        </div>
-        <div className="flex items-center gap-8">
-           <Search className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-           <Menu className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
+// MAGNETIC BUTTON COMPONENT
+const MagneticBtn = ({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) => {
+  const ref = useRef<HTMLButtonElement>(null);
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const xSpring = useSpring(x, { damping: 3, stiffness: 100 });
+  const ySpring = useSpring(y, { damping: 3, stiffness: 100 });
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    const rect = ref.current?.getBoundingClientRect();
+    if (rect) {
+      x.set(e.clientX - (rect.left + rect.width / 2));
+      y.set(e.clientY - (rect.top + rect.height / 2));
+    }
+  };
+
+  const handleMouseLeave = () => {
+    x.set(0);
+    y.set(0);
+  };
+
+  return (
+    <motion.button
+      ref={ref}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      onClick={onClick}
+      style={{ x: xSpring, y: ySpring }}
+      className="px-8 py-3 bg-[#2d5a3d] text-[#f5f0e6] font-black uppercase text-sm tracking-wider rounded hover:bg-[#1a3a20] transition-colors"
+    >
+      {children}
+    </motion.button>
+  );
+};
+
+export default function ThreadlineSustainable() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [selectedCollection, setSelectedCollection] = useState("All");
+  const [wishlist, setWishlist] = useState<number[]>([]);
+  const [sizingModalOpen, setSizingModalOpen] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+  const { scrollY } = useScroll();
+  const heroY = useTransform(scrollY, [0, 500], [0, 150]);
+
+  const products = [
+    { id: 1, name: "Organic Cotton Tee", collection: "Basics", price: "$45", img: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=600&auto=format&fit=crop" },
+    { id: 2, name: "Hemp Overshirt", collection: "Outerwear", price: "$89", img: "https://images.unsplash.com/photo-1551028719-00167b16ebc5?q=80&w=600&auto=format&fit=crop" },
+    { id: 3, name: "Linen Trousers", collection: "Basics", price: "$79", img: "https://images.unsplash.com/photo-1542272604-787c62d465d1?q=80&w=600&auto=format&fit=crop" },
+    { id: 4, name: "Wool Beanie", collection: "Accessories", price: "$34", img: "https://images.unsplash.com/photo-1572635196237-14b3f281503f?q=80&w=600&auto=format&fit=crop" },
+    { id: 5, name: "Canvas Tote", collection: "Accessories", price: "$56", img: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?q=80&w=600&auto=format&fit=crop" },
+    { id: 6, name: "Recycled Puffer", collection: "Outerwear", price: "$129", img: "https://images.unsplash.com/photo-1539533057592-4ee29e8b254e?q=80&w=600&auto=format&fit=crop" },
+    { id: 7, name: "Bamboo Basics Set", collection: "Basics", price: "$65", img: "https://images.unsplash.com/photo-1506629082847-11d3e44e6b85?q=80&w=600&auto=format&fit=crop" },
+    { id: 8, name: "Cork Belt", collection: "Accessories", price: "$42", img: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=600&auto=format&fit=crop" },
+  ];
+
+  const lookbook = [
+    "https://images.unsplash.com/photo-1551028719-00167b16ebc5?q=80&w=600&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1552062407-98eeb64c6a62?q=80&w=600&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1542272604-787c62d465d1?q=80&w=600&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1529148482759-b649efde8876?q=80&w=600&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1566150905458-1bf1fc113f0d?q=80&w=600&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1539533057592-4ee29e8b254e?q=80&w=600&auto=format&fit=crop",
+  ];
+
+  const collections = ["All", "Basics", "Outerwear", "Accessories"];
+  const filteredProducts = selectedCollection === "All" ? products : products.filter(p => p.collection === selectedCollection);
+
+  const toggleWishlist = (id: number) => {
+    setWishlist(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+  };
+
+  return (
+    <div style={{ backgroundColor: "#f5f0e6", color: "#1a1a1a", minHeight: "100vh" }}>
+      {/* NAV */}
+      <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 50, backgroundColor: "rgba(245,240,230,0.95)", backdropFilter: "blur(12px)", borderBottom: "1px solid #2d5a3d40" }}>
+        <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <h1 style={{ fontSize: "1.5rem", fontWeight: "900", color: "#2d5a3d", letterSpacing: "-0.02em" }}>THREADLINE</h1>
+          <div style={{ display: "none", gap: "2rem" }} className="md:flex">
+            {["Collections", "About", "Sustainability", "Contact"].map((item) => (
+              <a key={item} href="#" style={{ fontSize: "0.875rem", fontWeight: "600", textDecoration: "none", color: "#1a1a1a", opacity: 0.7 }}>
+                {item}
+              </a>
+            ))}
+          </div>
+          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} style={{ cursor: "pointer", background: "none", border: "none", color: "#2d5a3d" }}>
+            <Menu size={24} />
+          </button>
         </div>
       </nav>
 
-      <AnimatePresence mode="wait">
-        
-        {/* THE DUO VIEW (PORTRAIT LANDING) */}
-        {view === "duo" && (
-          <motion.div key="duo" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-48 pb-32 px-12 max-w-[1800px] mx-auto min-h-screen flex flex-col justify-center">
-             <header className="mb-24 border-b-2 border-[#f43f5e]/20 pb-12 flex flex-col md:flex-row justify-between items-end gap-12">
-                <div>
-                   <span className="text-[10px] uppercase font-black tracking-[1em] text-[#f43f5e] opacity-40 mb-4 block underline decoration-[#f43f5e]/10 underline-offset-8 italic">Portrait_Deployment // Series_086</span>
-                   <h1 className="text-7xl md:text-[12vw] font-black italic uppercase tracking-tighter leading-[0.75] text-white">THE. <br/> <span className="text-[#f43f5e]">DUO.</span></h1>
-                </div>
-                <div className="text-right flex flex-col items-end">
-                   <div className="text-3xl font-black mb-4 tracking-tighter uppercase opacity-10 italic">Secure_Sync</div>
-                   <div className="w-64 h-1 bg-white/5 rounded-full overflow-hidden">
-                      <motion.div animate={{ width: ['20%', '90%', '40%', '75%'] }} transition={{ duration: 4, repeat: Infinity }} className="h-full bg-[#f43f5e]" />
-                   </div>
-                </div>
-             </header>
-
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {PORTRAITS.map((p, i) => (
-                  <motion.div 
-                    key={p.id} initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                    className="group relative h-[60vh] rounded-[3rem] overflow-hidden border border-[#f43f5e]/10 hover:border-[#f43f5e]/40 transition-all cursor-pointer shadow-2xl"
-                    onClick={() => { setActiveItem(i); setView("lens"); }}
-                  >
-                     <Image src={p.img} alt={p.title} fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[2s] group-hover:scale-110" />
-                     <div className="absolute inset-0 bg-[#f43f5e] mix-blend-color group-hover:opacity-0 transition-opacity duration-[1s]" />
-                     <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                     
-                     <div className="absolute inset-10 flex flex-col justify-between">
-                        <div className="flex justify-between items-start">
-                           <div className="p-4 bg-white/5 border border-white/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Plus className="w-5 h-5 text-[#f43f5e]" />
-                           </div>
-                           <div className="text-[10px] font-black uppercase tracking-widest opacity-20 group-hover:opacity-100 transition-opacity text-[#f43f5e]">REF_0x{p.id}</div>
-                        </div>
-                        <div>
-                           <span className="text-[10px] uppercase font-black tracking-widest text-[#f43f5e]/40 mb-2 block italic">{p.cat}</span>
-                           <h3 className="text-5xl font-black italic uppercase tracking-tighter text-white group-hover:text-[#f43f5e] transition-colors">{p.title}</h3>
-                        </div>
-                     </div>
-                  </motion.div>
-                ))}
-             </div>
+      {/* MOBILE MENU */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} style={{ position: "fixed", top: "60px", left: 0, right: 0, backgroundColor: "#f5f0e6", zIndex: 40, padding: "2rem", borderBottom: "1px solid #2d5a3d40" }}>
+            {["Collections", "About", "Sustainability", "Contact"].map((item, i) => (
+              <motion.a key={item} href="#" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }} style={{ display: "block", padding: "0.75rem 0", fontSize: "1rem", fontWeight: "600", color: "#1a1a1a", textDecoration: "none", borderBottom: "1px solid #e8dfc5" }}>
+                {item}
+              </motion.a>
+            ))}
           </motion.div>
         )}
-
-        {/* THE LENS VIEW (DETAIL) */}
-        {view === "lens" && (
-          <motion.div key="lens" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen">
-             <button onClick={() => setView("duo")} className="fixed top-12 left-12 z-[60] bg-white text-black p-5 rounded-full hover:scale-110 transition-transform shadow-2xl">
-                <X className="w-6 h-6" />
-             </button>
-
-             <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen pt-24 lg:pt-0">
-                <div className="lg:col-span-12 relative flex items-center justify-center p-8 md:p-32 overflow-hidden h-screen bg-[#050505]">
-                   <div className="absolute inset-0 opacity-10">
-                      <Image src={PORTRAITS[activeItem].img} alt="Background" fill className="object-cover grayscale" />
-                   </div>
-                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#050505_100%)]" />
-                   
-                   <div className="max-w-[1500px] w-full grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10">
-                      <motion.div initial={{ scale: 1.1, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1 }} className="relative aspect-square w-full rounded-[4rem] overflow-hidden border border-[#f43f5e]/10 group bg-white/5 shadow-2xl">
-                         <Image src={PORTRAITS[activeItem].img} alt="Spec" fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[3s] opacity-80" priority />
-                         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                         <div className="absolute top-12 left-12 p-4 bg-black/60 backdrop-blur-3xl rounded-2xl border border-white/10">
-                            <Layers className="w-6 h-6 text-white animate-pulse" />
-                         </div>
-                      </motion.div>
-
-                      <div className="flex flex-col justify-center space-y-12">
-                         <div className="space-y-6">
-                            <span className="text-[10px] uppercase tracking-[1em] font-black text-[#f43f5e]/40 mb-8 block underline decoration-white decoration-4 underline-offset-8 italic">Archive_Sync // {PORTRAITS[activeItem].cat}</span>
-                            <h1 className="text-7xl md:text-[8vw] font-black italic uppercase tracking-tighter leading-none text-white">{PORTRAITS[activeItem].title}</h1>
-                            <div className="text-4xl font-black italic tracking-tighter opacity-10 italic text-[#f43f5e]">State: SYNCHRONIZED</div>
-                         </div>
-
-                         <p className="text-3xl font-light italic leading-relaxed uppercase tracking-tight opacity-40 text-white leading-relaxed">
-                            Structural allocation for {PORTRAITS[activeItem].title}. System integrity at 100%. Thermal load nominal at 32C. Every coordinate synchronized.
-                         </p>
-
-                         <div className="grid grid-cols-2 gap-12 py-12 border-y border-[#f43f5e]/10 text-[#f43f5e]">
-                            {[
-                              { icon: <Globe className="w-5 h-5" />, l: "Region", v: "Class_A" },
-                              { icon: <Zap className="w-5 h-5" />, l: "Logic", v: "Phase_Shift" },
-                              { icon: <Shield className="w-5 h-5" />, l: "Security", v: "High_Impact" },
-                              { icon: <Activity className="w-5 h-5" />, l: "Sync", v: PORTRAITS[activeItem].value },
-                            ].map((s, i) => (
-                              <div key={i} className="flex gap-6 items-center">
-                                 <div className="opacity-20">{s.icon}</div>
-                                 <div className="text-left">
-                                    <div className="text-[10px] font-black opacity-30 uppercase tracking-widest mb-1 italic">{s.l}</div>
-                                    <div className="text-sm font-black uppercase italic tracking-tighter text-white">{s.v}</div>
-                                 </div>
-                              </div>
-                            ))}
-                         </div>
-
-                         <div className="flex gap-6 pt-8">
-                            <button onClick={() => setView("duo")} className="flex-grow py-8 bg-white text-black font-black uppercase text-xs tracking-[1em] hover:bg-white/80 transition-all shadow-2xl">
-                               Return_to_Duo
-                            </button>
-                            <button className="px-12 py-8 border border-[#f43f5e]/20 text-[10px] font-black uppercase tracking-[0.5em] hover:scale-105 transition-all text-[#f43f5e]">
-                               PDF_Spec
-                            </button>
-                         </div>
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
-        {/* THE PULSE VIEW (INFO) */}
-        {view === "pulse" && (
-          <motion.div key="pulse" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen flex flex-col justify-center">
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center text-white">
-                <div className="space-y-16">
-                   <span className="text-[10px] uppercase font-black tracking-[1.5em] text-[#f43f5e] opacity-60 block underline decoration-[#f43f5e]/20 underline-offset-8 italic">The_Identity_Protocol</span>
-                   <h2 className="text-7xl md:text-[10vw] font-black italic tracking-tighter leading-none text-white uppercase">The <br/> Truth.</h2>
-                   <p className="text-3xl md:text-4xl font-light italic opacity-60 leading-relaxed uppercase tracking-tight text-[#f43f5e]/60">
-                      We treat architecture as code. Every structure is a function of its environmental variables and tectonic intent. 100% precision. Zero noise.
-                   </p>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t border-[#f43f5e]/20 text-[#f43f5e]">
-                      {[
-                        { icon: <Sparkles className="w-6 h-6" />, t: "Adaptive Flow", v: "Dynamic Load Sync" },
-                        { icon: <Plus className="w-6 h-6" />, t: "Structural Sync", v: "Deep_Material_ID" },
-                      ].map((item, i) => (
-                        <div key={i} className="flex gap-8 group">
-                           <div className="w-16 h-16 rounded-full border border-[#f43f5e] flex items-center justify-center text-[#f43f5e] group-hover:bg-[#f43f5e] group-hover:text-black transition-all shadow-xl">
-                              {item.icon}
-                           </div>
-                           <div className="text-left">
-                              <h4 className="text-2xl font-black uppercase italic tracking-tighter text-white leading-none mb-2">{item.t}</h4>
-                              <p className="text-[10px] opacity-30 uppercase tracking-[0.3em] font-black leading-relaxed text-[#f43f5e]/40">{item.v}</p>
-                           </div>
-                        </div>
-                      ))}
-                   </div>
-                </div>
-                <div className="relative aspect-square bg-[#1a1a1a] rounded-[4rem] p-12 overflow-hidden border border-[#f43f5e]/10 group shadow-2xl">
-                   <Image src="https://images.unsplash.com/photo-1541829070764-84a7d30dee62?q=80&w=1000&auto=format&fit=crop" alt="The Archive" fill className="object-cover opacity-20 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-[2s]" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                   <div className="absolute inset-x-0 bottom-12 flex justify-center">
-                      <div className="px-12 py-6 border border-[#f43f5e] text-[#f43f5e] text-[10px] font-black uppercase tracking-widest italic animate-bounce cursor-pointer hover:bg-[#f43f5e] hover:text-black transition-all">
-                         Establish_Handshake
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
       </AnimatePresence>
 
-      {/* Global Status HUD */}
-      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em] italic text-[#f43f5e]">
-         <div className="flex gap-12 text-[#f43f5e]">
-            <span>Duo_OS_Alpha</span>
-            <span>Uptime: 99.9%</span>
-         </div>
-         <div className="flex gap-4 items-end text-[#f43f5e]">
-            <div className="text-right leading-tight italic">
-               Inventory_Control <br /> v4.0.21
-            </div>
-            <div className="flex gap-[4px] h-4">
-               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-full bg-[#f43f5e] opacity-${i*20}`}></div>)}
-            </div>
-         </div>
-      </footer>
+      {/* HERO */}
+      <motion.section style={{ height: "100vh", position: "relative", overflow: "hidden", marginTop: "60px" }}>
+        <motion.div style={{ position: "absolute", inset: 0, y: heroY }}>
+          <Image src="https://images.unsplash.com/photo-1551028719-00167b16ebc5?q=80&w=1600&auto=format&fit=crop" alt="Sustainable Fashion" fill style={{ objectFit: "cover" }} unoptimized priority />
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(245,240,230,0.85) 0%, rgba(245,240,230,0.6) 100%)" }} />
+        </motion.div>
+        <div style={{ position: "relative", height: "100%", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", textAlign: "center", padding: "2rem" }}>
+          <Reveal>
+            <motion.span style={{ fontSize: "0.875rem", fontWeight: "900", letterSpacing: "0.1em", color: "#2d5a3d", textTransform: "uppercase", marginBottom: "1rem" }}>
+              Sustainable Fashion
+            </motion.span>
+          </Reveal>
+          <Reveal delay={0.2}>
+            <h2 style={{ fontSize: "clamp(3rem, 12vw, 8rem)", fontWeight: "900", lineHeight: 1, marginBottom: "2rem", maxWidth: "900px", color: "#1a1a1a" }}>
+              Wear Your <span style={{ color: "#2d5a3d" }}>Values</span>
+            </h2>
+          </Reveal>
+          <Reveal delay={0.4}>
+            <p style={{ fontSize: "1.25rem", opacity: 0.7, marginBottom: "3rem", maxWidth: "600px", color: "#1a1a1a" }}>
+              100% organic. Zero synthetic dyes. Certified B Corp. Every piece tells a story of sustainability.
+            </p>
+          </Reveal>
+          <Reveal delay={0.6}>
+            <motion.div animate={{ y: [0, 10, 0] }} transition={{ duration: 2, repeat: Infinity }}>
+              <ChevronDown size={32} style={{ color: "#2d5a3d" }} />
+            </motion.div>
+          </Reveal>
+        </div>
+      </motion.section>
 
-      <style>{`
-        ::-webkit-scrollbar { width: 0px; }
-      `}</style>
+      {/* IMPACT STATS */}
+      <section style={{ padding: "6rem 2rem", backgroundColor: "#2d5a3d", color: "white" }}>
+        <div style={{ maxWidth: "1400px", margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "3rem" }}>
+          {[
+            { label: "Organic Cotton", value: 100, suffix: "%" },
+            { label: "Synthetic Dyes", value: 0, suffix: "%" },
+            { label: "Trees Planted", value: 50, suffix: "K" },
+            { label: "B Corp Certified", value: 1, suffix: "✓" },
+          ].map((stat, i) => (
+            <Reveal key={i} delay={i * 0.1}>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: "3rem", fontWeight: "900", marginBottom: "0.5rem", color: "#f5f0e6" }}>
+                  <Counter target={stat.value} suffix={stat.suffix} />
+                </div>
+                <p style={{ fontSize: "0.875rem", opacity: 0.8, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  {stat.label}
+                </p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* PRODUCT COLLECTION */}
+      <section style={{ padding: "6rem 2rem" }}>
+        <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
+          <Reveal>
+            <h2 style={{ fontSize: "2.5rem", fontWeight: "900", marginBottom: "3rem", textAlign: "center" }}>Collections</h2>
+          </Reveal>
+
+          {/* COLLECTION FILTER */}
+          <div style={{ display: "flex", gap: "1rem", marginBottom: "3rem", overflowX: "auto", justifyContent: "center", flexWrap: "wrap" }}>
+            {collections.map((coll) => (
+              <button
+                key={coll}
+                onClick={() => setSelectedCollection(coll)}
+                style={{
+                  padding: "0.75rem 1.5rem",
+                  backgroundColor: selectedCollection === coll ? "#2d5a3d" : "transparent",
+                  color: selectedCollection === coll ? "white" : "#1a1a1a",
+                  border: `2px solid ${selectedCollection === coll ? "#2d5a3d" : "#d4cfc5"}`,
+                  borderRadius: "9999px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  transition: "all 0.3s ease",
+                }}
+              >
+                {coll}
+              </button>
+            ))}
+          </div>
+
+          {/* PRODUCTS GRID */}
+          <motion.div layout style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "2rem" }}>
+            <AnimatePresence mode="wait">
+              {filteredProducts.map((product, i) => (
+                <motion.div
+                  key={product.id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ delay: i * 0.05 }}
+                  style={{
+                    position: "relative",
+                    borderRadius: "0.75rem",
+                    overflow: "hidden",
+                    backgroundColor: "white",
+                    border: "1px solid #e8dfc5",
+                  }}
+                >
+                  <div style={{ position: "relative", aspectRatio: "1", overflow: "hidden" }}>
+                    <Image src={product.img} alt={product.name} fill style={{ objectFit: "cover" }} unoptimized />
+                    <button
+                      onClick={() => toggleWishlist(product.id)}
+                      style={{
+                        position: "absolute",
+                        top: "1rem",
+                        right: "1rem",
+                        width: "40px",
+                        height: "40px",
+                        borderRadius: "50%",
+                        backgroundColor: "white",
+                        border: "none",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        zIndex: 10,
+                      }}
+                    >
+                      <Heart size={20} fill={wishlist.includes(product.id) ? "#2d5a3d" : "none"} color={wishlist.includes(product.id) ? "#2d5a3d" : "#1a1a1a"} />
+                    </button>
+                  </div>
+                  <div style={{ padding: "1.5rem" }}>
+                    <h3 style={{ fontSize: "1rem", fontWeight: "900", marginBottom: "0.25rem" }}>{product.name}</h3>
+                    <p style={{ fontSize: "0.875rem", opacity: 0.7, marginBottom: "0.75rem" }}>{product.collection}</p>
+                    <p style={{ fontSize: "1.25rem", fontWeight: "700", color: "#2d5a3d" }}>{product.price}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* MATERIALS SECTION */}
+      <section style={{ padding: "6rem 2rem", backgroundColor: "#f0e8d5" }}>
+        <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
+          <Reveal>
+            <h2 style={{ fontSize: "2.5rem", fontWeight: "900", marginBottom: "3rem", textAlign: "center" }}>Materials Transparency</h2>
+          </Reveal>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "2rem" }}>
+            {[
+              { name: "Organic Cotton", cert: "GOTS Certified", desc: "Grown without synthetic pesticides or fertilizers" },
+              { name: "Hemp Fiber", cert: "Fair Trade", desc: "Sustainably harvested with water-efficient processing" },
+              { name: "Recycled Polyester", cert: "GRS Certified", desc: "Made from recovered plastic bottles and textiles" },
+              { name: "Natural Dyes", cert: "Oeko-Tex", desc: "Plant-based colors with zero chemical waste" },
+            ].map((material, i) => (
+              <Reveal key={i} delay={i * 0.1}>
+                <motion.div
+                  whileHover={{ y: -8 }}
+                  style={{
+                    padding: "2rem",
+                    backgroundColor: "white",
+                    borderRadius: "0.75rem",
+                    border: "1px solid #e8dfc5",
+                    cursor: "pointer",
+                    transition: "all 0.3s ease",
+                  }}
+                >
+                  <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem", alignItems: "center" }}>
+                    <Leaf size={24} style={{ color: "#2d5a3d" }} />
+                    <Award size={24} style={{ color: "#2d5a3d" }} />
+                  </div>
+                  <h3 style={{ fontSize: "1.25rem", fontWeight: "900", marginBottom: "0.25rem" }}>{material.name}</h3>
+                  <p style={{ fontSize: "0.875rem", fontWeight: "700", color: "#2d5a3d", marginBottom: "0.75rem" }}>
+                    {material.cert}
+                  </p>
+                  <p style={{ fontSize: "0.875rem", opacity: 0.7 }}>{material.desc}</p>
+                </motion.div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* LOOKBOOK LIGHTBOX */}
+      <section style={{ padding: "6rem 2rem" }}>
+        <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
+          <Reveal>
+            <h2 style={{ fontSize: "2.5rem", fontWeight: "900", marginBottom: "3rem", textAlign: "center" }}>Lookbook</h2>
+          </Reveal>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1.5rem" }}>
+            {lookbook.map((img, i) => (
+              <Reveal key={i} delay={i * 0.1}>
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  onClick={() => {
+                    setLightboxIndex(i);
+                    setLightboxOpen(true);
+                  }}
+                  style={{
+                    position: "relative",
+                    aspectRatio: "1",
+                    cursor: "pointer",
+                    borderRadius: "0.75rem",
+                    overflow: "hidden",
+                  }}
+                >
+                  <Image src={img} alt={`Lookbook ${i + 1}`} fill style={{ objectFit: "cover" }} unoptimized />
+                </motion.div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* LIGHTBOX MODAL */}
+      <AnimatePresence>
+        {lightboxOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setLightboxOpen(false)}
+            style={{
+              position: "fixed",
+              inset: 0,
+              backgroundColor: "rgba(0,0,0,0.9)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 60,
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.9 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                position: "relative",
+                width: "90vw",
+                height: "90vh",
+                maxWidth: "800px",
+              }}
+            >
+              <Image src={lookbook[lightboxIndex]} alt="Lookbook" fill style={{ objectFit: "contain" }} unoptimized />
+              <button
+                onClick={() => setLightboxOpen(false)}
+                style={{
+                  position: "absolute",
+                  top: "-50px",
+                  right: 0,
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "white",
+                  fontSize: "2rem",
+                }}
+              >
+                <X size={32} />
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* SIZING MODAL */}
+      <AnimatePresence>
+        {sizingModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSizingModalOpen(false)}
+            style={{
+              position: "fixed",
+              inset: 0,
+              backgroundColor: "rgba(0,0,0,0.5)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 60,
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                backgroundColor: "#f5f0e6",
+                borderRadius: "1rem",
+                padding: "2rem",
+                maxWidth: "500px",
+                width: "90vw",
+                position: "relative",
+              }}
+            >
+              <button onClick={() => setSizingModalOpen(false)} style={{ position: "absolute", top: "1rem", right: "1rem", background: "none", border: "none", cursor: "pointer" }}>
+                <X size={24} />
+              </button>
+              <h3 style={{ fontSize: "1.75rem", fontWeight: "900", marginBottom: "1rem" }}>Size Guide</h3>
+              <table style={{ width: "100%", marginBottom: "2rem" }}>
+                <thead>
+                  <tr style={{ borderBottom: "2px solid #2d5a3d" }}>
+                    <th style={{ padding: "0.75rem", textAlign: "left", fontWeight: "700" }}>Size</th>
+                    <th style={{ padding: "0.75rem", textAlign: "left", fontWeight: "700" }}>Chest (cm)</th>
+                    <th style={{ padding: "0.75rem", textAlign: "left", fontWeight: "700" }}>Length (cm)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { size: "XS", chest: "84-89", length: "66" },
+                    { size: "S", chest: "89-94", length: "68" },
+                    { size: "M", chest: "94-99", length: "70" },
+                    { size: "L", chest: "99-104", length: "72" },
+                  ].map((row) => (
+                    <tr key={row.size} style={{ borderBottom: "1px solid #e8dfc5" }}>
+                      <td style={{ padding: "0.75rem" }}>{row.size}</td>
+                      <td style={{ padding: "0.75rem" }}>{row.chest}</td>
+                      <td style={{ padding: "0.75rem" }}>{row.length}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <button style={{ width: "100%", padding: "0.75rem", backgroundColor: "#2d5a3d", color: "white", fontWeight: "700", borderRadius: "0.5rem", border: "none", cursor: "pointer" }}>
+                Got It
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* TESTIMONIALS */}
+      <section style={{ padding: "6rem 2rem", backgroundColor: "#f0e8d5" }}>
+        <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
+          <Reveal>
+            <h2 style={{ fontSize: "2.5rem", fontWeight: "900", marginBottom: "3rem", textAlign: "center" }}>Customer Stories</h2>
+          </Reveal>
+          <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            style={{
+              padding: "2rem",
+              backgroundColor: "white",
+              borderRadius: "1rem",
+              borderLeft: "4px solid #2d5a3d",
+            }}
+          >
+            <p style={{ fontSize: "1.1rem", marginBottom: "1rem" }}>
+              "I love knowing exactly where my clothes come from and that they're made ethically. Threadline makes sustainable fashion accessible."
+            </p>
+            <p style={{ fontWeight: "700", color: "#2d5a3d" }}>— Emma Rodriguez, Threadline Customer</p>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section style={{ padding: "6rem 2rem" }}>
+        <div style={{ maxWidth: "800px", margin: "0 auto" }}>
+          <Reveal>
+            <h2 style={{ fontSize: "2.5rem", fontWeight: "900", marginBottom: "3rem", textAlign: "center" }}>Questions</h2>
+          </Reveal>
+          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            {[
+              { q: "How sustainable is Threadline?", a: "100% organic cotton, zero synthetic dyes, B Corp certified, and carbon neutral shipping." },
+              { q: "What's your return policy?", a: "30-day returns for unworn items. Free shipping on returns." },
+              { q: "How do I find my size?", a: "Use our size guide or contact us for personalized recommendations." },
+              { q: "Do you offer gift cards?", a: "Yes! Digital and physical gift cards available at checkout." },
+            ].map((faq, i) => (
+              <Reveal key={i} delay={i * 0.1}>
+                <motion.button
+                  style={{
+                    padding: "1.5rem",
+                    backgroundColor: "white",
+                    border: "1px solid #e8dfc5",
+                    borderRadius: "0.75rem",
+                    color: "#1a1a1a",
+                    cursor: "pointer",
+                    textAlign: "left",
+                    fontWeight: "700",
+                    transition: "all 0.3s ease",
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span>{faq.q}</span>
+                    <ChevronDown size={20} />
+                  </div>
+                </motion.button>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* NEWSLETTER CTA */}
+      <section style={{ padding: "6rem 2rem", backgroundColor: "#2d5a3d", color: "white" }}>
+        <div style={{ maxWidth: "800px", margin: "0 auto", textAlign: "center" }}>
+          <Reveal>
+            <h2 style={{ fontSize: "2.5rem", fontWeight: "900", marginBottom: "2rem" }}>Join Our Community</h2>
+          </Reveal>
+          <Reveal delay={0.2}>
+            <p style={{ fontSize: "1.1rem", opacity: 0.9, marginBottom: "2rem" }}>
+              Get sustainability tips, new collection releases, and exclusive 15% off your first order.
+            </p>
+          </Reveal>
+          <Reveal delay={0.4}>
+            <div style={{ display: "flex", gap: "1rem", marginBottom: "2rem", maxWidth: "500px", margin: "0 auto 2rem" }}>
+              <input
+                type="email"
+                placeholder="your@email.com"
+                style={{
+                  flex: 1,
+                  padding: "0.75rem",
+                  backgroundColor: "rgba(255,255,255,0.2)",
+                  border: "1px solid white",
+                  borderRadius: "0.5rem",
+                  color: "white",
+                }}
+              />
+              <button style={{ padding: "0.75rem 2rem", backgroundColor: "#f5f0e6", color: "#2d5a3d", fontWeight: "900", borderRadius: "0.5rem", border: "none", cursor: "pointer" }}>
+                Subscribe
+              </button>
+            </div>
+          </Reveal>
+          <Reveal delay={0.6}>
+            <button
+              onClick={() => setSizingModalOpen(true)}
+              style={{
+                padding: "1rem 2.5rem",
+                backgroundColor: "#f5f0e6",
+                color: "#2d5a3d",
+                fontWeight: "900",
+                fontSize: "1rem",
+                borderRadius: "0.5rem",
+                border: "none",
+                cursor: "pointer",
+                display: "inline-flex",
+                gap: "0.75rem",
+                alignItems: "center",
+              }}
+            >
+              Shop Now <ArrowRight size={20} />
+            </button>
+          </Reveal>
+        </div>
+      </section>
     </div>
   );
 }

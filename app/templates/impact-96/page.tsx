@@ -1,231 +1,622 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { motion, AnimatePresence, useScroll, useTransform, useMotionValue, useSpring, useInView } from "framer-motion";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { X, Menu, Search, Diamond, Zap, Activity, Globe, Shield, Command, Plus, ArrowUpRight, Maximize2, MoveRight, Layers, Box, Compass, Sparkles, MoveVertical, Droplet } from "lucide-react";
-import "../premium.css";
+import { Menu, X, ChevronDown, ShoppingCart, Play } from "lucide-react";
+import Link from "next/link";
 
-const GEMS = [
-  { id: 1, title: "LUX_REFRACT", cat: "Crystalline", value: "Locked", img: "https://images.unsplash.com/photo-1599643477877-530eb83abc8e?q=80&w=1000&auto=format&fit=crop" },
-  { id: 2, title: "PRISM_CORE", cat: "Refractive", value: "Active", img: "https://images.unsplash.com/photo-1573480813647-55a49b7b5ed9?q=80&w=1000&auto=format&fit=crop" },
-  { id: 3, title: "VOID_CHROMA", cat: "Speculative", value: "Verified", img: "https://images.unsplash.com/photo-1551028150-64b9f398f678?q=80&w=1000&auto=format&fit=crop" },
-];
+const Reveal = ({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) => {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-60px" });
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 30 }}
+      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+      transition={{ duration: 0.6, delay }}
+    >
+      {children}
+    </motion.div>
+  );
+};
 
-export default function LuxuryRefractiveSPA() {
-  const [view, setView] = useState<"prism" | "lux" | "protocol">("prism");
-  const [activeItem, setActiveItem] = useState(0);
+const Counter = ({ target, label }: { target: number; label: string }) => {
+  const [count, setCount] = useState(0);
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-60px" });
+
+  useEffect(() => {
+    if (!isInView) return;
+    const interval = setInterval(() => {
+      setCount((prev) => (prev < target ? prev + Math.ceil(target / 50) : target));
+    }, 30);
+    return () => clearInterval(interval);
+  }, [isInView, target]);
 
   return (
-    <div className="premium-theme bg-[#050505] text-[#f8f8f8] min-h-screen selection:bg-white selection:text-black font-serif overflow-x-hidden">
-      
-      {/* Background HUD Layers */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_#ffffff05_0%,_transparent_70%)] opacity-40" />
-        <div 
-          className="absolute inset-0 opacity-[0.05]"
-          style={{ backgroundImage: `linear-gradient(#ffffff10 1px, transparent 1px), linear-gradient(90deg, #ffffff10 1px, transparent 1px)`, backgroundSize: '80px 80px' }}
-        />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-screen" />
+    <div ref={ref} className="text-center">
+      <div className="text-5xl font-bold" style={{ color: "#d4a96a" }}>
+        {count}
+        {label.includes("K") ? "K" : ""}
       </div>
+      <p className="text-sm uppercase tracking-wide mt-2" style={{ color: "#e5e7eb" }}>
+        {label.replace(/K/g, "")}
+      </p>
+    </div>
+  );
+};
 
-      {/* Editorial HUD Nav */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-center bg-black/40 backdrop-blur-3xl border-b border-white/10 font-mono">
-        <div className="flex gap-12 items-center">
-           <button onClick={() => setView("prism")} className="text-xl font-black italic tracking-tighter hover:scale-105 transition-transform font-serif uppercase">
-              PRISM_OS&trade;
-           </button>
-           <div className="hidden lg:flex gap-8 text-[10px] font-black uppercase tracking-widest opacity-20 italic">
-              Status: Refraction_Sync_Active
-              <span className="text-white">Ref: 0x96_P</span>
-           </div>
-        </div>
-        <div className="hidden md:flex gap-12 text-[10px] font-black uppercase tracking-[0.4em] opacity-30">
-           <button onClick={() => setView("prism")} className={`hover:opacity-100 transition-opacity ${view === 'prism' ? 'text-white opacity-100 underline decoration-white decoration-2 underline-offset-8 italic' : ''}`}>THE_PRISM</button>
-           <button onClick={() => setView("protocol")} className={`hover:opacity-100 transition-opacity ${view === 'protocol' ? 'text-white opacity-100 underline decoration-white decoration-2 underline-offset-8 italic' : ''}`}>THE_PROTOCOL</button>
-        </div>
-        <div className="flex items-center gap-8">
-           <Search className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-           <Menu className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-        </div>
-      </nav>
+const MagneticBtn = ({ children }: { children: React.ReactNode }) => {
+  const ref = useRef(null);
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const xSpring = useSpring(x, { stiffness: 200, damping: 20 });
+  const ySpring = useSpring(y, { stiffness: 200, damping: 20 });
 
-      <AnimatePresence mode="wait">
-        
-        {/* THE PRISM VIEW (LANDING) */}
-        {view === "prism" && (
-          <motion.div key="prism" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-48 pb-32 px-12 max-w-[1800px] mx-auto min-h-screen flex flex-col justify-center relative z-10">
-             <header className="mb-24 border-b-2 border-white/20 pb-12 flex flex-col md:flex-row justify-between items-end gap-12">
-                <div>
-                   <span className="text-[10px] uppercase font-black tracking-[1em] opacity-40 mb-4 block underline decoration-white/10 underline-offset-8 italic font-mono">Molecular_Sync // Series_096</span>
-                   <h1 className="text-7xl md:text-[12vw] font-black italic uppercase tracking-tighter leading-[0.75] font-serif">LUX. <br/> <span className="text-stone-400">REFRACT.</span></h1>
-                </div>
-                <div className="text-right flex flex-col items-end">
-                   <div className="text-3xl font-black mb-4 tracking-tighter uppercase opacity-10 italic font-mono">Secure_Sync</div>
-                   <div className="w-64 h-1 bg-white/5 rounded-full overflow-hidden">
-                      <motion.div animate={{ width: ['20%', '90%', '40%', '75%'] }} transition={{ duration: 4, repeat: Infinity }} className="h-full bg-white" />
-                   </div>
-                </div>
-             </header>
+  const handleMouse = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!ref.current) return;
+    const rect = (ref.current as HTMLElement).getBoundingClientRect();
+    x.set(event.clientX - (rect.left + rect.width / 2));
+    y.set(event.clientY - (rect.top + rect.height / 2));
+  };
 
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 font-mono">
-                {GEMS.map((p, i) => (
-                  <motion.div 
-                    key={p.id} initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                    className="group relative h-[60vh] rounded-[3.5rem] overflow-hidden border border-white/10 hover:border-white transition-all cursor-pointer shadow-2xl bg-white/5"
-                    onClick={() => { setActiveItem(i); setView("lux"); }}
-                  >
-                     <Image src={p.img} alt={p.title} fill className="object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-[2s]" />
-                     <div className="absolute inset-0 bg-black/10 transition-colors group-hover:bg-transparent" />
-                     
-                     <div className="absolute inset-10 flex flex-col justify-between">
-                        <div className="flex justify-between items-start">
-                           <div className="p-4 bg-white/5 border border-white/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Droplet className="w-5 h-5 text-white" />
-                           </div>
-                           <div className="text-[10px] font-black uppercase tracking-widest opacity-20 italic">REF_0x{p.id}</div>
-                        </div>
-                        <div className="mix-blend-difference">
-                           <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-2 block italic text-white">{p.cat} // {p.value}</span>
-                           <h3 className="text-5xl font-black italic uppercase tracking-tighter leading-none font-serif text-white">{p.title}</h3>
-                        </div>
-                     </div>
-                  </motion.div>
-                ))}
-             </div>
+  return (
+    <motion.button
+      ref={ref}
+      onMouseMove={handleMouse}
+      onMouseLeave={() => { x.set(0); y.set(0); }}
+      style={{ x: xSpring, y: ySpring }}
+      className="px-8 py-3 rounded-full font-bold uppercase text-sm"
+      style={{ color: "#0d1117", backgroundColor: "#d4a96a" } as any}
+    >
+      {children}
+    </motion.button>
+  );
+};
+
+const Marquee = ({ items }: { items: string[] }) => {
+  return (
+    <div style={{ overflow: "hidden", display: "flex", width: "100%" }}>
+      <motion.div
+        animate={{ x: [0, -1000] }}
+        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+        className="flex gap-8 whitespace-nowrap"
+      >
+        {[...items, ...items].map((item, i) => (
+          <span key={i} className="text-lg font-bold" style={{ color: "#d4a96a" }}>
+            {item} •
+          </span>
+        ))}
+      </motion.div>
+    </div>
+  );
+};
+
+const AccordionItem = ({ title, content, isOpen, onClick }: { title: string; content: string; isOpen: boolean; onClick: () => void }) => {
+  return (
+    <div style={{ borderBottom: "1px solid #d4a96a40" }}>
+      <button
+        onClick={onClick}
+        className="w-full py-4 px-6 flex justify-between items-center hover:bg-white/5 transition-colors"
+      >
+        <span className="font-bold text-white">{title}</span>
+        <ChevronDown
+          style={{
+            color: "#d4a96a",
+            transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
+            transition: "transform 0.3s",
+          }}
+        />
+      </button>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="overflow-hidden"
+          >
+            <p className="px-6 pb-4 text-white/70">{content}</p>
           </motion.div>
         )}
+      </AnimatePresence>
+    </div>
+  );
+};
 
-        {/* THE LUX VIEW (DETAIL) */}
-        {view === "lux" && (
-          <motion.div key="lux" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen">
-             <button onClick={() => setView("prism")} className="fixed top-12 left-12 z-[60] bg-white text-black p-5 rounded-full hover:scale-110 transition-transform shadow-2xl">
-                <X className="w-6 h-6" />
-             </button>
+export default function NomadLens() {
+  const containerRef = useRef(null);
+  const { scrollYProgress } = useScroll({ target: containerRef });
+  const parallaxY = useTransform(scrollYProgress, [0, 1], ["0%", "40%"]);
 
-             <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen pt-24 lg:pt-0">
-                <div className="lg:col-span-12 relative flex items-center justify-center p-8 md:p-32 overflow-hidden h-screen bg-[#050505]">
-                   <div className="absolute inset-0 opacity-10">
-                      <Image src={GEMS[activeItem].img} alt="Background" fill className="object-cover grayscale" />
-                   </div>
-                   <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[40vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center font-serif uppercase">
-                      LUX
-                   </div>
-                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#050505_100%)]" />
-                   
-                   <div className="max-w-[1500px] w-full grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10">
-                      <motion.div initial={{ scale: 1.1, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1 }} className="relative aspect-square w-full rounded-[4rem] overflow-hidden border border-white/10 group bg-white/5 shadow-2xl">
-                         <Image src={GEMS[activeItem].img} alt="Refraction" fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[3s] opacity-80" priority />
-                         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                         <div className="absolute top-12 left-12 p-4 bg-black/60 backdrop-blur-3xl rounded-2xl border border-white/10">
-                            <Layers className="w-6 h-6 text-white animate-pulse" />
-                         </div>
-                      </motion.div>
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [activeFilter, setActiveFilter] = useState("All");
+  const [selectedPhoto, setSelectedPhoto] = useState<number | null>(null);
+  const [selectedWorkshop, setSelectedWorkshop] = useState<number | null>(null);
+  const [openAccordion, setOpenAccordion] = useState<number | null>(null);
 
-                      <div className="flex flex-col justify-center space-y-12">
-                         <div className="space-y-6 font-mono">
-                            <span className="text-[10px] uppercase tracking-[1em] font-black opacity-30 mb-8 block underline decoration-white decoration-4 underline-offset-8 italic">Phased_Sync // {GEMS[activeItem].cat}</span>
-                            <h1 className="text-7xl md:text-[8vw] font-black italic uppercase tracking-tighter leading-none text-white font-serif">{GEMS[activeItem].title}</h1>
-                            <div className="text-4xl font-black italic tracking-tighter opacity-10 italic">State: SYNCHRONIZED</div>
-                         </div>
+  const filters = ["All", "Portraits", "Landscapes", "Street", "Wildlife", "Architecture"];
+  const photos = Array.from({ length: 12 }, (_, i) => ({
+    id: i + 1,
+    title: `Capture ${i + 1}`,
+    category: filters[Math.floor(Math.random() * (filters.length - 1)) + 1],
+    img: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=500&auto=format&fit=crop",
+  }));
 
-                         <p className="text-3xl font-light italic leading-relaxed uppercase tracking-tight opacity-40 text-white leading-relaxed font-serif">
-                            Structural allocation for {GEMS[activeItem].title}. System integrity at 100%. Thermal load nominal at 32C. Every coordinate synchronized.
-                         </p>
+  const workshops = [
+    { id: 1, type: "Destination", title: "Iceland Landscapes", duration: "7 days", price: "$2,499", desc: "Glaciers, waterfalls, northern lights" },
+    { id: 2, type: "Online", title: "Mastering Composition", duration: "4 weeks", price: "$299", desc: "Live weekly masterclasses" },
+    { id: 3, type: "1:1", title: "Personal Mentoring", duration: "Flexible", price: "$150/hr", desc: "One-on-one feedback sessions" },
+  ];
 
-                         <div className="grid grid-cols-2 gap-12 py-12 border-y border-white/10 font-mono text-white/60">
-                            {[
-                              { icon: <Globe className="w-5 h-5" />, l: "Region", v: "Global_East" },
-                              { icon: <Zap className="w-5 h-5" />, l: "Logic", v: "Phase_Shift" },
-                              { icon: <Shield className="w-5 h-5" />, l: "Security", v: "High_Impact" },
-                              { icon: <Activity className="w-5 h-5" />, l: "Sync", v: "Active" },
-                            ].map((s, i) => (
-                              <div key={i} className="flex gap-6 items-center">
-                                 <div className="opacity-20">{s.icon}</div>
-                                 <div className="text-left">
-                                    <div className="text-[10px] font-black opacity-30 uppercase tracking-widest mb-1 italic">{s.l}</div>
-                                    <div className="text-sm font-black uppercase italic tracking-tighter text-white">{s.v}</div>
-                                 </div>
-                              </div>
-                            ))}
-                         </div>
+  const faqs = [
+    { title: "What equipment do I need?", content: "Any camera works - smartphone to DSLR. We teach technique over gear." },
+    { title: "Do you offer payment plans?", content: "Yes! Workshops available in 3 monthly installments with no interest." },
+    { title: "What's your refund policy?", content: "100% refund if you cancel 14 days before workshop start date." },
+    { title: "Can I bring a friend?", content: "Absolutely! Group discounts available for 3+ participants." },
+  ];
 
-                         <div className="flex gap-6 pt-8 font-mono">
-                            <button onClick={() => setView("prism")} className="flex-grow py-8 bg-white text-black font-black uppercase text-xs tracking-[1em] hover:bg-white/80 transition-all shadow-2xl">
-                               Return_to_Prism
-                            </button>
-                            <button className="px-12 py-8 border border-white/20 text-[10px] font-black uppercase tracking-[0.5em] hover:scale-105 transition-all text-white">
-                               PDF_Spec
-                            </button>
-                         </div>
-                      </div>
-                   </div>
-                </div>
-             </div>
+  const gearGuide = [
+    { category: "Cameras", items: "Sony A7IV, Canon R5, Fujifilm XT-4" },
+    { category: "Lenses", items: "35mm f/1.4, 70-200mm f/2.8, 16-35mm f/2.8" },
+    { category: "Accessories", items: "Tripod, filters, backup batteries, weather protection" },
+  ];
+
+  return (
+    <div ref={containerRef} style={{ backgroundColor: "#0d1117", color: "#e5e7eb", minHeight: "100vh" }}>
+      {/* Header */}
+      <header style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 50, backgroundColor: "#0d1117dd", backdropFilter: "blur(10px)", borderBottom: "1px solid #d4a96a20" }} className="py-4 px-6 md:px-12 flex justify-between items-center">
+        <h1 style={{ color: "#d4a96a" }} className="text-2xl font-bold">
+          NOMAD LENS
+        </h1>
+        <nav className="hidden md:flex gap-8">
+          {["Gallery", "Workshops", "Gear", "Blog"].map((item) => (
+            <Link key={item} href="#" style={{ color: "#e5e7eb" }} className="hover:text-[#d4a96a] transition-colors">
+              {item}
+            </Link>
+          ))}
+        </nav>
+        <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden">
+          {mobileOpen ? <X size={24} style={{ color: "#d4a96a" }} /> : <Menu size={24} style={{ color: "#d4a96a" }} />}
+        </button>
+      </header>
+
+      {/* Mobile Menu */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            style={{ backgroundColor: "#1a1a1a", zIndex: 40, marginTop: "60px" }}
+            className="md:hidden py-4 px-6 border-b border-[#d4a96a20]"
+          >
+            {["Gallery", "Workshops", "Gear", "Blog"].map((item) => (
+              <p key={item} style={{ color: "#e5e7eb" }} className="py-2">
+                {item}
+              </p>
+            ))}
           </motion.div>
         )}
-
-        {/* THE PROTOCOL VIEW (INFO) */}
-        {view === "protocol" && (
-          <motion.div key="protocol" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen flex flex-col justify-center">
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center text-white">
-                <div className="space-y-16">
-                   <span className="text-[10px] uppercase font-black tracking-[1.5em] opacity-30 block underline decoration-white decoration-2 underline-offset-8 italic font-mono">The_Refraction_Protocol</span>
-                   <h2 className="text-7xl md:text-[10vw] font-black italic tracking-tighter leading-none text-white uppercase font-serif">The <br/> Truth.</h2>
-                   <p className="text-3xl md:text-4xl font-light italic opacity-60 leading-relaxed uppercase tracking-tight text-white/60 font-serif">
-                      We treat architecture as code. Every structure is a function of its environmental variables and tectonic intent. 100% precision. Zero noise.
-                   </p>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t border-white/20 font-mono">
-                      {[
-                        { icon: <Sparkles className="w-6 h-6" />, t: "Adaptive Flow", v: "Dynamic Load Sync" },
-                        { icon: <Plus className="w-6 h-6" />, t: "Structural Sync", v: "Deep_Material_ID" },
-                      ].map((item, i) => (
-                        <div key={i} className="flex gap-8 group">
-                           <div className="w-16 h-16 rounded-full border border-white flex items-center justify-center text-white group-hover:bg-white group-hover:text-black transition-all shadow-xl">
-                              {item.icon}
-                           </div>
-                           <div className="text-left">
-                              <h4 className="text-2xl font-black uppercase italic tracking-tighter text-white leading-none mb-2 font-serif">{item.t}</h4>
-                              <p className="text-[10px] opacity-30 uppercase tracking-[0.3em] font-black leading-relaxed text-white/40">{item.v}</p>
-                           </div>
-                        </div>
-                      ))}
-                   </div>
-                </div>
-                <div className="relative aspect-square bg-[#1a1a1a] rounded-[4rem] p-12 overflow-hidden border border-white/10 group shadow-2xl">
-                   <Image src="https://images.unsplash.com/photo-1541829070764-84a7d30dee62?q=80&w=1000&auto=format&fit=crop" alt="The Archive" fill className="object-cover opacity-20 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-[2s]" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                   <div className="absolute inset-x-0 bottom-12 flex justify-center font-mono">
-                      <div className="px-12 py-6 border border-white text-white text-[10px] font-black uppercase tracking-widest italic animate-bounce cursor-pointer hover:bg-white hover:text-black transition-all">
-                         Establish_Handshake
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
       </AnimatePresence>
 
-      {/* Global Status HUD */}
-      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em] italic text-white leading-none font-mono">
-         <div className="flex gap-12">
-            <span>Prism_OS_Alpha</span>
-            <span>Uptime: 99.9%</span>
-         </div>
-         <div className="flex gap-4 items-end">
-            <div className="text-right leading-tight italic">
-               Refraction_Control <br /> v4.0.21
-            </div>
-            <div className="flex gap-[4px] h-4">
-               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-full bg-white opacity-${i*20}`}></div>)}
-            </div>
-         </div>
-      </footer>
+      {/* Full-Bleed Parallax Hero */}
+      <section style={{ position: "relative", height: "100vh", overflow: "hidden", marginTop: "60px" }}>
+        <motion.div style={{ y: parallaxY }}>
+          <Image
+            src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=1200&auto=format&fit=crop"
+            alt="Mountain Landscape"
+            fill
+            unoptimized
+            priority
+            style={{ objectFit: "cover" }}
+          />
+        </motion.div>
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(13,17,23,0.2), rgba(13,17,23,0.8))" }} />
+        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", textAlign: "center", zIndex: 10 }}>
+          <Reveal delay={0.1}>
+            <h2 style={{ fontSize: "clamp(2.5rem, 8vw, 5rem)", fontWeight: "bold", marginBottom: "1rem", color: "#d4a96a" }}>
+              CAPTURE MOMENTS
+            </h2>
+          </Reveal>
+          <Reveal delay={0.2}>
+            <p style={{ fontSize: "1.25rem", marginBottom: "2rem" }}>
+              Travel photography across 40 countries
+            </p>
+          </Reveal>
+          <Reveal delay={0.3}>
+            <MagneticBtn>Browse Portfolio</MagneticBtn>
+          </Reveal>
+        </div>
+      </section>
 
-      <style>{`
-        ::-webkit-scrollbar { width: 0px; }
-      `}</style>
+      {/* Masonry Gallery */}
+      <section style={{ padding: "6rem 1.5rem", maxWidth: "1400px", margin: "0 auto" }}>
+        <Reveal>
+          <h3 style={{ fontSize: "2rem", fontWeight: "bold", marginBottom: "2rem", textAlign: "center", color: "#d4a96a" }}>
+            Photo Series
+          </h3>
+        </Reveal>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginBottom: "3rem", justifyContent: "center" }}>
+          {filters.map((filter) => (
+            <motion.button
+              key={filter}
+              onClick={() => setActiveFilter(filter)}
+              whileHover={{ scale: 1.05 }}
+              style={{
+                padding: "0.5rem 1.5rem",
+                border: `2px solid ${activeFilter === filter ? "#d4a96a" : "#d4a96a40"}`,
+                borderRadius: "30px",
+                backgroundColor: activeFilter === filter ? "#d4a96a" : "transparent",
+                color: activeFilter === filter ? "#0d1117" : "#d4a96a",
+                cursor: "pointer",
+                fontWeight: "bold",
+              }}
+            >
+              {filter}
+            </motion.button>
+          ))}
+        </div>
+
+        {/* Masonry Layout */}
+        <div style={{ columnCount: 3, columnGap: "1.5rem", marginBottom: "3rem" } as any}>
+          {photos.map((photo, idx) => (
+            <Reveal key={photo.id} delay={idx * 0.05}>
+              <motion.div
+                whileHover={{ y: -10 }}
+                onClick={() => setSelectedPhoto(photo.id)}
+                style={{
+                  cursor: "pointer",
+                  marginBottom: "1.5rem",
+                  borderRadius: "0.5rem",
+                  overflow: "hidden",
+                  border: "2px solid #d4a96a",
+                  breakInside: "avoid" as any,
+                }}
+              >
+                <Image
+                  src={photo.img}
+                  alt={photo.title}
+                  width={300}
+                  height={300}
+                  unoptimized
+                  style={{ objectFit: "cover", width: "100%", height: "auto" }}
+                />
+                <div style={{ padding: "1rem", backgroundColor: "#1a1a1a" }}>
+                  <p style={{ color: "#d4a96a", fontSize: "0.875rem" }}>{photo.category}</p>
+                  <h4 style={{ fontWeight: "bold" }}>{photo.title}</h4>
+                </div>
+              </motion.div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* Behind the Scenes Video */}
+      <section style={{ padding: "6rem 1.5rem", backgroundColor: "#1a1a1a" }}>
+        <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
+          <Reveal>
+            <h3 style={{ fontSize: "2rem", fontWeight: "bold", marginBottom: "2rem", textAlign: "center", color: "#d4a96a" }}>
+              Behind the Scenes
+            </h3>
+          </Reveal>
+          <Reveal delay={0.1}>
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              style={{
+                position: "relative",
+                aspectRatio: "16/9",
+                borderRadius: "1rem",
+                overflow: "hidden",
+                border: "2px solid #d4a96a",
+                cursor: "pointer",
+              }}
+            >
+              <Image
+                src="https://images.unsplash.com/photo-1516035069371-29a08e8be853?q=80&w=1200&auto=format&fit=crop"
+                alt="Video Thumbnail"
+                fill
+                unoptimized
+                style={{ objectFit: "cover" }}
+              />
+              <div style={{ position: "absolute", inset: 0, display: "flex", justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.3)" }}>
+                <Play size={80} style={{ color: "#d4a96a" }} fill="#d4a96a" />
+              </div>
+            </motion.div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* Workshop Offerings */}
+      <section style={{ padding: "6rem 1.5rem", maxWidth: "1200px", margin: "0 auto" }}>
+        <Reveal>
+          <h3 style={{ fontSize: "2rem", fontWeight: "bold", marginBottom: "3rem", textAlign: "center", color: "#d4a96a" }}>
+            Learn From Me
+          </h3>
+        </Reveal>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "2rem" }}>
+          {workshops.map((workshop, idx) => (
+            <Reveal key={workshop.id} delay={idx * 0.1}>
+              <motion.div
+                whileHover={{ y: -10 }}
+                onClick={() => setSelectedWorkshop(workshop.id)}
+                style={{
+                  padding: "2rem",
+                  backgroundColor: "#1a1a1a",
+                  borderRadius: "1rem",
+                  border: "2px solid #d4a96a",
+                  cursor: "pointer",
+                }}
+              >
+                <p style={{ color: "#d4a96a", fontSize: "0.875rem", marginBottom: "0.5rem" }}>
+                  {workshop.type.toUpperCase()}
+                </p>
+                <h4 style={{ fontSize: "1.5rem", fontWeight: "bold", marginBottom: "1rem" }}>
+                  {workshop.title}
+                </h4>
+                <p style={{ marginBottom: "1rem" }}>{workshop.desc}</p>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ color: "#d4a96a", fontWeight: "bold" }}>
+                    {workshop.duration}
+                  </span>
+                  <span style={{ fontSize: "1.25rem", fontWeight: "bold" }}>
+                    {workshop.price}
+                  </span>
+                </div>
+                <button
+                  style={{
+                    marginTop: "1rem",
+                    width: "100%",
+                    padding: "0.75rem",
+                    backgroundColor: "#d4a96a",
+                    color: "#0d1117",
+                    borderRadius: "0.5rem",
+                    fontWeight: "bold",
+                    cursor: "pointer",
+                    border: "none",
+                  }}
+                >
+                  Book Workshop
+                </button>
+              </motion.div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* Stats */}
+      <section style={{ padding: "6rem 1.5rem", backgroundColor: "#0d1117" }}>
+        <div style={{ maxWidth: "1200px", margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "3rem" }}>
+          <Counter target={50} label="K Photos Published" />
+          <Counter target={40} label="Countries Visited" />
+          <Counter target={200} label="Workshops Taught" />
+          <Counter target={15} label="Awards Won" />
+        </div>
+      </section>
+
+      {/* Marquee */}
+      <section style={{ padding: "3rem 0", overflow: "hidden" }}>
+        <Marquee items={["Published in National Geographic", "Canon Ambassador", "Award Winning Photographer", "Travel Expert"]} />
+      </section>
+
+      {/* Gear Guide Accordion */}
+      <section style={{ padding: "6rem 1.5rem", maxWidth: "800px", margin: "0 auto" }}>
+        <Reveal>
+          <h3 style={{ fontSize: "2rem", fontWeight: "bold", marginBottom: "2rem", textAlign: "center", color: "#d4a96a" }}>
+            Gear Guide
+          </h3>
+        </Reveal>
+        {gearGuide.map((gear, idx) => (
+          <Reveal key={idx} delay={idx * 0.1}>
+            <AccordionItem
+              title={gear.category}
+              content={gear.items}
+              isOpen={openAccordion === idx}
+              onClick={() => setOpenAccordion(openAccordion === idx ? null : idx)}
+            />
+          </Reveal>
+        ))}
+      </section>
+
+      {/* Print Shop */}
+      <section style={{ padding: "6rem 1.5rem", backgroundColor: "#1a1a1a" }}>
+        <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+          <Reveal>
+            <h3 style={{ fontSize: "2rem", fontWeight: "bold", marginBottom: "3rem", textAlign: "center", color: "#d4a96a" }}>
+              Fine Art Prints
+            </h3>
+          </Reveal>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "2rem" }}>
+            {["Iceland Dreams", "Tokyo Streets", "Safari Gold", "Desert Dawn"].map((title, idx) => (
+              <Reveal key={idx} delay={idx * 0.1}>
+                <motion.div
+                  whileHover={{ y: -10 }}
+                  style={{
+                    padding: "1.5rem",
+                    backgroundColor: "#0d1117",
+                    borderRadius: "1rem",
+                    border: "2px solid #d4a96a",
+                  }}
+                >
+                  <div style={{ aspectRatio: "1", borderRadius: "0.5rem", overflow: "hidden", marginBottom: "1rem" }}>
+                    <Image
+                      src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=500&auto=format&fit=crop"
+                      alt={title}
+                      width={300}
+                      height={300}
+                      unoptimized
+                      style={{ objectFit: "cover", width: "100%", height: "100%" }}
+                    />
+                  </div>
+                  <h4 style={{ fontWeight: "bold", marginBottom: "0.5rem" }}>{title}</h4>
+                  <p style={{ color: "#d4a96a", marginBottom: "1rem" }}>16x24" | Matte Paper</p>
+                  <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem" }}>
+                    {["16x24", "20x30", "24x36"].map((size) => (
+                      <button
+                        key={size}
+                        style={{
+                          flex: 1,
+                          padding: "0.5rem",
+                          backgroundColor: "#d4a96a",
+                          color: "#0d1117",
+                          borderRadius: "0.25rem",
+                          fontSize: "0.75rem",
+                          cursor: "pointer",
+                          border: "none",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    style={{
+                      width: "100%",
+                      padding: "0.75rem",
+                      backgroundColor: "#d4a96a",
+                      color: "#0d1117",
+                      borderRadius: "0.5rem",
+                      fontWeight: "bold",
+                      cursor: "pointer",
+                      border: "none",
+                    }}
+                  >
+                    <ShoppingCart size={16} style={{ display: "inline", marginRight: "0.5rem" }} />
+                    Add to Cart
+                  </button>
+                </motion.div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section style={{ padding: "6rem 1.5rem", maxWidth: "800px", margin: "0 auto" }}>
+        <Reveal>
+          <h3 style={{ fontSize: "2rem", fontWeight: "bold", marginBottom: "2rem", textAlign: "center", color: "#d4a96a" }}>
+            Questions
+          </h3>
+        </Reveal>
+        {faqs.map((faq, idx) => (
+          <Reveal key={idx} delay={idx * 0.1}>
+            <AccordionItem
+              title={faq.title}
+              content={faq.content}
+              isOpen={openAccordion === idx + 100}
+              onClick={() => setOpenAccordion(openAccordion === idx + 100 ? null : idx + 100)}
+            />
+          </Reveal>
+        ))}
+      </section>
+
+      {/* Newsletter CTA */}
+      <section style={{ padding: "6rem 1.5rem", textAlign: "center", backgroundColor: "#d4a96a" }}>
+        <Reveal>
+          <h3 style={{ fontSize: "2rem", fontWeight: "bold", marginBottom: "1rem", color: "#0d1117" }}>
+            Stay Connected
+          </h3>
+        </Reveal>
+        <Reveal delay={0.1}>
+          <p style={{ marginBottom: "2rem", color: "#0d1117" }}>
+            Subscribe for behind-the-scenes content and travel tips
+          </p>
+        </Reveal>
+        <Reveal delay={0.2}>
+          <div style={{ display: "flex", gap: "1rem", maxWidth: "400px", margin: "0 auto" }}>
+            <input
+              type="email"
+              placeholder="Enter your email"
+              style={{
+                flex: 1,
+                padding: "0.75rem",
+                borderRadius: "0.5rem",
+                border: "none",
+                color: "#0d1117",
+              }}
+            />
+            <button
+              style={{
+                padding: "0.75rem 1.5rem",
+                backgroundColor: "#0d1117",
+                color: "#d4a96a",
+                borderRadius: "0.5rem",
+                fontWeight: "bold",
+                cursor: "pointer",
+                border: "none",
+              }}
+            >
+              Subscribe
+            </button>
+          </div>
+        </Reveal>
+      </section>
+
+      {/* Photo Lightbox Modal */}
+      <AnimatePresence>
+        {selectedPhoto && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSelectedPhoto(null)}
+            style={{
+              position: "fixed",
+              inset: 0,
+              backgroundColor: "#00000090",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              zIndex: 60,
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                position: "relative",
+                maxWidth: "90vw",
+                maxHeight: "90vh",
+                borderRadius: "1rem",
+                overflow: "hidden",
+              }}
+            >
+              <Image
+                src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=1200&auto=format&fit=crop"
+                alt="Full Size Photo"
+                width={1200}
+                height={800}
+                unoptimized
+                style={{ objectFit: "contain" }}
+              />
+              <button
+                onClick={() => setSelectedPhoto(null)}
+                style={{
+                  position: "absolute",
+                  top: "1rem",
+                  right: "1rem",
+                  width: "40px",
+                  height: "40px",
+                  borderRadius: "50%",
+                  backgroundColor: "#d4a96a",
+                  color: "#0d1117",
+                  border: "none",
+                  cursor: "pointer",
+                  fontWeight: "bold",
+                  fontSize: "1.5rem",
+                }}
+              >
+                ✕
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
