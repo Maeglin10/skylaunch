@@ -1,232 +1,474 @@
-"use client";
+"use client"
+import { motion, useScroll, useTransform, useInView, AnimatePresence, useMotionValue, useSpring } from "framer-motion"
+import { useState, useRef, useEffect } from "react"
+import Image from "next/image"
+import Link from "next/link"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
+import { Menu, X, Heart, MapPin, Clock, Droplets, Wind, Sun, Smile, Gift } from "lucide-react"
 
-import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
-import Image from "next/image";
-import { X, Menu, Search, Award, Zap, Activity, Globe, Shield, Command, Plus, ArrowUpRight, Maximize2, MoveRight, Layers, Box, Compass, Sparkles, MoveVertical, Target, Radio, CheckCircle2, Music, Mic2, Play } from "lucide-react";
-import "../premium.css";
+function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: "-60px" })
+  return (
+    <motion.div ref={ref}
+      initial={{ opacity: 0, y: 24 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.55, delay, ease: [0.25, 0.46, 0.45, 0.94] }}
+    >
+      {children}
+    </motion.div>
+  )
+}
 
-const TRACKS = [
-  { id: 1, title: "MIDNIGHT_ECLIPSE", cat: "Synthetics", value: "Verified", img: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?q=80&w=1000&auto=format&fit=crop" },
-  { id: 2, title: "VOID_FREQUENCY", cat: "Ambient", value: "Active", img: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=1000&auto=format&fit=crop" },
-  { id: 3, title: "NEON_WAVE", cat: "Bass", value: "Locked", img: "https://images.unsplash.com/photo-1514525253344-f814d0c9e583?q=80&w=1000&auto=format&fit=crop" },
-];
+function Counter({ target, suffix = "" }: { target: number; suffix?: string }) {
+  const [count, setCount] = useState(0)
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true })
+  useEffect(() => {
+    if (!inView) return
+    const duration = 1500
+    const step = target / (duration / 16)
+    const t = setInterval(() => setCount(c => { const next = c + step; if (next >= target) { clearInterval(t); return target; } return next; }), 16)
+    return () => clearInterval(t)
+  }, [inView, target])
+  return <span ref={ref}>{Math.floor(count).toLocaleString()}{suffix}</span>
+}
 
-export default function SonicAudioSPA() {
-  const [view, setView] = useState<"sonic" | "track" | "logic">("sonic");
-  const [activeItem, setActiveItem] = useState(0);
+function MagneticBtn({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  const x = useMotionValue(0); const y = useMotionValue(0)
+  const sx = useSpring(x, { stiffness: 400, damping: 20 })
+  const sy = useSpring(y, { stiffness: 400, damping: 20 })
+  const ref = useRef<HTMLButtonElement>(null)
+  const handleMouse = (e: React.MouseEvent) => {
+    const r = ref.current!.getBoundingClientRect()
+    x.set((e.clientX - r.left - r.width / 2) * 0.3)
+    y.set((e.clientY - r.top - r.height / 2) * 0.3)
+  }
+  return (
+    <motion.button ref={ref} style={{ x: sx, y: sy }} onMouseMove={handleMouse}
+      onMouseLeave={() => { x.set(0); y.set(0) }}
+      className={`cursor-pointer transition-all duration-200 ${className}`}
+    >
+      {children}
+    </motion.button>
+  )
+}
+
+export default function OasisSpa() {
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const [selectedTreatment, setSelectedTreatment] = useState(null)
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [bookingOpen, setBookingOpen] = useState(false)
+  const { scrollY } = useScroll()
+
+  const treatments = {
+    massage: [
+      { id: 1, name: "Swedish Massage", duration: "60 min", price: "€85", benefits: ["Relaxation", "Circulation", "Tension relief"] },
+      { id: 2, name: "Deep Tissue", duration: "60 min", price: "€95", benefits: ["Muscle release", "Pain relief", "Recovery"] },
+      { id: 3, name: "Hot Stone", duration: "75 min", price: "€110", benefits: ["Deep warmth", "Healing", "Renewal"] },
+      { id: 4, name: "Thai Massage", duration: "90 min", price: "€125", benefits: ["Energy flow", "Flexibility", "Balance"] },
+      { id: 5, name: "Lomi Lomi", duration: "60 min", price: "€95", benefits: ["Hawaiian healing", "Flow", "Joy"] },
+      { id: 6, name: "Sports Massage", duration: "60 min", price: "€90", benefits: ["Athletic recovery", "Performance", "Prevention"] },
+      { id: 7, name: "Prenatal Massage", duration: "60 min", price: "€90", benefits: ["Safe for pregnancy", "Comfort", "Support"] },
+      { id: 8, name: "Couples Massage", duration: "60 min", price: "€170", benefits: ["Connection", "Relaxation", "Harmony"] },
+    ],
+    facial: [
+      { id: 9, name: "HydraGlow Facial", duration: "60 min", price: "€75", benefits: ["Hydration", "Radiance", "Refresh"] },
+      { id: 10, name: "Pure Oxygen", duration: "45 min", price: "€85", benefits: ["Oxygenation", "Glow", "Youth"] },
+      { id: 11, name: "Crystal Rose", duration: "60 min", price: "€95", benefits: ["Anti-aging", "Rejuvenation", "Luminosity"] },
+    ],
+    body: [
+      { id: 12, name: "Detox Wrap", duration: "75 min", price: "€105", benefits: ["Purification", "Softness", "Renewal"] },
+      { id: 13, name: "Honey Exfoliate", duration: "50 min", price: "€65", benefits: ["Smoothness", "Glow", "Wellness"] },
+    ],
+    nails: [
+      { id: 14, name: "Manicure Deluxe", duration: "45 min", price: "€45", benefits: ["Nourished hands", "Shine", "Strength"] },
+      { id: 15, name: "Pedicure Bliss", duration: "60 min", price: "€55", benefits: ["Soft feet", "Rejuvenation", "Comfort"] },
+    ],
+    packages: [
+      { id: 16, name: "Escape Package", duration: "3 hours", price: "€199", includes: ["Massage", "Facial", "Tea"] },
+      { id: 17, name: "Revival Package", duration: "4 hours", price: "€279", includes: ["Massage", "Body", "Facial", "Nails"] },
+    ],
+  }
+
+  const experiences = {
+    halfDay: ["2 Treatments", "Healthy Lunch", "Wellness Tea", "Quiet Lounge Access"],
+    fullDay: ["4 Treatments", "All Meals", "Meditation", "Hydrotherapy", "Private Space"],
+    weekend: ["8 Treatments", "Full Board", "Workshops", "Guided Nature", "Renewal Rituals"],
+  }
+
+  const therapists = [
+    { name: "Elena Moretti", specialty: "Swedish & Deep Tissue", years: "12", bio: "Certified massage therapist with healing touch" },
+    { name: "Sofia Santos", specialty: "Facial & Body", years: "15", bio: "Skincare expert and wellness visionary" },
+    { name: "Marco Rossi", specialty: "Thai & Sports", years: "10", bio: "Athletic recovery and energy specialist" },
+    { name: "Lucia Bonetti", specialty: "Holistic Wellness", years: "18", bio: "Master therapist and meditation guide" },
+  ]
+
+  const products = [
+    { name: "Luminous Serum", price: "€55", benefit: "Brightens & Protects" },
+    { name: "Rose Oil", price: "€45", benefit: "Hydrates & Soothes" },
+    { name: "Honey Mask", price: "€38", benefit: "Nourishes & Glows" },
+    { name: "Detox Cream", price: "€52", benefit: "Purifies & Restores" },
+    { name: "Eye Essence", price: "€48", benefit: "Firms & Rejuvenates" },
+    { name: "Night Elixir", price: "€60", benefit: "Repairs & Renews" },
+  ]
+
+  const giftTiers = [
+    { amount: "€50", perks: ["1 Treatment", "Welcome Drink", "Gift Card"] },
+    { amount: "€100", perks: ["2 Treatments", "Spa Lunch", "Products"] },
+    { amount: "€200", perks: ["5 Treatments", "Full Experience", "Premium Products"] },
+  ]
 
   return (
-    <div className="premium-theme bg-[#0a0a0a] text-purple-400 min-h-screen selection:bg-purple-600 selection:text-white font-sans overflow-x-hidden">
-      
-      {/* Background HUD Layers */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[45vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase">
-           SONIC
-        </div>
-        <div className="absolute inset-x-0 top-0 bottom-0 left-1/2 -translate-x-1/2 w-[1px] bg-white/5" />
-        <div className="absolute inset-0 bg-[#0a0a0a]/40 backdrop-blur-[2px]" />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.05] mix-blend-screen" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#0a0a0a_100%)] opacity-80" />
-      </div>
-
-      {/* Editorial HUD Nav */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-center bg-transparent backdrop-blur-3xl border-b border-purple-500/10 font-mono text-white">
-        <div className="flex gap-12 items-center text-purple-400">
-           <button onClick={() => setView("sonic")} className="text-xl font-black italic tracking-tighter hover:text-white transition-colors flex items-center gap-4 text-purple-500">
-              SONIC_OS&trade;
-           </button>
-           <div className="hidden lg:flex gap-8 text-[10px] font-black uppercase tracking-widest opacity-20 italic">
-              Status: Audio_Sync_Active
-              <span className="text-white">Ref: 0x141</span>
-           </div>
-        </div>
-        <div className="hidden md:flex gap-12 text-[10px] font-black uppercase tracking-[0.4em] opacity-30">
-           <button onClick={() => setView("sonic")} className={`hover:opacity-100 transition-opacity ${view === 'sonic' ? 'text-white opacity-100 underline decoration-white underline-offset-8 italic' : ''}`}>THE_SONIC</button>
-           <button onClick={() => setView("logic")} className={`hover:opacity-100 transition-opacity ${view === 'logic' ? 'text-white opacity-100 underline decoration-white underline-offset-8 italic' : ''}`}>THE_LOGIC</button>
-        </div>
-        <div className="flex items-center gap-8 text-white">
-           <Search className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-           <Menu className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-        </div>
-      </nav>
-
-      <AnimatePresence mode="wait">
-        
-        {/* THE SONIC VIEW (LANDING) */}
-        {view === "sonic" && (
-          <motion.div key="sonic" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-48 pb-32 px-12 max-w-[1800px] mx-auto min-h-screen flex flex-col justify-center relative z-10">
-             <header className="mb-24 border-b border-purple-500/20 pb-12 flex flex-col md:flex-row justify-between items-end gap-12 text-white">
-                <div>
-                   <span className="text-[10px] uppercase font-black tracking-[1em] opacity-40 mb-4 block underline decoration-purple-500/10 underline-offset-8 italic font-mono text-purple-500">Visual_Capture // Series_141</span>
-                   <h1 className="text-7xl md:text-[12vw] font-black italic uppercase tracking-tighter leading-[0.75]">PURE. <br/> <span className="text-transparent" style={{ WebkitTextStroke: "2px rgba(167,139,250,0.6)" }}>SOUND.</span></h1>
-                </div>
-                <div className="text-right flex flex-col items-end">
-                   <div className="text-3xl font-black mb-4 tracking-tighter uppercase opacity-10 italic font-mono text-purple-600">Audio_Sync</div>
-                   <div className="w-64 h-[2px] bg-white/5 rounded-none overflow-hidden">
-                      <motion.div animate={{ width: ['20%', '90%', '40%', '75%'] }} transition={{ duration: 4, repeat: Infinity }} className="h-full bg-purple-500" />
-                   </div>
-                </div>
-             </header>
-
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {TRACKS.map((p, i) => (
-                  <motion.div 
-                    key={p.id} initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                    className="group relative h-[60vh] rounded-[4rem] overflow-hidden border border-purple-500/10 hover:border-purple-500/40 transition-all cursor-pointer shadow-2xl bg-white/5"
-                    onClick={() => { setActiveItem(i); setView("track"); }}
-                  >
-                     <Image src={p.img} alt={p.title} fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[2s] group-hover:scale-110" />
-                     <div className="absolute inset-0 bg-purple-500/10 group-hover:bg-transparent transition-colors duration-1000" />
-                     <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                     
-                     <div className="absolute inset-10 flex flex-col justify-between">
-                        <div className="flex justify-between items-start text-white">
-                           <div className="p-4 bg-white/10 border border-white/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Music className="w-5 h-5" />
-                           </div>
-                           <div className="text-[10px] font-black uppercase tracking-widest opacity-20 italic">TRACK_0x{i+141}</div>
-                        </div>
-                        <div className="text-white">
-                           <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-2 block italic text-purple-300">{p.cat} // {p.value}</span>
-                           <h3 className="text-5xl font-black italic uppercase tracking-tighter leading-none transition-all group-hover:tracking-widest">{p.title}</h3>
-                        </div>
-                     </div>
-                  </motion.div>
-                ))}
-             </div>
-          </motion.div>
-        )}
-
-        {/* THE TRACK VIEW (DETAIL) */}
-        {view === "track" && (
-          <motion.div key="track" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen">
-             <button onClick={() => setView("sonic")} className="fixed top-12 left-12 z-[60] bg-white text-black p-5 rounded-full hover:scale-110 transition-transform shadow-2xl">
-                <X className="w-6 h-6" />
-             </button>
-
-             <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen pt-24 lg:pt-0">
-                <div className="lg:col-span-12 relative flex items-center justify-center p-8 md:p-32 overflow-hidden h-screen bg-[#0a0a0a]">
-                   <div className="absolute inset-0 opacity-10">
-                      <Image src={TRACKS[activeItem].img} alt="Background" fill className="object-cover grayscale" />
-                   </div>
-                   <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[40vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase text-purple-500 font-sans">
-                      AUDIO
-                   </div>
-                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#0a0a0a_100%)]" />
-                   
-                   <div className="max-w-[1500px] w-full grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10 font-sans text-white">
-                      <motion.div initial={{ scale: 1.1, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1 }} className="relative aspect-square w-full rounded-[4rem] overflow-hidden border border-purple-500/20 group bg-neutral-900 shadow-2xl">
-                         <Image src={TRACKS[activeItem].img} alt="Spec" fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[3s] opacity-80" priority />
-                         <div className="absolute top-12 left-12 p-4 bg-black/60 backdrop-blur-3xl rounded-none border-2 border-white/10 z-20">
-                            <Layers className="w-6 h-6 text-purple-400 animate-pulse" />
-                         </div>
-                      </motion.div>
-
-                      <div className="flex flex-col justify-center space-y-12">
-                         <div className="space-y-6">
-                            <span className="text-[10px] uppercase tracking-[1em] font-black opacity-30 mb-8 block underline decoration-white decoration-4 underline-offset-8 italic text-purple-600 font-mono text-purple-500">Audio_Sync // {TRACKS[activeItem].cat}</span>
-                            <h1 className="text-7xl md:text-[8vw] font-black italic uppercase tracking-tighter leading-none text-white">{TRACKS[activeItem].title}</h1>
-                            <div className="text-4xl font-black italic tracking-tighter opacity-10 italic text-purple-500">State: {TRACKS[activeItem].value}</div>
-                         </div>
-
-                         <p className="text-3xl font-light italic leading-relaxed uppercase tracking-tight opacity-40 text-white leading-relaxed">
-                            Structural allocation for mission {TRACKS[activeItem].title}. System integrity at 100%. Thermal load nominal at 32C. Every coordinate synchronized.
-                         </p>
-
-                         <div className="grid grid-cols-2 gap-12 py-12 border-y border-white/10 font-mono text-white/60 text-purple-400">
-                            {[
-                              { icon: <Mic2 className="w-5 h-5" />, l: "Logic", v: "Phase_Shift" },
-                              { icon: <Zap className="w-5 h-5" />, l: "Sync", v: "Active" },
-                              { icon: <Shield className="w-5 h-5" />, l: "Security", v: "High_Impact" },
-                              { icon: <Activity className="w-5 h-5" />, l: "Status", v: "Verified" },
-                            ].map((s, i) => (
-                              <div key={i} className="flex gap-6 items-center">
-                                 <div className="opacity-20">{s.icon}</div>
-                                 <div className="text-left">
-                                    <div className="text-[10px] font-black opacity-30 uppercase tracking-widest mb-1 italic text-white">{s.l}</div>
-                                    <div className="text-sm font-black uppercase italic tracking-tighter text-white">{s.v}</div>
-                                 </div>
-                              </div>
-                            ))}
-                         </div>
-
-                         <div className="flex gap-6 pt-8 font-mono">
-                            <button onClick={() => setView("sonic")} className="flex-grow py-8 bg-purple-600 text-white font-black uppercase text-xs tracking-[1em] hover:bg-purple-500 transition-all shadow-2xl rounded-full">
-                               Return_to_Sonic
-                            </button>
-                            <button className="px-12 py-8 border border-white/20 text-[10px] font-black uppercase tracking-[0.5em] hover:scale-105 transition-all text-white rounded-full">
-                               PDF_Spec
-                            </button>
-                         </div>
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
-        {/* THE LOGIC VIEW (INFO) */}
-        {view === "logic" && (
-          <motion.div key="logic" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen flex flex-col justify-center">
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center text-white font-sans">
-                <div className="space-y-16">
-                   <span className="text-[10px] uppercase font-black tracking-[1.5em] opacity-30 block underline decoration-purple-400 decoration-2 underline-offset-8 italic font-mono text-purple-400">The_Logic_Protocol</span>
-                   <h2 className="text-7xl md:text-[10vw] font-black italic tracking-tighter leading-none text-white uppercase">The <br/> Truth.</h2>
-                   <p className="text-3xl md:text-4xl font-light italic opacity-60 leading-relaxed uppercase tracking-tight text-white/60 font-sans">
-                      We treat architecture as code. Every structure is a function of its environmental variables and tectonic intent. 100% precision. Zero noise.
-                   </p>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t border-white/10 font-mono text-purple-400">
-                      {[
-                        { icon: <Sparkles className="w-6 h-6" />, t: "Adaptive Flow", v: "Dynamic Load Sync" },
-                        { icon: <Plus className="w-6 h-6" />, t: "Structural Sync", v: "Deep_Material_ID" },
-                      ].map((item, i) => (
-                        <div key={i} className="flex gap-8 group">
-                           <div className="w-16 h-16 rounded-full border border-purple-500 flex items-center justify-center text-purple-500 group-hover:bg-purple-500 group-hover:text-black transition-all shadow-xl">
-                              {item.icon}
-                           </div>
-                           <div className="text-left text-white">
-                              <h4 className="text-2xl font-black uppercase italic tracking-tighter text-white leading-none mb-2">{item.t}</h4>
-                              <p className="text-[10px] opacity-30 uppercase tracking-[0.3em] font-black leading-relaxed text-purple-400/40 text-purple-500 font-mono">{item.v}</p>
-                           </div>
-                        </div>
-                      ))}
-                   </div>
-                </div>
-                <div className="relative aspect-square bg-purple-900/10 rounded-[4rem] p-12 overflow-hidden border border-purple-500/20 group shadow-2xl">
-                   <Image src="https://images.unsplash.com/photo-1541829070764-84a7d30dee62?q=80&w=1000&auto=format&fit=crop" alt="The Archive" fill className="object-cover opacity-20 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-[3s]" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                   <div className="absolute inset-x-0 bottom-12 flex justify-center font-mono">
-                      <div className="px-12 py-6 bg-purple-600 text-white text-[10px] font-black uppercase tracking-widest italic animate-bounce cursor-pointer hover:bg-purple-500 transition-all rounded-full font-mono">
-                         Establish_Handshake
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
-      </AnimatePresence>
-
-      {/* Global Status HUD */}
-      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em] italic text-purple-600 leading-none font-mono">
-         <div className="flex gap-12 text-purple-600">
-            <span>Sonic_OS_Alpha</span>
-            <span>Uptime: 99.9%</span>
-         </div>
-         <div className="flex gap-4 items-end text-purple-600">
-            <div className="text-right leading-tight italic">
-               Archival_Control <br /> v4.0.141
-            </div>
-            <div className="flex gap-[4px] h-4">
-               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-full bg-purple-500 opacity-${i*20}`}></div>)}
-            </div>
-         </div>
-      </footer>
-
+    <div style={{ overflowX: 'hidden', scrollBehavior: 'smooth' }} className="min-h-screen bg-[#fdf8f2] text-[#3d2014]">
       <style>{`
-        ::-webkit-scrollbar { width: 0px; }
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap');
+        body { font-family: 'Lato', sans-serif; }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Playfair Display', serif; font-weight: 600; }
       `}</style>
+
+      {/* Mobile Nav */}
+      <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+        <SheetTrigger asChild>
+          <button className="fixed top-6 left-6 z-50 md:hidden cursor-pointer transition-all duration-200 bg-white/80 backdrop-blur p-2 rounded-lg">
+            <Menu className="w-6 h-6 text-[#3d2014]" />
+          </button>
+        </SheetTrigger>
+        <SheetContent side="left" className="bg-[#fdf8f2] border-[#c9847a]/20">
+          <nav className="flex flex-col gap-4 mt-8">
+            <Link href="#treatments" className="text-lg font-light text-[#c9847a] cursor-pointer hover:text-[#3d2014]">Treatments</Link>
+            <Link href="#experience" className="text-lg font-light text-[#c9847a] cursor-pointer hover:text-[#3d2014]">Experiences</Link>
+            <Link href="#therapists" className="text-lg font-light text-[#c9847a] cursor-pointer hover:text-[#3d2014]">Therapists</Link>
+            <Link href="#products" className="text-lg font-light text-[#c9847a] cursor-pointer hover:text-[#3d2014]">Products</Link>
+            <Link href="#faq" className="text-lg font-light text-[#c9847a] cursor-pointer hover:text-[#3d2014]">FAQ</Link>
+          </nav>
+        </SheetContent>
+      </Sheet>
+
+      {/* Hero with Petal Particles */}
+      <motion.section className="relative h-screen flex items-center justify-center overflow-hidden">
+        <div className="absolute inset-0 z-0">
+          <Image src="https://images.unsplash.com/photo-1544161515-4ab6ce6db874?q=80&w=1200&auto=format&fit=crop" alt="Spa" fill className="object-cover" />
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
+        </div>
+
+        {/* Floating Petals */}
+        {[...Array(8)].map((_, i) => (
+          <motion.div key={i} className="absolute"
+            animate={{ y: [0, -300], opacity: [1, 0], rotate: [0, 360] }}
+            transition={{ duration: 6 + i * 0.5, repeat: Infinity }}
+            style={{ left: `${15 + i * 12}%`, top: `${30 + i * 5}%` }}
+          >
+            <Heart className="w-6 h-6 text-[#d4a017]/40" fill="currentColor" />
+          </motion.div>
+        ))}
+
+        <div className="relative z-10 text-center max-w-4xl px-6">
+          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
+            <h1 className="text-6xl md:text-7xl font-light text-white mb-6 leading-tight">Oasis</h1>
+            <p className="text-xl md:text-2xl text-white/90 font-light mb-8">Urban Luxury Spa & Wellness Sanctuary</p>
+            <MagneticBtn className="px-8 py-4 bg-[#c9847a] text-white rounded-full font-light hover:bg-[#a86d64] shadow-lg">Book Treatment</MagneticBtn>
+          </motion.div>
+        </div>
+      </motion.section>
+
+      {/* Treatments Section */}
+      <section id="treatments" className="py-20 px-6 max-w-7xl mx-auto">
+        <Reveal>
+          <h2 className="text-5xl font-light text-[#3d2014] mb-4">Treatments</h2>
+          <p className="text-lg text-[#999] font-light mb-12">Curated experiences for complete renewal</p>
+        </Reveal>
+
+        <Tabs defaultValue="massage" className="w-full">
+          <TabsList className="grid w-full grid-cols-5 bg-white border border-[#c9847a]/20 rounded-full p-1">
+            <TabsTrigger value="massage" className="cursor-pointer text-xs">Massage</TabsTrigger>
+            <TabsTrigger value="facial" className="cursor-pointer text-xs">Facial</TabsTrigger>
+            <TabsTrigger value="body" className="cursor-pointer text-xs">Body</TabsTrigger>
+            <TabsTrigger value="nails" className="cursor-pointer text-xs">Nails</TabsTrigger>
+            <TabsTrigger value="packages" className="cursor-pointer text-xs">Packages</TabsTrigger>
+          </TabsList>
+
+          {Object.entries(treatments).map(([key, items]) => (
+            <TabsContent key={key} value={key} className="mt-12">
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {items.map((treatment, idx) => (
+                  <Reveal key={treatment.id} delay={idx * 0.08}>
+                    <Card className="bg-white border-[#c9847a]/20 hover:shadow-2xl hover:scale-105 cursor-pointer transition-all duration-300 group"
+                      onClick={() => { setSelectedTreatment(treatment); setDialogOpen(true); }}>
+                      <CardContent className="p-6">
+                        <h3 className="font-light text-[#3d2014] mb-2 text-lg">{treatment.name}</h3>
+                        <p className="text-sm text-[#999] mb-4 font-light">{treatment.duration}</p>
+                        <div className="space-y-1 mb-4">
+                          {treatment.benefits.map((b, i) => (
+                            <p key={i} className="text-xs text-[#c9847a] flex items-center gap-2">
+                              <Sun className="w-3 h-3" /> {b}
+                            </p>
+                          ))}
+                        </div>
+                        <p className="text-2xl font-light text-[#d4a017]">{treatment.price}</p>
+                      </CardContent>
+                    </Card>
+                  </Reveal>
+                ))}
+              </div>
+            </TabsContent>
+          ))}
+        </Tabs>
+      </section>
+
+      {/* Experience Selector */}
+      <section id="experience" className="py-20 px-6 max-w-7xl mx-auto">
+        <Reveal>
+          <h2 className="text-5xl font-light text-[#3d2014] mb-12">Experience Packages</h2>
+        </Reveal>
+
+        <Tabs defaultValue="halfDay" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 bg-white border border-[#c9847a]/20 rounded-full p-1">
+            <TabsTrigger value="halfDay" className="cursor-pointer">Half Day</TabsTrigger>
+            <TabsTrigger value="fullDay" className="cursor-pointer">Full Day</TabsTrigger>
+            <TabsTrigger value="weekend" className="cursor-pointer">Weekend</TabsTrigger>
+          </TabsList>
+
+          {["halfDay", "fullDay", "weekend"].map((key) => (
+            <TabsContent key={key} value={key} className="mt-12">
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {experiences[key as keyof typeof experiences].map((item, idx) => (
+                  <Reveal key={idx} delay={idx * 0.1}>
+                    <Card className="bg-white border-[#c9847a]/20 hover:shadow-lg transition-all duration-300">
+                      <CardContent className="p-6">
+                        <Droplets className="w-8 h-8 text-[#c9847a] mb-4" />
+                        <p className="text-[#3d2014] font-light">{item}</p>
+                      </CardContent>
+                    </Card>
+                  </Reveal>
+                ))}
+              </div>
+            </TabsContent>
+          ))}
+        </Tabs>
+      </section>
+
+      {/* Therapist Team */}
+      <section id="therapists" className="py-20 px-6 max-w-7xl mx-auto bg-white/50 rounded-3xl">
+        <Reveal>
+          <h2 className="text-5xl font-light text-[#3d2014] mb-12">Our Therapists</h2>
+        </Reveal>
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {therapists.map((therapist, idx) => (
+            <Reveal key={idx} delay={idx * 0.1}>
+              <Card className="bg-white border-[#c9847a]/20 hover:shadow-lg transition-all duration-300">
+                <CardContent className="p-6 text-center">
+                  <Avatar className="w-16 h-16 mx-auto mb-4 border-2 border-[#c9847a]">
+                    <AvatarFallback className="bg-[#c9847a] text-white text-lg font-light">{therapist.name.charAt(0)}</AvatarFallback>
+                  </Avatar>
+                  <h3 className="font-light text-[#3d2014] mb-1">{therapist.name}</h3>
+                  <Badge variant="outline" className="border-[#c9847a] text-[#c9847a] text-xs font-light mb-3">{therapist.specialty}</Badge>
+                  <p className="text-xs text-[#999] font-light">{therapist.years} years</p>
+                  <p className="text-xs text-[#666] font-light mt-2">{therapist.bio}</p>
+                </CardContent>
+              </Card>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* Stats */}
+      <section className="py-20 px-6 max-w-7xl mx-auto">
+        <div className="grid md:grid-cols-4 gap-8 text-center">
+          {[
+            { num: 10000, label: "Treatments Delivered" },
+            { num: 12, label: "Expert Therapists" },
+            { num: 4.9, suffix: "★", label: "Customer Rating" },
+            { num: 15, label: "Years in Wellness" },
+          ].map((stat, idx) => (
+            <Reveal key={idx} delay={idx * 0.1}>
+              <div>
+                <p className="text-5xl font-light text-[#d4a017] mb-2"><Counter target={stat.num} suffix={stat.suffix || ""} /></p>
+                <p className="text-[#999] font-light">{stat.label}</p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* Gift Cards */}
+      <section className="py-20 px-6 max-w-7xl mx-auto">
+        <Reveal>
+          <h2 className="text-5xl font-light text-[#3d2014] mb-12">Gift Cards</h2>
+        </Reveal>
+        <div className="grid md:grid-cols-3 gap-8">
+          {giftTiers.map((tier, idx) => (
+            <Reveal key={idx} delay={idx * 0.15}>
+              <Card className="bg-gradient-to-br from-white to-[#fdf8f2] border-[#c9847a]/20 hover:shadow-xl transition-all duration-300 cursor-pointer group">
+                <CardContent className="p-8">
+                  <p className="text-4xl font-light text-[#d4a017] mb-6">{tier.amount}</p>
+                  <ul className="space-y-3 mb-8">
+                    {tier.perks.map((perk, i) => (
+                      <li key={i} className="flex items-center gap-2 text-[#3d2014] font-light text-sm">
+                        <Gift className="w-4 h-4 text-[#c9847a]" /> {perk}
+                      </li>
+                    ))}
+                  </ul>
+                  <button className="w-full py-3 border-2 border-[#c9847a] text-[#c9847a] rounded-full hover:bg-[#c9847a] hover:text-white transition-all duration-200 font-light cursor-pointer">
+                    Purchase
+                  </button>
+                </CardContent>
+              </Card>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* Products */}
+      <section id="products" className="py-20 px-6 max-w-7xl mx-auto bg-white/50 rounded-3xl">
+        <Reveal>
+          <h2 className="text-5xl font-light text-[#3d2014] mb-12">Skincare Line</h2>
+        </Reveal>
+        <div className="grid md:grid-cols-2 lg:grid-cols-6 gap-6">
+          {products.map((product, idx) => (
+            <Reveal key={idx} delay={idx * 0.08}>
+              <Card className="bg-white border-[#c9847a]/20 hover:shadow-lg transition-all duration-300 text-center">
+                <CardContent className="p-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-[#c9847a] to-[#d4a017] rounded-full mx-auto mb-4" />
+                  <h3 className="text-sm font-light text-[#3d2014] mb-2">{product.name}</h3>
+                  <p className="text-xs text-[#999] font-light mb-3">{product.benefit}</p>
+                  <p className="text-lg font-light text-[#d4a017]">{product.price}</p>
+                </CardContent>
+              </Card>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="py-20 px-6 max-w-7xl mx-auto">
+        <Reveal>
+          <h2 className="text-5xl font-light text-[#3d2014] mb-12">Guest Stories</h2>
+        </Reveal>
+        <Carousel className="w-full">
+          <CarouselContent>
+            {[
+              { text: "Oasis transformed my entire wellness routine. Pure bliss.", name: "Charlotte M.", treatment: "Full Day Package" },
+              { text: "Best spa experience of my life. Therapists truly understand healing.", name: "Michael R.", treatment: "Deep Tissue" },
+              { text: "A sanctuary in the heart of the city. I return every month.", name: "Sophie L.", treatment: "Facial Package" },
+            ].map((test, i) => (
+              <CarouselItem key={i} className="md:basis-1/2">
+                <Reveal>
+                  <Card className="bg-white border-[#c9847a]/20">
+                    <CardContent className="p-8">
+                      <p className="text-[#3d2014] mb-6 italic font-light">"{test.text}"</p>
+                      <div className="border-t border-[#c9847a]/20 pt-4">
+                        <p className="font-light text-[#3d2014]">{test.name}</p>
+                        <Badge variant="outline" className="border-[#c9847a] text-[#c9847a] text-xs mt-2 font-light">{test.treatment}</Badge>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Reveal>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="cursor-pointer border-[#c9847a] text-[#c9847a] hover:bg-[#c9847a] hover:text-white" />
+          <CarouselNext className="cursor-pointer border-[#c9847a] text-[#c9847a] hover:bg-[#c9847a] hover:text-white" />
+        </Carousel>
+      </section>
+
+      {/* FAQ */}
+      <section id="faq" className="py-20 px-6 max-w-3xl mx-auto">
+        <Reveal>
+          <h2 className="text-5xl font-light text-[#3d2014] mb-12">FAQ</h2>
+        </Reveal>
+        <Accordion type="single" collapsible className="space-y-4">
+          {[
+            { q: "How do I book a treatment?", a: "Call, email, or use our online booking system. We reserve time 48 hours in advance. Walk-ins welcome when available." },
+            { q: "What's your cancellation policy?", a: "Free cancellation up to 24 hours before appointment. Late cancellations incur 50% charge. No-shows charged in full." },
+            { q: "Do you accommodate medical conditions?", a: "Yes. Inform us of any conditions during booking. Our therapists modify treatments for pregnancy, injuries, and health concerns." },
+            { q: "What should I bring?", a: "Bring comfortable clothing and arrive 15 minutes early. We provide robes, towels, and all spa amenities." },
+            { q: "Is parking available?", a: "Yes. Free parking in our dedicated lot. Valet service available for weekend appointments." },
+            { q: "Do you offer corporate packages?", a: "Absolutely. Team wellness programs, bulk gift cards, and on-site chair massage available for corporate clients." },
+          ].map((faq, idx) => (
+            <AccordionItem key={idx} value={`faq-${idx}`} className="border border-[#c9847a]/20 rounded-lg px-6 bg-white">
+              <AccordionTrigger className="text-[#3d2014] font-light cursor-pointer hover:text-[#c9847a] transition-colors">{faq.q}</AccordionTrigger>
+              <AccordionContent className="text-[#999] font-light">{faq.a}</AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </section>
+
+      {/* Booking CTA */}
+      <section className="py-20 px-6 max-w-7xl mx-auto">
+        <Reveal>
+          <div className="bg-gradient-to-r from-[#c9847a] to-[#d4a017] rounded-3xl p-12 text-center text-white">
+            <h2 className="text-4xl font-light mb-4">Find Your Oasis</h2>
+            <p className="text-lg mb-8 font-light opacity-90">Book your transformation today</p>
+            <MagneticBtn className="px-8 py-3 bg-white text-[#c9847a] rounded-full font-light hover:bg-[#f5f5f5]">Book Now</MagneticBtn>
+          </div>
+        </Reveal>
+      </section>
+
+      {/* Treatment Detail Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="bg-white border-[#c9847a]/20 max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-[#3d2014] font-light text-2xl">{selectedTreatment?.name}</DialogTitle>
+          </DialogHeader>
+          {selectedTreatment && (
+            <div className="space-y-6">
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm font-light text-[#999] uppercase mb-2">Duration</p>
+                  <p className="text-[#3d2014] font-light">{selectedTreatment.duration}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-light text-[#999] uppercase mb-2">Price</p>
+                  <p className="text-2xl font-light text-[#d4a017]">{selectedTreatment.price}</p>
+                </div>
+              </div>
+              <div>
+                <p className="text-sm font-light text-[#999] uppercase mb-3">Benefits</p>
+                <div className="flex flex-wrap gap-2">
+                  {selectedTreatment.benefits?.map((b, i) => (
+                    <Badge key={i} variant="outline" className="border-[#c9847a] text-[#c9847a] font-light">{b}</Badge>
+                  ))}
+                </div>
+              </div>
+              <button onClick={() => { setDialogOpen(false); setBookingOpen(true); }} className="w-full py-3 bg-[#c9847a] text-white rounded-full hover:bg-[#a86d64] transition-all duration-200 font-light cursor-pointer">
+                Book Appointment
+              </button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Booking Dialog */}
+      <Dialog open={bookingOpen} onOpenChange={setBookingOpen}>
+        <DialogContent className="bg-white border-[#c9847a]/20">
+          <DialogHeader>
+            <DialogTitle className="text-[#3d2014] font-light">Book Your Treatment</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <input type="text" placeholder="Full Name" className="w-full px-4 py-2 border border-[#c9847a]/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#c9847a] font-light" />
+            <input type="email" placeholder="Email" className="w-full px-4 py-2 border border-[#c9847a]/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#c9847a] font-light" />
+            <input type="tel" placeholder="Phone" className="w-full px-4 py-2 border border-[#c9847a]/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#c9847a] font-light" />
+            <input type="date" className="w-full px-4 py-2 border border-[#c9847a]/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#c9847a] font-light" />
+            <button className="w-full py-3 bg-[#c9847a] text-white rounded-full hover:bg-[#a86d64] transition-all duration-200 font-light cursor-pointer">Confirm Booking</button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Footer */}
+      <footer className="bg-[#3d2014] text-white py-12 px-6 mt-20">
+        <div className="max-w-7xl mx-auto text-center">
+          <p className="mb-4 font-light text-xl">Oasis Spa</p>
+          <p className="text-sm text-white/60 font-light">Urban sanctuary for wellness & renewal © 2024</p>
+        </div>
+      </footer>
     </div>
-  );
+  )
 }

@@ -1,231 +1,372 @@
-"use client";
+"use client"
+import { motion, useScroll, useTransform, useInView, AnimatePresence, useMotionValue, useSpring } from "framer-motion"
+import { useState, useRef, useEffect } from "react"
+import Image from "next/image"
+import Link from "next/link"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { Progress } from "@/components/ui/progress"
+import { Menu, X, ShoppingCart, Zap, Dumbbell, Package, Badge as BadgeIcon, TrendingUp } from "lucide-react"
 
-import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
-import Image from "next/image";
-import { X, Menu, Search, Award, Zap, Activity, Globe, Shield, Command, Plus, ArrowUpRight, Maximize2, MoveRight, Layers, Box, Compass, Sparkles, MoveVertical, Target, Radio, CheckCircle2, Gauge, Timer } from "lucide-react";
-import "../premium.css";
+function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: "-60px" })
+  return (
+    <motion.div ref={ref}
+      initial={{ opacity: 0, y: 24 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.55, delay, ease: [0.25, 0.46, 0.45, 0.94] }}
+    >
+      {children}
+    </motion.div>
+  )
+}
 
-const SPECS = [
-  { id: 1, title: "PHANTOM_GT_R", cat: "Performance", value: "820HP", img: "https://images.unsplash.com/photo-1544636331-e26879cd4d9b?q=80&w=1000&auto=format&fit=crop" },
-  { id: 2, title: "VELOCITY_NODE", cat: "Aerodynamics", value: "342KM/H", img: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=1000&auto=format&fit=crop" },
-  { id: 3, title: "NEON_SHELL", cat: "E-Performance", value: "0-100: 2.4s", img: "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?q=80&w=1000&auto=format&fit=crop" },
-];
+function Counter({ target, suffix = "" }: { target: number; suffix?: string }) {
+  const [count, setCount] = useState(0)
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true })
+  useEffect(() => {
+    if (!inView) return
+    const duration = 1500
+    const step = target / (duration / 16)
+    const t = setInterval(() => setCount(c => { const next = c + step; if (next >= target) { clearInterval(t); return target; } return next; }), 16)
+    return () => clearInterval(t)
+  }, [inView, target])
+  return <span ref={ref}>{Math.floor(count).toLocaleString()}{suffix}</span>
+}
 
-export default function ApexAutomotiveSPA() {
-  const [view, setView] = useState<"apex" | "spec" | "logic">("apex");
-  const [activeItem, setActiveItem] = useState(0);
+function MagneticBtn({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  const x = useMotionValue(0); const y = useMotionValue(0)
+  const sx = useSpring(x, { stiffness: 400, damping: 20 })
+  const sy = useSpring(y, { stiffness: 400, damping: 20 })
+  const ref = useRef<HTMLButtonElement>(null)
+  const handleMouse = (e: React.MouseEvent) => {
+    const r = ref.current!.getBoundingClientRect()
+    x.set((e.clientX - r.left - r.width / 2) * 0.3)
+    y.set((e.clientY - r.top - r.height / 2) * 0.3)
+  }
+  return (
+    <motion.button ref={ref} style={{ x: sx, y: sy }} onMouseMove={handleMouse}
+      onMouseLeave={() => { x.set(0); y.set(0) }}
+      className={`cursor-pointer transition-all duration-200 ${className}`}
+    >
+      {children}
+    </motion.button>
+  )
+}
+
+export default function VertxFitness() {
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const [loadingProgress, setLoadingProgress] = useState(0)
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [selectedProduct, setSelectedProduct] = useState(null)
+  const { scrollY } = useScroll()
+
+  useEffect(() => {
+    const timer = setTimeout(() => setLoadingProgress(100), 800)
+    return () => clearTimeout(timer)
+  }, [])
+
+  const products = {
+    racks: [
+      { id: 1, name: "Power Rack Pro", price: "$1,299", specs: "2x2\" steel, 1000lb capacity" },
+      { id: 2, name: "Squat Rack Elite", price: "$899", specs: "11-gauge, safety bars" },
+      { id: 3, name: "Half Rack Plus", price: "$599", specs: "Compact, 800lb capacity" },
+      { id: 4, name: "Bench Combo", price: "$799", specs: "Adjustable 7-position" },
+      { id: 5, name: "Smith Machine Pro", price: "$1,499", specs: "Guided motion system" },
+      { id: 6, name: "Functional Trainer", price: "$2,499", specs: "Dual stack 300lb each" },
+      { id: 7, name: "Multi-Station", price: "$3,999", specs: "8-station comprehensive" },
+      { id: 8, name: "Cable Machine", price: "$1,799", specs: "Single stack 300lb" },
+    ],
+    dumbbells: [
+      { id: 9, name: "EcoFlex Dumbbell Set", price: "$599", specs: "5-50lb pairs" },
+      { id: 10, name: "Adjustable Dumbbells", price: "$399", specs: "5-25lb per hand" },
+      { id: 11, name: "Rubber Hex Pairs", price: "$199", specs: "10-100lb" },
+    ],
+  }
+
+  const features = [
+    { icon: <Zap className="w-6 h-6" />, name: "SmartCoach™", desc: "AI-powered form analysis" },
+    { icon: <TrendingUp className="w-6 h-6" />, name: "HydraSteel™", desc: "Advanced alloy durability" },
+    { icon: <Dumbbell className="w-6 h-6" />, name: "EcoFlex™", desc: "100% sustainable material" },
+    { icon: <Badge as="div" className="w-6 h-6" />, name: "ConnectSync™", desc: "App integration suite" },
+  ]
+
+  const programs = [
+    { name: "Strength 101", level: "Beginner", duration: "8 weeks", equipment: "Rack, Dumbbells" },
+    { name: "Hypertrophy Build", level: "Intermediate", duration: "12 weeks", equipment: "Full setup" },
+    { name: "Power & Conditioning", level: "Advanced", duration: "16 weeks", equipment: "Complete station" },
+    { name: "Powerlifting Prep", level: "Advanced", duration: "20 weeks", equipment: "Competition gear" },
+    { name: "CrossFit Fusion", level: "Intermediate", duration: "10 weeks", equipment: "Cardio + weights" },
+    { name: "Recovery & Mobility", level: "All", duration: "6 weeks", equipment: "Minimal gear" },
+  ]
+
+  const stats = [
+    { num: 50000, label: "Athletes Using VERTX" },
+    { num: 30, label: "Countries Served" },
+    { num: 4.9, suffix: "★", label: "Customer Rating" },
+    { num: 25, suffix: " year", label: "Warranty" },
+  ]
 
   return (
-    <div className="premium-theme bg-[#0c0c0c] text-red-500 min-h-screen selection:bg-red-600 selection:text-white font-sans overflow-x-hidden">
-      
-      {/* Background HUD Layers */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[45vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase">
-           APEX
-        </div>
-        <div className="absolute inset-0 bg-[#0c0c0c]/40 backdrop-blur-[2px]" />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.05] mix-blend-screen" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#0c0c0c_100%)] opacity-80" />
-      </div>
-
-      {/* Editorial HUD Nav */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-center bg-transparent backdrop-blur-3xl border-b border-red-500/10 font-mono text-white">
-        <div className="flex gap-12 items-center">
-           <button onClick={() => setView("apex")} className="text-xl font-black italic tracking-tighter hover:text-white transition-colors flex items-center gap-4 text-red-500">
-              APEX_OS&trade;
-           </button>
-           <div className="hidden lg:flex gap-8 text-[10px] font-black uppercase tracking-widest opacity-20 italic">
-              Status: Engine_Sync_Active
-              <span className="text-white">Ref: 0x139</span>
-           </div>
-        </div>
-        <div className="hidden md:flex gap-12 text-[10px] font-black uppercase tracking-[0.4em] opacity-30">
-           <button onClick={() => setView("apex")} className={`hover:opacity-100 transition-opacity ${view === 'apex' ? 'text-white opacity-100 underline decoration-white underline-offset-8 italic' : ''}`}>THE_APEX</button>
-           <button onClick={() => setView("logic")} className={`hover:opacity-100 transition-opacity ${view === 'logic' ? 'text-white opacity-100 underline decoration-white underline-offset-8 italic' : ''}`}>THE_LOGIC</button>
-        </div>
-        <div className="flex items-center gap-8 text-white">
-           <Search className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-           <Menu className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-        </div>
-      </nav>
-
-      <AnimatePresence mode="wait">
-        
-        {/* THE APEX VIEW (LANDING) */}
-        {view === "apex" && (
-          <motion.div key="apex" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-48 pb-32 px-12 max-w-[1800px] mx-auto min-h-screen flex flex-col justify-center relative z-10">
-             <header className="mb-24 border-b border-red-500/20 pb-12 flex flex-col md:flex-row justify-between items-end gap-12 text-white">
-                <div>
-                   <span className="text-[10px] uppercase font-black tracking-[1em] opacity-40 mb-4 block underline decoration-red-500/10 underline-offset-8 italic font-mono text-red-500">Performance_Capture // Series_139</span>
-                   <h1 className="text-7xl md:text-[12vw] font-black italic uppercase tracking-tighter leading-[0.75]">PURE. <br/> <span className="text-transparent" style={{ WebkitTextStroke: "2px rgba(239,68,68,0.6)" }}>VELOCITY.</span></h1>
-                </div>
-                <div className="text-right flex flex-col items-end">
-                   <div className="text-3xl font-black mb-4 tracking-tighter uppercase opacity-10 italic font-mono text-red-600">Dynamic_Sync</div>
-                   <div className="w-64 h-[2px] bg-white/5 rounded-none overflow-hidden">
-                      <motion.div animate={{ width: ['20%', '90%', '40%', '75%'] }} transition={{ duration: 4, repeat: Infinity }} className="h-full bg-red-500" />
-                   </div>
-                </div>
-             </header>
-
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {SPECS.map((p, i) => (
-                  <motion.div 
-                    key={p.id} initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                    className="group relative h-[60vh] rounded-none overflow-hidden border border-red-500/10 hover:border-red-500/40 transition-all cursor-pointer shadow-2xl bg-white/5"
-                    onClick={() => { setActiveItem(i); setView("spec"); }}
-                  >
-                     <Image src={p.img} alt={p.title} fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[2s] group-hover:scale-110" />
-                     <div className="absolute inset-0 bg-red-500/10 group-hover:bg-transparent transition-colors duration-1000" />
-                     <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                     
-                     <div className="absolute inset-10 flex flex-col justify-between">
-                        <div className="flex justify-between items-start text-white">
-                           <div className="p-4 bg-white/10 border border-white/20 rounded-none opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Gauge className="w-5 h-5" />
-                           </div>
-                           <div className="text-[10px] font-black uppercase tracking-widest opacity-20 italic text-red-400">UNIT_0x{i+139}</div>
-                        </div>
-                        <div className="text-white">
-                           <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-2 block italic text-red-300">{p.cat} // {p.value}</span>
-                           <h3 className="text-5xl font-black italic uppercase tracking-tighter leading-none transition-all group-hover:tracking-widest">{p.title}</h3>
-                        </div>
-                     </div>
-                  </motion.div>
-                ))}
-             </div>
-          </motion.div>
-        )}
-
-        {/* THE SPEC VIEW (DETAIL) */}
-        {view === "spec" && (
-          <motion.div key="spec" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen font-sans">
-             <button onClick={() => setView("apex")} className="fixed top-12 left-12 z-[60] bg-white text-black p-5 rounded-none hover:scale-110 transition-transform shadow-2xl">
-                <X className="w-6 h-6" />
-             </button>
-
-             <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen pt-24 lg:pt-0">
-                <div className="lg:col-span-12 relative flex items-center justify-center p-8 md:p-32 overflow-hidden h-screen bg-[#0c0c0c]">
-                   <div className="absolute inset-0 opacity-10">
-                      <Image src={SPECS[activeItem].img} alt="Background" fill className="object-cover grayscale" />
-                   </div>
-                   <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[40vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase text-red-500">
-                      PHANTOM
-                   </div>
-                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#0c0c0c_100%)]" />
-                   
-                   <div className="max-w-[1500px] w-full grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10 text-white font-sans">
-                      <motion.div initial={{ scale: 1.1, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1 }} className="relative aspect-square w-full rounded-none overflow-hidden border border-red-500/20 group bg-neutral-900 shadow-2xl">
-                         <Image src={SPECS[activeItem].img} alt="Spec" fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[3s] opacity-80" priority />
-                         <div className="absolute top-12 left-12 p-4 bg-black/60 backdrop-blur-3xl rounded-none border-2 border-white/10 z-20">
-                            <Layers className="w-6 h-6 text-red-400 animate-pulse" />
-                         </div>
-                      </motion.div>
-
-                      <div className="flex flex-col justify-center space-y-12 text-white">
-                         <div className="space-y-6">
-                            <span className="text-[10px] uppercase tracking-[1em] font-black opacity-30 mb-8 block underline decoration-white decoration-4 underline-offset-8 italic text-red-600 font-mono">Performance_Sync // {SPECS[activeItem].cat}</span>
-                            <h1 className="text-7xl md:text-[8vw] font-black italic uppercase tracking-tighter leading-none text-white">{SPECS[activeItem].title}</h1>
-                            <div className="text-4xl font-black italic tracking-tighter opacity-10 italic text-red-500">State: {SPECS[activeItem].value}</div>
-                         </div>
-
-                         <p className="text-3xl font-light italic leading-relaxed uppercase tracking-tight opacity-40 text-white leading-relaxed">
-                            Structural allocation for mission {SPECS[activeItem].title}. System integrity at 100%. Thermal load nominal at 32C. Every coordinate synchronized.
-                         </p>
-
-                         <div className="grid grid-cols-2 gap-12 py-12 border-y border-white/10 font-mono text-white/60">
-                            {[
-                              { icon: <Timer className="w-5 h-5" />, l: "Logic", v: "Phase_Shift" },
-                              { icon: <Zap className="w-5 h-5" />, l: "Power", v: "Verified" },
-                              { icon: <Shield className="w-5 h-5" />, l: "Security", v: "High_Impact" },
-                              { icon: <Activity className="w-5 h-5" />, l: "Status", v: "Active" },
-                            ].map((s, i) => (
-                              <div key={i} className="flex gap-6 items-center">
-                                 <div className="opacity-20 text-red-400">{s.icon}</div>
-                                 <div className="text-left">
-                                    <div className="text-[10px] font-black opacity-30 uppercase tracking-widest mb-1 italic text-white">{s.l}</div>
-                                    <div className="text-sm font-black uppercase italic tracking-tighter text-white">{s.v}</div>
-                                 </div>
-                              </div>
-                            ))}
-                         </div>
-
-                         <div className="flex gap-6 pt-8 font-mono">
-                            <button onClick={() => setView("apex")} className="flex-grow py-8 bg-red-600 text-white font-black uppercase text-xs tracking-[1em] hover:bg-red-500 transition-all shadow-2xl">
-                               Return_to_Apex
-                            </button>
-                            <button className="px-12 py-8 border border-white/20 text-[10px] font-black uppercase tracking-[0.5em] hover:scale-105 transition-all text-white">
-                               PDF_Spec
-                            </button>
-                         </div>
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
-        {/* THE LOGIC VIEW (INFO) */}
-        {view === "logic" && (
-          <motion.div key="logic" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen flex flex-col justify-center">
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center text-white">
-                <div className="space-y-16">
-                   <span className="text-[10px] uppercase font-black tracking-[1.5em] opacity-30 block underline decoration-red-400 decoration-2 underline-offset-8 italic font-mono text-red-400">The_Logic_Protocol</span>
-                   <h2 className="text-7xl md:text-[10vw] font-black italic tracking-tighter leading-none text-white uppercase font-sans">The <br/> Truth.</h2>
-                   <p className="text-3xl md:text-4xl font-light italic opacity-60 leading-relaxed uppercase tracking-tight text-white/60 font-sans">
-                      We treat architecture as code. Every structure is a function of its environmental variables and tectonic intent. 100% precision. Zero noise.
-                   </p>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t border-white/10 font-mono text-red-400">
-                      {[
-                        { icon: <Sparkles className="w-6 h-6" />, t: "Adaptive Flow", v: "Dynamic Load Sync" },
-                        { icon: <Plus className="w-6 h-6" />, t: "Structural Sync", v: "Deep_Material_ID" },
-                      ].map((item, i) => (
-                        <div key={i} className="flex gap-8 group">
-                           <div className="w-16 h-16 rounded-none border border-red-500 flex items-center justify-center text-red-500 group-hover:bg-red-500 group-hover:text-black transition-all shadow-xl">
-                              {item.icon}
-                           </div>
-                           <div className="text-left text-white">
-                              <h4 className="text-2xl font-black uppercase italic tracking-tighter text-white leading-none mb-2 font-sans">{item.t}</h4>
-                              <p className="text-[10px] opacity-30 uppercase tracking-[0.3em] font-black leading-relaxed text-red-400/40 font-mono">{item.v}</p>
-                           </div>
-                        </div>
-                      ))}
-                   </div>
-                </div>
-                <div className="relative aspect-square bg-red-900/10 rounded-none p-12 overflow-hidden border border-red-500/20 group shadow-2xl">
-                   <Image src="https://images.unsplash.com/photo-1541829070764-84a7d30dee62?q=80&w=1000&auto=format&fit=crop" alt="The Archive" fill className="object-cover opacity-20 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-[3s]" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                   <div className="absolute inset-x-0 bottom-12 flex justify-center font-mono">
-                      <div className="px-12 py-6 bg-red-600 text-white text-[10px] font-black uppercase tracking-widest italic animate-bounce cursor-pointer hover:bg-red-500 transition-all rounded-none font-mono">
-                         Establish_Handshake
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
-      </AnimatePresence>
-
-      {/* Global Status HUD */}
-      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em] italic text-red-600 leading-none font-mono font-mono">
-         <div className="flex gap-12 text-red-600">
-            <span>Apex_OS_Alpha</span>
-            <span>Uptime: 99.9%</span>
-         </div>
-         <div className="flex gap-4 items-end text-red-600">
-            <div className="text-right leading-tight italic">
-               Archival_Control <br /> v4.0.139
-            </div>
-            <div className="flex gap-[4px] h-4">
-               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-full bg-red-500 opacity-${i*20}`}></div>)}
-            </div>
-         </div>
-      </footer>
-
+    <div style={{ overflowX: 'hidden', scrollBehavior: 'smooth' }} className="min-h-screen bg-[#090909] text-white">
       <style>{`
-        ::-webkit-scrollbar { width: 0px; }
+        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+        body { font-family: 'Sora', sans-serif; }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Space Mono', monospace; font-weight: bold; }
       `}</style>
+
+      {/* Mobile Nav */}
+      <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+        <SheetTrigger asChild>
+          <button className="fixed top-6 left-6 z-50 md:hidden cursor-pointer transition-all duration-200 bg-white/10 backdrop-blur p-2 rounded-lg hover:bg-white/20">
+            <Menu className="w-6 h-6 text-white" />
+          </button>
+        </SheetTrigger>
+        <SheetContent side="left" className="bg-[#1a1a1a] border-[#dc2626]/20">
+          <nav className="flex flex-col gap-4 mt-8">
+            <Link href="#products" className="text-lg font-semibold text-[#dc2626] cursor-pointer hover:text-white">Products</Link>
+            <Link href="#features" className="text-lg font-semibold text-[#dc2626] cursor-pointer hover:text-white">Features</Link>
+            <Link href="#programs" className="text-lg font-semibold text-[#dc2626] cursor-pointer hover:text-white">Programs</Link>
+            <Link href="#faq" className="text-lg font-semibold text-[#dc2626] cursor-pointer hover:text-white">FAQ</Link>
+          </nav>
+        </SheetContent>
+      </Sheet>
+
+      {/* Hero with Loading Bar */}
+      <section className="relative h-screen flex items-center justify-center overflow-hidden pt-20">
+        <div className="absolute inset-0 z-0">
+          <Image src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1200&auto=format&fit=crop" alt="Gym Equipment" fill className="object-cover" />
+          <div className="absolute inset-0 bg-black/60" />
+        </div>
+
+        {/* Animated Loading Bar */}
+        <motion.div className="absolute top-32 left-0 right-0 h-1 bg-gradient-to-r from-[#dc2626] via-white to-[#dc2626]"
+          initial={{ width: "0%" }}
+          animate={{ width: `${loadingProgress}%` }}
+          transition={{ duration: 2 }}
+        />
+
+        <div className="relative z-10 text-center max-w-5xl px-6">
+          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
+            <motion.div animate={{ opacity: [0.7, 1, 0.7] }} transition={{ duration: 2, repeat: Infinity }} className="inline-block mb-4">
+              <Badge className="bg-[#dc2626] text-white text-xs">NEW COLLECTION</Badge>
+            </motion.div>
+            <h1 className="text-6xl md:text-8xl font-bold text-white mb-6 leading-tight">VERTX</h1>
+            <motion.div
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ duration: 1, delay: 0.2 }}
+              className="h-1 bg-[#dc2626] w-32 mx-auto mb-8"
+            />
+            <p className="text-xl md:text-2xl text-white/90 mb-8 uppercase tracking-wider">BUILD YOUR BEST</p>
+            <MagneticBtn className="px-8 py-4 bg-[#dc2626] text-white rounded-none font-bold hover:bg-[#991818] uppercase tracking-wider">Shop Now</MagneticBtn>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Products Section */}
+      <section id="products" className="py-20 px-6 max-w-7xl mx-auto">
+        <Reveal>
+          <h2 className="text-5xl font-bold text-white mb-4 uppercase">Equipment</h2>
+          <p className="text-lg text-[#999] mb-12">Premium strength training solutions for serious athletes</p>
+        </Reveal>
+
+        <Tabs defaultValue="racks" className="w-full">
+          <TabsList className="grid w-full grid-cols-4 bg-white/5 border border-[#dc2626]/20 rounded-none p-1">
+            <TabsTrigger value="racks" className="cursor-pointer uppercase text-xs">Racks</TabsTrigger>
+            <TabsTrigger value="dumbbells" className="cursor-pointer uppercase text-xs">Dumbbells</TabsTrigger>
+            <TabsTrigger value="cardio" className="cursor-pointer uppercase text-xs">Cardio</TabsTrigger>
+            <TabsTrigger value="accessories" className="cursor-pointer uppercase text-xs">Accessories</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="racks" className="mt-12">
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {products.racks.map((prod, idx) => (
+                <Reveal key={prod.id} delay={idx * 0.08}>
+                  <Card className="bg-white/5 border-[#dc2626]/20 hover:border-[#dc2626]/60 hover:shadow-2xl hover:scale-105 cursor-pointer transition-all duration-300 group overflow-hidden"
+                    onClick={() => { setSelectedProduct(prod); setDialogOpen(true); }}>
+                    <CardContent className="p-6">
+                      <div className="relative aspect-square mb-4 rounded-lg overflow-hidden bg-[#1a1a1a] group-hover:bg-[#2a2a2a] transition-colors">
+                        <Image src={`https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=400&auto=format&fit=crop`} alt={prod.name} fill className="object-cover group-hover:scale-110 transition-transform duration-300" />
+                      </div>
+                      <h3 className="font-bold text-white mb-2 uppercase text-sm">{prod.name}</h3>
+                      <p className="text-xs text-[#999] mb-4">{prod.specs}</p>
+                      <div className="flex justify-between items-center">
+                        <span className="text-lg font-bold text-[#dc2626]">{prod.price}</span>
+                        <button className="p-2 bg-[#dc2626] text-white rounded-none hover:bg-[#991818] transition-all cursor-pointer">
+                          <ShoppingCart className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Reveal>
+              ))}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="dumbbells" className="mt-12">
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {products.dumbbells.map((prod, idx) => (
+                <Reveal key={prod.id} delay={idx * 0.1}>
+                  <Card className="bg-white/5 border-[#dc2626]/20 hover:border-[#dc2626]/60 cursor-pointer transition-all duration-300 group overflow-hidden">
+                    <CardContent className="p-6">
+                      <div className="relative aspect-square mb-4 rounded-lg overflow-hidden bg-[#1a1a1a]">
+                        <Image src={`https://images.unsplash.com/photo-1638801429407-f5f06e9c9c13?q=80&w=400&auto=format&fit=crop`} alt={prod.name} fill className="object-cover group-hover:scale-110 transition-transform duration-300" />
+                      </div>
+                      <h3 className="font-bold text-white mb-2 uppercase text-sm">{prod.name}</h3>
+                      <p className="text-xs text-[#999] mb-4">{prod.specs}</p>
+                      <span className="text-lg font-bold text-[#dc2626]">{prod.price}</span>
+                    </CardContent>
+                  </Card>
+                </Reveal>
+              ))}
+            </div>
+          </TabsContent>
+        </Tabs>
+      </section>
+
+      {/* Features */}
+      <section id="features" className="py-20 px-6 max-w-7xl mx-auto bg-white/5 rounded-2xl">
+        <Reveal>
+          <h2 className="text-5xl font-bold text-white mb-12 uppercase">Innovation</h2>
+        </Reveal>
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {features.map((feat, idx) => (
+            <Reveal key={idx} delay={idx * 0.1}>
+              <Card className="bg-white/5 border-[#dc2626]/20 hover:shadow-lg transition-all duration-300">
+                <CardContent className="p-6">
+                  <div className="w-12 h-12 bg-[#dc2626] rounded-none flex items-center justify-center mb-4 text-white">
+                    {feat.icon}
+                  </div>
+                  <h3 className="font-bold text-white mb-2 uppercase text-sm">{feat.name}</h3>
+                  <Badge variant="outline" className="border-[#dc2626] text-[#dc2626] text-xs">{feat.desc}</Badge>
+                </CardContent>
+              </Card>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* Stats */}
+      <section className="py-20 px-6 max-w-7xl mx-auto">
+        <div className="grid md:grid-cols-4 gap-8 text-center">
+          {stats.map((stat, idx) => (
+            <Reveal key={idx} delay={idx * 0.1}>
+              <div>
+                <p className="text-5xl font-bold text-[#dc2626] mb-2"><Counter target={stat.num} suffix={stat.suffix || ""} /></p>
+                <p className="text-[#999] uppercase text-sm font-semibold tracking-wider">{stat.label}</p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* Training Programs */}
+      <section id="programs" className="py-20 px-6 max-w-7xl mx-auto">
+        <Reveal>
+          <h2 className="text-5xl font-bold text-white mb-12 uppercase">Training Programs</h2>
+        </Reveal>
+        <Accordion type="single" collapsible className="space-y-4">
+          {programs.map((prog, idx) => (
+            <AccordionItem key={idx} value={`prog-${idx}`} className="border border-[#dc2626]/20 rounded-none px-6 bg-white/5">
+              <AccordionTrigger className="text-white font-bold cursor-pointer hover:text-[#dc2626] transition-colors uppercase text-sm">
+                <div className="flex justify-between w-full items-center">
+                  <span>{prog.name}</span>
+                  <Badge variant="outline" className="border-[#dc2626] text-[#dc2626] text-xs ml-4">{prog.level}</Badge>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="text-[#999]">
+                <div className="grid md:grid-cols-3 gap-4 mt-4">
+                  <div>
+                    <p className="text-xs font-semibold text-[#dc2626] uppercase mb-1">Duration</p>
+                    <p className="text-white">{prog.duration}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-[#dc2626] uppercase mb-1">Equipment</p>
+                    <p className="text-white text-sm">{prog.equipment}</p>
+                  </div>
+                  <button className="px-4 py-2 bg-[#dc2626] text-white rounded-none hover:bg-[#991818] transition-all font-semibold uppercase text-xs cursor-pointer">Start</button>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </section>
+
+      {/* FAQ */}
+      <section id="faq" className="py-20 px-6 max-w-3xl mx-auto">
+        <Reveal>
+          <h2 className="text-5xl font-bold text-white mb-12 uppercase">FAQ</h2>
+        </Reveal>
+        <Accordion type="single" collapsible className="space-y-4">
+          {[
+            { q: "What's the shipping timeframe?", a: "Orders ship within 3-5 business days. Delivery typically 7-14 days depending on location." },
+            { q: "Do you offer assembly service?", a: "Yes. Premium assembly available for $149-$299 depending on equipment complexity." },
+            { q: "What's your warranty coverage?", a: "25-year structural warranty on all equipment. Covers defects in materials and craftsmanship." },
+            { q: "Do you offer financing?", a: "Yes. 0% APR financing available for purchases over $2,000 with approved credit." },
+            { q: "Can I return equipment?", a: "30-day return window. Free return shipping on defective items. Restocking fee 10% on returns." },
+            { q: "Do you have showrooms?", a: "Yes. We have demo spaces in major cities where you can test equipment before purchase." },
+          ].map((faq, idx) => (
+            <AccordionItem key={idx} value={`faq-${idx}`} className="border border-[#dc2626]/20 rounded-none px-6 bg-white/5">
+              <AccordionTrigger className="text-white font-bold cursor-pointer hover:text-[#dc2626] transition-colors">{faq.q}</AccordionTrigger>
+              <AccordionContent className="text-[#999]">{faq.a}</AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </section>
+
+      {/* CTA */}
+      <section className="py-20 px-6 max-w-7xl mx-auto">
+        <Reveal>
+          <div className="bg-gradient-to-r from-[#dc2626] to-[#991818] rounded-none p-12 text-center text-white">
+            <h2 className="text-4xl font-bold mb-4 uppercase">Start Your Transformation</h2>
+            <p className="text-lg mb-8 opacity-90">Build the home gym of champions. Free trial included.</p>
+            <MagneticBtn className="px-8 py-3 bg-white text-[#dc2626] rounded-none font-bold hover:bg-[#f0f0f0] uppercase tracking-wider">Get Free Trial</MagneticBtn>
+          </div>
+        </Reveal>
+      </section>
+
+      {/* Product Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="bg-[#1a1a1a] border-[#dc2626]/20 max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-white uppercase tracking-wider">{selectedProduct?.name}</DialogTitle>
+          </DialogHeader>
+          {selectedProduct && (
+            <div className="space-y-6">
+              <div className="relative aspect-video rounded-lg overflow-hidden">
+                <Image src={`https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=800&auto=format&fit=crop`} alt={selectedProduct.name} fill className="object-cover" />
+              </div>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <p className="text-white font-bold text-2xl">{selectedProduct.price}</p>
+                  <Badge className="bg-[#dc2626] text-white">In Stock</Badge>
+                </div>
+                <p className="text-[#999]">{selectedProduct.specs}</p>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <input type="number" placeholder="Quantity" defaultValue="1" className="px-4 py-2 bg-white/10 border border-[#dc2626]/20 rounded-none text-white" />
+                  <button className="px-4 py-2 bg-[#dc2626] text-white rounded-none hover:bg-[#991818] font-bold uppercase cursor-pointer">Add to Cart</button>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Footer */}
+      <footer className="bg-black border-t border-[#dc2626]/20 py-12 px-6 mt-20">
+        <div className="max-w-7xl mx-auto text-center">
+          <p className="mb-4 uppercase font-bold tracking-wider text-white">VERTX FITNESS</p>
+          <p className="text-sm text-[#666]">Premium equipment for serious athletes © 2024</p>
+        </div>
+      </footer>
     </div>
-  );
+  )
 }

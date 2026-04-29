@@ -1,231 +1,407 @@
-"use client";
+"use client"
+import { motion, useScroll, useTransform, useInView, AnimatePresence, useMotionValue, useSpring } from "framer-motion"
+import { useState, useRef, useEffect } from "react"
+import Image from "next/image"
+import Link from "next/link"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { Menu, X, BookOpen, TrendingUp, Users, Building2, CheckCircle2, ArrowRight } from "lucide-react"
 
-import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
-import Image from "next/image";
-import { X, Menu, Search, Award, Zap, Activity, Globe, Shield, Command, Plus, ArrowUpRight, Maximize2, MoveRight, Layers, Box, Compass, Sparkles, MoveVertical, Target, Radio, CheckCircle2, MapPin, Compass as CompassIcon } from "lucide-react";
-import "../premium.css";
+function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: "-60px" })
+  return (
+    <motion.div ref={ref}
+      initial={{ opacity: 0, y: 24 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.55, delay, ease: [0.25, 0.46, 0.45, 0.94] }}
+    >
+      {children}
+    </motion.div>
+  )
+}
 
-const DESTINATIONS = [
-  { id: 1, title: "CORE_SANTORINI", cat: "Aegean", value: "Verified", img: "https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?q=80&w=1000&auto=format&fit=crop" },
-  { id: 2, title: "VOID_KYOTO", cat: "Culture", value: "Active", img: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=1000&auto=format&fit=crop" },
-  { id: 3, title: "NEON_PATAGONIA", cat: "Wilderness", value: "Locked", img: "https://images.unsplash.com/photo-1531761535209-180857e963b9?q=80&w=1000&auto=format&fit=crop" },
-];
+function Counter({ target, suffix = "" }: { target: number; suffix?: string }) {
+  const [count, setCount] = useState(0)
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true })
+  useEffect(() => {
+    if (!inView) return
+    const duration = 1500
+    const step = target / (duration / 16)
+    const t = setInterval(() => setCount(c => { const next = c + step; if (next >= target) { clearInterval(t); return target; } return next; }), 16)
+    return () => clearInterval(t)
+  }, [inView, target])
+  return <span ref={ref}>{Math.floor(count).toLocaleString()}{suffix}</span>
+}
 
-export default function WanderlustTravelSPA() {
-  const [view, setView] = useState<"wanderlust" | "journey" | "logic">("wanderlust");
-  const [activeItem, setActiveItem] = useState(0);
+function MagneticBtn({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  const x = useMotionValue(0); const y = useMotionValue(0)
+  const sx = useSpring(x, { stiffness: 400, damping: 20 })
+  const sy = useSpring(y, { stiffness: 400, damping: 20 })
+  const ref = useRef<HTMLButtonElement>(null)
+  const handleMouse = (e: React.MouseEvent) => {
+    const r = ref.current!.getBoundingClientRect()
+    x.set((e.clientX - r.left - r.width / 2) * 0.3)
+    y.set((e.clientY - r.top - r.height / 2) * 0.3)
+  }
+  return (
+    <motion.button ref={ref} style={{ x: sx, y: sy }} onMouseMove={handleMouse}
+      onMouseLeave={() => { x.set(0); y.set(0) }}
+      className={`cursor-pointer transition-all duration-200 ${className}`}
+    >
+      {children}
+    </motion.button>
+  )
+}
+
+export default function MeridianConsulting() {
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const [words, setWords] = useState(0)
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const { scrollY } = useScroll()
+
+  const wordRotations = ["Strategy", "Growth", "Results", "Impact"]
+
+  useEffect(() => {
+    const timer = setInterval(() => setWords((w) => (w + 1) % wordRotations.length), 3000)
+    return () => clearInterval(timer)
+  }, [])
+
+  const services = {
+    strategy: [
+      { name: "Business Strategy", desc: "Market positioning, competitive advantage, 5-year roadmaps" },
+      { name: "Growth Strategy", desc: "Revenue expansion, market entry, M&A planning" },
+    ],
+    operations: [
+      { name: "Process Optimization", desc: "Supply chain, cost reduction, efficiency gains" },
+      { name: "Organization Design", desc: "Structure, roles, governance transformation" },
+    ],
+    digital: [
+      { name: "Digital Transformation", desc: "Technology adoption, business model innovation" },
+      { name: "Data & Analytics", desc: "Insight generation, decision support systems" },
+    ],
+    people: [
+      { name: "Talent Management", desc: "Recruitment, development, retention strategies" },
+      { name: "Change Management", desc: "Organizational change, culture transformation" },
+    ],
+    finance: [
+      { name: "Financial Planning", desc: "Budgeting, forecasting, financial modeling" },
+      { name: "M&A Advisory", desc: "Valuation, due diligence, integration planning" },
+    ],
+    sustainability: [
+      { name: "ESG Strategy", desc: "Sustainability goals, impact measurement" },
+      { name: "Climate Action", desc: "Carbon reduction, renewable transition" },
+    ],
+  }
+
+  const caseStudies = [
+    { industry: "Technology", result: "+40% Revenue", title: "SaaS Scaling Success", company: "Innovate Systems" },
+    { industry: "Healthcare", result: "+35% Efficiency", title: "Clinic Network Optimization", company: "HealthCare Plus" },
+    { industry: "Financial", result: "+50% Profitability", title: "Asset Manager Restructuring", company: "Prime Capital" },
+    { industry: "Retail", result: "+65% Digital Sales", title: "Omnichannel Transformation", company: "Modern Retail" },
+    { industry: "Manufacturing", result: "+25% Output", title: "Production Excellence", company: "Global Manufacturing" },
+    { industry: "Energy", result: "+$80M Savings", title: "Cost Optimization Program", company: "Energy Solutions" },
+  ]
+
+  const articles = [
+    { title: "The Future of Work: 5 Trends Shaping 2025", reading: "8 min", topic: "Workforce" },
+    { title: "Sustainability as Competitive Advantage", reading: "10 min", topic: "ESG" },
+    { title: "AI & Augmented Intelligence in Consulting", reading: "12 min", topic: "Technology" },
+    { title: "Building Resilient Supply Chains", reading: "7 min", topic: "Operations" },
+  ]
+
+  const team = [
+    { name: "Sarah Williams", role: "Managing Partner", prev: "McKinsey", mba: "Harvard MBA" },
+    { name: "David Chen", role: "Senior Partner", prev: "BCG", mba: "Stanford MBA" },
+    { name: "Emma Rodriguez", role: "Partner", prev: "Bain", mba: "Wharton MBA" },
+    { name: "James Patterson", role: "Partner", prev: "Goldman Sachs", mba: "Oxford MBA" },
+  ]
+
+  const clients = ["Apple", "Amazon", "Netflix", "Tesla", "Microsoft", "Google", "Meta", "NVIDIA"]
 
   return (
-    <div className="premium-theme bg-[#0d1117] text-amber-400 min-h-screen selection:bg-amber-600 selection:text-white font-sans overflow-x-hidden">
-      
-      {/* Background HUD Layers */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[45vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase">
-           TRAVEL
-        </div>
-        <div className="absolute inset-0 bg-[#0d1117]/40 backdrop-blur-[2px]" />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.05] mix-blend-screen" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#0d1117_100%)] opacity-80" />
-      </div>
-
-      {/* Editorial HUD Nav */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-center bg-transparent backdrop-blur-3xl border-b border-amber-500/10 font-mono text-white">
-        <div className="flex gap-12 items-center">
-           <button onClick={() => setView("wanderlust")} className="text-xl font-black italic tracking-tighter hover:text-white transition-colors flex items-center gap-4 text-amber-500">
-              WANDERLUST&trade;
-           </button>
-           <div className="hidden lg:flex gap-8 text-[10px] font-black uppercase tracking-widest opacity-20 italic">
-              Status: Journey_Sync_Active
-              <span className="text-white">Ref: 0x140</span>
-           </div>
-        </div>
-        <div className="hidden md:flex gap-12 text-[10px] font-black uppercase tracking-[0.4em] opacity-30 text-white">
-           <button onClick={() => setView("wanderlust")} className={`hover:opacity-100 transition-opacity ${view === 'wanderlust' ? 'text-white opacity-100 underline decoration-white underline-offset-8 italic' : ''}`}>THE_WANDERLUST</button>
-           <button onClick={() => setView("logic")} className={`hover:opacity-100 transition-opacity ${view === 'logic' ? 'text-white opacity-100 underline decoration-white underline-offset-8 italic' : ''}`}>THE_LOGIC</button>
-        </div>
-        <div className="flex items-center gap-8 text-white">
-           <Search className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-           <Menu className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-        </div>
-      </nav>
-
-      <AnimatePresence mode="wait">
-        
-        {/* THE WANDERLUST VIEW (LANDING) */}
-        {view === "wanderlust" && (
-          <motion.div key="wanderlust" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-48 pb-32 px-12 max-w-[1800px] mx-auto min-h-screen flex flex-col justify-center relative z-10">
-             <header className="mb-24 border-b border-amber-500/20 pb-12 flex flex-col md:flex-row justify-between items-end gap-12 text-white">
-                <div>
-                   <span className="text-[10px] uppercase font-black tracking-[1em] opacity-40 mb-4 block underline decoration-amber-500/10 underline-offset-8 italic font-mono text-amber-500">Visual_Capture // Series_140</span>
-                   <h1 className="text-7xl md:text-[12vw] font-black italic uppercase tracking-tighter leading-[0.75]">PURE. <br/> <span className="text-transparent" style={{ WebkitTextStroke: "2px rgba(245,158,11,0.6)" }}>TRAVEL.</span></h1>
-                </div>
-                <div className="text-right flex flex-col items-end">
-                   <div className="text-3xl font-black mb-4 tracking-tighter uppercase opacity-10 italic font-mono text-amber-600">Dynamic_Sync</div>
-                   <div className="w-64 h-[2px] bg-white/5 rounded-none overflow-hidden">
-                      <motion.div animate={{ width: ['20%', '90%', '40%', '75%'] }} transition={{ duration: 4, repeat: Infinity }} className="h-full bg-amber-500" />
-                   </div>
-                </div>
-             </header>
-
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {DESTINATIONS.map((p, i) => (
-                  <motion.div 
-                    key={p.id} initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                    className="group relative h-[60vh] rounded-none overflow-hidden border border-amber-500/10 hover:border-amber-500/40 transition-all cursor-pointer shadow-2xl bg-white/5"
-                    onClick={() => { setActiveItem(i); setView("journey"); }}
-                  >
-                     <Image src={p.img} alt={p.title} fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[2s] group-hover:scale-110" />
-                     <div className="absolute inset-0 bg-amber-500/10 group-hover:bg-transparent transition-colors duration-1000" />
-                     <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                     
-                     <div className="absolute inset-10 flex flex-col justify-between">
-                        <div className="flex justify-between items-start text-white">
-                           <div className="p-4 bg-white/10 border border-white/20 rounded-none opacity-0 group-hover:opacity-100 transition-opacity">
-                              <CompassIcon className="w-5 h-5" />
-                           </div>
-                           <div className="text-[10px] font-black uppercase tracking-widest opacity-20 italic text-amber-400">UNIT_0x{i+140}</div>
-                        </div>
-                        <div className="text-white">
-                           <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-2 block italic text-amber-300">{p.cat} // {p.value}</span>
-                           <h3 className="text-5xl font-black italic uppercase tracking-tighter leading-none transition-all group-hover:tracking-widest font-sans">{p.title}</h3>
-                        </div>
-                     </div>
-                  </motion.div>
-                ))}
-             </div>
-          </motion.div>
-        )}
-
-        {/* THE JOURNEY VIEW (DETAIL) */}
-        {view === "journey" && (
-          <motion.div key="journey" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen">
-             <button onClick={() => setView("wanderlust")} className="fixed top-12 left-12 z-[60] bg-white text-black p-5 rounded-none hover:scale-110 transition-transform shadow-2xl">
-                <X className="w-6 h-6" />
-             </button>
-
-             <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen pt-24 lg:pt-0">
-                <div className="lg:col-span-12 relative flex items-center justify-center p-8 md:p-32 overflow-hidden h-screen bg-[#0d1117]">
-                   <div className="absolute inset-0 opacity-10">
-                      <Image src={DESTINATIONS[activeItem].img} alt="Background" fill className="object-cover grayscale" />
-                   </div>
-                   <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[40vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase text-amber-500 font-sans">
-                      CORE
-                   </div>
-                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#0d1117_100%)]" />
-                   
-                   <div className="max-w-[1500px] w-full grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10 font-sans text-white">
-                      <motion.div initial={{ scale: 1.1, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1 }} className="relative aspect-square w-full rounded-none overflow-hidden border border-amber-500/20 group bg-neutral-900 shadow-2xl">
-                         <Image src={DESTINATIONS[activeItem].img} alt="Spec" fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[3s] opacity-80" priority />
-                         <div className="absolute top-12 left-12 p-4 bg-black/60 backdrop-blur-3xl rounded-none border-2 border-white/10 z-20">
-                            <Layers className="w-6 h-6 text-amber-400 animate-pulse" />
-                         </div>
-                      </motion.div>
-
-                      <div className="flex flex-col justify-center space-y-12">
-                         <div className="space-y-6">
-                            <span className="text-[10px] uppercase tracking-[1em] font-black opacity-30 mb-8 block underline decoration-white decoration-4 underline-offset-8 italic text-amber-400 font-mono">Dynamic_Sync // {DESTINATIONS[activeItem].cat}</span>
-                            <h1 className="text-7xl md:text-[8vw] font-black italic uppercase tracking-tighter leading-none text-white">{DESTINATIONS[activeItem].title}</h1>
-                            <div className="text-4xl font-black italic tracking-tighter opacity-10 italic text-amber-500">State: {DESTINATIONS[activeItem].value}</div>
-                         </div>
-
-                         <p className="text-3xl font-light italic leading-relaxed uppercase tracking-tight opacity-40 text-white leading-relaxed">
-                            Structural allocation for mission {DESTINATIONS[activeItem].title}. System integrity at 100%. Thermal load nominal at 32C. Every coordinate synchronized.
-                         </p>
-
-                         <div className="grid grid-cols-2 gap-12 py-12 border-y border-white/10 font-mono text-white/60">
-                            {[
-                              { icon: <Globe className="w-5 h-5" />, l: "Region", v: "Global_East" },
-                              { icon: <Zap className="w-5 h-5" />, l: "Logic", v: "Phase_Shift" },
-                              { icon: <Shield className="w-5 h-5" />, l: "Security", v: "High_Impact" },
-                              { icon: <Activity className="w-5 h-5" />, l: "Sync", v: "Active" },
-                            ].map((s, i) => (
-                              <div key={i} className="flex gap-6 items-center">
-                                 <div className="opacity-20 text-amber-400">{s.icon}</div>
-                                 <div className="text-left">
-                                    <div className="text-[10px] font-black opacity-30 uppercase tracking-widest mb-1 italic text-white">{s.l}</div>
-                                    <div className="text-sm font-black uppercase italic tracking-tighter text-white">{s.v}</div>
-                                 </div>
-                              </div>
-                            ))}
-                         </div>
-
-                         <div className="flex gap-6 pt-8 font-mono">
-                            <button onClick={() => setView("wanderlust")} className="flex-grow py-8 bg-amber-600 text-white font-black uppercase text-xs tracking-[1em] hover:bg-amber-500 transition-all shadow-2xl">
-                               Return_to_Wanderlust
-                            </button>
-                            <button className="px-12 py-8 border border-white/20 text-[10px] font-black uppercase tracking-[0.5em] hover:scale-105 transition-all text-white">
-                               PDF_Spec
-                            </button>
-                         </div>
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
-        {/* THE LOGIC VIEW (INFO) */}
-        {view === "logic" && (
-          <motion.div key="logic" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen flex flex-col justify-center">
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center text-white">
-                <div className="space-y-16">
-                   <span className="text-[10px] uppercase font-black tracking-[1.5em] opacity-30 block underline decoration-amber-400 decoration-2 underline-offset-8 italic font-mono text-amber-400">The_Logic_Protocol</span>
-                   <h2 className="text-7xl md:text-[10vw] font-black italic tracking-tighter leading-none text-white uppercase font-sans">The <br/> Truth.</h2>
-                   <p className="text-3xl md:text-4xl font-light italic opacity-60 leading-relaxed uppercase tracking-tight text-white/60 font-sans">
-                      We treat architecture as code. Every structure is a function of its environmental variables and tectonic intent. 100% precision. Zero noise.
-                   </p>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t border-white/10 font-mono text-amber-400">
-                      {[
-                        { icon: <Sparkles className="w-6 h-6" />, t: "Adaptive Flow", v: "Dynamic Load Sync" },
-                        { icon: <Plus className="w-6 h-6" />, t: "Structural Sync", v: "Deep_Material_ID" },
-                      ].map((item, i) => (
-                        <div key={i} className="flex gap-8 group">
-                           <div className="w-16 h-16 rounded-none border border-amber-500 flex items-center justify-center text-amber-500 group-hover:bg-amber-500 group-hover:text-black transition-all shadow-xl">
-                              {item.icon}
-                           </div>
-                           <div className="text-left text-white">
-                              <h4 className="text-2xl font-black uppercase italic tracking-tighter text-white leading-none mb-2 font-sans">{item.t}</h4>
-                              <p className="text-[10px] opacity-30 uppercase tracking-[0.3em] font-black leading-relaxed text-amber-400/40 font-mono">{item.v}</p>
-                           </div>
-                        </div>
-                      ))}
-                   </div>
-                </div>
-                <div className="relative aspect-square bg-amber-900/10 rounded-none p-12 overflow-hidden border border-amber-500/20 group shadow-2xl">
-                   <Image src="https://images.unsplash.com/photo-1541829070764-84a7d30dee62?q=80&w=1000&auto=format&fit=crop" alt="The Archive" fill className="object-cover opacity-20 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-[3s]" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                   <div className="absolute inset-x-0 bottom-12 flex justify-center font-mono">
-                      <div className="px-12 py-6 bg-amber-600 text-white text-[10px] font-black uppercase tracking-widest italic animate-bounce cursor-pointer hover:bg-amber-500 transition-all rounded-none font-mono">
-                         Establish_Handshake
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
-      </AnimatePresence>
-
-      {/* Global Status HUD */}
-      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em] italic text-amber-600 leading-none font-mono">
-         <div className="flex gap-12 text-amber-600">
-            <span>Wanderlust_OS_Alpha</span>
-            <span>Uptime: 99.9%</span>
-         </div>
-         <div className="flex gap-4 items-end text-amber-600">
-            <div className="text-right leading-tight italic">
-               Archival_Control <br /> v4.0.140
-            </div>
-            <div className="flex gap-[4px] h-4">
-               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-full bg-amber-500 opacity-${i*20}`}></div>)}
-            </div>
-         </div>
-      </footer>
-
+    <div style={{ overflowX: 'hidden', scrollBehavior: 'smooth' }} className="min-h-screen bg-[#f8f9fa] text-[#0d1b2a]">
       <style>{`
-        ::-webkit-scrollbar { width: 0px; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Inter', sans-serif; letter-spacing: 0.02em; }
       `}</style>
+
+      {/* Mobile Nav */}
+      <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+        <SheetTrigger asChild>
+          <button className="fixed top-6 left-6 z-50 md:hidden cursor-pointer transition-all duration-200 bg-white/80 backdrop-blur p-2 rounded-lg">
+            <Menu className="w-6 h-6 text-[#0d1b2a]" />
+          </button>
+        </SheetTrigger>
+        <SheetContent side="left" className="bg-white border-[#c9a84c]/20">
+          <nav className="flex flex-col gap-4 mt-8">
+            <Link href="#services" className="text-lg font-semibold text-[#c9a84c] cursor-pointer hover:text-[#0d1b2a]">Services</Link>
+            <Link href="#cases" className="text-lg font-semibold text-[#c9a84c] cursor-pointer hover:text-[#0d1b2a]">Case Studies</Link>
+            <Link href="#team" className="text-lg font-semibold text-[#c9a84c] cursor-pointer hover:text-[#0d1b2a]">Team</Link>
+            <Link href="#faq" className="text-lg font-semibold text-[#c9a84c] cursor-pointer hover:text-[#0d1b2a]">FAQ</Link>
+          </nav>
+        </SheetContent>
+      </Sheet>
+
+      {/* Hero with Word Animation */}
+      <section className="relative h-screen flex items-center justify-center overflow-hidden pt-20">
+        <div className="absolute inset-0 z-0">
+          <Image src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1200&auto=format&fit=crop" alt="Consulting" fill className="object-cover" />
+          <div className="absolute inset-0 bg-black/50" />
+        </div>
+        <div className="relative z-10 text-center max-w-5xl px-6">
+          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
+            <h1 className="text-6xl md:text-7xl font-bold text-white mb-6 leading-tight">
+              <span>Meridian</span><br />
+              <AnimatePresence mode="wait">
+                <motion.span key={words}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.5 }}
+                  className="text-[#c9a84c]"
+                >
+                  {wordRotations[words]}
+                </motion.span>
+              </AnimatePresence>
+            </h1>
+            <p className="text-xl md:text-2xl text-white/90 mb-8">Strategy & Management Consulting</p>
+            <MagneticBtn className="px-8 py-4 bg-[#c9a84c] text-[#0d1b2a] rounded-lg font-bold hover:bg-[#b89936]">Start Engagement</MagneticBtn>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Services Section */}
+      <section id="services" className="py-20 px-6 max-w-7xl mx-auto">
+        <Reveal>
+          <h2 className="text-5xl font-bold text-[#0d1b2a] mb-4">Services</h2>
+          <p className="text-lg text-[#666] mb-12">Strategic advice across every business function</p>
+        </Reveal>
+
+        <Tabs defaultValue="strategy" className="w-full">
+          <TabsList className="grid w-full grid-cols-6 bg-white border border-[#c9a84c]/20 rounded-lg p-1">
+            <TabsTrigger value="strategy" className="cursor-pointer text-xs">Strategy</TabsTrigger>
+            <TabsTrigger value="operations" className="cursor-pointer text-xs">Operations</TabsTrigger>
+            <TabsTrigger value="digital" className="cursor-pointer text-xs">Digital</TabsTrigger>
+            <TabsTrigger value="people" className="cursor-pointer text-xs">People</TabsTrigger>
+            <TabsTrigger value="finance" className="cursor-pointer text-xs">Finance</TabsTrigger>
+            <TabsTrigger value="sustainability" className="cursor-pointer text-xs">Sustainability</TabsTrigger>
+          </TabsList>
+
+          {Object.entries(services).map(([key, items]) => (
+            <TabsContent key={key} value={key} className="mt-8 grid md:grid-cols-2 gap-6">
+              {items.map((item, idx) => (
+                <Reveal key={idx} delay={idx * 0.1}>
+                  <Card className="bg-white border-[#c9a84c]/20 hover:shadow-lg transition-all duration-300">
+                    <CardContent className="p-6">
+                      <h3 className="font-bold text-[#0d1b2a] mb-2 text-lg">{item.name}</h3>
+                      <p className="text-[#666] text-sm">{item.desc}</p>
+                      <Badge variant="outline" className="border-[#c9a84c] text-[#c9a84c] mt-4 text-xs">Typical: 3-6 months</Badge>
+                    </CardContent>
+                  </Card>
+                </Reveal>
+              ))}
+            </TabsContent>
+          ))}
+        </Tabs>
+      </section>
+
+      {/* Case Studies */}
+      <section id="cases" className="py-20 px-6 max-w-7xl mx-auto">
+        <Reveal>
+          <h2 className="text-5xl font-bold text-[#0d1b2a] mb-12">Case Studies</h2>
+        </Reveal>
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {caseStudies.map((cs, idx) => (
+            <Reveal key={idx} delay={idx * 0.08}>
+              <Card className="bg-white border-[#c9a84c]/20 hover:shadow-xl hover:scale-105 cursor-pointer transition-all duration-300 group overflow-hidden"
+                onClick={() => setDialogOpen(true)}>
+                <CardContent className="p-6">
+                  <div className="mb-4">
+                    <Badge variant="outline" className="border-[#c9a84c] text-[#c9a84c] text-xs">{cs.industry}</Badge>
+                  </div>
+                  <h3 className="font-bold text-[#0d1b2a] mb-2 group-hover:text-[#c9a84c] transition-colors">{cs.title}</h3>
+                  <p className="text-sm text-[#666] mb-4">{cs.company}</p>
+                  <p className="text-2xl font-bold text-[#c9a84c]">{cs.result}</p>
+                </CardContent>
+              </Card>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* Thought Leadership */}
+      <section className="py-20 px-6 max-w-7xl mx-auto bg-white/50 rounded-3xl">
+        <Reveal>
+          <h2 className="text-5xl font-bold text-[#0d1b2a] mb-12">Thought Leadership</h2>
+        </Reveal>
+        <div className="grid md:grid-cols-2 gap-8">
+          {articles.map((article, idx) => (
+            <Reveal key={idx} delay={idx * 0.1}>
+              <Card className="bg-white border-[#c9a84c]/20 hover:shadow-lg transition-all duration-300 cursor-pointer">
+                <CardContent className="p-6">
+                  <Badge variant="outline" className="border-[#c9a84c] text-[#c9a84c] text-xs mb-4">{article.topic}</Badge>
+                  <h3 className="font-bold text-[#0d1b2a] mb-4">{article.title}</h3>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-[#666]">{article.reading} read</span>
+                    <ArrowRight className="w-4 h-4 text-[#c9a84c]" />
+                  </div>
+                </CardContent>
+              </Card>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* Stats */}
+      <section className="py-20 px-6 max-w-7xl mx-auto">
+        <div className="grid md:grid-cols-4 gap-8 text-center">
+          {[
+            { num: 200, label: "Client Engagements" },
+            { num: 15, label: "Years in Practice" },
+            { num: 8, label: "Industries Served" },
+            { num: 2, suffix: "B", label: "Value Created" },
+          ].map((stat, idx) => (
+            <Reveal key={idx} delay={idx * 0.1}>
+              <div>
+                <p className="text-5xl font-bold text-[#c9a84c] mb-2"><Counter target={stat.num} suffix={stat.suffix || ""} /></p>
+                <p className="text-[#666] font-semibold">{stat.label}</p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* Team */}
+      <section id="team" className="py-20 px-6 max-w-7xl mx-auto">
+        <Reveal>
+          <h2 className="text-5xl font-bold text-[#0d1b2a] mb-12">Leadership</h2>
+        </Reveal>
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {team.map((member, idx) => (
+            <Reveal key={idx} delay={idx * 0.1}>
+              <Card className="bg-white border-[#c9a84c]/20 hover:shadow-lg transition-all duration-300">
+                <CardContent className="p-6">
+                  <Avatar className="w-16 h-16 mx-auto mb-4 border-2 border-[#c9a84c]">
+                    <AvatarFallback className="bg-[#c9a84c] text-white font-bold">{member.name.charAt(0)}</AvatarFallback>
+                  </Avatar>
+                  <h3 className="font-bold text-[#0d1b2a] text-center mb-1">{member.name}</h3>
+                  <p className="text-xs text-[#c9a84c] text-center mb-4 font-semibold">{member.role}</p>
+                  <Badge variant="outline" className="block w-full text-center border-[#c9a84c] text-[#666] text-xs mb-2">{member.prev}</Badge>
+                  <Badge variant="secondary" className="block w-full text-center bg-[#c9a84c]/10 text-[#c9a84c] text-xs">{member.mba}</Badge>
+                </CardContent>
+              </Card>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* Client Logos */}
+      <section className="py-20 px-6 bg-white/50 border-y border-[#c9a84c]/20">
+        <Reveal>
+          <p className="text-center text-sm font-bold text-[#666] mb-12 uppercase tracking-wider">Trusted by industry leaders</p>
+        </Reveal>
+        <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-8 items-center">
+          {clients.map((client, idx) => (
+            <Reveal key={idx} delay={idx * 0.05}>
+              <div className="text-center font-bold text-[#0d1b2a]/40 hover:text-[#c9a84c] transition-colors cursor-pointer text-sm">
+                {client}
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* Approach Accordion */}
+      <section className="py-20 px-6 max-w-3xl mx-auto">
+        <Reveal>
+          <h2 className="text-5xl font-bold text-[#0d1b2a] mb-12">Our Approach</h2>
+        </Reveal>
+        <Accordion type="single" collapsible className="space-y-4">
+          {[
+            { title: "Diagnose", desc: "Deep situation assessment through data analysis, interviews, and benchmarking. We uncover root causes, not symptoms." },
+            { title: "Design", desc: "Co-create tailored solutions with your team. Detailed implementation roadmap with clear milestones and KPIs." },
+            { title: "Deploy", desc: "Hand-in-hand implementation support. We build internal capability and change management to ensure adoption." },
+            { title: "Sustain", desc: "Ongoing support and monitoring. We track results, adjust course, and ensure lasting impact beyond our engagement." },
+          ].map((step, idx) => (
+            <AccordionItem key={idx} value={`step-${idx}`} className="border border-[#c9a84c]/20 rounded-lg px-6 bg-white">
+              <AccordionTrigger className="text-[#0d1b2a] font-bold cursor-pointer hover:text-[#c9a84c] transition-colors">{step.title}</AccordionTrigger>
+              <AccordionContent className="text-[#666]">{step.desc}</AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </section>
+
+      {/* Testimonials */}
+      <section className="py-20 px-6 max-w-7xl mx-auto bg-white/50 rounded-3xl">
+        <Reveal>
+          <h2 className="text-5xl font-bold text-[#0d1b2a] mb-12">Client Feedback</h2>
+        </Reveal>
+        <div className="grid md:grid-cols-3 gap-8">
+          {[
+            { text: "Meridian helped us unlock $50M in value we didn't know existed. Transformative.", company: "Fortune 500 Tech" },
+            { text: "Their strategic clarity and execution discipline are unmatched in our industry.", company: "Global Consumer" },
+            { text: "They didn't just consult—they built capability within our team for sustained success.", company: "Healthcare Leader" },
+          ].map((test, idx) => (
+            <Reveal key={idx} delay={idx * 0.1}>
+              <Card className="bg-white border-[#c9a84c]/20">
+                <CardContent className="p-6">
+                  <p className="text-[#666] mb-4 italic">"{test.text}"</p>
+                  <p className="font-semibold text-[#0d1b2a]">{test.company}</p>
+                </CardContent>
+              </Card>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section id="faq" className="py-20 px-6 max-w-3xl mx-auto">
+        <Reveal>
+          <h2 className="text-5xl font-bold text-[#0d1b2a] mb-12">FAQ</h2>
+        </Reveal>
+        <Accordion type="single" collapsible className="space-y-4">
+          {[
+            { q: "How do you calculate your fees?", a: "Value-based pricing model. We align our success with yours through outcome guarantees on key metrics." },
+            { q: "What's the typical engagement timeline?", a: "3-6 months for most engagements. Complex multi-phase programs can extend 12-24 months with different team compositions." },
+            { q: "Do you work with startups?", a: "Yes. We work across all stages—from Series A through Fortune 500. Different approaches for different scales." },
+            { q: "What makes you different?", a: "Deep industry expertise + execution focus. We don't just create plans; we drive results and build lasting capability." },
+            { q: "Can you guarantee results?", a: "We structure risk-sharing arrangements where our fees are partially tied to achieving defined outcomes." },
+            { q: "How do you ensure knowledge transfer?", a: "Embedded teams + knowledge transfer workshops + documentation. Your team leads by engagement end." },
+          ].map((faq, idx) => (
+            <AccordionItem key={idx} value={`faq-${idx}`} className="border border-[#c9a84c]/20 rounded-lg px-6 bg-white">
+              <AccordionTrigger className="text-[#0d1b2a] font-bold cursor-pointer hover:text-[#c9a84c] transition-colors">{faq.q}</AccordionTrigger>
+              <AccordionContent className="text-[#666]">{faq.a}</AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </section>
+
+      {/* CTA */}
+      <section className="py-20 px-6 max-w-7xl mx-auto">
+        <Reveal>
+          <div className="bg-gradient-to-r from-[#0d1b2a] to-[#1a2a3a] rounded-2xl p-12 text-center text-white">
+            <h2 className="text-4xl font-bold mb-4">Start Your Transformation</h2>
+            <p className="text-lg mb-8 opacity-90">Let's unlock your organization's full potential together.</p>
+            <MagneticBtn className="px-8 py-3 bg-[#c9a84c] text-[#0d1b2a] rounded-lg font-bold hover:bg-[#b89936]">Schedule Kickoff</MagneticBtn>
+          </div>
+        </Reveal>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-[#0d1b2a] text-white py-12 px-6 mt-20">
+        <div className="max-w-7xl mx-auto text-center">
+          <p className="mb-4 font-bold">Meridian Consulting</p>
+          <p className="text-sm text-[#999]">Strategic counsel for transformative change © 2024</p>
+        </div>
+      </footer>
     </div>
-  );
+  )
 }
