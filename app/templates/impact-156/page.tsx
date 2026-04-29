@@ -1,235 +1,344 @@
-"use client";
+"use client"
+import { motion, useScroll, useTransform, useInView, useMotionValue, useSpring } from "framer-motion"
+import { useState, useRef, useEffect } from "react"
+import Image from "next/image"
+import Link from "next/link"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { Code, GitBranch } from "lucide-react"
 
-import { motion, useScroll, useTransform, useSpring, useMotionValue } from "framer-motion";
-import { useRef, useEffect, useState } from "react";
-import Image from "next/image";
-import Link from "next/link";
-import { Leaf, Wind, Zap, Shield, Activity, Menu, Search, ArrowRight, Layers } from "lucide-react";
-import "../premium.css";
-
-const SYSTEMS = [
-  { id: 1, title: "SOLAR_GRID", cat: "Renewable", value: "Verified", img: "https://images.unsplash.com/photo-1546410531-bb4caa6b424d?auto=format&fit=crop&q=80&w=1500" },
-  { id: 2, title: "VERTICAL_BIOME", cat: "Ecological", value: "Active", img: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&q=80&w=1500" },
-  { id: 3, title: "LOOP_RECLAIM", cat: "Circular", value: "Locked", img: "https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&q=80&w=1500" },
-];
-
-function TextScramble({ text }: { text: string }) {
-  const [display, setDisplay] = useState(text);
-  const chars = "!<>-_\\/[]{}—=+*^?#________";
-  
-  useEffect(() => {
-    let iteration = 0;
-    const interval = setInterval(() => {
-      setDisplay(prev => 
-        text.split("").map((char, index) => {
-          if (index < iteration) return text[index];
-          return chars[Math.floor(Math.random() * chars.length)];
-        }).join("")
-      );
-      if (iteration >= text.length) clearInterval(interval);
-      iteration += 1/3;
-    }, 30);
-    return () => clearInterval(interval);
-  }, [text]);
-
-  return <span>{display}</span>;
+function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: "-60px" })
+  return <motion.div ref={ref} initial={{ opacity: 0, y: 24 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.55, delay, ease: [0.25, 0.46, 0.45, 0.94] }}>{children}</motion.div>
 }
 
-export default function BioFormSustainableSPA() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: containerRef });
-  
-  const yHero = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
-  const heroScale = useTransform(scrollYProgress, [0, 0.5], [1, 1.1]);
-  
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-  const springX = useSpring(mouseX, { stiffness: 40, damping: 20 });
-  const springY = useSpring(mouseY, { stiffness: 40, damping: 20 });
-
+function Counter({ target, suffix = "", prefix = "" }: { target: number; suffix?: string; prefix?: string }) {
+  const [count, setCount] = useState(0)
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true })
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      mouseX.set(e.clientX - window.innerWidth / 2);
-      mouseY.set(e.clientY - window.innerHeight / 2);
-    };
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, [mouseX, mouseY]);
+    if (!inView) return
+    const step = target / 90
+    const t = setInterval(() => setCount(c => { const n = c + step; if (n >= target) { clearInterval(t); return target; } return n; }), 16)
+    return () => clearInterval(t)
+  }, [inView, target])
+  return <span ref={ref}>{prefix}{Math.floor(count).toLocaleString()}{suffix}</span>
+}
+
+function MagneticBtn({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  const x = useMotionValue(0); const y = useMotionValue(0)
+  const sx = useSpring(x, { stiffness: 400, damping: 20 })
+  const sy = useSpring(y, { stiffness: 400, damping: 20 })
+  const ref = useRef<HTMLButtonElement>(null)
+  const handleMouse = (e: React.MouseEvent) => {
+    const r = ref.current!.getBoundingClientRect()
+    x.set((e.clientX - r.left - r.width/2) * 0.3)
+    y.set((e.clientY - r.top - r.height/2) * 0.3)
+  }
+  return <motion.button ref={ref} style={{ x: sx, y: sy }} onMouseMove={handleMouse} onMouseLeave={() => { x.set(0); y.set(0) }} className={`cursor-pointer ${className}`}>{children}</motion.button>
+}
+
+const features = [
+  { before: "function parse(str) {\n  return JSON.parse(str)\n}", after: "syntax.parse('data')\n→ Type-safe, validated", title: "Smart Parsing" },
+  { before: "let syntax = {\n  parse: () => {}\n}", after: "Instant autocomplete\nComplete docs inline", title: "Developer UX" },
+  { before: "// Manual checks\nif (!data) error", after: "Built-in validation\nError handling", title: "Error Prevention" },
+  { before: "// Copy-paste setup\nmodule.export = {}", after: "One command setup\nZero config", title: "Quick Setup" }
+]
+
+const pricingPlans = [
+  { name: "Hobby", price: "Free", users: "Solo", features: ["Basic features", "5K monthly uses", "Community support"] },
+  { name: "Pro", price: "$9/month", users: "Up to 5", features: ["Advanced IDE extensions", "100K monthly uses", "Priority email support", "API access"] },
+  { name: "Team", price: "$19/user/month", users: "Unlimited", features: ["All Pro features", "Team collaboration", "Admin controls", "SSO authentication", "Dedicated support"] }
+]
+
+export default function SyntaxIDE() {
+  const [selectedPlan, setSelectedPlan] = useState<typeof pricingPlans[0] | null>(null)
+  const [open, setOpen] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const { scrollYProgress } = useScroll({ target: containerRef })
+  const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"])
 
   return (
-    <div ref={containerRef} className="premium-theme bg-[#F2F4F1] text-[#2D3A2D] min-h-screen font-sans selection:bg-[#2D3A2D] selection:text-white overflow-hidden relative uppercase text-center">
-      
-      {/* ECO GLOW & TEXTURE */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#F2F4F1_100%)] opacity-80" />
-        <motion.div 
-           style={{ x: springX, y: springY }}
-           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70vw] h-[70vw] bg-emerald-600 opacity-[0.03] blur-[150px] rounded-full mix-blend-multiply" 
-        />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.1] mix-blend-multiply" />
-      </div>
+    <div ref={containerRef} style={{ overflowX: 'hidden', scrollBehavior: 'smooth' }} className="min-h-screen bg-[#0d1117] text-white font-sans">
 
-      {/* HEADER */}
-      <header className="fixed top-0 left-0 w-full px-6 md:px-12 py-10 flex justify-between items-center z-50 bg-[#F2F4F1]/30 backdrop-blur-3xl border-b border-[#2D3A2D]/10">
-        <Link href="/" className="font-black text-2xl tracking-[0.2em] text-[#2D3A2D] flex items-center gap-4 italic uppercase text-center md:text-left">
-           BIO<span className="text-emerald-700">_FORM</span>
-        </Link>
-        
-        <nav className="hidden lg:flex gap-16 font-black text-[10px] uppercase tracking-[0.6em] text-[#2D3A2D]/40 text-center">
-            <Link href="#" className="hover:text-[#2D3A2D] transition-colors group">
-               Ecology<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-emerald-700 italic">.</span>
-            </Link>
-            <Link href="#" className="hover:text-[#2D3A2D] transition-colors group">
-               Systems<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-emerald-700 italic">.</span>
-            </Link>
-            <Link href="#" className="hover:text-[#2D3A2D] transition-colors group">
-               Archives<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-emerald-700 italic">.</span>
-            </Link>
-        </nav>
-        
-        <div className="flex items-center gap-10">
-           <button className="bg-[#2D3A2D] text-white px-12 py-4 font-black text-[10px] uppercase tracking-[0.4em] hover:bg-[#1A1A1A] transition-all shadow-xl">
-              Initiate_Sync
-           </button>
-           <Menu className="w-6 h-6 text-[#2D3A2D] cursor-pointer" />
-        </div>
-      </header>
+      {/* HERO WITH CODE EDITOR */}
+      <section className="relative h-screen flex items-center justify-center px-6 md:px-12 overflow-hidden">
+        <motion.div style={{ y }} className="absolute inset-0 z-0">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,_rgba(34,197,94,0.1)_0%,rgba(13,17,23,1)_100%)]" />
+        </motion.div>
 
-      {/* HERO SECTION */}
-      <section className="relative h-screen flex flex-col justify-center items-center px-6 text-center z-10 pt-20 overflow-hidden text-center">
-         <motion.div style={{ scale: heroScale, y: yHero }} className="absolute inset-0 z-0">
-            <Image src="https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&q=80&w=2500" alt="Ecology" fill className="object-cover opacity-60 grayscale contrast-125 text-center" priority />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#F2F4F1] via-transparent to-[#F2F4F1]/40" />
-         </motion.div>
-         
-         <div className="relative z-10 max-w-7xl w-full text-center">
-            <motion.div 
-               initial={{ opacity: 0, scale: 0.95 }}
-               animate={{ opacity: 1, scale: 1 }}
-               transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
-            >
-               <div className="inline-flex items-center gap-4 font-black text-[10px] uppercase tracking-[1em] text-[#2D3A2D]/40 mb-16 border-l-2 border-[#2D3A2D]/10 pl-10 italic font-mono text-center">
-                  Ecological_Capture // 0156_Alpha
-               </div>
-               
-               <h1 className="text-7xl md:text-[13vw] font-black italic uppercase leading-[0.8] tracking-tighter mb-24 text-[#2D3A2D] text-center">
-                  <TextScramble text="DYNAMIC." /><br/>
-                  <span className="text-transparent" style={{ WebkitTextStroke: "1.5px rgba(45,58,45,0.6)" }}>BIOMES.</span>
-               </h1>
-               
-               <p className="text-xl md:text-3xl font-light italic text-[#2D3A2D]/40 max-w-2xl mx-auto mb-28 leading-relaxed uppercase tracking-tight text-center">
-                  Structural allocation for sustainable futures. Architecting biomes with tectonic precision and ecological intent.
-               </p>
-               
-               <div className="flex flex-col md:flex-row gap-20 justify-center items-center font-mono text-center">
-                  <div className="flex items-center gap-8 group cursor-pointer text-center">
-                     <div className="w-20 h-px bg-[#2D3A2D]/10 group-hover:w-32 transition-all" />
-                     <span className="text-[10px] font-black uppercase tracking-[0.8em] text-[#2D3A2D]">Read_Manifesto</span>
-                  </div>
-                  <div className="hidden md:block w-px h-16 bg-black/5" />
-                  <div className="font-black text-[9px] uppercase tracking-[0.6em] text-black/10 italic text-center">
-                     Ecology_Sync // Established
-                  </div>
-               </div>
+        <div className="relative z-10 max-w-6xl w-full">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            <motion.div initial={{ opacity: 0, x: -40 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }}>
+              <h1 className="text-6xl md:text-7xl font-black tracking-tight mb-6 text-[#22c55e]">
+                Syntax
+              </h1>
+              <p className="text-lg md:text-xl text-white/60 max-w-xl mb-12">
+                Developer tools & IDE extensions for Python, JavaScript, Go, Rust, and Java. 500K+ installs.
+              </p>
+              <motion.button initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} onClick={() => setOpen(true)} className="px-8 py-4 bg-[#22c55e] text-[#0d1117] font-bold cursor-pointer hover:bg-white transition-all duration-200">
+                Start Free Trial
+              </motion.button>
             </motion.div>
-         </div>
 
-         {/* Eco HUD */}
-         <div className="absolute right-12 bottom-12 flex flex-col items-end gap-4 font-black text-[8px] uppercase tracking-[0.8em] text-[#2D3A2D]/20 hidden md:flex italic font-mono text-center">
-            <span>ECO_SYNC: ACTIVE</span>
-            <div className="flex gap-1 h-12 items-end">
-               {[1, 2, 3, 4, 5].map(i => <motion.div key={i} animate={{ height: ['20%', '100%', '40%'] }} transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }} className="w-[1px] bg-[#2D3A2D]" />)}
-            </div>
-         </div>
-         
-         <div className="absolute left-12 bottom-12 hidden md:block text-center">
-            <div className="flex flex-col gap-2 text-[8px] font-black uppercase tracking-[0.4em] text-[#2D3A2D]/10 italic font-mono text-center">
-               <span>O2_LEVELS: OPTIMAL</span>
-               <span>CO2_SYNC: VERIFIED</span>
-               <span>STATUS: REGENERATING</span>
-            </div>
-         </div>
-      </section>
-
-      {/* SYSTEMS GRID */}
-      <section className="py-48 px-6 md:px-12 max-w-[1800px] mx-auto relative z-10 bg-[#F2F4F1]">
-         <div className="flex flex-col md:flex-row justify-between items-end mb-40 border-b border-[#2D3A2D]/10 pb-20 gap-16 text-center md:text-left">
-            <div>
-               <span className="text-[10px] font-black uppercase tracking-[1.5em] text-[#2D3A2D]/20 mb-8 block italic font-mono text-center md:text-left">Visual_Manifest</span>
-               <h2 className="text-6xl md:text-[10vw] font-black italic uppercase tracking-tighter text-[#2D3A2D] leading-[0.8] text-center md:text-left">The <br/> <span className="text-emerald-800/20">Bio_Form_</span></h2>
-            </div>
-            <div className="flex gap-16 text-[10px] font-black uppercase tracking-[0.6em] text-[#2D3A2D]/30 italic font-mono text-center md:text-left">
-               <span>Records: [03]</span>
-               <span>Status: [Verified]</span>
-            </div>
-         </div>
-
-         <div className="grid grid-cols-1 md:grid-cols-3 gap-16 text-center">
-            {SYSTEMS.map((p, i) => (
-                <motion.div 
-                   key={i} 
-                   initial={{ opacity: 0, y: 80 }}
-                   whileInView={{ opacity: 1, y: 0 }}
-                   viewport={{ once: true, margin: "-100px" }}
-                   transition={{ duration: 1.2, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
-                   className="group relative h-[85vh] bg-stone-100 border border-black/5 overflow-hidden cursor-pointer hover:border-[#2D3A2D]/20 transition-all text-center shadow-sm"
-                >
-                    <Image src={p.img} alt={p.title} fill className="object-cover opacity-60 grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-1000 text-center" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#F2F4F1] via-transparent to-transparent opacity-90 text-center" />
-                    <div className="absolute inset-0 bg-[#2D3A2D]/5 group-hover:bg-transparent transition-colors duration-700 text-center" />
-                    
-                    <div className="absolute inset-16 flex flex-col justify-between z-10 font-mono text-[#2D3A2D] text-center">
-                        <div className="flex justify-between items-start text-center">
-                           <div className="p-5 bg-white/40 backdrop-blur-xl border border-black/5 rounded-none group-hover:bg-[#2D3A2D] group-hover:text-white transition-all shadow-sm text-center">
-                              <Leaf className="w-6 h-6 text-center" />
-                           </div>
-                           <div className="text-[10px] font-black uppercase tracking-[0.8em] text-[#2D3A2D]/20 italic font-mono text-center">Unit_0x{i+156}</div>
-                        </div>
-                        
-                        <div className="text-center">
-                           <span className="text-[10px] uppercase tracking-[0.8em] text-emerald-800 mb-8 block italic font-black text-center">{p.cat} // {p.value}</span>
-                           <h3 className="text-5xl md:text-6xl font-black italic uppercase tracking-tighter mb-16 text-[#2D3A2D] group-hover:tracking-widest transition-all leading-[0.8] text-center">{p.title}</h3>
-                           <div className="flex items-center gap-8 text-[10px] font-black uppercase tracking-[0.6em] opacity-0 group-hover:opacity-100 transition-all translate-y-10 group-hover:translate-y-0 text-[#2D3A2D] text-center justify-center">
-                              Open_Module <ArrowRight className="w-6 h-6 text-center" />
-                           </div>
-                        </div>
-                    </div>
+            <motion.div initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} className="hidden md:block">
+              <div className="bg-[#161b22] border border-[#30363d] rounded p-6 font-mono text-sm">
+                <div className="text-[#8b949e] mb-4 flex justify-between">
+                  <span>syntax.tsx</span>
+                  <span className="text-[#22c55e]">✓</span>
+                </div>
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6, duration: 1 }}>
+                  <div className="text-[#79c0ff]">import <span className="text-[#ffa657]">Syntax</span> from <span className="text-[#a5d6ff]">'@syntax/core'</span></div>
+                  <div className="text-[#8b949e] mt-2">// Type-safe, validated code</div>
+                  <div className="text-[#79c0ff] mt-2">const parser = <span className="text-[#ffa657]">new</span> <span className="text-[#22c55e]">Syntax</span>()</div>
+                  <div className="text-[#79c0ff]">parser.<span className="text-[#d2a8ff]">parse</span>(<span className="text-[#a5d6ff]">'{"code":"fast"}'</span>)</div>
                 </motion.div>
-            ))}
-         </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
       </section>
 
-      {/* FOOTER */}
-      <footer className="py-48 px-6 md:px-12 border-t border-black/5 relative z-10 bg-[#F2F4F1]">
-         <div className="max-w-[1800px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-40 text-center md:text-left">
-            <div className="text-center md:text-left">
-               <div className="text-[#2D3A2D] mb-16 flex items-center gap-6 font-black text-2xl italic uppercase tracking-widest font-mono justify-center md:justify-start">
-                  <Wind className="w-10 h-10 text-emerald-700 text-center md:text-left" /> Bio_Form_v4
-               </div>
-               <p className="text-4xl md:text-6xl font-light italic leading-[0.9] text-[#2D3A2D]/20 uppercase tracking-tighter mb-20 text-center md:text-left">
-                  WE TREAT ECOLOGY AS ARCHITECTURE. EVERY BIOME A FUNCTION.
-               </p>
-               <div className="flex gap-20 font-black text-[10px] uppercase tracking-[0.8em] text-[#2D3A2D]/30 italic font-mono justify-center md:justify-start">
-                  <span>Oslo</span>
-                  <span>Vancouver</span>
-                  <span>Kyoto</span>
-               </div>
+      {/* PRODUCTS */}
+      <section className="py-20 md:py-32 px-6 md:px-12 max-w-7xl mx-auto">
+        <Reveal>
+          <h2 className="text-4xl md:text-6xl font-black mb-12">Products</h2>
+        </Reveal>
+
+        <Tabs defaultValue="vscode" className="w-full">
+          <TabsList className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-12 bg-transparent">
+            <TabsTrigger value="vscode" className="cursor-pointer">VS Code Ext.</TabsTrigger>
+            <TabsTrigger value="cli" className="cursor-pointer">CLI Tool</TabsTrigger>
+            <TabsTrigger value="api" className="cursor-pointer">API</TabsTrigger>
+            <TabsTrigger value="plugins" className="cursor-pointer">Plugins</TabsTrigger>
+          </TabsList>
+
+          {[
+            { value: "vscode", features: ["Smart syntax highlighting", "Real-time validation", "Auto-completion", "1M+ downloads"] },
+            { value: "cli", features: ["Command-line tool", "Batch processing", "Pipeline integration", "500K+ installs"] },
+            { value: "api", features: ["REST API", "WebSocket support", "Rate limiting", "100% uptime SLA"] },
+            { value: "plugins", features: ["GitHub integration", "GitLab support", "Jira workflows", "Custom plugins"] }
+          ].map((tab) => (
+            <TabsContent key={tab.value} value={tab.value}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {tab.features.map((feature, i) => (
+                  <Reveal key={i} delay={i * 0.1}>
+                    <Card className="bg-[#161b22] border-[#30363d] hover:border-[#22c55e]/50 transition-all duration-300 cursor-pointer">
+                      <CardContent className="p-6">
+                        <h3 className="font-bold mb-3">{feature}</h3>
+                        <Badge className="bg-[#22c55e] text-[#0d1117] cursor-pointer">Available</Badge>
+                      </CardContent>
+                    </Card>
+                  </Reveal>
+                ))}
+              </div>
+            </TabsContent>
+          ))}
+        </Tabs>
+      </section>
+
+      {/* INTEGRATION LOGOS */}
+      <section className="py-16 md:py-24 px-6 md:px-12 bg-[#161b22]">
+        <Reveal>
+          <h3 className="text-center text-lg font-bold mb-12 opacity-60">Integrates with your workflow</h3>
+        </Reveal>
+        <div className="flex flex-wrap justify-center gap-8 items-center max-w-6xl mx-auto">
+          {["GitHub", "GitLab", "Jira", "Linear", "Slack", "Notion", "VS Code", "Vim"].map((service, i) => (
+            <motion.div key={i} initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ delay: i * 0.1 }} className="h-12 w-32 bg-[#0d1117] border border-[#30363d] rounded flex items-center justify-center cursor-pointer hover:border-[#22c55e] transition-colors duration-200">
+              {service}
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* STATS */}
+      <section className="py-20 md:py-32 px-6 md:px-12">
+        <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+          <Reveal><div><div className="text-4xl md:text-5xl font-black mb-2 text-[#22c55e]"><Counter target={500} />K+</div><p className="text-sm opacity-60">Downloads</p></div></Reveal>
+          <Reveal delay={0.1}><div><div className="text-4xl md:text-5xl font-black mb-2 text-[#3b82f6]"><Counter target={8000} /></div><p className="text-sm opacity-60">GitHub Stars</p></div></Reveal>
+          <Reveal delay={0.2}><div><div className="text-4xl md:text-5xl font-black mb-2 text-[#22c55e]"><Counter target={200} />+</div><p className="text-sm opacity-60">Contributors</p></div></Reveal>
+          <Reveal delay={0.3}><div><div className="text-4xl md:text-5xl font-black mb-2 text-[#3b82f6]">4.9<span className="text-2xl">★</span></div><p className="text-sm opacity-60">Average Rating</p></div></Reveal>
+        </div>
+      </section>
+
+      {/* FEATURE SHOWCASE */}
+      <section className="py-20 md:py-32 px-6 md:px-12 max-w-7xl mx-auto">
+        <Reveal>
+          <h2 className="text-4xl md:text-6xl font-black mb-12">Code Comparison</h2>
+        </Reveal>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {features.map((feature, i) => (
+            <Reveal key={i} delay={i * 0.1}>
+              <Card className="bg-[#161b22] border-[#30363d] overflow-hidden hover:border-[#22c55e]/50 transition-all duration-300">
+                <CardContent className="p-6">
+                  <h3 className="font-bold mb-6 text-[#22c55e]">{feature.title}</h3>
+                  <div className="grid grid-cols-2 gap-4 text-xs font-mono">
+                    <div className="bg-[#0d1117] p-4 rounded border border-red-500/20">
+                      <p className="text-[#8b949e] mb-2">Without Syntax</p>
+                      <p className="text-[#ff7b72]">{feature.before}</p>
+                    </div>
+                    <div className="bg-[#0d1117] p-4 rounded border border-[#22c55e]/20">
+                      <p className="text-[#8b949e] mb-2">With Syntax</p>
+                      <p className="text-[#22c55e]">{feature.after}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* PRICING */}
+      <section className="py-20 md:py-32 px-6 md:px-12 max-w-6xl mx-auto">
+        <Reveal>
+          <h2 className="text-4xl md:text-6xl font-black mb-12 text-center">Simple Pricing</h2>
+        </Reveal>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {pricingPlans.map((plan, i) => (
+            <Reveal key={i} delay={i * 0.1}>
+              <motion.div onClick={() => { setSelectedPlan(plan); setOpen(true); }} className="group relative cursor-pointer bg-[#161b22] border border-[#30363d] hover:border-[#22c55e] transition-all duration-300 p-8 rounded hover:shadow-2xl hover:shadow-[#22c55e]/20">
+                <h3 className="text-2xl font-black mb-2">{plan.name}</h3>
+                <p className="text-2xl font-black text-[#22c55e] mb-2">{plan.price}</p>
+                <p className="text-sm opacity-60 mb-8">For {plan.users}</p>
+                <ul className="space-y-3 mb-8">
+                  {plan.features.map((feature, fi) => (
+                    <li key={fi} className="text-sm flex gap-3">
+                      <span className="text-[#22c55e]">✓</span>
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+                <motion.div className="flex items-center gap-2 text-[#22c55e] opacity-0 group-hover:opacity-100 transition-all duration-300">
+                  Choose Plan <span className="ml-auto">→</span>
+                </motion.div>
+              </motion.div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* SECURITY */}
+      <section className="py-20 md:py-32 px-6 md:px-12 max-w-4xl mx-auto">
+        <Reveal>
+          <h2 className="text-4xl md:text-6xl font-black mb-12">Security & Privacy</h2>
+        </Reveal>
+        <Accordion type="single" collapsible>
+          {[
+            { title: "Data Privacy", description: "Your code is never stored on our servers. All processing happens locally or in secure EU data centers with encryption." },
+            { title: "Local Processing", description: "Most operations run on your machine. Cloud processing is opt-in and encrypted end-to-end." },
+            { title: "Enterprise SSO", description: "SAML 2.0, OAuth 2.0, and LDAP integration for enterprise deployments with audit logging." },
+            { title: "Audit Logs", description: "Complete audit trail of all API access, user actions, and configuration changes with retention policies." }
+          ].map((item, i) => (
+            <Reveal key={i} delay={i * 0.1}>
+              <AccordionItem value={`item-${i}`} className="border-b border-[#30363d]">
+                <AccordionTrigger className="cursor-pointer py-4 hover:text-[#22c55e] transition-colors">{item.title}</AccordionTrigger>
+                <AccordionContent className="text-white/60 py-4">{item.description}</AccordionContent>
+              </AccordionItem>
+            </Reveal>
+          ))}
+        </Accordion>
+      </section>
+
+      {/* TESTIMONIALS */}
+      <section className="py-20 md:py-32 px-6 md:px-12 bg-[#161b22]">
+        <Reveal>
+          <h2 className="text-4xl md:text-6xl font-black mb-12 text-center">Trusted by Developers</h2>
+        </Reveal>
+        <div className="max-w-4xl mx-auto">
+          <Carousel>
+            <CarouselContent>
+              {[
+                { text: "Syntax has saved us hours of debugging every week. The IDE integration is flawless.", author: "Alex Chen, Senior Developer", company: "TechCorp" },
+                { text: "Finally a tool that understands modern development workflows. Best plugin I've ever used.", author: "Sara Williams, CTO", company: "DevStudio" },
+                { text: "Team productivity increased 40% after switching to Syntax. Worth every penny.", author: "Marcus Johnson, Engineering Lead", company: "CloudScale" }
+              ].map((testimonial, i) => (
+                <CarouselItem key={i} className="md:basis-full">
+                  <Card className="bg-[#0d1117] border-[#30363d]">
+                    <CardContent className="p-8 text-center">
+                      <p className="text-lg mb-6 italic text-white/60">"{testimonial.text}"</p>
+                      <p className="font-bold text-white">{testimonial.author}</p>
+                      <p className="text-sm opacity-60">{testimonial.company}</p>
+                    </CardContent>
+                  </Card>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="cursor-pointer" />
+            <CarouselNext className="cursor-pointer" />
+          </Carousel>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="py-20 md:py-32 px-6 md:px-12 max-w-4xl mx-auto">
+        <Reveal>
+          <h2 className="text-4xl md:text-6xl font-black mb-12">FAQ</h2>
+        </Reveal>
+        <Accordion type="single" collapsible>
+          {[
+            { q: "Which languages are supported?", a: "Python, JavaScript, TypeScript, Go, Rust, Java, C#, and more. Check GitHub for the complete list." },
+            { q: "Is there a self-hosted option?", a: "Yes, Enterprise plan includes self-hosted deployment with Docker and Kubernetes support." },
+            { q: "What's the setup time?", a: "VS Code extension: 2 minutes. CLI: 5 minutes. API integration: depends on your stack." },
+            { q: "Can I cancel anytime?", a: "Yes, Pro and Team plans can be cancelled anytime with no penalties." }
+          ].map((item, i) => (
+            <Reveal key={i} delay={i * 0.1}>
+              <AccordionItem value={`faq-${i}`} className="border-b border-[#30363d]">
+                <AccordionTrigger className="cursor-pointer py-4 hover:text-[#22c55e] transition-colors">{item.q}</AccordionTrigger>
+                <AccordionContent className="text-white/60 py-4">{item.a}</AccordionContent>
+              </AccordionItem>
+            </Reveal>
+          ))}
+        </Accordion>
+      </section>
+
+      {/* PLAN SELECTION DIALOG */}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">Choose Your Plan</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6">
+            {selectedPlan && (
+              <div className="bg-[#161b22] border border-[#22c55e]/30 p-6 rounded">
+                <p className="text-sm opacity-60 mb-2">Selected Plan</p>
+                <p className="text-2xl font-black text-[#22c55e]">{selectedPlan.name}</p>
+                <p className="text-lg font-bold mt-2">{selectedPlan.price}</p>
+              </div>
+            )}
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-bold mb-2">Billing Cycle</label>
+                <select className="w-full border border-[#30363d] bg-[#0d1117] p-2 rounded cursor-pointer text-white">
+                  <option>Monthly</option>
+                  <option>Annual (Save 20%)</option>
+                </select>
+              </div>
             </div>
-            <div className="flex flex-col justify-between items-end text-right font-mono text-center md:text-right text-[#2D3A2D]">
-               <div className="w-full text-center md:text-right">
-                  <h4 className="text-[12vw] font-black italic uppercase tracking-tighter text-[#2D3A2D] opacity-[0.02] leading-none mb-20 text-center md:text-right">BIOFORM</h4>
-                  <nav className="flex flex-col gap-10 font-black text-[10px] uppercase tracking-[0.8em] text-[#2D3A2D]/20 text-center md:text-right">
-                     <Link href="#" className="hover:text-[#2D3A2D] transition-colors group">Instagram</Link>
-                     <Link href="#" className="hover:text-[#2D3A2D] transition-colors group">Lab_Notes</Link>
-                     <Link href="#" className="hover:text-[#2D3A2D] transition-colors group">Ecology</Link>
-                  </nav>
-               </div>
-               <div className="font-black text-[9px] uppercase tracking-[1.5em] text-black/5 mt-32 italic text-center md:text-right">
-                  &copy; 2026 // BIO_FORM&trade;
-               </div>
-            </div>
-         </div>
-      </footer>
+            <MagneticBtn className="w-full px-6 py-3 bg-[#22c55e] text-[#0d1117] font-bold hover:bg-white transition-all duration-300">
+              Start Free Trial
+            </MagneticBtn>
+            <p className="text-xs text-white/40 text-center">No credit card required. 14-day free trial.</p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* FOOTER CTA */}
+      <section className="py-20 md:py-32 px-6 md:px-12 bg-[#161b22] text-center">
+        <Reveal>
+          <h2 className="text-4xl md:text-6xl font-black mb-6 text-[#22c55e]">Ready to ship faster code?</h2>
+          <p className="text-lg text-white/60 mb-8 max-w-2xl mx-auto">Join 500K+ developers using Syntax</p>
+          <MagneticBtn className="px-8 py-4 bg-[#22c55e] text-[#0d1117] font-bold cursor-pointer hover:bg-white transition-all duration-200">
+            Get Started Free
+          </MagneticBtn>
+        </Reveal>
+      </section>
     </div>
-  );
+  )
 }

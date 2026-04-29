@@ -1,235 +1,340 @@
-"use client";
+"use client"
+import { motion, useScroll, useTransform, useInView, useMotionValue, useSpring } from "framer-motion"
+import { useState, useRef, useEffect } from "react"
+import Image from "next/image"
+import Link from "next/link"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { Heart, Users } from "lucide-react"
 
-import { motion, useScroll, useTransform, useSpring, useMotionValue } from "framer-motion";
-import { useRef, useEffect, useState } from "react";
-import Image from "next/image";
-import Link from "next/link";
-import { Palette, Eye, Zap, Shield, Activity, Menu, Search, ArrowRight, Layers } from "lucide-react";
-import "../premium.css";
-
-const WORKS = [
-  { id: 1, title: "FRACTAL_VOID", cat: "Abstract", value: "Verified", img: "https://images.unsplash.com/photo-1541701494587-cb58502866ab?auto=format&fit=crop&q=80&w=1500" },
-  { id: 2, title: "STATIC_RESONANCE", cat: "Digital", value: "Active", img: "https://images.unsplash.com/photo-1549490349-8643362247b5?auto=format&fit=crop&q=80&w=1500" },
-  { id: 3, title: "NEURAL_DRIFT", cat: "Generative", value: "Locked", img: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&q=80&w=1500" },
-];
-
-function TextScramble({ text }: { text: string }) {
-  const [display, setDisplay] = useState(text);
-  const chars = "!<>-_\\/[]{}—=+*^?#________";
-  
-  useEffect(() => {
-    let iteration = 0;
-    const interval = setInterval(() => {
-      setDisplay(prev => 
-        text.split("").map((char, index) => {
-          if (index < iteration) return text[index];
-          return chars[Math.floor(Math.random() * chars.length)];
-        }).join("")
-      );
-      if (iteration >= text.length) clearInterval(interval);
-      iteration += 1/3;
-    }, 30);
-    return () => clearInterval(interval);
-  }, [text]);
-
-  return <span>{display}</span>;
+function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: "-60px" })
+  return <motion.div ref={ref} initial={{ opacity: 0, y: 24 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.55, delay, ease: [0.25, 0.46, 0.45, 0.94] }}>{children}</motion.div>
 }
 
-export default function ArtIndexGallerySPA() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: containerRef });
-  
-  const yHero = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
-  const heroScale = useTransform(scrollYProgress, [0, 0.5], [1, 1.1]);
-  
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-  const springX = useSpring(mouseX, { stiffness: 40, damping: 20 });
-  const springY = useSpring(mouseY, { stiffness: 40, damping: 20 });
-
+function Counter({ target, suffix = "", prefix = "" }: { target: number; suffix?: string; prefix?: string }) {
+  const [count, setCount] = useState(0)
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true })
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      mouseX.set(e.clientX - window.innerWidth / 2);
-      mouseY.set(e.clientY - window.innerHeight / 2);
-    };
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, [mouseX, mouseY]);
+    if (!inView) return
+    const step = target / 90
+    const t = setInterval(() => setCount(c => { const n = c + step; if (n >= target) { clearInterval(t); return target; } return n; }), 16)
+    return () => clearInterval(t)
+  }, [inView, target])
+  return <span ref={ref}>{prefix}{Math.floor(count).toLocaleString()}{suffix}</span>
+}
+
+function MagneticBtn({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  const x = useMotionValue(0); const y = useMotionValue(0)
+  const sx = useSpring(x, { stiffness: 400, damping: 20 })
+  const sy = useSpring(y, { stiffness: 400, damping: 20 })
+  const ref = useRef<HTMLButtonElement>(null)
+  const handleMouse = (e: React.MouseEvent) => {
+    const r = ref.current!.getBoundingClientRect()
+    x.set((e.clientX - r.left - r.width/2) * 0.3)
+    y.set((e.clientY - r.top - r.height/2) * 0.3)
+  }
+  return <motion.button ref={ref} style={{ x: sx, y: sy }} onMouseMove={handleMouse} onMouseLeave={() => { x.set(0); y.set(0) }} className={`cursor-pointer ${className}`}>{children}</motion.button>
+}
+
+const doctors = [
+  { name: "Dr. Sarah Mitchell", specialty: "Fertility Specialist", hospital: "Columbia Medical", book: true, image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=400" },
+  { name: "Dr. James Chen", specialty: "OB/GYN", hospital: "Mt. Sinai", book: true, image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400" },
+  { name: "Dr. Maria Gonzalez", specialty: "Prenatal Care", hospital: "NYU Langone", book: true, image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=400" },
+  { name: "Dr. Lisa Wang", specialty: "Menopausal Health", hospital: "Cornell Medical", book: true, image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=400" }
+]
+
+export default function MiraHealth() {
+  const [selectedDoctor, setSelectedDoctor] = useState<typeof doctors[0] | null>(null)
+  const [open, setOpen] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const { scrollYProgress } = useScroll({ target: containerRef })
+  const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"])
 
   return (
-    <div ref={containerRef} className="premium-theme bg-[#050505] text-stone-400 min-h-screen font-sans selection:bg-stone-600 selection:text-white overflow-hidden relative uppercase">
-      
-      {/* STONE GLOW & NOISE */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#050505_100%)] opacity-90" />
-        <motion.div 
-           style={{ x: springX, y: springY }}
-           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vw] bg-stone-600 opacity-[0.03] blur-[150px] rounded-full mix-blend-screen" 
-        />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.1] mix-blend-soft-light" />
-      </div>
+    <div ref={containerRef} style={{ overflowX: 'hidden', scrollBehavior: 'smooth' }} className="min-h-screen bg-[#fdf8f0] text-[#2d2d2d] font-sans">
 
-      {/* HEADER */}
-      <header className="fixed top-0 left-0 w-full px-6 md:px-12 py-10 flex justify-between items-center z-50 bg-[#050505]/50 backdrop-blur-3xl border-b border-stone-500/10">
-        <Link href="/" className="font-black text-2xl tracking-[0.4em] text-white flex items-center gap-4 italic uppercase text-center md:text-left">
-           ART<span className="text-stone-500">_INDEX</span>
-        </Link>
-        
-        <nav className="hidden lg:flex gap-16 font-black text-[10px] uppercase tracking-[0.8em] text-white/30 text-center">
-            <Link href="#" className="hover:text-stone-400 transition-colors group">
-               Exhibition<span className="inline-block w-0 group-hover:w-4 transition-all overflow-hidden text-stone-500 italic">.</span>
-            </Link>
-            <Link href="#" className="hover:text-stone-400 transition-colors group">
-               Artists<span className="inline-block w-0 group-hover:w-4 transition-all overflow-hidden text-stone-500 italic">.</span>
-            </Link>
-            <Link href="#" className="hover:text-stone-400 transition-colors group">
-               Journal<span className="inline-block w-0 group-hover:w-4 transition-all overflow-hidden text-stone-500 italic">.</span>
-            </Link>
-        </nav>
-        
-        <div className="flex items-center gap-10">
-           <button className="bg-stone-800 text-white px-12 py-4 font-black text-[10px] uppercase tracking-[0.5em] hover:bg-white hover:text-black transition-all shadow-xl">
-              Subscribe_
-           </button>
-           <Menu className="w-6 h-6 text-stone-500 cursor-pointer" />
+      {/* HERO */}
+      <section className="relative h-screen flex items-center justify-center px-6 md:px-12 overflow-hidden">
+        <motion.div style={{ y }} className="absolute inset-0 z-0">
+          <Image src="https://images.unsplash.com/photo-1559757175-0eb30cd8c063?auto=format&fit=crop&q=80&w=2000" alt="hero" fill className="object-cover" priority />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#fdf8f0] via-transparent to-[#fdf8f0]" />
+        </motion.div>
+
+        <div className="relative z-10 max-w-5xl text-center">
+          <motion.h1 initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="text-6xl md:text-8xl font-black tracking-tight mb-6 text-[#9b2335]">
+            Mira Health
+          </motion.h1>
+          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2 }} className="text-lg md:text-2xl text-[#2d2d2d]/60 max-w-2xl mx-auto mb-12">
+            Women's health & fertility care that listens
+          </motion.p>
+          <motion.button initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} onClick={() => setOpen(true)} className="px-8 py-4 bg-[#9b2335] text-white font-bold cursor-pointer hover:bg-[#2d2d2d] hover:text-[#9b2335] transition-all duration-200">
+            Schedule Appointment
+          </motion.button>
         </div>
-      </header>
-
-      {/* HERO SECTION */}
-      <section className="relative h-screen flex flex-col justify-center items-center px-6 text-center z-10 pt-20 overflow-hidden text-center">
-         <motion.div style={{ scale: heroScale, y: yHero }} className="absolute inset-0 z-0">
-            <Image src="https://images.unsplash.com/photo-1549490349-8643362247b5?auto=format&fit=crop&q=80&w=2500" alt="Art" fill className="object-cover opacity-20 grayscale contrast-150 text-center" priority />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-[#050505]" />
-         </motion.div>
-         
-         <div className="relative z-10 max-w-7xl w-full text-center">
-            <motion.div 
-               initial={{ opacity: 0, scale: 0.95 }}
-               animate={{ opacity: 1, scale: 1 }}
-               transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
-            >
-               <div className="inline-flex items-center gap-6 font-black text-[10px] uppercase tracking-[1.2em] text-stone-500/50 mb-20 border-l-2 border-stone-600 pl-12 italic font-mono text-center">
-                  Visual_Record // 0155_Alpha
-               </div>
-               
-               <h1 className="text-7xl md:text-[13vw] font-black italic uppercase leading-[0.75] tracking-tighter mb-24 text-white text-center">
-                  <TextScramble text="BEYOND." /><br/>
-                  <span className="text-transparent" style={{ WebkitTextStroke: "1px rgba(120,113,108,0.6)" }}>STATIC.</span>
-               </h1>
-               
-               <p className="text-xl md:text-3xl font-light italic text-white/20 max-w-3xl mx-auto mb-28 leading-relaxed uppercase tracking-tight text-center">
-                  A curated index of visual tectonic shifts. Architectural intent redefined through generative resonance.
-               </p>
-               
-               <div className="flex flex-col md:flex-row gap-20 justify-center items-center font-mono text-center">
-                  <div className="flex items-center gap-10 group cursor-pointer text-center">
-                     <div className="w-24 h-px bg-stone-600/30 group-hover:w-32 transition-all" />
-                     <span className="text-[10px] font-black uppercase tracking-[1em] text-stone-500">Explore_Works</span>
-                  </div>
-                  <div className="hidden md:block w-px h-20 bg-white/5" />
-                  <div className="font-black text-[9px] uppercase tracking-[0.8em] text-white/10 italic text-center">
-                     Established_2026 // Global
-                  </div>
-               </div>
-            </motion.div>
-         </div>
-
-         {/* Index HUD */}
-         <div className="absolute right-12 bottom-12 flex flex-col items-end gap-6 font-black text-[8px] uppercase tracking-[1em] text-stone-500/10 hidden md:flex italic font-mono text-center">
-            <span>INDEX_SYNC: ACTIVE</span>
-            <div className="flex gap-1 h-16 items-end">
-               {[1, 2, 3, 4, 5, 6].map(i => <motion.div key={i} animate={{ height: ['20%', '100%', '40%'] }} transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }} className="w-[1px] bg-stone-500" />)}
-            </div>
-         </div>
-         
-         <div className="absolute left-12 bottom-12 hidden md:block text-center">
-            <div className="flex flex-col gap-2 text-[8px] font-black uppercase tracking-[0.4em] text-white/10 italic font-mono text-center">
-               <span>NODES: 2048</span>
-               <span>STATE: STABLE</span>
-               <span>STATUS: ARCHIVED</span>
-            </div>
-         </div>
       </section>
 
-      {/* WORKS GRID */}
-      <section className="py-48 px-6 md:px-12 max-w-[1800px] mx-auto relative z-10 bg-[#050505]">
-         <div className="flex flex-col md:flex-row justify-between items-end mb-48 border-b border-stone-500/10 pb-24 gap-20 text-center md:text-left">
-            <div>
-               <span className="text-[10px] font-black uppercase tracking-[2em] text-stone-600 mb-10 block italic font-mono text-center md:text-left">Exhibition_Manifest</span>
-               <h2 className="text-6xl md:text-[10vw] font-black italic uppercase tracking-tighter text-white leading-none text-center md:text-left">The <span className="text-stone-500">Index_</span></h2>
-            </div>
-            <div className="flex gap-20 text-[10px] font-black uppercase tracking-[1em] text-white/20 italic font-mono text-center md:text-left">
-               <span>Curated: [Active]</span>
-               <span>Records: [03]</span>
-            </div>
-         </div>
+      {/* CARE PATHWAY */}
+      <section className="py-20 md:py-32 px-6 md:px-12 max-w-7xl mx-auto">
+        <Reveal>
+          <h2 className="text-4xl md:text-6xl font-black mb-12">Our Care Services</h2>
+        </Reveal>
 
-         <div className="grid grid-cols-1 md:grid-cols-3 gap-20 text-center">
-            {WORKS.map((p, i) => (
-                <motion.div 
-                   key={i} 
-                   initial={{ opacity: 0, y: 100 }}
-                   whileInView={{ opacity: 1, y: 0 }}
-                   viewport={{ once: true, margin: "-100px" }}
-                   transition={{ duration: 1.2, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
-                   className="group relative h-[90vh] bg-neutral-900 border border-white/5 overflow-hidden cursor-pointer hover:border-stone-500/40 transition-all text-center shadow-2xl"
-                >
-                    <Image src={p.img} alt={p.title} fill className="object-cover opacity-40 grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-1000 text-center" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent opacity-95 text-center" />
-                    <div className="absolute inset-0 bg-stone-600/5 group-hover:bg-transparent transition-colors duration-700 text-center" />
-                    
-                    <div className="absolute inset-20 flex flex-col justify-between z-10 font-sans text-white text-center">
-                        <div className="flex justify-between items-start text-center">
-                           <div className="p-6 bg-white/5 border border-white/10 rounded-none group-hover:bg-stone-600 group-hover:text-black transition-all text-center shadow-xl">
-                              <Eye className="w-8 h-8 text-center" />
-                           </div>
-                           <div className="text-[10px] font-black uppercase tracking-[1em] text-stone-500/20 italic font-mono text-center">Ref_0x{i+155}</div>
+        <Tabs defaultValue="fertility" className="w-full">
+          <TabsList className="grid grid-cols-2 md:grid-cols-5 gap-2 mb-12 bg-transparent">
+            <TabsTrigger value="fertility" className="cursor-pointer">Fertility</TabsTrigger>
+            <TabsTrigger value="gynecology" className="cursor-pointer">Gynecology</TabsTrigger>
+            <TabsTrigger value="prenatal" className="cursor-pointer">Prenatal</TabsTrigger>
+            <TabsTrigger value="postpartum" className="cursor-pointer">Postpartum</TabsTrigger>
+            <TabsTrigger value="menopause" className="cursor-pointer">Menopause</TabsTrigger>
+          </TabsList>
+
+          {[
+            { value: "fertility", services: ["Fertility Testing", "IVF Treatment", "Egg Freezing", "Male Factor Evaluation"] },
+            { value: "gynecology", services: ["Annual Exams", "Contraception", "Pap Smears", "Hormonal Management"] },
+            { value: "prenatal", services: ["Obstetric Care", "Ultrasounds", "Genetic Testing", "Nutrition Counseling"] },
+            { value: "postpartum", services: ["Postpartum Check-ups", "Lactation Support", "Mental Health Screening", "Recovery Care"] },
+            { value: "menopause", services: ["Hormone Therapy", "Symptom Management", "Bone Health", "Wellness Support"] }
+          ].map((tab) => (
+            <TabsContent key={tab.value} value={tab.value}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {tab.services.map((service, i) => (
+                  <Reveal key={i} delay={i * 0.1}>
+                    <Card className="bg-white border-[#fde8e8]/50 hover:border-[#9b2335]/50 transition-all duration-300 cursor-pointer">
+                      <CardContent className="p-6">
+                        <h3 className="font-bold mb-3">{service}</h3>
+                        <div className="flex gap-2">
+                          <Badge className="bg-[#6b8f71] text-white cursor-pointer text-xs">In-Person</Badge>
+                          <Badge className="bg-[#9b2335] text-white cursor-pointer text-xs">Telehealth</Badge>
                         </div>
-                        
-                        <div className="text-center">
-                           <span className="text-[10px] uppercase tracking-[1em] text-stone-500 mb-10 block italic font-black font-mono text-center">{p.cat} // {p.value}</span>
-                           <h3 className="text-6xl md:text-7xl font-black italic uppercase tracking-tighter mb-20 text-white group-hover:tracking-[0.1em] transition-all leading-[0.8] text-center">{p.title}</h3>
-                           <div className="flex items-center gap-10 text-[10px] font-black uppercase tracking-[1em] opacity-0 group-hover:opacity-100 transition-all translate-y-10 group-hover:translate-y-0 text-white text-center justify-center">
-                              View_Record <ArrowRight className="w-8 h-8 text-center" />
-                           </div>
-                        </div>
-                    </div>
-                </motion.div>
+                      </CardContent>
+                    </Card>
+                  </Reveal>
+                ))}
+              </div>
+            </TabsContent>
+          ))}
+        </Tabs>
+      </section>
+
+      {/* DOCTOR TEAM */}
+      <section className="py-20 md:py-32 px-6 md:px-12 max-w-6xl mx-auto">
+        <Reveal>
+          <h2 className="text-4xl md:text-6xl font-black mb-12">Our Physicians</h2>
+        </Reveal>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {doctors.map((doctor, i) => (
+            <Reveal key={i} delay={i * 0.1}>
+              <motion.div className="text-center hover:scale-105 transition-transform duration-300">
+                <Avatar className="h-32 w-32 mx-auto mb-6 border-4 border-[#9b2335]">
+                  <AvatarImage src={doctor.image} alt={doctor.name} />
+                  <AvatarFallback>{doctor.name.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <h3 className="text-lg font-bold mb-1">{doctor.name}</h3>
+                <Badge variant="outline" className="mb-3 cursor-pointer">{doctor.specialty}</Badge>
+                <div className="text-xs text-[#2d2d2d]/60 mb-4">
+                  <p>{doctor.hospital}</p>
+                </div>
+                <button onClick={() => { setSelectedDoctor(doctor); setOpen(true); }} className="text-[#9b2335] font-bold text-sm cursor-pointer hover:text-[#2d2d2d] transition-colors">
+                  Book Appointment →
+                </button>
+              </motion.div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* PATIENT JOURNEY */}
+      <section className="py-20 md:py-32 px-6 md:px-12 max-w-4xl mx-auto">
+        <Reveal>
+          <h2 className="text-4xl md:text-6xl font-black mb-12">Your Journey With Us</h2>
+        </Reveal>
+        <div className="space-y-6">
+          {[
+            { step: 1, title: "Initial Consultation", desc: "Meet with our physicians to discuss your health goals" },
+            { step: 2, title: "Comprehensive Testing", desc: "Personalized diagnostic testing and health assessment" },
+            { step: 3, title: "Treatment Plan", desc: "Customized care plan tailored to your needs" },
+            { step: 4, title: "Ongoing Support", desc: "Continuous monitoring and wellness support" }
+          ].map((item, i) => (
+            <Reveal key={i} delay={i * 0.1}>
+              <motion.div className="flex gap-6 items-start">
+                <div className="flex-shrink-0">
+                  <div className="flex items-center justify-center h-12 w-12 rounded-full bg-[#9b2335] text-white font-bold">
+                    {item.step}
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold mb-2">{item.title}</h3>
+                  <p className="text-[#2d2d2d]/60">{item.desc}</p>
+                </div>
+              </motion.div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* STATS */}
+      <section className="py-20 md:py-32 px-6 md:px-12 bg-[#9b2335] text-white">
+        <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+          <Reveal><div><div className="text-4xl md:text-5xl font-black mb-2"><Counter target={10000} />+</div><p className="text-sm opacity-60">Patients Served</p></div></Reveal>
+          <Reveal delay={0.1}><div><div className="text-4xl md:text-5xl font-black mb-2"><Counter target={15} /></div><p className="text-sm opacity-60">Board-Certified Physicians</p></div></Reveal>
+          <Reveal delay={0.2}><div><div className="text-4xl md:text-5xl font-black mb-2">4.9<span className="text-2xl">★</span></div><p className="text-sm opacity-60">Patient Rating</p></div></Reveal>
+          <Reveal delay={0.3}><div><div className="text-4xl md:text-5xl font-black mb-2">98<span className="text-2xl">%</span></div><p className="text-sm opacity-60">Recommendation</p></div></Reveal>
+        </div>
+      </section>
+
+      {/* WHAT TO EXPECT */}
+      <section className="py-20 md:py-32 px-6 md:px-12 max-w-4xl mx-auto">
+        <Reveal>
+          <h2 className="text-4xl md:text-6xl font-black mb-12">What to Expect</h2>
+        </Reveal>
+        <Accordion type="single" collapsible>
+          {[
+            { title: "First Visit", description: "Comprehensive health history, physical exam, and personalized consultation (60-90 minutes)" },
+            { title: "Testing", description: "Blood work, imaging, or specialized testing based on your needs. Results typically within 3-5 business days" },
+            { title: "Treatment Plans", description: "Detailed discussion of options, timelines, costs, and next steps tailored to your goals" },
+            { title: "Ongoing Care", description: "Regular follow-ups, monitoring, and adjustments to ensure optimal outcomes" }
+          ].map((item, i) => (
+            <Reveal key={i} delay={i * 0.1}>
+              <AccordionItem value={`item-${i}`} className="border-b border-[#2d2d2d]/10">
+                <AccordionTrigger className="cursor-pointer py-4 hover:text-[#9b2335] transition-colors">{item.title}</AccordionTrigger>
+                <AccordionContent className="text-[#2d2d2d]/60 py-4">{item.description}</AccordionContent>
+              </AccordionItem>
+            </Reveal>
+          ))}
+        </Accordion>
+      </section>
+
+      {/* INSURANCE & BILLING */}
+      <section className="py-20 md:py-32 px-6 md:px-12 max-w-6xl mx-auto">
+        <Reveal>
+          <h2 className="text-4xl md:text-6xl font-black mb-12">Insurance & Billing</h2>
+        </Reveal>
+        <div className="mb-12">
+          <h3 className="font-bold mb-6 text-lg">We Accept</h3>
+          <div className="flex flex-wrap gap-4">
+            {["Aetna", "Blue Cross", "Cigna", "Empire", "Medicaid", "Medicare"].map((ins, i) => (
+              <Badge key={i} className="bg-[#fde8e8] text-[#9b2335] cursor-pointer">{ins}</Badge>
             ))}
-         </div>
+          </div>
+        </div>
+        <Accordion type="single" collapsible>
+          {[
+            { title: "Insurance Coverage", description: "Most preventive care, fertility treatments, and office visits are covered. Verify your plan for specifics." },
+            { title: "FSA/HSA", description: "We accept FSA and HSA cards for eligible expenses. Ask our billing team for details." },
+            { title: "Payment Plans", description: "Flexible payment plans available for out-of-pocket costs. We work with you on affordability." }
+          ].map((item, i) => (
+            <Reveal key={i} delay={i * 0.1}>
+              <AccordionItem value={`billing-${i}`} className="border-b border-[#2d2d2d]/10">
+                <AccordionTrigger className="cursor-pointer py-4 hover:text-[#9b2335] transition-colors">{item.title}</AccordionTrigger>
+                <AccordionContent className="text-[#2d2d2d]/60 py-4">{item.description}</AccordionContent>
+              </AccordionItem>
+            </Reveal>
+          ))}
+        </Accordion>
       </section>
 
-      {/* FOOTER */}
-      <footer className="py-60 px-6 md:px-12 border-t border-white/5 relative z-10 bg-[#050505]">
-         <div className="max-w-[1800px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-60 text-center md:text-left">
-            <div className="text-center md:text-left">
-               <div className="text-stone-500 mb-20 flex items-center gap-8 font-black text-3xl italic uppercase tracking-[0.5em] font-mono justify-center md:justify-start">
-                  <Activity className="w-12 h-12 text-center md:text-left" /> Exhibition_Sync
-               </div>
-               <p className="text-5xl md:text-7xl font-light italic leading-[0.9] text-white/10 uppercase tracking-tighter mb-24 text-center md:text-left">
-                  VISUAL REASONING IS A FUNCTION OF ENVIRONMENTAL VARIABLES.
-               </p>
-               <div className="flex gap-24 font-black text-[10px] uppercase tracking-[1em] text-stone-500/30 italic font-mono justify-center md:justify-start">
-                  <span>Berlin</span>
-                  <span>New York</span>
-                  <span>Tokyo</span>
-               </div>
+      {/* TESTIMONIALS */}
+      <section className="py-20 md:py-32 px-6 md:px-12 bg-[#fdf8f0]">
+        <Reveal>
+          <h2 className="text-4xl md:text-6xl font-black mb-12 text-center">Patient Stories</h2>
+        </Reveal>
+        <div className="max-w-4xl mx-auto">
+          <Carousel>
+            <CarouselContent>
+              {[
+                { text: "The team at Mira Health made my fertility journey manageable and hopeful. I'm now a proud mother of twins!", author: "Jennifer M." },
+                { text: "Compassionate care with cutting-edge medicine. Every question was answered. Thank you, Mira!", author: "Amanda T." },
+                { text: "Best gynecology experience I've had. They genuinely listen and care about your health.", author: "Rachel K." }
+              ].map((testimonial, i) => (
+                <CarouselItem key={i} className="md:basis-full">
+                  <Card className="bg-white border-[#fde8e8]/50">
+                    <CardContent className="p-8 text-center">
+                      <p className="text-lg mb-6 italic text-[#2d2d2d]/60">"{testimonial.text}"</p>
+                      <p className="font-bold text-[#9b2335]">{testimonial.author}</p>
+                    </CardContent>
+                  </Card>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="cursor-pointer" />
+            <CarouselNext className="cursor-pointer" />
+          </Carousel>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="py-20 md:py-32 px-6 md:px-12 max-w-4xl mx-auto">
+        <Reveal>
+          <h2 className="text-4xl md:text-6xl font-black mb-12">FAQ</h2>
+        </Reveal>
+        <Accordion type="single" collapsible>
+          {[
+            { q: "Do you offer telehealth appointments?", a: "Yes, telehealth is available for consultations, follow-ups, and certain procedures." },
+            { q: "Do I need a referral?", a: "No referral needed to schedule an appointment. Many insurance plans don't require one." },
+            { q: "What are your office hours?", a: "Monday-Friday 8am-6pm, Saturday 9am-2pm. After-hours urgent care available." },
+            { q: "Can international patients be treated?", a: "Yes, we welcome international patients. We can arrange remote consultations initially." }
+          ].map((item, i) => (
+            <Reveal key={i} delay={i * 0.1}>
+              <AccordionItem value={`faq-${i}`} className="border-b border-[#2d2d2d]/10">
+                <AccordionTrigger className="cursor-pointer py-4 hover:text-[#9b2335] transition-colors">{item.q}</AccordionTrigger>
+                <AccordionContent className="text-[#2d2d2d]/60 py-4">{item.a}</AccordionContent>
+              </AccordionItem>
+            </Reveal>
+          ))}
+        </Accordion>
+      </section>
+
+      {/* APPOINTMENT DIALOG */}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">Schedule Your Appointment</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6">
+            {selectedDoctor && (
+              <div className="bg-[#fde8e8] p-4 rounded">
+                <p className="text-sm opacity-60 mb-2">Selected Physician</p>
+                <p className="font-bold">{selectedDoctor.name}</p>
+                <p className="text-sm text-[#2d2d2d]/60">{selectedDoctor.specialty}</p>
+              </div>
+            )}
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-bold mb-2">Preferred Service</label>
+                <select className="w-full border border-[#2d2d2d]/20 p-2 rounded cursor-pointer">
+                  <option>Select a service...</option>
+                  <option>Initial Consultation</option>
+                  <option>Follow-up Visit</option>
+                  <option>Testing</option>
+                  <option>Telehealth</option>
+                </select>
+              </div>
             </div>
-            <div className="flex flex-col justify-between items-end text-right font-mono text-center md:text-right text-stone-500">
-               <div className="w-full text-center md:text-right">
-                  <h4 className="text-[15vw] font-black italic uppercase tracking-tighter text-white opacity-[0.02] leading-none mb-24 text-center md:text-right">INDEX</h4>
-                  <nav className="flex flex-col gap-12 font-black text-[10px] uppercase tracking-[1em] text-white/10 text-center md:text-right">
-                     <Link href="#" className="hover:text-stone-400 transition-colors group">Instagram</Link>
-                     <Link href="#" className="hover:text-stone-400 transition-colors group">Archives</Link>
-                     <Link href="#" className="hover:text-stone-400 transition-colors group">Manifesto</Link>
-                  </nav>
-               </div>
-               <div className="font-black text-[9px] uppercase tracking-[2em] text-white/5 mt-48 italic text-center md:text-right">
-                  &copy; 2026 // ART_INDEX&trade;
-               </div>
-            </div>
-         </div>
-      </footer>
+            <MagneticBtn className="w-full px-6 py-3 bg-[#9b2335] text-white font-bold hover:bg-[#2d2d2d] transition-all duration-300">
+              Continue Booking
+            </MagneticBtn>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* FOOTER CTA */}
+      <section className="py-20 md:py-32 px-6 md:px-12 bg-[#9b2335] text-white text-center">
+        <Reveal>
+          <h2 className="text-4xl md:text-6xl font-black mb-6">Your health journey starts here</h2>
+          <p className="text-lg text-white/60 mb-8 max-w-2xl mx-auto">Compassionate, expert care tailored to your unique needs</p>
+          <MagneticBtn className="px-8 py-4 bg-white text-[#9b2335] font-bold cursor-pointer hover:bg-[#2d2d2d] hover:text-white transition-all duration-200">
+            Book Your Appointment Today
+          </MagneticBtn>
+        </Reveal>
+      </section>
     </div>
-  );
+  )
 }

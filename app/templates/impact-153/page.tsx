@@ -1,235 +1,301 @@
-"use client";
+"use client"
+import { motion, useScroll, useTransform, useInView, useMotionValue, useSpring } from "framer-motion"
+import { useState, useRef, useEffect } from "react"
+import Image from "next/image"
+import Link from "next/link"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { Scale, Users, Briefcase } from "lucide-react"
 
-import { motion, useScroll, useTransform, useSpring, useMotionValue } from "framer-motion";
-import { useRef, useEffect, useState } from "react";
-import Image from "next/image";
-import Link from "next/link";
-import { Users, Briefcase, Zap, Shield, Activity, Menu, Search, ArrowRight, Layers } from "lucide-react";
-import "../premium.css";
-
-const TEAM = [
-  { id: 1, title: "ELENA_VOLKOV", cat: "Design", value: "Verified", img: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=1500" },
-  { id: 2, title: "MARCUS_THORNE", cat: "Engineering", value: "Active", img: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=1500" },
-  { id: 3, title: "SARAH_LIN", cat: "Product", value: "Locked", img: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=1500" },
-];
-
-function TextScramble({ text }: { text: string }) {
-  const [display, setDisplay] = useState(text);
-  const chars = "!<>-_\\/[]{}—=+*^?#________";
-  
-  useEffect(() => {
-    let iteration = 0;
-    const interval = setInterval(() => {
-      setDisplay(prev => 
-        text.split("").map((char, index) => {
-          if (index < iteration) return text[index];
-          return chars[Math.floor(Math.random() * chars.length)];
-        }).join("")
-      );
-      if (iteration >= text.length) clearInterval(interval);
-      iteration += 1/3;
-    }, 30);
-    return () => clearInterval(interval);
-  }, [text]);
-
-  return <span>{display}</span>;
+function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: "-60px" })
+  return <motion.div ref={ref} initial={{ opacity: 0, y: 24 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.55, delay, ease: [0.25, 0.46, 0.45, 0.94] }}>{children}</motion.div>
 }
 
-export default function VeloceSystemsSPA() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: containerRef });
-  
-  const yHero = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
-  const heroScale = useTransform(scrollYProgress, [0, 0.5], [1, 1.1]);
-  
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-  const springX = useSpring(mouseX, { stiffness: 40, damping: 20 });
-  const springY = useSpring(mouseY, { stiffness: 40, damping: 20 });
-
+function Counter({ target, suffix = "", prefix = "" }: { target: number; suffix?: string; prefix?: string }) {
+  const [count, setCount] = useState(0)
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true })
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      mouseX.set(e.clientX - window.innerWidth / 2);
-      mouseY.set(e.clientY - window.innerHeight / 2);
-    };
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, [mouseX, mouseY]);
+    if (!inView) return
+    const step = target / 90
+    const t = setInterval(() => setCount(c => { const n = c + step; if (n >= target) { clearInterval(t); return target; } return n; }), 16)
+    return () => clearInterval(t)
+  }, [inView, target])
+  return <span ref={ref}>{prefix}{Math.floor(count).toLocaleString()}{suffix}</span>
+}
+
+function MagneticBtn({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  const x = useMotionValue(0); const y = useMotionValue(0)
+  const sx = useSpring(x, { stiffness: 400, damping: 20 })
+  const sy = useSpring(y, { stiffness: 400, damping: 20 })
+  const ref = useRef<HTMLButtonElement>(null)
+  const handleMouse = (e: React.MouseEvent) => {
+    const r = ref.current!.getBoundingClientRect()
+    x.set((e.clientX - r.left - r.width/2) * 0.3)
+    y.set((e.clientY - r.top - r.height/2) * 0.3)
+  }
+  return <motion.button ref={ref} style={{ x: sx, y: sy }} onMouseMove={handleMouse} onMouseLeave={() => { x.set(0); y.set(0) }} className={`cursor-pointer ${className}`}>{children}</motion.button>
+}
+
+const caseResults = [
+  { title: "Wrongful Termination Victory", settlement: "$2.8M", industry: "Tech", brief: "Employee wrongly terminated after injury report", outcome: "Full settlement + damages" },
+  { title: "Wage Theft Recovery", settlement: "$1.5M", industry: "Retail", brief: "Wage and hour violations for 500+ employees", outcome: "Class action success" },
+  { title: "Discrimination Settlement", settlement: "$3.2M", industry: "Finance", brief: "Gender-based discrimination and harassment", outcome: "Company policy reform" },
+  { title: "Wrongful Termination Case", settlement: "$1.8M", industry: "Healthcare", brief: "Retaliation for safety reporting", outcome: "Reinstatement + damages" },
+  { title: "Age Discrimination Win", settlement: "$2.1M", industry: "Manufacturing", brief: "Age-based layoffs and replacement", outcome: "Significant precedent" },
+  { title: "Hostile Workplace", settlement: "$2.5M", industry: "Education", brief: "Severe workplace harassment", outcome: "Training & oversight mandated" }
+]
+
+const attorneys = [
+  { name: "Patricia Monroe", specialty: "Employment Law", bar: "NY, CA, TX", wins: "450+ cases", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=400" },
+  { name: "James Richardson", specialty: "Labor Rights", bar: "FL, GA, OH", wins: "380+ cases", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400" },
+  { name: "Diana Foster", specialty: "Class Actions", bar: "CA, WA, OR", wins: "290+ cases", image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=400" },
+  { name: "Robert Chen", specialty: "Discrimination", bar: "IL, MN, MI", wins: "310+ cases", image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=400" }
+]
+
+export default function PeakLegal() {
+  const [selectedCase, setSelectedCase] = useState<typeof caseResults[0] | null>(null)
+  const [open, setOpen] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const { scrollYProgress } = useScroll({ target: containerRef })
+  const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"])
 
   return (
-    <div ref={containerRef} className="premium-theme bg-[#080808] text-indigo-400 min-h-screen font-sans selection:bg-indigo-600 selection:text-white overflow-hidden relative uppercase">
-      
-      {/* INDIGO GLOW & GRID */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(99,102,241,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(99,102,241,0.05)_1px,transparent_1px)] bg-[size:5rem_5rem] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_70%,transparent_100%)]" />
-        <motion.div 
-           style={{ x: springX, y: springY }}
-           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70vw] h-[70vw] bg-indigo-600 opacity-[0.03] blur-[150px] rounded-full mix-blend-screen" 
-        />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.1] mix-blend-soft-light" />
-      </div>
+    <div ref={containerRef} style={{ overflowX: 'hidden', scrollBehavior: 'smooth' }} className="min-h-screen bg-[#f5f5f3] text-[#0d1b2d] font-sans">
 
-      {/* HEADER */}
-      <header className="fixed top-0 left-0 w-full px-6 md:px-12 py-8 flex justify-between items-center z-50 bg-[#080808]/50 backdrop-blur-xl border-b border-indigo-500/10">
-        <Link href="/" className="font-black text-2xl tracking-[0.2em] text-white flex items-center gap-3 italic uppercase text-center md:text-left">
-           VÉLOCE<span className="text-indigo-500">_OS</span>
-        </Link>
-        
-        <nav className="hidden lg:flex gap-12 font-black text-[10px] uppercase tracking-[0.5em] text-white/30 text-center">
-            <Link href="#" className="hover:text-indigo-400 transition-colors group">
-               Team<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-indigo-500 italic">_</span>
-            </Link>
-            <Link href="#" className="hover:text-indigo-400 transition-colors group">
-               Architects<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-indigo-500 italic">_</span>
-            </Link>
-            <Link href="#" className="hover:text-indigo-400 transition-colors group">
-               Flow<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-indigo-500 italic">_</span>
-            </Link>
-        </nav>
-        
-        <div className="flex items-center gap-6">
-           <button className="bg-indigo-600 text-white px-10 py-3 font-black text-[10px] uppercase tracking-[0.3em] hover:bg-white hover:text-black transition-all shadow-xl">
-              Partner_With_Us
-           </button>
-           <Menu className="w-6 h-6 text-indigo-500 cursor-pointer" />
+      {/* HERO */}
+      <section className="relative h-screen flex items-center justify-center px-6 md:px-12 overflow-hidden">
+        <motion.div style={{ y }} className="absolute inset-0 z-0">
+          <Image src="https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&q=80&w=2000" alt="hero" fill className="object-cover" priority />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#f5f5f3] via-transparent to-[#f5f5f3]" />
+        </motion.div>
+
+        <div className="relative z-10 max-w-5xl text-center">
+          <motion.h1 initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="text-6xl md:text-8xl font-black tracking-tight mb-6 text-[#0d1b2d]">
+            Peak Legal
+          </motion.h1>
+          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2 }} className="text-lg md:text-2xl text-[#0d1b2d]/60 max-w-2xl mx-auto mb-12">
+            Employment & labor law firm fighting for worker justice
+          </motion.p>
+          <motion.button initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} onClick={() => setOpen(true)} className="px-8 py-4 bg-[#c9a84c] text-[#0d1b2d] font-bold cursor-pointer hover:bg-[#0d1b2d] hover:text-[#c9a84c] transition-all duration-200">
+            Free Consultation
+          </motion.button>
         </div>
-      </header>
-
-      {/* HERO SECTION */}
-      <section className="relative h-screen flex flex-col justify-center items-center px-6 text-center z-10 pt-20 overflow-hidden text-center">
-         <motion.div style={{ scale: heroScale, y: yHero }} className="absolute inset-0 z-0">
-            <Image src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&q=80&w=2500" alt="Agency" fill className="object-cover opacity-20 grayscale contrast-125 text-center" priority />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#080808] via-transparent to-[#080808]" />
-         </motion.div>
-         
-         <div className="relative z-10 max-w-6xl w-full text-center">
-            <motion.div 
-               initial={{ opacity: 0, scale: 0.95 }}
-               animate={{ opacity: 1, scale: 1 }}
-               transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
-            >
-               <div className="inline-flex items-center gap-4 font-black text-[10px] uppercase tracking-[0.8em] text-indigo-400/60 mb-12 border-l-2 border-indigo-600 pl-8 italic font-mono text-center">
-                  Agency_Sync // Active_Record
-               </div>
-               
-               <h1 className="text-7xl md:text-[11vw] font-black italic uppercase leading-[0.8] tracking-tighter mb-16 text-white text-center">
-                  <TextScramble text="HUMAN." /><br/>
-                  <span className="text-transparent" style={{ WebkitTextStroke: "1px rgba(99,102,241,0.6)" }}>VELOCITY.</span>
-               </h1>
-               
-               <p className="text-xl md:text-2xl font-light text-white/40 max-w-2xl mx-auto mb-20 leading-relaxed uppercase tracking-[0.3em] italic text-center">
-                  Hyper-integrated tectonic solutions for high-performance architectural intent. Precision at scale.
-               </p>
-               
-               <div className="flex flex-col md:flex-row gap-12 justify-center items-center font-mono text-center">
-                  <div className="flex items-center gap-6 group cursor-pointer text-center">
-                     <div className="w-16 h-px bg-indigo-600/30 group-hover:w-24 transition-all" />
-                     <span className="text-[10px] font-black uppercase tracking-[0.5em] text-indigo-400">View_Portfolios</span>
-                  </div>
-                  <div className="hidden md:block w-px h-12 bg-white/5" />
-                  <div className="font-black text-[9px] uppercase tracking-[0.5em] text-white/10 italic text-center">
-                     Sync_Ref: 0x153 // Alpha
-                  </div>
-               </div>
-            </motion.div>
-         </div>
-
-         {/* Velocity HUD */}
-         <div className="absolute right-12 bottom-12 flex flex-col items-end gap-4 font-black text-[8px] uppercase tracking-[0.6em] text-indigo-400/20 hidden md:flex italic font-mono text-center">
-            <span>VELOCITY_SYNC: ACTIVE</span>
-            <div className="flex gap-1 h-12 items-end">
-               {[1, 2, 3, 4, 5].map(i => <motion.div key={i} animate={{ height: ['20%', '100%', '40%'] }} transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }} className="w-[1px] bg-indigo-500" />)}
-            </div>
-         </div>
-         
-         <div className="absolute left-12 bottom-12 hidden md:block text-center">
-            <div className="flex flex-col gap-2 text-[8px] font-black uppercase tracking-[0.4em] text-white/10 italic font-mono text-center">
-               <span>NODES: 512</span>
-               <span>LOAD: OPTIMAL</span>
-               <span>STATUS: SYNCHRONIZED</span>
-            </div>
-         </div>
       </section>
 
-      {/* TEAM GRID */}
-      <section className="py-40 px-6 md:px-12 max-w-[1800px] mx-auto relative z-10 bg-[#080808]">
-         <div className="flex flex-col md:flex-row justify-between items-end mb-32 border-b border-indigo-500/10 pb-16 gap-12 text-center md:text-left">
-            <div>
-               <span className="text-[10px] font-black uppercase tracking-[1.2em] text-indigo-600 mb-6 block italic font-mono text-center md:text-left">Human_Resources</span>
-               <h2 className="text-6xl md:text-8xl font-black italic uppercase tracking-tighter text-white leading-none text-center md:text-left">The <span className="text-indigo-400">Veloce_</span></h2>
-            </div>
-            <div className="flex gap-12 text-[10px] font-black uppercase tracking-[0.4em] text-white/20 italic font-mono text-center md:text-left">
-               <span>Capacity: [Optimal]</span>
-               <span>Records: [03]</span>
-            </div>
-         </div>
+      {/* PRACTICE AREAS */}
+      <section className="py-20 md:py-32 px-6 md:px-12 max-w-7xl mx-auto">
+        <Reveal>
+          <h2 className="text-4xl md:text-6xl font-black mb-12">Practice Areas</h2>
+        </Reveal>
 
-         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 text-center">
-            {TEAM.map((p, i) => (
-                <motion.div 
-                   key={i} 
-                   initial={{ opacity: 0, y: 60 }}
-                   whileInView={{ opacity: 1, y: 0 }}
-                   viewport={{ once: true }}
-                   transition={{ duration: 1.2, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
-                   className="group relative h-[75vh] bg-neutral-900 border border-white/5 overflow-hidden cursor-pointer hover:border-indigo-500/30 transition-all text-center shadow-2xl"
-                >
-                    <Image src={p.img} alt={p.title} fill className="object-cover opacity-50 grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-1000 text-center" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#080808] via-transparent to-transparent opacity-90 text-center" />
-                    <div className="absolute inset-0 bg-indigo-600/5 group-hover:bg-transparent transition-colors duration-700 text-center" />
-                    
-                    <div className="absolute inset-12 flex flex-col justify-between z-10 font-mono text-white text-center">
-                        <div className="flex justify-between items-start text-center">
-                           <div className="p-4 bg-white/5 border border-white/10 rounded-none group-hover:bg-indigo-600 group-hover:text-black transition-all text-center">
-                              <Users className="w-6 h-6 text-center" />
-                           </div>
-                           <div className="text-[10px] font-black uppercase tracking-[0.5em] text-indigo-500/40 italic font-mono text-center">ID_0x{i+153}</div>
-                        </div>
-                        
-                        <div className="text-center">
-                           <span className="text-[10px] uppercase tracking-[0.5em] text-indigo-400 mb-6 block italic font-black font-mono text-center">{p.cat} // {p.value}</span>
-                           <h3 className="text-5xl md:text-6xl font-black italic uppercase tracking-tighter mb-10 text-white group-hover:text-indigo-400 transition-colors leading-none text-center">{p.title}</h3>
-                           <div className="flex items-center gap-6 text-[10px] font-black uppercase tracking-[0.4em] opacity-0 group-hover:opacity-100 transition-all translate-y-6 group-hover:translate-y-0 text-white text-center justify-center">
-                              View Bio <ArrowRight className="w-5 h-5 text-center" />
-                           </div>
-                        </div>
-                    </div>
+        <Tabs defaultValue="employment" className="w-full">
+          <TabsList className="grid grid-cols-2 md:grid-cols-5 gap-2 mb-12 bg-transparent">
+            <TabsTrigger value="employment" className="cursor-pointer">Employment</TabsTrigger>
+            <TabsTrigger value="discrimination" className="cursor-pointer">Discrimination</TabsTrigger>
+            <TabsTrigger value="wrongful" className="cursor-pointer">Wrongful Term.</TabsTrigger>
+            <TabsTrigger value="wage" className="cursor-pointer">Wage Theft</TabsTrigger>
+            <TabsTrigger value="class" className="cursor-pointer">Class Action</TabsTrigger>
+          </TabsList>
+
+          {[
+            { value: "employment", services: ["Contract negotiations", "Severance review", "Non-compete disputes", "Employment agreements"] },
+            { value: "discrimination", services: ["Race discrimination", "Gender discrimination", "Age discrimination", "Disability rights"] },
+            { value: "wrongful", services: ["Retaliatory termination", "Medical leave violations", "Constructive dismissal", "Whistleblower protection"] },
+            { value: "wage", services: ["Unpaid wages recovery", "Overtime violations", "Misclassification claims", "Wage statements"] },
+            { value: "class", services: ["Multi-employee actions", "Systemic discrimination", "Wage & hour collective", "Class certification"] }
+          ].map((tab) => (
+            <TabsContent key={tab.value} value={tab.value}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {tab.services.map((service, i) => (
+                  <Reveal key={i} delay={i * 0.1}>
+                    <Card className="bg-white border-[#c9a84c]/20 hover:border-[#c9a84c]/50 transition-all duration-300 cursor-pointer">
+                      <CardContent className="p-6">
+                        <h3 className="font-bold mb-2">{service}</h3>
+                        <Badge className="bg-[#c9a84c] text-[#0d1b2d] cursor-pointer">Free Consultation</Badge>
+                      </CardContent>
+                    </Card>
+                  </Reveal>
+                ))}
+              </div>
+            </TabsContent>
+          ))}
+        </Tabs>
+      </section>
+
+      {/* CASE RESULTS */}
+      <section className="py-20 md:py-32 px-6 md:px-12 max-w-7xl mx-auto">
+        <Reveal>
+          <h2 className="text-4xl md:text-6xl font-black mb-12">Case Results</h2>
+        </Reveal>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {caseResults.map((caseItem, i) => (
+            <Reveal key={i} delay={i * 0.1}>
+              <motion.div onClick={() => { setSelectedCase(caseItem); setOpen(true); }} className="group relative cursor-pointer bg-white border border-[#0d1b2d]/10 hover:border-[#c9a84c] transition-all duration-300 p-6 hover:shadow-lg">
+                <Badge className="mb-3 bg-[#c9a84c] text-[#0d1b2d] cursor-pointer">${(parseInt(caseItem.settlement) / 1000000).toFixed(1)}M</Badge>
+                <h3 className="text-lg font-bold mb-2">{caseItem.title}</h3>
+                <p className="text-sm text-[#0d1b2d]/60 mb-4">{caseItem.industry} • {caseItem.brief.substring(0, 30)}...</p>
+                <motion.div className="flex items-center gap-2 text-[#c9a84c] opacity-0 group-hover:opacity-100 transition-all duration-300">
+                  View Details <span className="ml-auto">→</span>
                 </motion.div>
-            ))}
-         </div>
+              </motion.div>
+            </Reveal>
+          ))}
+        </div>
       </section>
 
-      {/* FOOTER */}
-      <footer className="py-40 px-6 md:px-12 border-t border-white/5 relative z-10 bg-[#080808]">
-         <div className="max-w-[1800px] mx-auto flex flex-col lg:flex-row justify-between gap-32 text-center md:text-left">
-            <div className="max-w-2xl text-center md:text-left">
-               <div className="text-indigo-400 mb-12 flex items-center gap-4 font-black text-2xl italic uppercase tracking-widest font-mono justify-center md:justify-start">
-                  <Activity className="w-8 h-8 text-center md:text-left" /> Sync_Status
-               </div>
-               <p className="text-3xl md:text-5xl font-light italic leading-tight text-white/30 uppercase tracking-tighter mb-16 text-center md:text-left">
-                  WE TREAT ARCHITECTURE AS CODE. EVERY STRUCTURE IS A FUNCTION.
-               </p>
-               <div className="flex gap-16 font-black text-[10px] uppercase tracking-[0.6em] text-indigo-500/40 italic font-mono justify-center md:justify-start">
-                  <span>Berlin</span>
-                  <span>London</span>
-                  <span>Singapore</span>
-               </div>
-            </div>
-            <div className="flex flex-col justify-between items-end text-right font-mono text-center md:text-right text-indigo-400">
-               <div className="w-full text-center md:text-right">
-                  <h4 className="text-[10vw] font-black italic uppercase tracking-tighter text-white opacity-[0.03] leading-none mb-12 text-center md:text-right">VELOCE</h4>
-                  <nav className="flex flex-col gap-6 font-black text-[10px] uppercase tracking-[0.6em] text-white/20 text-center md:text-right">
-                     <Link href="#" className="hover:text-indigo-400 transition-colors group">Instagram</Link>
-                     <Link href="#" className="hover:text-indigo-400 transition-colors group">Careers</Link>
-                     <Link href="#" className="hover:text-indigo-400 transition-colors group">Manifesto</Link>
-                  </nav>
-               </div>
-               <div className="font-black text-[9px] uppercase tracking-[1em] text-white/5 mt-24 italic text-center md:text-right">
-                  &copy; 2026 // VÉLOCE_SYSTEMS&trade;
-               </div>
-            </div>
-         </div>
-      </footer>
+      {/* ATTORNEYS */}
+      <section className="py-20 md:py-32 px-6 md:px-12 max-w-6xl mx-auto">
+        <Reveal>
+          <h2 className="text-4xl md:text-6xl font-black mb-12">Our Attorneys</h2>
+        </Reveal>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {attorneys.map((attorney, i) => (
+            <Reveal key={i} delay={i * 0.1}>
+              <motion.div className="text-center hover:scale-105 transition-transform duration-300">
+                <Avatar className="h-32 w-32 mx-auto mb-6 border-4 border-[#c9a84c]">
+                  <AvatarImage src={attorney.image} alt={attorney.name} />
+                  <AvatarFallback>{attorney.name.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <h3 className="text-lg font-bold mb-1">{attorney.name}</h3>
+                <Badge variant="outline" className="mb-3 cursor-pointer">{attorney.specialty}</Badge>
+                <div className="text-xs text-[#0d1b2d]/60 space-y-1">
+                  <p>Bar: {attorney.bar}</p>
+                  <p className="font-bold text-[#c9a84c]">{attorney.wins}</p>
+                </div>
+              </motion.div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* STATS */}
+      <section className="py-20 md:py-32 px-6 md:px-12 bg-[#0d1b2d] text-white">
+        <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+          <Reveal><div><div className="text-4xl md:text-5xl font-black mb-2"><Counter target={5000} />+</div><p className="text-sm opacity-60">Cases Won</p></div></Reveal>
+          <Reveal delay={0.1}><div><div className="text-4xl md:text-5xl font-black mb-2"><Counter target={20} /></div><p className="text-sm opacity-60">Years Experience</p></div></Reveal>
+          <Reveal delay={0.2}><div><div className="text-4xl md:text-5xl font-black mb-2">98<span className="text-2xl">%</span></div><p className="text-sm opacity-60">Success Rate</p></div></Reveal>
+          <Reveal delay={0.3}><div><div className="text-4xl md:text-5xl font-black mb-2">$200<span className="text-2xl">M+</span></div><p className="text-sm opacity-60">Recovered</p></div></Reveal>
+        </div>
+      </section>
+
+      {/* RESOURCES */}
+      <section className="py-20 md:py-32 px-6 md:px-12 max-w-4xl mx-auto">
+        <Reveal>
+          <h2 className="text-4xl md:text-6xl font-black mb-12">Client Resources</h2>
+        </Reveal>
+        <Accordion type="single" collapsible>
+          {[
+            { title: "Know Your Rights", description: "Federal and state employment law protections, minimum wage requirements, and workplace safety standards you should know about" },
+            { title: "Filing Deadlines", description: "Critical timelines for filing complaints, including EEOC deadlines (180-300 days), statute of limitations, and notice requirements" },
+            { title: "Documentation Tips", description: "How to properly document workplace issues, keep records, gather evidence, and prepare for legal action" },
+            { title: "Class Action Info", description: "Understanding class action lawsuits, eligibility, opt-in/opt-out processes, and settlement distribution" }
+          ].map((item, i) => (
+            <Reveal key={i} delay={i * 0.1}>
+              <AccordionItem value={`item-${i}`} className="border-b border-[#0d1b2d]/10">
+                <AccordionTrigger className="cursor-pointer py-4 hover:text-[#c9a84c] transition-colors">{item.title}</AccordionTrigger>
+                <AccordionContent className="text-[#0d1b2d]/60 py-4">{item.description}</AccordionContent>
+              </AccordionItem>
+            </Reveal>
+          ))}
+        </Accordion>
+      </section>
+
+      {/* TESTIMONIALS */}
+      <section className="py-20 md:py-32 px-6 md:px-12 bg-[#f5f5f3]">
+        <Reveal>
+          <h2 className="text-4xl md:text-6xl font-black mb-12 text-center">Client Testimonials</h2>
+        </Reveal>
+        <div className="max-w-4xl mx-auto">
+          <Carousel>
+            <CarouselContent>
+              {[
+                { text: "Peak Legal fought relentlessly for my case. The outcome exceeded my expectations. They truly care about justice.", author: "Sarah M., Former Employee" },
+                { text: "Professional, compassionate, and results-driven. The entire team was supportive throughout the process.", author: "Michael J., Wrongful Termination" },
+                { text: "Finally found attorneys who understood my situation and delivered. Highly recommend Peak Legal.", author: "Lisa T., Discrimination Case" }
+              ].map((testimonial, i) => (
+                <CarouselItem key={i} className="md:basis-full">
+                  <Card className="bg-white border-[#c9a84c]/20">
+                    <CardContent className="p-8 text-center">
+                      <p className="text-lg mb-6 italic text-[#0d1b2d]/60">"{testimonial.text}"</p>
+                      <p className="font-bold text-[#0d1b2d]">{testimonial.author}</p>
+                    </CardContent>
+                  </Card>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="cursor-pointer" />
+            <CarouselNext className="cursor-pointer" />
+          </Carousel>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="py-20 md:py-32 px-6 md:px-12 max-w-4xl mx-auto">
+        <Reveal>
+          <h2 className="text-4xl md:text-6xl font-black mb-12">Frequently Asked</h2>
+        </Reveal>
+        <Accordion type="single" collapsible>
+          {[
+            { q: "Do you work on contingency?", a: "Yes, we handle most employment cases on a contingency basis. You don't pay unless we win." },
+            { q: "What's the typical timeline?", a: "Cases vary from 6 months to 2 years depending on complexity and whether litigation is necessary." },
+            { q: "What documents do I need?", a: "Emails, performance reviews, pay stubs, and any documentation of the workplace issue. We'll guide you through the rest." },
+            { q: "Can I still file if I'm working elsewhere?", a: "Yes, you can file claims for past employers or current employment issues with another company." }
+          ].map((item, i) => (
+            <Reveal key={i} delay={i * 0.1}>
+              <AccordionItem value={`faq-${i}`} className="border-b border-[#0d1b2d]/10">
+                <AccordionTrigger className="cursor-pointer py-4 hover:text-[#c9a84c] transition-colors">{item.q}</AccordionTrigger>
+                <AccordionContent className="text-[#0d1b2d]/60 py-4">{item.a}</AccordionContent>
+              </AccordionItem>
+            </Reveal>
+          ))}
+        </Accordion>
+      </section>
+
+      {/* CASE DETAIL DIALOG */}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          {selectedCase && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-2xl">{selectedCase.title}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-6">
+                <div className="bg-[#c9a84c]/10 border border-[#c9a84c]/20 p-6 rounded">
+                  <div className="text-3xl font-black text-[#c9a84c] mb-2">{selectedCase.settlement}</div>
+                  <p className="text-sm opacity-60">Settlement Amount</p>
+                </div>
+                <div className="space-y-4">
+                  <div><p className="text-sm font-bold opacity-60">Industry</p><p>{selectedCase.industry}</p></div>
+                  <div><p className="text-sm font-bold opacity-60">Case Details</p><p>{selectedCase.brief}</p></div>
+                  <div><p className="text-sm font-bold opacity-60">Outcome</p><p className="text-[#c9a84c] font-bold">{selectedCase.outcome}</p></div>
+                  <MagneticBtn className="w-full px-6 py-3 bg-[#c9a84c] text-[#0d1b2d] font-bold hover:bg-[#0d1b2d] hover:text-[#c9a84c] transition-all duration-300">
+                    Schedule Free Consultation
+                  </MagneticBtn>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* FOOTER CTA */}
+      <section className="py-20 md:py-32 px-6 md:px-12 bg-[#0d1b2d] text-white text-center">
+        <Reveal>
+          <h2 className="text-4xl md:text-6xl font-black mb-6">Don't face workplace injustice alone</h2>
+          <p className="text-lg text-white/60 mb-8 max-w-2xl mx-auto">Get expert legal representation with no upfront costs</p>
+          <MagneticBtn className="px-8 py-4 bg-[#c9a84c] text-[#0d1b2d] font-bold cursor-pointer hover:bg-white transition-all duration-200">
+            Schedule Your Free Consultation
+          </MagneticBtn>
+        </Reveal>
+      </section>
     </div>
-  );
+  )
 }

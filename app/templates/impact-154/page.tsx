@@ -1,235 +1,329 @@
-"use client";
+"use client"
+import { motion, useScroll, useTransform, useInView, useMotionValue, useSpring } from "framer-motion"
+import { useState, useRef, useEffect } from "react"
+import Image from "next/image"
+import Link from "next/link"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { Beer, Flame } from "lucide-react"
 
-import { motion, useScroll, useTransform, useSpring, useMotionValue } from "framer-motion";
-import { useRef, useEffect, useState } from "react";
-import Image from "next/image";
-import Link from "next/link";
-import { PenTool, Layout, Zap, Shield, Activity, Menu, Search, ArrowRight, Layers } from "lucide-react";
-import "../premium.css";
-
-const SERVICES = [
-  { id: 1, title: "BRAND_IDENTITY", cat: "Visual", value: "Verified", img: "https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&q=80&w=1500" },
-  { id: 2, title: "WEB_ARCHITECTURE", cat: "Core", value: "Active", img: "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&q=80&w=1500" },
-  { id: 3, title: "DIGITAL_CRAFT", cat: "Experience", value: "Locked", img: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&q=80&w=1500" },
-];
-
-function TextScramble({ text }: { text: string }) {
-  const [display, setDisplay] = useState(text);
-  const chars = "!<>-_\\/[]{}—=+*^?#________";
-  
-  useEffect(() => {
-    let iteration = 0;
-    const interval = setInterval(() => {
-      setDisplay(prev => 
-        text.split("").map((char, index) => {
-          if (index < iteration) return text[index];
-          return chars[Math.floor(Math.random() * chars.length)];
-        }).join("")
-      );
-      if (iteration >= text.length) clearInterval(interval);
-      iteration += 1/3;
-    }, 30);
-    return () => clearInterval(interval);
-  }, [text]);
-
-  return <span>{display}</span>;
+function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: "-60px" })
+  return <motion.div ref={ref} initial={{ opacity: 0, y: 24 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.55, delay, ease: [0.25, 0.46, 0.45, 0.94] }}>{children}</motion.div>
 }
 
-export default function ObliqStudioSPA() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: containerRef });
-  
-  const yHero = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
-  const heroScale = useTransform(scrollYProgress, [0, 0.5], [1, 1.1]);
-  
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-  const springX = useSpring(mouseX, { stiffness: 40, damping: 20 });
-  const springY = useSpring(mouseY, { stiffness: 40, damping: 20 });
-
+function Counter({ target, suffix = "", prefix = "" }: { target: number; suffix?: string; prefix?: string }) {
+  const [count, setCount] = useState(0)
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true })
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      mouseX.set(e.clientX - window.innerWidth / 2);
-      mouseY.set(e.clientY - window.innerHeight / 2);
-    };
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, [mouseX, mouseY]);
+    if (!inView) return
+    const step = target / 90
+    const t = setInterval(() => setCount(c => { const n = c + step; if (n >= target) { clearInterval(t); return target; } return n; }), 16)
+    return () => clearInterval(t)
+  }, [inView, target])
+  return <span ref={ref}>{prefix}{Math.floor(count).toLocaleString()}{suffix}</span>
+}
+
+function MagneticBtn({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  const x = useMotionValue(0); const y = useMotionValue(0)
+  const sx = useSpring(x, { stiffness: 400, damping: 20 })
+  const sy = useSpring(y, { stiffness: 400, damping: 20 })
+  const ref = useRef<HTMLButtonElement>(null)
+  const handleMouse = (e: React.MouseEvent) => {
+    const r = ref.current!.getBoundingClientRect()
+    x.set((e.clientX - r.left - r.width/2) * 0.3)
+    y.set((e.clientY - r.top - r.height/2) * 0.3)
+  }
+  return <motion.button ref={ref} style={{ x: sx, y: sy }} onMouseMove={handleMouse} onMouseLeave={() => { x.set(0); y.set(0) }} className={`cursor-pointer ${className}`}>{children}</motion.button>
+}
+
+const beers = [
+  { name: "Crisp IPA", abv: "6.2%", ibu: "68", flavor: "Citrus, pine, crisp finish", image: "https://images.unsplash.com/photo-1555658636-6e4a36218be7?auto=format&fit=crop&q=80&w=400" },
+  { name: "Midnight Stout", abv: "7.8%", ibu: "45", flavor: "Coffee, chocolate, roast", image: "https://images.unsplash.com/photo-1555658636-6e4a36218be7?auto=format&fit=crop&q=80&w=400" },
+  { name: "Golden Lager", abv: "4.5%", ibu: "22", flavor: "Clean, malty, refreshing", image: "https://images.unsplash.com/photo-1555658636-6e4a36218be7?auto=format&fit=crop&q=80&w=400" },
+  { name: "Sour Grapefruit", abv: "5.1%", ibu: "15", flavor: "Tart, citrus, bright", image: "https://images.unsplash.com/photo-1555658636-6e4a36218be7?auto=format&fit=crop&q=80&w=400" },
+  { name: "Autumn Harvest", abv: "6.8%", ibu: "52", flavor: "Spice, fruit, warming", image: "https://images.unsplash.com/photo-1555658636-6e4a36218be7?auto=format&fit=crop&q=80&w=400" },
+  { name: "Berry Wheat", abv: "5.4%", ibu: "28", flavor: "Berry, wheat, smooth", image: "https://images.unsplash.com/photo-1555658636-6e4a36218be7?auto=format&fit=crop&q=80&w=400" },
+  { name: "Double Hops", abv: "8.2%", ibu: "85", flavor: "Bold, hoppy, bold finish", image: "https://images.unsplash.com/photo-1555658636-6e4a36218be7?auto=format&fit=crop&q=80&w=400" },
+  { name: "Honey Session", abv: "4.2%", ibu: "18", flavor: "Honey, subtle malt", image: "https://images.unsplash.com/photo-1555658636-6e4a36218be7?auto=format&fit=crop&q=80&w=400" }
+]
+
+const brewerStories = [
+  { name: "Marcus Sterling", role: "Head Brewer", style: "IPA Specialist", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400" },
+  { name: "Sarah Chen", role: "Barrel Master", style: "Stout Expert", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=400" },
+  { name: "James O'Brien", role: "Master Brewer", style: "Lager Craftsman", image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=400" }
+]
+
+export default function KinfolkBrewing() {
+  const [selectedBeer, setSelectedBeer] = useState<typeof beers[0] | null>(null)
+  const [open, setOpen] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const { scrollYProgress } = useScroll({ target: containerRef })
+  const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"])
 
   return (
-    <div ref={containerRef} className="premium-theme bg-[#0D0D0D] text-rose-400 min-h-screen font-sans selection:bg-rose-600 selection:text-white overflow-hidden relative uppercase">
-      
-      {/* ROSE GLOW & TEXTURE */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#0D0D0D_100%)] opacity-90" />
-        <motion.div 
-           style={{ x: springX, y: springY }}
-           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70vw] h-[70vw] bg-rose-600 opacity-[0.03] blur-[150px] rounded-full mix-blend-screen" 
-        />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.1] mix-blend-overlay" />
-      </div>
+    <div ref={containerRef} style={{ overflowX: 'hidden', scrollBehavior: 'smooth' }} className="min-h-screen bg-[#fdf6ec] text-[#1a0d00] font-sans">
 
-      {/* HEADER */}
-      <header className="fixed top-0 left-0 w-full px-6 md:px-12 py-10 flex justify-between items-center z-50 bg-[#0D0D0D]/50 backdrop-blur-2xl border-b border-rose-500/10">
-        <Link href="/" className="font-black text-2xl tracking-[0.3em] text-white flex items-center gap-4 italic uppercase text-center md:text-left">
-           OBLIQ<span className="text-rose-500">_STUDIO</span>
-        </Link>
-        
-        <nav className="hidden lg:flex gap-12 font-black text-[10px] uppercase tracking-[0.6em] text-white/30 text-center">
-            <Link href="#" className="hover:text-rose-400 transition-colors group">
-               Craft<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-rose-500 italic">.</span>
-            </Link>
-            <Link href="#" className="hover:text-rose-400 transition-colors group">
-               Visuals<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-rose-500 italic">.</span>
-            </Link>
-            <Link href="#" className="hover:text-rose-400 transition-colors group">
-               Archives<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-rose-500 italic">.</span>
-            </Link>
-        </nav>
-        
-        <div className="flex items-center gap-8">
-           <button className="bg-rose-600 text-white px-10 py-3 font-black text-[10px] uppercase tracking-[0.4em] hover:bg-white hover:text-black transition-all shadow-xl">
-              Start_Project
-           </button>
-           <Menu className="w-6 h-6 text-rose-500 cursor-pointer" />
+      {/* HERO */}
+      <section className="relative h-screen flex items-center justify-center px-6 md:px-12 overflow-hidden">
+        <motion.div style={{ y }} className="absolute inset-0 z-0">
+          <Image src="https://images.unsplash.com/photo-1555658636-6e4a36218be7?auto=format&fit=crop&q=80&w=2000" alt="hero" fill className="object-cover" priority />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#fdf6ec] via-transparent to-[#fdf6ec]" />
+        </motion.div>
+
+        <div className="relative z-10 max-w-5xl text-center">
+          <motion.h1 initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="text-6xl md:text-8xl font-black tracking-tight mb-6 text-[#1a0d00]">
+            Kinfolk Brewing
+          </motion.h1>
+          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2 }} className="text-lg md:text-2xl text-[#1a0d00]/60 max-w-2xl mx-auto mb-12">
+            Craft beer crafted with intention. Est. 2014.
+          </motion.p>
+          <motion.button initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} onClick={() => setOpen(true)} className="px-8 py-4 bg-[#d97706] text-white font-bold cursor-pointer hover:bg-[#1a0d00] hover:text-[#d97706] transition-all duration-200">
+            Book Taproom Tour
+          </motion.button>
         </div>
-      </header>
-
-      {/* HERO SECTION */}
-      <section className="relative h-screen flex flex-col justify-center items-center px-6 text-center z-10 pt-20 overflow-hidden text-center">
-         <motion.div style={{ scale: heroScale, y: yHero }} className="absolute inset-0 z-0">
-            <Image src="https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&q=80&w=2500" alt="Design" fill className="object-cover opacity-20 grayscale contrast-150 text-center" priority />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0D0D0D] via-transparent to-[#0D0D0D]" />
-         </motion.div>
-         
-         <div className="relative z-10 max-w-6xl w-full text-center">
-            <motion.div 
-               initial={{ opacity: 0, scale: 0.95 }}
-               animate={{ opacity: 1, scale: 1 }}
-               transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
-            >
-               <div className="inline-flex items-center gap-4 font-black text-[10px] uppercase tracking-[1em] text-rose-500/50 mb-16 border-l-2 border-rose-600 pl-10 italic font-mono text-center">
-                  Studio_Sync // 0154_Alpha
-               </div>
-               
-               <h1 className="text-7xl md:text-[12vw] font-black italic uppercase leading-[0.8] tracking-tighter mb-20 text-white text-center">
-                  <TextScramble text="VISUAL." /><br/>
-                  <span className="text-transparent" style={{ WebkitTextStroke: "1px rgba(244,63,94,0.6)" }}>RESONANCE.</span>
-               </h1>
-               
-               <p className="text-xl md:text-3xl font-light text-white/30 max-w-2xl mx-auto mb-24 leading-relaxed uppercase tracking-[0.2em] italic text-center">
-                  Architectural intent meets visual precision. We don't just design; we synthesize digital experiences.
-               </p>
-               
-               <div className="flex flex-col md:flex-row gap-16 justify-center items-center font-mono text-center">
-                  <div className="flex items-center gap-8 group cursor-pointer text-center">
-                     <div className="w-20 h-px bg-rose-600/30 group-hover:w-32 transition-all" />
-                     <span className="text-[10px] font-black uppercase tracking-[0.8em] text-rose-500">Read_Manifesto</span>
-                  </div>
-                  <div className="hidden md:block w-px h-16 bg-white/5" />
-                  <div className="font-black text-[9px] uppercase tracking-[0.6em] text-white/10 italic text-center">
-                     Established_2026 // NYC
-                  </div>
-               </div>
-            </motion.div>
-         </div>
-
-         {/* Resonance HUD */}
-         <div className="absolute right-12 bottom-12 flex flex-col items-end gap-4 font-black text-[8px] uppercase tracking-[1em] text-rose-500/20 hidden md:flex italic font-mono text-center">
-            <span>RESONANCE_SYNC: ACTIVE</span>
-            <div className="flex gap-1 h-12 items-end">
-               {[1, 2, 3, 4, 5].map(i => <motion.div key={i} animate={{ height: ['20%', '100%', '40%'] }} transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }} className="w-[1px] bg-rose-500" />)}
-            </div>
-         </div>
-         
-         <div className="absolute left-12 bottom-12 hidden md:block text-center">
-            <div className="flex flex-col gap-2 text-[8px] font-black uppercase tracking-[0.4em] text-white/10 italic font-mono text-center">
-               <span>NODES: 1024</span>
-               <span>STATE: RESONATING</span>
-               <span>STATUS: HARMONIZED</span>
-            </div>
-         </div>
       </section>
 
-      {/* SERVICES GRID */}
-      <section className="py-48 px-6 md:px-12 max-w-[1800px] mx-auto relative z-10 bg-[#0D0D0D]">
-         <div className="flex flex-col md:flex-row justify-between items-end mb-40 border-b border-rose-500/10 pb-20 gap-16 text-center md:text-left">
-            <div>
-               <span className="text-[10px] font-black uppercase tracking-[1.5em] text-rose-600 mb-8 block italic font-mono text-center md:text-left">Studio_Manifest</span>
-               <h2 className="text-6xl md:text-9xl font-black italic uppercase tracking-tighter text-white leading-none text-center md:text-left">The <span className="text-rose-500">Obliq_</span></h2>
-            </div>
-            <div className="flex gap-16 text-[10px] font-black uppercase tracking-[0.6em] text-white/20 italic font-mono text-center md:text-left">
-               <span>Capacity: 100%</span>
-               <span>Records: 03</span>
-            </div>
-         </div>
+      {/* BEER CATALOG */}
+      <section className="py-20 md:py-32 px-6 md:px-12 max-w-7xl mx-auto">
+        <Reveal>
+          <h2 className="text-4xl md:text-6xl font-black mb-12">Our Beer Selection</h2>
+        </Reveal>
 
-         <div className="grid grid-cols-1 lg:grid-cols-3 gap-16 text-center">
-            {SERVICES.map((p, i) => (
-                <motion.div 
-                   key={i} 
-                   initial={{ opacity: 0, y: 80 }}
-                   whileInView={{ opacity: 1, y: 0 }}
-                   viewport={{ once: true, margin: "-100px" }}
-                   transition={{ duration: 1.2, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
-                   className="group relative h-[85vh] bg-neutral-900 border border-white/5 overflow-hidden cursor-pointer hover:border-rose-500/40 transition-all text-center shadow-2xl"
-                >
-                    <Image src={p.img} alt={p.title} fill className="object-cover opacity-50 grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-1000 text-center" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0D0D0D] via-transparent to-transparent opacity-95 text-center" />
-                    <div className="absolute inset-0 bg-rose-600/5 group-hover:bg-transparent transition-colors duration-700 text-center" />
-                    
-                    <div className="absolute inset-16 flex flex-col justify-between z-10 font-sans text-white text-center">
-                        <div className="flex justify-between items-start text-center">
-                           <div className="p-5 bg-white/5 border border-white/10 rounded-none group-hover:bg-rose-600 group-hover:text-black transition-all text-center">
-                              <Layers className="w-6 h-6 text-center" />
-                           </div>
-                           <div className="text-[10px] font-black uppercase tracking-[0.8em] text-rose-500/30 italic font-mono text-center">Ref_0x{i+154}</div>
-                        </div>
-                        
-                        <div className="text-center">
-                           <span className="text-[10px] uppercase tracking-[0.8em] text-rose-500 mb-8 block italic font-black font-mono text-center">{p.cat} // {p.value}</span>
-                           <h3 className="text-5xl md:text-6xl font-black italic uppercase tracking-tighter mb-16 text-white group-hover:text-rose-500 transition-colors leading-[0.85] text-center">{p.title}</h3>
-                           <div className="flex items-center gap-8 text-[10px] font-black uppercase tracking-[0.6em] opacity-0 group-hover:opacity-100 transition-all translate-y-8 group-hover:translate-y-0 text-white text-center justify-center">
-                              Specifications <ArrowRight className="w-6 h-6 text-center" />
-                           </div>
-                        </div>
+        <Tabs defaultValue="all" className="w-full">
+          <TabsList className="grid grid-cols-2 md:grid-cols-5 gap-2 mb-12 bg-transparent">
+            <TabsTrigger value="all" className="cursor-pointer">All</TabsTrigger>
+            <TabsTrigger value="ipas" className="cursor-pointer">IPAs</TabsTrigger>
+            <TabsTrigger value="stouts" className="cursor-pointer">Stouts</TabsTrigger>
+            <TabsTrigger value="lagers" className="cursor-pointer">Lagers</TabsTrigger>
+            <TabsTrigger value="seasonals" className="cursor-pointer">Seasonals</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="all">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {beers.map((beer, i) => (
+                <Reveal key={i} delay={i * 0.1}>
+                  <motion.div onClick={() => { setSelectedBeer(beer); setOpen(true); }} className="group relative cursor-pointer overflow-hidden bg-white border border-[#d97706]/20 hover:border-[#d97706] transition-all duration-300">
+                    <div className="relative h-64 overflow-hidden bg-[#fdf6ec]">
+                      <Image src={beer.image} alt={beer.name} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
                     </div>
-                </motion.div>
-            ))}
-         </div>
+                    <div className="p-4">
+                      <h3 className="text-lg font-bold mb-2">{beer.name}</h3>
+                      <div className="flex gap-2 mb-3">
+                        <Badge className="bg-[#d97706] text-white cursor-pointer text-xs">{beer.abv}</Badge>
+                        <Badge className="bg-[#2d5a3d] text-white cursor-pointer text-xs">{beer.ibu} IBU</Badge>
+                      </div>
+                      <p className="text-sm text-[#1a0d00]/60 mb-3">{beer.flavor}</p>
+                      <motion.div className="flex items-center gap-2 text-[#d97706] opacity-0 group-hover:opacity-100 transition-all duration-300">
+                        Learn More <span className="ml-auto">→</span>
+                      </motion.div>
+                    </div>
+                  </motion.div>
+                </Reveal>
+              ))}
+            </div>
+          </TabsContent>
+        </Tabs>
       </section>
 
-      {/* FOOTER */}
-      <footer className="py-48 px-6 md:px-12 border-t border-white/5 relative z-10 bg-[#0D0D0D]">
-         <div className="max-w-[1800px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-40 text-center md:text-left">
-            <div className="text-center md:text-left">
-               <div className="text-rose-500 mb-16 flex items-center gap-6 font-black text-2xl italic uppercase tracking-widest font-mono justify-center md:justify-start">
-                  <Activity className="w-10 h-10 text-center md:text-left" /> Studio_Logs
-               </div>
-               <p className="text-4xl md:text-6xl font-light italic leading-tight text-white/20 uppercase tracking-tighter mb-20 text-center md:text-left">
-                  WE TREAT ARCHITECTURE AS CODE. EVERY STRUCTURE IS A FUNCTION.
-               </p>
-               <div className="flex gap-20 font-black text-[10px] uppercase tracking-[0.8em] text-rose-500/40 italic font-mono justify-center md:justify-start">
-                  <span>New York</span>
-                  <span>Paris</span>
-                  <span>London</span>
-               </div>
-            </div>
-            <div className="flex flex-col justify-between items-end text-right font-mono text-center md:text-right text-rose-500">
-               <div className="w-full text-center md:text-right">
-                  <h4 className="text-[12vw] font-black italic uppercase tracking-tighter text-white opacity-[0.02] leading-none mb-20 text-center md:text-right">OBLIQ</h4>
-                  <nav className="flex flex-col gap-10 font-black text-[10px] uppercase tracking-[0.8em] text-white/10 font-mono text-center md:text-right">
-                     <Link href="#" className="hover:text-rose-400 transition-colors group">Instagram</Link>
-                     <Link href="#" className="hover:text-rose-400 transition-colors group">Behance</Link>
-                     <Link href="#" className="hover:text-rose-400 transition-colors group">Manifesto</Link>
-                  </nav>
-               </div>
-               <div className="font-black text-[9px] uppercase tracking-[1.5em] text-white/5 mt-32 italic text-center md:text-right">
-                  &copy; 2026 // OBLIQ_STUDIO&trade;
-               </div>
-            </div>
-         </div>
-      </footer>
+      {/* TAPROOM GALLERY */}
+      <section className="py-20 md:py-32 px-6 md:px-12 bg-[#2d5a3d] text-white">
+        <Reveal>
+          <h2 className="text-4xl md:text-6xl font-black mb-12">Visit Our Taprooms</h2>
+        </Reveal>
+        <Carousel>
+          <CarouselContent>
+            {[
+              "https://images.unsplash.com/photo-1608715174306-e6835065d75d?auto=format&fit=crop&q=80&w=1200",
+              "https://images.unsplash.com/photo-1555658636-6e4a36218be7?auto=format&fit=crop&q=80&w=1200",
+              "https://images.unsplash.com/photo-1577720643272-265b434fb4f5?auto=format&fit=crop&q=80&w=1200"
+            ].map((img, i) => (
+              <CarouselItem key={i} className="md:basis-full">
+                <div className="relative h-96 w-full">
+                  <Image src={img} alt={`Taproom ${i}`} fill className="object-cover" />
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="cursor-pointer" />
+          <CarouselNext className="cursor-pointer" />
+        </Carousel>
+      </section>
+
+      {/* BREWING PROCESS */}
+      <section className="py-20 md:py-32 px-6 md:px-12 max-w-4xl mx-auto">
+        <Reveal>
+          <h2 className="text-4xl md:text-6xl font-black mb-12">The Brewing Process</h2>
+        </Reveal>
+        <Accordion type="single" collapsible>
+          {[
+            { title: "Milling", description: "Grain preparation and crushing for optimal extraction and flavor development" },
+            { title: "Mashing", description: "Temperature-controlled steeping to convert starches into fermentable sugars" },
+            { title: "Fermenting", description: "Yeast activation and fermentation over 7-14 days depending on beer style" },
+            { title: "Conditioning", description: "Carbonation and aging to develop complexity and achieve peak flavor" }
+          ].map((item, i) => (
+            <Reveal key={i} delay={i * 0.1}>
+              <AccordionItem value={`item-${i}`} className="border-b border-[#1a0d00]/10">
+                <AccordionTrigger className="cursor-pointer py-4 hover:text-[#d97706] transition-colors">{item.title}</AccordionTrigger>
+                <AccordionContent className="text-[#1a0d00]/60 py-4">{item.description}</AccordionContent>
+              </AccordionItem>
+            </Reveal>
+          ))}
+        </Accordion>
+      </section>
+
+      {/* SEASONAL RELEASES */}
+      <section className="py-20 md:py-32 px-6 md:px-12 max-w-7xl mx-auto">
+        <Reveal>
+          <h2 className="text-4xl md:text-6xl font-black mb-12">Seasonal Releases</h2>
+        </Reveal>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          {[
+            { season: "Spring", beer: "Wildflower Pale", date: "March 15" },
+            { season: "Summer", beer: "Citrus Crush", date: "June 1" },
+            { season: "Fall", beer: "Pumpkin Spice Porter", date: "September 1" },
+            { season: "Winter", beer: "Holiday Blend", date: "December 1" }
+          ].map((release, i) => (
+            <Reveal key={i} delay={i * 0.1}>
+              <Card className="bg-white border-[#d97706]/20 hover:border-[#d97706] transition-all duration-300 cursor-pointer">
+                <CardContent className="p-6 text-center">
+                  <Badge className="mb-4 bg-[#d97706] text-white cursor-pointer">{release.season}</Badge>
+                  <h3 className="font-bold mb-2">{release.beer}</h3>
+                  <p className="text-sm text-[#1a0d00]/60">Available {release.date}</p>
+                </CardContent>
+              </Card>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* BEER SCHOOL */}
+      <section className="py-20 md:py-32 px-6 md:px-12 max-w-6xl mx-auto">
+        <Reveal>
+          <h2 className="text-4xl md:text-6xl font-black mb-12">Beer School</h2>
+        </Reveal>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {[
+            { title: "Tasting 101", desc: "Learn proper tasting techniques and flavor identification" },
+            { title: "Beer Pairing", desc: "Discover perfect food and beer combinations" },
+            { title: "Home Brew Kit", desc: "Start your own brewing journey at home" }
+          ].map((course, i) => (
+            <Reveal key={i} delay={i * 0.1}>
+              <Card className="bg-white border-[#2d5a3d]/20 hover:border-[#2d5a3d] transition-all duration-300">
+                <CardContent className="p-6">
+                  <h3 className="text-xl font-bold mb-3">{course.title}</h3>
+                  <p className="text-[#1a0d00]/60 mb-4">{course.desc}</p>
+                  <Link href="#" className="text-[#d97706] font-bold cursor-pointer hover:text-[#2d5a3d] transition-colors">Learn More →</Link>
+                </CardContent>
+              </Card>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* STATS */}
+      <section className="py-20 md:py-32 px-6 md:px-12 bg-[#1a0d00] text-white">
+        <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+          <Reveal><div><div className="text-4xl md:text-5xl font-black mb-2">Est.<br/><Counter target={2014} /></div><p className="text-sm opacity-60">Founded</p></div></Reveal>
+          <Reveal delay={0.1}><div><div className="text-4xl md:text-5xl font-black mb-2"><Counter target={45} /></div><p className="text-sm opacity-60">Total Beers</p></div></Reveal>
+          <Reveal delay={0.2}><div><div className="text-4xl md:text-5xl font-black mb-2"><Counter target={8} /></div><p className="text-sm opacity-60">Gold Medals</p></div></Reveal>
+          <Reveal delay={0.3}><div><div className="text-4xl md:text-5xl font-black mb-2"><Counter target={2} /></div><p className="text-sm opacity-60">Taprooms</p></div></Reveal>
+        </div>
+      </section>
+
+      {/* BREWERS */}
+      <section className="py-20 md:py-32 px-6 md:px-12 max-w-6xl mx-auto">
+        <Reveal>
+          <h2 className="text-4xl md:text-6xl font-black mb-12">Meet the Brewers</h2>
+        </Reveal>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {brewerStories.map((brewer, i) => (
+            <Reveal key={i} delay={i * 0.1}>
+              <motion.div className="text-center hover:scale-105 transition-transform duration-300">
+                <Avatar className="h-32 w-32 mx-auto mb-6 border-4 border-[#d97706]">
+                  <AvatarImage src={brewer.image} alt={brewer.name} />
+                  <AvatarFallback>{brewer.name.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <h3 className="text-lg font-bold mb-1">{brewer.name}</h3>
+                <Badge variant="outline" className="mb-3 cursor-pointer">{brewer.role}</Badge>
+                <p className="text-sm text-[#1a0d00]/60">{brewer.style}</p>
+              </motion.div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="py-20 md:py-32 px-6 md:px-12 max-w-4xl mx-auto">
+        <Reveal>
+          <h2 className="text-4xl md:text-6xl font-black mb-12">FAQ</h2>
+        </Reveal>
+        <Accordion type="single" collapsible>
+          {[
+            { q: "Where can I find your beers?", a: "Available at 300+ retailers and our two taproom locations in downtown and riverside" },
+            { q: "Do you offer brewery tours?", a: "Yes! Tours available Tuesday-Sunday, booking required. $15 per person includes samples." },
+            { q: "Can I order online?", a: "Limited online ordering available for growlers and merchandise. Shipping restrictions apply." },
+            { q: "Do you host private events?", a: "Absolutely! Contact our events team for private taproom bookings and catering options." }
+          ].map((item, i) => (
+            <Reveal key={i} delay={i * 0.1}>
+              <AccordionItem value={`faq-${i}`} className="border-b border-[#1a0d00]/10">
+                <AccordionTrigger className="cursor-pointer py-4 hover:text-[#d97706] transition-colors">{item.q}</AccordionTrigger>
+                <AccordionContent className="text-[#1a0d00]/60 py-4">{item.a}</AccordionContent>
+              </AccordionItem>
+            </Reveal>
+          ))}
+        </Accordion>
+      </section>
+
+      {/* BEER DETAIL DIALOG */}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          {selectedBeer && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-2xl">{selectedBeer.name}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-6">
+                <div className="relative h-64 w-full">
+                  <Image src={selectedBeer.image} alt={selectedBeer.name} fill className="object-cover rounded" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-[#d97706]/10 p-4 rounded">
+                    <p className="text-xs opacity-60 mb-1">ABV</p>
+                    <p className="text-2xl font-bold text-[#d97706]">{selectedBeer.abv}</p>
+                  </div>
+                  <div className="bg-[#2d5a3d]/10 p-4 rounded">
+                    <p className="text-xs opacity-60 mb-1">IBU</p>
+                    <p className="text-2xl font-bold text-[#2d5a3d]">{selectedBeer.ibu}</p>
+                  </div>
+                </div>
+                <div><p className="text-sm font-bold opacity-60 mb-2">Flavor Profile</p><p>{selectedBeer.flavor}</p></div>
+                <MagneticBtn className="w-full px-6 py-3 bg-[#d97706] text-white font-bold hover:bg-[#1a0d00] transition-all duration-300">
+                  Find Near You
+                </MagneticBtn>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* FOOTER CTA */}
+      <section className="py-20 md:py-32 px-6 md:px-12 bg-[#1a0d00] text-white text-center">
+        <Reveal>
+          <h2 className="text-4xl md:text-6xl font-black mb-6">Craft Your Next Experience</h2>
+          <p className="text-lg text-white/60 mb-8 max-w-2xl mx-auto">Visit one of our taprooms or order a growler for home</p>
+          <MagneticBtn className="px-8 py-4 bg-[#d97706] text-white font-bold cursor-pointer hover:bg-white hover:text-[#d97706] transition-all duration-200">
+            Book Your Taproom Visit
+          </MagneticBtn>
+        </Reveal>
+      </section>
     </div>
-  );
+  )
 }
