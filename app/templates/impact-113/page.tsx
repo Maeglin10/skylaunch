@@ -1,241 +1,425 @@
-"use client";
+"use client"
+import { motion, useScroll, useTransform, useInView, AnimatePresence, useMotionValue, useSpring } from "framer-motion"
+import { useState, useRef, useEffect } from "react"
+import Image from "next/image"
+import Link from "next/link"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
+import { Progress } from "@/components/ui/progress"
 
-import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
-import Image from "next/image";
-import { X, Menu, Search, Award, Zap, Activity, Globe, Shield, Command, Plus, ArrowUpRight, Maximize2, MoveRight, Layers, Box, Compass, Sparkles, MoveVertical, Cpu } from "lucide-react";
-import "../premium.css";
+function Reveal({ children, delay=0 }: { children: React.ReactNode; delay?: number }) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: "-60px" })
+  return <motion.div ref={ref} initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, delay }}>{children}</motion.div>
+}
 
-const FEATURES = [
-  { id: 1, title: "CORE_LOGIC", cat: "Neural", value: "Verified", img: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=1000&auto=format&fit=crop" },
-  { id: 2, title: "PULSE_NODE", cat: "Sync", value: "Active", img: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1000&auto=format&fit=crop" },
-  { id: 3, title: "VOID_SHELL", cat: "Secure", value: "Locked", img: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=1000&auto=format&fit=crop" },
-];
+function Counter({ target, suffix="" }: { target: number; suffix?: string }) {
+  const [count, setCount] = useState(0)
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true })
+  useEffect(() => {
+    if (!inView) return
+    const step = Math.ceil(target / 60)
+    const t = setInterval(() => setCount(c => Math.min(c + step, target)), 16)
+    return () => clearInterval(t)
+  }, [inView, target])
+  return <span ref={ref}>{count.toLocaleString()}{suffix}</span>
+}
 
-export default function NexusAisSaaS_SPA() {
-  const [view, setView] = useState<"nexus" | "pulse" | "logic">("nexus");
-  const [activeItem, setActiveItem] = useState(0);
+function MagneticBtn({ children, className="" }: { children: React.ReactNode; className?: string }) {
+  const x = useMotionValue(0); const y = useMotionValue(0)
+  const sx = useSpring(x, { stiffness: 500, damping: 25 })
+  const sy = useSpring(y, { stiffness: 500, damping: 25 })
+  const ref = useRef<HTMLButtonElement>(null)
+  const handleMouse = (e: React.MouseEvent) => {
+    const r = ref.current!.getBoundingClientRect()
+    x.set((e.clientX - r.left - r.width/2) * 0.35)
+    y.set((e.clientY - r.top - r.height/2) * 0.35)
+  }
+  return <motion.button ref={ref} style={{ x: sx, y: sy }} onMouseMove={handleMouse} onMouseLeave={() => { x.set(0); y.set(0) }} className={className}>{children}</motion.button>
+}
+
+const PRODUCTS = [
+  { id: 1, title: "Luminous Serum", cat: "Serums", types: "All", price: "$125", img: "https://images.unsplash.com/photo-1556228578-8c89e6adf883" },
+  { id: 2, title: "Velvet Moisturizer", cat: "Moisturisers", types: "Dry/Combination", price: "$95", img: "https://images.unsplash.com/photo-1556228578-8c89e6adf883" },
+  { id: 3, title: "Radiance Mask", cat: "Masks", types: "Oily/Sensitive", price: "$65", img: "https://images.unsplash.com/photo-1556228578-8c89e6adf883" },
+  { id: 4, title: "Silk Body Oil", cat: "Body", types: "All", price: "$85", img: "https://images.unsplash.com/photo-1556228578-8c89e6adf883" },
+  { id: 5, title: "Luxury Set", cat: "Sets", types: "All", price: "$240", img: "https://images.unsplash.com/photo-1556228578-8c89e6adf883" },
+  { id: 6, title: "Essence Toner", cat: "Serums", types: "All", price: "$55", img: "https://images.unsplash.com/photo-1556228578-8c89e6adf883" },
+  { id: 7, title: "Night Recovery", cat: "Moisturisers", types: "All", price: "$110", img: "https://images.unsplash.com/photo-1556228578-8c89e6adf883" },
+  { id: 8, title: "Glow Starter", cat: "Sets", types: "All", price: "$160", img: "https://images.unsplash.com/photo-1556228578-8c89e6adf883" },
+]
+
+const INGREDIENTS = [
+  { name: "Hyaluronic Acid", source: "Sustainable Fermentation", efficacy: 95 },
+  { name: "Retinol Complex", source: "Plant-Derived", efficacy: 88 },
+  { name: "Niacinamide", source: "Clean Beauty", efficacy: 92 },
+  { name: "Peptide Blend", source: "Lab-Synthesized", efficacy: 85 },
+  { name: "Vitamin C", source: "Botanical Extract", efficacy: 90 },
+  { name: "Squalane", source: "Olive-Derived", efficacy: 87 },
+]
+
+export default function AuraBeauty() {
+  const [activeProduct, setActiveProduct] = useState(0)
+  const [productDialog, setProductDialog] = useState(false)
+  const [wishlist, setWishlist] = useState<number[]>([])
+  const [quizOpen, setQuizOpen] = useState(false)
+  const { scrollY } = useScroll()
+  const heroY = useTransform(scrollY, [0, 500], [0, 150])
 
   return (
-    <div className="premium-theme bg-[#030308] text-[#8b5cf6] min-h-screen selection:bg-violet-500 selection:text-white font-mono overflow-x-hidden">
-      
-      {/* Background HUD Layers */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[45vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase">
-           NEXUS
+    <div className="min-h-screen bg-[#fafaf8]" style={{ color: "#1a0f0a" }}>
+      <motion.section style={{ y: heroY }} className="relative h-screen flex items-center justify-center overflow-hidden">
+        <Image src="https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=1600" alt="Luxury Skincare" fill className="object-cover" />
+        <div className="absolute inset-0 bg-black/30" />
+        <div className="relative z-10 text-center text-white max-w-4xl mx-auto px-6">
+          <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="text-6xl md:text-8xl font-light mb-6">
+            AURA
+          </motion.h1>
+          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="text-xl md:text-2xl font-light">
+            Luxury Skincare & Wellness
+          </motion.p>
         </div>
-        <div className="absolute inset-0 bg-[#030308]/40 backdrop-blur-[2px]" />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.05] mix-blend-screen" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#030308_100%)] opacity-80" />
-        
-        {/* Synthetic Scanline Layer */}
-        <div className="absolute inset-x-0 top-0 h-2 bg-violet-500/10 animate-scanline z-10" />
-      </div>
+      </motion.section>
 
-      {/* Editorial HUD Nav */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-center bg-black/40 backdrop-blur-3xl border-b border-violet-500/10 font-mono">
-        <div className="flex gap-12 items-center">
-           <button onClick={() => setView("nexus")} className="text-xl font-black italic tracking-tighter hover:text-white transition-colors flex items-center gap-4">
-              <Cpu className="w-6 h-6 animate-pulse" /> NEXUS_OS&trade;
-           </button>
-           <div className="hidden lg:flex gap-8 text-[10px] font-black uppercase tracking-widest opacity-20 italic">
-              Status: Kernal_Sync_Active
-              <span className="text-white">Ref: 0x113</span>
-           </div>
-        </div>
-        <div className="hidden md:flex gap-12 text-[10px] font-black uppercase tracking-[0.4em] opacity-30">
-           <button onClick={() => setView("nexus")} className={`hover:opacity-100 transition-opacity ${view === 'nexus' ? 'text-white opacity-100 underline decoration-white underline-offset-8 italic' : ''}`}>THE_NEXUS</button>
-           <button onClick={() => setView("logic")} className={`hover:opacity-100 transition-opacity ${view === 'logic' ? 'text-white opacity-100 underline decoration-white underline-offset-8 italic' : ''}`}>THE_LOGIC</button>
-        </div>
-        <div className="flex items-center gap-8">
-           <Search className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-           <Menu className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-        </div>
-      </nav>
-
-      <AnimatePresence mode="wait">
-        
-        {/* THE NEXUS VIEW (LANDING) */}
-        {view === "nexus" && (
-          <motion.div key="nexus" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-48 pb-32 px-12 max-w-[1800px] mx-auto min-h-screen flex flex-col justify-center relative z-10">
-             <header className="mb-24 border-b border-violet-500/20 pb-12 flex flex-col md:flex-row justify-between items-end gap-12">
-                <div>
-                   <span className="text-[10px] uppercase font-black tracking-[1em] opacity-40 mb-4 block underline decoration-violet-500/10 underline-offset-8 italic text-violet-400">Neural_Deployment // Series_113</span>
-                   <h1 className="text-7xl md:text-[12vw] font-black italic uppercase tracking-tighter leading-[0.75] text-white">GEN. <br/> <span className="bg-clip-text text-transparent bg-gradient-to-r from-violet-500 to-white">ALPHA.</span></h1>
-                </div>
-                <div className="text-right flex flex-col items-end">
-                   <div className="text-3xl font-black mb-4 tracking-tighter uppercase opacity-10 italic font-mono text-white">Secure_Flow</div>
-                   <div className="w-64 h-[2px] bg-white/5 rounded-none overflow-hidden">
-                      <motion.div animate={{ width: ['20%', '90%', '40%', '75%'] }} transition={{ duration: 4, repeat: Infinity }} className="h-full bg-violet-500" />
-                   </div>
-                </div>
-             </header>
-
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {FEATURES.map((p, i) => (
-                  <motion.div 
-                    key={p.id} initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                    className="group relative h-[60vh] rounded-none overflow-hidden border border-violet-500/10 hover:border-violet-500/40 transition-all cursor-pointer shadow-2xl bg-white/5"
-                    onClick={() => { setActiveItem(i); setView("pulse"); }}
-                  >
-                     <Image src={p.img} alt={p.title} fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[2s] group-hover:scale-110" />
-                     <div className="absolute inset-0 bg-violet-500/10 group-hover:bg-transparent transition-colors duration-1000" />
-                     <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                     
-                     <div className="absolute inset-10 flex flex-col justify-between">
-                        <div className="flex justify-between items-start">
-                           <div className="p-4 bg-white/10 border border-white/20 rounded-none opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Plus className="w-5 h-5 text-white" />
-                           </div>
-                           <div className="text-[10px] font-black uppercase tracking-widest opacity-20 italic text-violet-400">NODE_0x{i+113}</div>
+      <section className="py-24 px-6 md:px-12">
+        <Reveal>
+          <h2 className="text-5xl font-light mb-12" style={{ color: "#c4887a" }}>Our Collections</h2>
+        </Reveal>
+        <Tabs defaultValue="Serums" className="w-full">
+          <TabsList className="grid w-full grid-cols-5 bg-white border border-[#c4887a]/20">
+            {["Serums", "Moisturisers", "Masks", "Body", "Sets"].map((cat) => (
+              <TabsTrigger key={cat} value={cat} className="data-[state=active]:bg-[#c4887a] data-[state=active]:text-white">
+                {cat}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          {["Serums", "Moisturisers", "Masks", "Body", "Sets"].map((cat) => (
+            <TabsContent key={cat} value={cat} className="mt-12">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                {PRODUCTS.filter(p => p.cat === cat).map((prod, idx) => (
+                  <Reveal key={prod.id} delay={idx * 0.1}>
+                    <motion.div className="cursor-pointer group" whileHover={{ y: -8 }}>
+                      <div className="relative h-96 overflow-hidden rounded-lg mb-4 bg-[#f9ede8]">
+                        <Image src={prod.img + "?w=400"} alt={prod.title} fill className="object-cover opacity-70 group-hover:opacity-100 transition-opacity duration-500" />
+                      </div>
+                      <div className="flex justify-between items-start mb-3">
+                        <div onClick={() => { setActiveProduct(PRODUCTS.indexOf(prod)); setProductDialog(true); }}>
+                          <h3 className="text-lg font-light text-[#1a0f0a]">{prod.title}</h3>
+                          <p className="text-sm text-[#1a0f0a]/60">{prod.price}</p>
                         </div>
-                        <div>
-                           <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-2 block italic text-violet-300">{p.cat} // {p.value}</span>
-                           <h3 className="text-5xl font-black italic uppercase tracking-tighter leading-none text-white transition-all group-hover:tracking-widest">{p.title}</h3>
-                        </div>
-                     </div>
-                  </motion.div>
+                        <button onClick={() => setWishlist(w => w.includes(prod.id) ? w.filter(x => x !== prod.id) : [...w, prod.id])} className="text-xl">
+                          {wishlist.includes(prod.id) ? "❤️" : "🤍"}
+                        </button>
+                      </div>
+                      <Badge className="bg-[#d4a94a] text-[#1a0f0a]">{prod.types}</Badge>
+                    </motion.div>
+                  </Reveal>
                 ))}
-             </div>
-          </motion.div>
-        )}
+              </div>
+            </TabsContent>
+          ))}
+        </Tabs>
+      </section>
 
-        {/* THE PULSE VIEW (DETAIL) */}
-        {view === "pulse" && (
-          <motion.div key="pulse" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen">
-             <button onClick={() => setView("nexus")} className="fixed top-12 left-12 z-[60] bg-white text-black p-5 rounded-none hover:scale-110 transition-transform shadow-2xl">
-                <X className="w-6 h-6" />
-             </button>
-
-             <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen pt-24 lg:pt-0">
-                <div className="lg:col-span-12 relative flex items-center justify-center p-8 md:p-32 overflow-hidden h-screen bg-[#030308]">
-                   <div className="absolute inset-0 opacity-10">
-                      <Image src={FEATURES[activeItem].img} alt="Background" fill className="object-cover grayscale" />
-                   </div>
-                   <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[40vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase text-violet-500 font-serif">
-                      PULSE
-                   </div>
-                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#030308_100%)]" />
-                   
-                   <div className="max-w-[1500px] w-full grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10 font-mono">
-                      <motion.div initial={{ scale: 1.1, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1 }} className="relative aspect-square w-full rounded-none overflow-hidden border border-violet-500/20 group bg-neutral-900 shadow-2xl">
-                         <Image src={FEATURES[activeItem].img} alt="Spec" fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[3s] opacity-80" priority />
-                         <div className="absolute top-12 left-12 p-4 bg-black/60 backdrop-blur-3xl rounded-none border-2 border-white/10">
-                            <Layers className="w-6 h-6 text-violet-400 animate-pulse" />
-                         </div>
-                      </motion.div>
-
-                      <div className="flex flex-col justify-center space-y-12">
-                         <div className="space-y-6">
-                            <span className="text-[10px] uppercase tracking-[1em] font-black opacity-30 mb-8 block underline decoration-white decoration-4 underline-offset-8 italic text-violet-400">Nexus_Sync // {FEATURES[activeItem].cat}</span>
-                            <h1 className="text-7xl md:text-[8vw] font-black italic uppercase tracking-tighter leading-none text-white">{FEATURES[activeItem].title}</h1>
-                            <div className="text-4xl font-black italic tracking-tighter opacity-10 italic text-violet-500">State: {FEATURES[activeItem].value}</div>
-                         </div>
-
-                         <p className="text-3xl font-light italic leading-relaxed uppercase tracking-tight opacity-40 text-white leading-relaxed">
-                            Structural allocation for neural node {FEATURES[activeItem].title}. System integrity at 100%. Thermal load nominal at 32C. Every coordinate synchronized.
-                         </p>
-
-                         <div className="grid grid-cols-2 gap-12 py-12 border-y border-white/10 text-white/60">
-                            {[
-                              { icon: <Globe className="w-5 h-5" />, l: "Region", v: "Global_East" },
-                              { icon: <Zap className="w-5 h-5" />, l: "Logic", v: "Phase_Shift" },
-                              { icon: <Shield className="w-5 h-5" />, l: "Security", v: "High_Impact" },
-                              { icon: <Activity className="w-5 h-5" />, l: "Sync", v: "Active" },
-                            ].map((s, i) => (
-                              <div key={i} className="flex gap-6 items-center">
-                                 <div className="opacity-20 text-violet-400">{s.icon}</div>
-                                 <div className="text-left">
-                                    <div className="text-[10px] font-black opacity-30 uppercase tracking-widest mb-1 italic">{s.l}</div>
-                                    <div className="text-sm font-black uppercase italic tracking-tighter text-white">{s.v}</div>
-                                 </div>
-                              </div>
-                            ))}
-                         </div>
-
-                         <div className="flex gap-6 pt-8">
-                            <button onClick={() => setView("nexus")} className="flex-grow py-8 bg-violet-600 text-white font-black uppercase text-xs tracking-[1em] hover:bg-violet-500 transition-all shadow-2xl">
-                               Return_to_Nexus
-                            </button>
-                            <button className="px-12 py-8 border border-white/20 text-[10px] font-black uppercase tracking-[0.5em] hover:scale-105 transition-all text-white">
-                               PDF_Spec
-                            </button>
-                         </div>
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
-        {/* THE LOGIC VIEW (INFO) */}
-        {view === "logic" && (
-          <motion.div key="logic" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen flex flex-col justify-center">
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center text-white">
-                <div className="space-y-16">
-                   <span className="text-[10px] uppercase font-black tracking-[1.5em] opacity-30 block underline decoration-violet-500 decoration-2 underline-offset-8 italic text-violet-400">The_Logic_Protocol</span>
-                   <h2 className="text-7xl md:text-[10vw] font-black italic tracking-tighter leading-none text-white uppercase">The <br/> Truth.</h2>
-                   <p className="text-3xl md:text-4xl font-light italic opacity-60 leading-relaxed uppercase tracking-tight text-white/60">
-                      We treat architecture as code. Every structure is a function of its environmental variables and tectonic intent. 100% precision. Zero noise.
-                   </p>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t border-white/10 text-violet-400">
-                      {[
-                        { icon: <Sparkles className="w-6 h-6" />, t: "Adaptive Flow", v: "Dynamic Load Sync" },
-                        { icon: <Plus className="w-6 h-6" />, t: "Structural Sync", v: "Deep_Material_ID" },
-                      ].map((item, i) => (
-                        <div key={i} className="flex gap-8 group">
-                           <div className="w-16 h-16 rounded-none border border-violet-500 flex items-center justify-center text-violet-500 group-hover:bg-violet-500 group-hover:text-black transition-all shadow-xl">
-                              {item.icon}
-                           </div>
-                           <div className="text-left">
-                              <h4 className="text-2xl font-black uppercase italic tracking-tighter text-white leading-none mb-2">{item.t}</h4>
-                              <p className="text-[10px] opacity-30 uppercase tracking-[0.3em] font-black leading-relaxed text-violet-400/40">{item.v}</p>
-                           </div>
-                        </div>
-                      ))}
-                   </div>
-                </div>
-                <div className="relative aspect-square bg-[#0a0a1a] rounded-none p-12 overflow-hidden border border-violet-500/20 group shadow-2xl">
-                   <Image src="https://images.unsplash.com/photo-1541829070764-84a7d30dee62?q=80&w=1000&auto=format&fit=crop" alt="The Archive" fill className="object-cover opacity-20 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-[3s]" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                   <div className="absolute inset-x-0 bottom-12 flex justify-center">
-                      <div className="px-12 py-6 bg-violet-600 text-white text-[10px] font-black uppercase tracking-widest italic animate-bounce cursor-pointer hover:bg-violet-500 transition-all">
-                         Establish_Handshake
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
-      </AnimatePresence>
-
-      {/* Global Status HUD */}
-      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em] italic text-violet-400 leading-none">
-         <div className="flex gap-12 text-violet-400">
-            <span>Nexus_OS_Alpha</span>
-            <span>Uptime: 99.9%</span>
-         </div>
-         <div className="flex gap-4 items-end text-violet-400">
-            <div className="text-right leading-tight italic">
-               Archival_Control <br /> v4.0.113
+      <Dialog open={productDialog} onOpenChange={setProductDialog}>
+        <DialogContent className="max-w-4xl bg-white">
+          <DialogHeader>
+            <DialogTitle className="text-3xl" style={{ color: "#1a0f0a" }}>{PRODUCTS[activeProduct]?.title}</DialogTitle>
+          </DialogHeader>
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className="relative h-96 rounded-lg overflow-hidden bg-[#f9ede8]">
+              <Image src={PRODUCTS[activeProduct]?.img + "?w=500"} alt={PRODUCTS[activeProduct]?.title} fill className="object-cover" />
             </div>
-            <div className="flex gap-[4px] h-4">
-               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-full bg-violet-500 opacity-${i*20}`}></div>)}
+            <div>
+              <p className="text-2xl font-light mb-6" style={{ color: "#c4887a" }}>{PRODUCTS[activeProduct]?.price}</p>
+              <Accordion type="single" collapsible>
+                <AccordionItem value="ingredients">
+                  <AccordionTrigger>Key Ingredients</AccordionTrigger>
+                  <AccordionContent>Hyaluronic Acid, Peptide Complex, Botanical Extracts</AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="compatibility">
+                  <AccordionTrigger>Skin Type Compatibility</AccordionTrigger>
+                  <AccordionContent>
+                    <div className="space-y-3">
+                      <div><span className="font-light">Oily: </span><Progress value={85} className="h-2" /></div>
+                      <div><span className="font-light">Dry: </span><Progress value={78} className="h-2" /></div>
+                      <div><span className="font-light">Sensitive: </span><Progress value={92} className="h-2" /></div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="usage">
+                  <AccordionTrigger>How to Use</AccordionTrigger>
+                  <AccordionContent>Apply 2-3 drops to cleansed skin morning and evening. Follow with moisturizer.</AccordionContent>
+                </AccordionItem>
+              </Accordion>
+              <button onClick={() => setProductDialog(false)} className="mt-8 w-full py-3 rounded-lg font-light transition-colors" style={{ backgroundColor: "#c4887a", color: "white" }}>
+                Add to Cart
+              </button>
             </div>
-         </div>
-      </footer>
+          </div>
+        </DialogContent>
+      </Dialog>
 
-      <style>{`
-        ::-webkit-scrollbar { width: 0px; }
-        @keyframes scanline {
-          0% { transform: translateY(-100%); }
-          100% { transform: translateY(100vh); }
-        }
-        .animate-scanline {
-          animation: scanline 4s linear infinite;
-        }
-      `}</style>
+      <section className="py-24 px-6 md:px-12 bg-[#f9ede8]/30">
+        <Reveal>
+          <h2 className="text-5xl font-light mb-12" style={{ color: "#c4887a" }}>Skin Quiz</h2>
+        </Reveal>
+        <div className="text-center max-w-2xl mx-auto">
+          <p className="text-lg text-[#1a0f0a]/70 mb-8">Discover your personalized routine in 3 questions</p>
+          <button onClick={() => setQuizOpen(true)} className="px-12 py-4 rounded-lg font-light text-white transition-colors" style={{ backgroundColor: "#c4887a" }}>
+            Start Quiz
+          </button>
+        </div>
+      </section>
+
+      <section className="py-24 px-6 md:px-12">
+        <Reveal>
+          <h2 className="text-5xl font-light mb-12" style={{ color: "#c4887a" }}>Ingredient Transparency</h2>
+        </Reveal>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {INGREDIENTS.map((ing, idx) => (
+            <Reveal key={idx} delay={idx * 0.1}>
+              <Card className="bg-white border border-[#c4887a]/10">
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-light text-[#1a0f0a] mb-2">{ing.name}</h3>
+                  <Badge variant="outline" className="mb-4 border-[#c4887a] text-[#c4887a]">{ing.source}</Badge>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-[#1a0f0a]/60">Efficacy</span>
+                    <span className="text-[#c4887a] font-light">{ing.efficacy}%</span>
+                  </div>
+                  <Progress value={ing.efficacy} className="mt-2 bg-[#c4887a]/20" />
+                </CardContent>
+              </Card>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      <section className="py-24 px-6 md:px-12">
+        <Reveal>
+          <h2 className="text-5xl font-light mb-12" style={{ color: "#c4887a" }}>By The Numbers</h2>
+        </Reveal>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          {[
+            { label: "Happy Customers", value: 500, suffix: "K+" },
+            { label: "Products Offered", value: 15 },
+            { label: "Clean Beauty Certified", value: 100, suffix: "%" },
+            { label: "Customer Rating", value: 49, suffix: "/5" },
+          ].map((stat, idx) => (
+            <Reveal key={idx} delay={idx * 0.1}>
+              <div className="text-center">
+                <p className="text-4xl md:text-5xl font-light mb-2" style={{ color: "#c4887a" }}>
+                  <Counter target={stat.value} suffix={stat.suffix} />
+                </p>
+                <p className="text-sm text-[#1a0f0a]/60">{stat.label}</p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      <section className="py-24 px-6 md:px-12">
+        <Reveal>
+          <h2 className="text-5xl font-light mb-12" style={{ color: "#c4887a" }}>Dermatologist Endorsements</h2>
+        </Reveal>
+        <Carousel className="w-full max-w-4xl mx-auto">
+          <CarouselContent>
+            {[1, 2, 3].map((idx) => (
+              <CarouselItem key={idx}>
+                <Card className="bg-[#f9ede8]/50 border-none">
+                  <CardContent className="p-8">
+                    <p className="text-lg text-[#1a0f0a] mb-6 italic">"AURA formulations are clinically validated and dermatologist-tested. The results speak for themselves."</p>
+                    <div className="flex items-center gap-4">
+                      <Avatar className="w-12 h-12" style={{ backgroundColor: "#c4887a", color: "white" }}>
+                        <AvatarFallback>D{idx}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-light text-[#1a0f0a]">Dr. Sarah {["Chen", "Patel", "Williams"][idx-1]}</p>
+                        <p className="text-sm text-[#1a0f0a]/60">Dermatologist</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious />
+          <CarouselNext />
+        </Carousel>
+      </section>
+
+      <section className="py-24 px-6 md:px-12 bg-[#f9ede8]/30">
+        <Reveal>
+          <h2 className="text-5xl font-light mb-12" style={{ color: "#c4887a" }}>Before & After</h2>
+        </Reveal>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-4xl mx-auto">
+          {[1, 2].map((idx) => (
+            <Reveal key={idx} delay={idx * 0.1}>
+              <div>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="aspect-square rounded-lg overflow-hidden bg-[#f9ede8]">
+                    <Image src={`https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=400&q=50`} alt="Before" fill className="object-cover" />
+                    <p className="relative z-10 text-white font-light p-4">Before</p>
+                  </div>
+                  <div className="aspect-square rounded-lg overflow-hidden bg-[#f9ede8]">
+                    <Image src={`https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=400`} alt="After" fill className="object-cover" />
+                    <p className="relative z-10 text-white font-light p-4">After</p>
+                  </div>
+                </div>
+                <p className="text-[#1a0f0a]/70">4-week results with AURA Luminous Serum. Clinically visible improvement in radiance.</p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      <section className="py-24 px-6 md:px-12">
+        <Reveal>
+          <h2 className="text-5xl font-light mb-12" style={{ color: "#c4887a" }}>FAQ</h2>
+        </Reveal>
+        <Accordion type="single" collapsible className="max-w-2xl">
+          {[
+            { q: "Are your products vegan?", a: "98% of our products are vegan. Check product pages for specific details." },
+            { q: "What is your shipping policy?", a: "Free shipping on orders over $150. Standard shipping takes 3-5 business days." },
+            { q: "Do you offer returns?", a: "Yes, 60-day money-back guarantee if you're not satisfied with your purchase." },
+            { q: "Can I use multiple serums together?", a: "Yes, layer serums from lightest to heaviest texture. Consult our routine guides." },
+          ].map((item, idx) => (
+            <AccordionItem key={idx} value={`item-${idx}`}>
+              <AccordionTrigger className="text-[#1a0f0a]">{item.q}</AccordionTrigger>
+              <AccordionContent className="text-[#1a0f0a]/70">{item.a}</AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </section>
+
+      <section className="py-24 px-6 md:px-12 bg-[#f9ede8]/30">
+        <Reveal>
+          <h2 className="text-5xl font-light mb-12" style={{ color: "#c4887a" }}>The AURA Story</h2>
+        </Reveal>
+        <div className="max-w-2xl mx-auto">
+          <Reveal>
+            <p className="text-lg text-[#1a0f0a]/70 mb-6">Founded by skincare scientists and beauty experts, AURA emerged from a simple belief: luxury skincare doesn't require harsh chemicals or false promises. We blend cutting-edge dermatological science with nature's most potent ingredients to create transformative formulations.</p>
+          </Reveal>
+          <Reveal delay={0.1}>
+            <p className="text-lg text-[#1a0f0a]/70 mb-6">Every product is rigorously tested, clinically validated, and formulated for real results. Our commitment to clean beauty, sustainability, and ethical sourcing sets AURA apart in the luxury skincare landscape.</p>
+          </Reveal>
+          <Reveal delay={0.2}>
+            <p className="text-lg text-[#1a0f0a]/70">Join a community of 500K+ women who've discovered their best skin with AURA.</p>
+          </Reveal>
+        </div>
+      </section>
+
+      <section className="py-24 px-6 md:px-12">
+        <Reveal>
+          <h2 className="text-5xl font-light mb-12" style={{ color: "#c4887a" }}>Sustainability & Ethics</h2>
+        </Reveal>
+        <div className="grid md:grid-cols-3 gap-12">
+          {[
+            { title: "Ethical Sourcing", desc: "100% ethically sourced ingredients with fair-trade partnerships in developing regions." },
+            { title: "Eco Packaging", desc: "Recyclable/biodegradable packaging made from 80% post-consumer recycled materials." },
+            { title: "Cruelty-Free", desc: "Never tested on animals. Certified by Leaping Bunny and PETA." },
+          ].map((value, idx) => (
+            <Reveal key={idx} delay={idx * 0.1}>
+              <div className="text-center">
+                <div className="text-4xl mb-4">
+                  {idx === 0 && "🌍"}
+                  {idx === 1 && "♻️"}
+                  {idx === 2 && "🐰"}
+                </div>
+                <h3 className="text-xl font-light text-[#1a0f0a] mb-3">{value.title}</h3>
+                <p className="text-[#1a0f0a]/70">{value.desc}</p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      <section className="py-24 px-6 md:px-12 bg-[#f9ede8]/30">
+        <Reveal>
+          <h2 className="text-5xl font-light mb-12" style={{ color: "#c4887a" }}>Routine Builder</h2>
+        </Reveal>
+        <div className="max-w-3xl mx-auto">
+          <Reveal>
+            <p className="text-center text-[#1a0f0a]/70 mb-12">Custom skincare routines built for your unique skin. Answer a few questions and receive personalized product recommendations.</p>
+          </Reveal>
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              { step: "1. Cleanse", products: "Gentle, effective cleansing for daily use" },
+              { step: "2. Treat", products: "Serums and treatments targeting specific concerns" },
+              { step: "3. Protect", products: "Moisturizers and SPF for hydration and protection" },
+            ].map((routine, idx) => (
+              <Reveal key={idx} delay={idx * 0.1}>
+                <Card className="bg-white border-[#c4887a]/10">
+                  <CardContent className="p-6">
+                    <p className="font-light text-[#c4887a] text-sm mb-2">{routine.step}</p>
+                    <p className="text-[#1a0f0a]/70">{routine.products}</p>
+                  </CardContent>
+                </Card>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="py-24 px-6 md:px-12">
+        <Reveal>
+          <h2 className="text-5xl font-light mb-12" style={{ color: "#c4887a" }}>Research & Innovation</h2>
+        </Reveal>
+        <div className="grid md:grid-cols-2 gap-12">
+          <Reveal>
+            <div>
+              <h3 className="text-2xl font-light text-[#1a0f0a] mb-6">Our Lab</h3>
+              <p className="text-[#1a0f0a]/70 mb-4">AURA operates a dedicated research and development laboratory in Switzerland, where our team of 15 PhD-level chemists and dermatologists continuously innovate.</p>
+              <p className="text-[#1a0f0a]/70">We invest 12% of revenue back into R&D, ensuring we're always at the forefront of skincare science.</p>
+            </div>
+          </Reveal>
+          <Reveal delay={0.1}>
+            <div>
+              <h3 className="text-2xl font-light text-[#1a0f0a] mb-6">Clinical Trials</h3>
+              <p className="text-[#1a0f0a]/70 mb-4">Every product undergoes rigorous clinical testing with independent third-party labs. Our studies involve 100-500 participants over 8-12 weeks.</p>
+              <p className="text-[#1a0f0a]/70">Results are published and available for review. Transparency is core to our mission.</p>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      <section className="py-24 px-6 md:px-12 bg-[#f9ede8]/30">
+        <Reveal>
+          <h2 className="text-5xl font-light mb-12" style={{ color: "#c4887a" }}>Contact & Support</h2>
+        </Reveal>
+        <div className="max-w-2xl mx-auto text-center">
+          <p className="text-lg text-[#1a0f0a]/70 mb-6">Our customer success team is available 24/7 to support your AURA journey.</p>
+          <div className="space-y-4 text-[#1a0f0a]/70 mb-8">
+            <div>
+              <p className="font-light text-[#c4887a] text-sm">Email</p>
+              <p>support@aurabeauty.com</p>
+            </div>
+            <div>
+              <p className="font-light text-[#c4887a] text-sm">Phone</p>
+              <p>1-800-AURA-GLOW</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-24 px-6 md:px-12">
+        <Reveal>
+          <h2 className="text-5xl font-light mb-12" style={{ color: "#c4887a" }}>Join AURA</h2>
+        </Reveal>
+        <div className="text-center">
+          <p className="text-lg text-[#1a0f0a]/70 mb-8">Discover your best skin. Subscribe for exclusive offers, skincare tips, and early access to new launches.</p>
+          <MagneticBtn className="px-12 py-4 rounded-lg font-light text-white transition-colors" style={{ backgroundColor: "#c4887a" }}>
+            Subscribe Now
+          </MagneticBtn>
+        </div>
+      </section>
     </div>
-  );
+  )
 }

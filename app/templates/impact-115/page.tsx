@@ -1,235 +1,449 @@
-"use client";
+"use client"
+import { motion, useScroll, useTransform, useInView, AnimatePresence, useMotionValue, useSpring } from "framer-motion"
+import { useState, useRef, useEffect } from "react"
+import Image from "next/image"
+import Link from "next/link"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
+import { Progress } from "@/components/ui/progress"
 
-import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
-import { useState, useRef } from "react";
-import Image from "next/image";
-import { X, Menu, Search, Award, Zap, Activity, Globe, Shield, Command, Plus, ArrowUpRight, Maximize2, MoveRight, Layers, Box, Compass, Sparkles, MoveVertical, Eye } from "lucide-react";
-import "../premium.css";
+function Reveal({ children, delay=0 }: { children: React.ReactNode; delay?: number }) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: "-60px" })
+  return <motion.div ref={ref} initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, delay }}>{children}</motion.div>
+}
 
-const FRAMES = [
-  { id: 1, title: "VERBA_CORE", cat: "Forest", value: "Verified", img: "https://images.unsplash.com/photo-1502481851512-e9e2529b8bb5?q=80&w=1000&auto=format&fit=crop" },
-  { id: 2, title: "LIT_VECTOR", cat: "Sunset", value: "Active", img: "https://images.unsplash.com/photo-1495616811223-4d98c6e9c869?q=80&w=1000&auto=format&fit=crop" },
-  { id: 3, title: "VOID_SCAPE", cat: "Glacial", value: "Locked", img: "https://images.unsplash.com/photo-1497436072909-60f360e1d4b1?q=80&w=1000&auto=format&fit=crop" },
-];
+function Counter({ target, suffix="" }: { target: number; suffix?: string }) {
+  const [count, setCount] = useState(0)
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true })
+  useEffect(() => {
+    if (!inView) return
+    const step = Math.ceil(target / 60)
+    const t = setInterval(() => setCount(c => Math.min(c + step, target)), 16)
+    return () => clearInterval(t)
+  }, [inView, target])
+  return <span ref={ref}>{count.toLocaleString()}{suffix}</span>
+}
 
-export default function VerdaWaveSPA() {
-  const [view, setView] = useState<"wave" | "frame" | "archive">("wave");
-  const [activeItem, setActiveItem] = useState(0);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: containerRef });
-  
-  const yProgress = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
+function MagneticBtn({ children, className="" }: { children: React.ReactNode; className?: string }) {
+  const x = useMotionValue(0); const y = useMotionValue(0)
+  const sx = useSpring(x, { stiffness: 500, damping: 25 })
+  const sy = useSpring(y, { stiffness: 500, damping: 25 })
+  const ref = useRef<HTMLButtonElement>(null)
+  const handleMouse = (e: React.MouseEvent) => {
+    const r = ref.current!.getBoundingClientRect()
+    x.set((e.clientX - r.left - r.width/2) * 0.35)
+    y.set((e.clientY - r.top - r.height/2) * 0.35)
+  }
+  return <motion.button ref={ref} style={{ x: sx, y: sy }} onMouseMove={handleMouse} onMouseLeave={() => { x.set(0); y.set(0) }} className={className}>{children}</motion.button>
+}
+
+const PRACTICES = [
+  {
+    name: "Corporate",
+    services: ["M&A", "Securities", "Corporate Governance", "Contract Negotiation"],
+    cases: "520+ cases",
+    lead: "Margaret Chen",
+  },
+  {
+    name: "Litigation",
+    services: ["Civil Disputes", "Commercial Litigation", "Appellate", "Alternative Dispute Resolution"],
+    cases: "890+ cases",
+    lead: "James Mitchell",
+  },
+  {
+    name: "Real Estate",
+    services: ["Commercial Real Estate", "Residential", "Development", "Financing"],
+    cases: "650+ cases",
+    lead: "Sofia Rodriguez",
+  },
+  {
+    name: "Intellectual Property",
+    services: ["Patents", "Trademarks", "Copyright", "Licensing"],
+    cases: "410+ cases",
+    lead: "David Park",
+  },
+  {
+    name: "Employment",
+    services: ["Labor Law", "Employment Disputes", "Compliance", "Executive Compensation"],
+    cases: "380+ cases",
+    lead: "Rebecca Thompson",
+  },
+]
+
+const ATTORNEYS = [
+  { name: "Margaret Chen", title: "Managing Partner", bar: "NY, CA", specialty: "Corporate Law" },
+  { name: "James Mitchell", title: "Senior Counsel", bar: "NY, NJ, PA", specialty: "Litigation" },
+  { name: "Sofia Rodriguez", title: "Partner", bar: "NY, FL", specialty: "Real Estate" },
+  { name: "David Park", title: "Partner", bar: "NY, MA", specialty: "IP Law" },
+  { name: "Rebecca Thompson", title: "Counsel", bar: "NY, CT", specialty: "Employment" },
+  { name: "Michael O'Brien", title: "Associate", bar: "NY", specialty: "General Practice" },
+]
+
+const ARTICLES = [
+  { title: "M&A Trends in 2025", practice: "Corporate", date: "2025-01-15" },
+  { title: "AI Liability and Compliance", practice: "Employment", date: "2025-01-10" },
+  { title: "Real Estate Market Outlook", practice: "Real Estate", date: "2025-01-05" },
+  { title: "Patent Strategy in Tech", practice: "IP", date: "2024-12-28" },
+]
+
+export default function ApexLaw() {
+  const [activePractice, setActivePractice] = useState(0)
+  const { scrollY } = useScroll()
+  const heroY = useTransform(scrollY, [0, 500], [0, 150])
 
   return (
-    <div ref={containerRef} className="premium-theme bg-[#0e1111] text-[#10b981] min-h-screen selection:bg-emerald-600 selection:text-white font-sans overflow-x-hidden">
-      
-      {/* Background HUD Layers */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[45vw] font-black opacity-[0.02] select-none pointer-events-none italic tracking-tighter text-center uppercase">
-           VERDA
+    <div className="min-h-screen bg-[#f8f9fa] text-[#0f1b2d]">
+      <motion.section style={{ y: heroY }} className="relative h-screen flex items-center justify-center overflow-hidden">
+        <Image src="https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=1600" alt="Law Firm" fill className="object-cover" />
+        <div className="absolute inset-0 bg-black/50" />
+        <div className="relative z-10 text-center max-w-4xl mx-auto px-6">
+          <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="text-6xl md:text-8xl font-light mb-6 text-white">
+            APEX
+          </motion.h1>
+          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="text-xl md:text-2xl font-light text-white">
+            Modern Legal Excellence
+          </motion.p>
         </div>
-        <div className="absolute inset-0 bg-[#0e1111]/40 backdrop-blur-[2px]" />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.05] mix-blend-screen" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#0e1111_100%)] opacity-80" />
-      </div>
+      </motion.section>
 
-      {/* Editorial HUD Nav */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-center bg-transparent backdrop-blur-3xl border-b border-emerald-500/10 font-mono">
-        <div className="flex gap-12 items-center">
-           <button onClick={() => setView("wave")} className="text-xl font-bold tracking-tighter hover:scale-105 transition-transform font-sans uppercase text-[#10b981]">
-              VERDA_OS&trade;
-           </button>
-           <div className="hidden lg:flex gap-8 text-[10px] font-black uppercase tracking-widest opacity-20 italic text-white">
-              Status: Wave_Sync_Active
-              <span className="text-emerald-400">Ref: 0x115</span>
-           </div>
-        </div>
-        <div className="hidden md:flex gap-12 text-[10px] font-black uppercase tracking-[0.4em] opacity-30 text-white">
-           <button onClick={() => setView("wave")} className={`hover:opacity-100 transition-opacity ${view === 'wave' ? 'text-emerald-400 opacity-100 underline decoration-emerald-400 decoration-2 underline-offset-8 italic' : ''}`}>THE_WAVE</button>
-           <button onClick={() => setView("archive")} className={`hover:opacity-100 transition-opacity ${view === 'archive' ? 'text-emerald-400 opacity-100 underline decoration-emerald-400 decoration-2 underline-offset-8 italic' : ''}`}>THE_ARCHIVE</button>
-        </div>
-        <div className="flex items-center gap-8">
-           <Search className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer text-white" />
-           <Menu className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer text-white" />
-        </div>
-      </nav>
-
-      <AnimatePresence mode="wait">
-        
-        {/* THE WAVE VIEW (LANDING) */}
-        {view === "wave" && (
-          <motion.div key="wave" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-48 pb-32 px-12 max-w-[1800px] mx-auto min-h-screen flex flex-col justify-center relative z-10">
-             <header className="mb-24 border-b border-emerald-500/20 pb-12 flex flex-col md:flex-row justify-between items-end gap-12">
-                <div>
-                   <span className="text-[10px] uppercase font-black tracking-[1em] opacity-40 mb-4 block underline decoration-emerald-500/10 underline-offset-8 italic font-mono text-emerald-400">Archival_Sync // Series_115</span>
-                   <h1 className="text-7xl md:text-[12vw] font-black uppercase tracking-tighter leading-[0.75] text-white">DEEP. <br/> <span className="text-emerald-900">CHROMA.</span></h1>
-                </div>
-                <div className="text-right flex flex-col items-end">
-                   <div className="text-3xl font-black mb-4 tracking-tighter uppercase opacity-10 italic font-mono text-white">Atmospheric_Flow</div>
-                   <div className="w-64 h-[2px] bg-white/5 rounded-none overflow-hidden">
-                      <motion.div animate={{ width: ['20%', '90%', '40%', '75%'] }} transition={{ duration: 4, repeat: Infinity }} className="h-full bg-emerald-500" />
-                   </div>
-                </div>
-             </header>
-
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-12 font-mono">
-                {FRAMES.map((p, i) => (
-                  <motion.div 
-                    key={p.id} initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                    className="group relative h-[60vh] rounded-[3rem] overflow-hidden border border-emerald-500/10 hover:border-emerald-500/40 transition-all cursor-pointer shadow-2xl bg-white/5"
-                    onClick={() => { setActiveItem(i); setView("frame"); }}
-                  >
-                     <Image src={p.img} alt={p.title} fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[2s] group-hover:scale-110" />
-                     <div className="absolute inset-0 bg-emerald-900/10 group-hover:bg-transparent transition-colors duration-1000" />
-                     <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                     
-                     <div className="absolute inset-10 flex flex-col justify-between">
-                        <div className="flex justify-between items-start text-white mix-blend-difference">
-                           <div className="p-4 bg-white/10 border border-white/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Eye className="w-5 h-5" />
-                           </div>
-                           <div className="text-[10px] font-black uppercase tracking-widest opacity-20 italic">FRAME_0x{i+115}</div>
-                        </div>
-                        <div className="mix-blend-difference text-white">
-                           <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-2 block italic text-emerald-300">{p.cat} // {p.value}</span>
-                           <h3 className="text-5xl font-black italic uppercase tracking-tighter leading-none transition-all group-hover:tracking-widest">{p.title}</h3>
-                        </div>
-                     </div>
-                  </motion.div>
-                ))}
-             </div>
-          </motion.div>
-        )}
-
-        {/* THE FRAME VIEW (DETAIL) */}
-        {view === "frame" && (
-          <motion.div key="frame" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen">
-             <button onClick={() => setView("wave")} className="fixed top-12 left-12 z-[60] bg-white text-black p-5 rounded-full hover:scale-110 transition-transform shadow-2xl">
-                <X className="w-6 h-6" />
-             </button>
-
-             <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen pt-24 lg:pt-0">
-                <div className="lg:col-span-12 relative flex items-center justify-center p-8 md:p-32 overflow-hidden h-screen bg-[#0e1111]">
-                   <div className="absolute inset-0 opacity-10">
-                      <Image src={FRAMES[activeItem].img} alt="Background" fill className="object-cover grayscale" />
-                   </div>
-                   <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[40vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase text-emerald-500 font-sans">
-                      FRAME
-                   </div>
-                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#0e1111_100%)]" />
-                   
-                   <div className="max-w-[1500px] w-full grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10 font-sans text-white">
-                      <motion.div initial={{ scale: 1.1, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1 }} className="relative aspect-square w-full rounded-[4rem] overflow-hidden border border-emerald-500/20 bg-neutral-900 shadow-2xl group">
-                         <Image src={FRAMES[activeItem].img} alt="Spec" fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[3s] opacity-80" priority />
-                         <div className="absolute bottom-12 left-12 p-4 bg-black/60 backdrop-blur-3xl rounded-none border-2 border-white/10 z-20">
-                            <Layers className="w-6 h-6 text-emerald-400 animate-pulse" />
-                         </div>
-                      </motion.div>
-
-                      <div className="flex flex-col justify-center space-y-12 text-white">
-                         <div className="space-y-6">
-                            <span className="text-[10px] uppercase tracking-[1em] font-black opacity-30 mb-8 block underline decoration-white decoration-4 underline-offset-8 italic text-emerald-400 font-mono">Verda_Sync // {FRAMES[activeItem].cat}</span>
-                            <h1 className="text-7xl md:text-[8vw] font-black italic uppercase tracking-tighter leading-none text-white">{FRAMES[activeItem].title}</h1>
-                            <div className="text-4xl font-black italic tracking-tighter opacity-10 italic text-emerald-600">State: {FRAMES[activeItem].value}</div>
-                         </div>
-
-                         <p className="text-3xl font-light italic leading-relaxed uppercase tracking-tight opacity-40 text-white leading-relaxed">
-                            Structural allocation for mission {FRAMES[activeItem].title}. System integrity at 100%. Thermal load nominal at 32C. Every coordinate synchronized.
-                         </p>
-
-                         <div className="grid grid-cols-2 gap-12 py-12 border-y border-white/10 font-mono text-white/60">
-                            {[
-                              { icon: <Globe className="w-5 h-5" />, l: "Region", v: "Global_East" },
-                              { icon: <Zap className="w-5 h-5" />, l: "Logic", v: "Phase_Shift" },
-                              { icon: <Shield className="w-5 h-5" />, l: "Security", v: "High_Impact" },
-                              { icon: <Activity className="w-5 h-5" />, l: "Sync", v: "Active" },
-                            ].map((s, i) => (
-                              <div key={i} className="flex gap-6 items-center">
-                                 <div className="opacity-20 text-emerald-400">{s.icon}</div>
-                                 <div className="text-left">
-                                    <div className="text-[10px] font-black opacity-30 uppercase tracking-widest mb-1 italic text-white">{s.l}</div>
-                                    <div className="text-sm font-black uppercase italic tracking-tighter text-white">{s.v}</div>
-                                 </div>
-                              </div>
-                            ))}
-                         </div>
-
-                         <div className="flex gap-6 pt-8 font-mono">
-                            <button onClick={() => setView("wave")} className="flex-grow py-8 bg-emerald-600 text-white font-black uppercase text-xs tracking-[1em] hover:bg-emerald-500 transition-all shadow-2xl rounded-full">
-                               Return_to_Wave
-                            </button>
-                            <button className="px-12 py-8 border border-white/20 text-[10px] font-black uppercase tracking-[0.5em] hover:scale-105 transition-all text-white rounded-full">
-                               PDF_Spec
-                            </button>
-                         </div>
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
-        {/* THE ARCHIVE VIEW (INFO) */}
-        {view === "archive" && (
-          <motion.div key="archive" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen flex flex-col justify-center">
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center text-white">
-                <div className="space-y-16">
-                   <span className="text-[10px] uppercase font-black tracking-[1.5em] opacity-30 block underline decoration-emerald-400 decoration-2 underline-offset-8 italic font-mono text-emerald-400">The_Verda_Protocol</span>
-                   <h2 className="text-7xl md:text-[10vw] font-black italic tracking-tighter leading-none text-white uppercase font-sans">The <br/> Truth.</h2>
-                   <p className="text-3xl md:text-4xl font-light italic opacity-60 leading-relaxed uppercase tracking-tight text-white/60 font-sans">
-                      We treat architecture as code. Every structure is a function of its environmental variables and tectonic intent. 100% precision. Zero noise.
-                   </p>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t border-white/10 font-mono text-emerald-400">
-                      {[
-                        { icon: <Sparkles className="w-6 h-6" />, t: "Adaptive Flow", v: "Dynamic Load Sync" },
-                        { icon: <Plus className="w-6 h-6" />, t: "Structural Sync", v: "Deep_Material_ID" },
-                      ].map((item, i) => (
-                        <div key={i} className="flex gap-8 group">
-                           <div className="w-16 h-16 rounded-full border border-emerald-400 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-400 group-hover:text-black transition-all shadow-xl">
-                              {item.icon}
-                           </div>
-                           <div className="text-left">
-                              <h4 className="text-2xl font-black uppercase italic tracking-tighter text-white leading-none mb-2 font-sans">{item.t}</h4>
-                              <p className="text-[10px] opacity-30 uppercase tracking-[0.3em] font-black leading-relaxed text-emerald-400/40">{item.v}</p>
-                           </div>
+      <section className="py-24 px-6 md:px-12">
+        <Reveal>
+          <h2 className="text-5xl font-light mb-12 text-[#0f1b2d]">Practice Areas</h2>
+        </Reveal>
+        <Tabs defaultValue="Corporate" className="w-full">
+          <TabsList className="grid w-full grid-cols-5 bg-white border border-[#c9a84c]/20">
+            {PRACTICES.map((p) => (
+              <TabsTrigger key={p.name} value={p.name} className="data-[state=active]:bg-[#0f1b2d] data-[state=active]:text-[#c9a84c]">
+                {p.name}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          {PRACTICES.map((practice) => (
+            <TabsContent key={practice.name} value={practice.name} className="mt-12">
+              <div className="grid md:grid-cols-2 gap-12">
+                <Reveal>
+                  <div>
+                    <h3 className="text-3xl font-light text-[#0f1b2d] mb-6">{practice.name} Law</h3>
+                    <div className="space-y-3 mb-8">
+                      {practice.services.map((svc, idx) => (
+                        <div key={idx} className="flex items-center gap-3">
+                          <div className="w-2 h-2 bg-[#c9a84c] rounded-full" />
+                          <span className="text-[#0f1b2d]/70">{svc}</span>
                         </div>
                       ))}
-                   </div>
-                </div>
-                <div className="relative aspect-square bg-emerald-900/10 rounded-none p-12 overflow-hidden border border-emerald-500/20 group shadow-2xl">
-                   <Image src="https://images.unsplash.com/photo-1541829070764-84a7d30dee62?q=80&w=1000&auto=format&fit=crop" alt="The Archive" fill className="object-cover opacity-20 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-[3s]" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                   <div className="absolute inset-x-0 bottom-12 flex justify-center font-mono">
-                      <div className="px-12 py-6 bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest italic animate-bounce cursor-pointer hover:bg-white transition-all rounded-full">
-                         Establish_Handshake
+                    </div>
+                    <Badge className="bg-[#0f1b2d] text-[#c9a84c]">{practice.cases}</Badge>
+                    <p className="text-sm text-[#0f1b2d]/60 mt-6">Led by {practice.lead}</p>
+                  </div>
+                </Reveal>
+                <Reveal delay={0.1}>
+                  <div className="relative h-96 bg-[#e8eef5] rounded-lg overflow-hidden">
+                    <Image src="https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=500" alt={practice.name} fill className="object-cover" />
+                  </div>
+                </Reveal>
+              </div>
+            </TabsContent>
+          ))}
+        </Tabs>
+      </section>
+
+      <section className="py-24 px-6 md:px-12 bg-[#0f1b2d]">
+        <Reveal>
+          <h2 className="text-5xl font-light mb-12 text-white">Our Attorneys</h2>
+        </Reveal>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {ATTORNEYS.map((atty, idx) => (
+            <Reveal key={idx} delay={idx * 0.1}>
+              <Card className="bg-[#1a2a3d] border-[#c9a84c]/20">
+                <CardContent className="p-6">
+                  <Avatar className="w-16 h-16 mb-4" style={{ backgroundColor: "#c9a84c" }}>
+                    <AvatarFallback className="text-[#0f1b2d]">{atty.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                  </Avatar>
+                  <h3 className="text-lg font-light text-white mb-1">{atty.name}</h3>
+                  <p className="text-sm text-[#c9a84c] mb-3">{atty.title}</p>
+                  <Badge variant="outline" className="border-[#c9a84c] text-[#c9a84c]">{atty.bar}</Badge>
+                  <p className="text-xs text-white/60 mt-3">{atty.specialty}</p>
+                </CardContent>
+              </Card>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      <section className="py-24 px-6 md:px-12">
+        <Reveal>
+          <h2 className="text-5xl font-light mb-12 text-[#0f1b2d]">Case Results</h2>
+        </Reveal>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          {[
+            { label: "Cases Won", value: 2000, suffix: "+" },
+            { label: "Success Rate", value: 98, suffix: "%" },
+            { label: "Years in Practice", value: 35 },
+            { label: "Offices Worldwide", value: 12 },
+          ].map((stat, idx) => (
+            <Reveal key={idx} delay={idx * 0.1}>
+              <div className="text-center">
+                <p className="text-4xl md:text-5xl font-light mb-2 text-[#c9a84c]">
+                  <Counter target={stat.value} suffix={stat.suffix} />
+                </p>
+                <p className="text-sm text-[#0f1b2d]/60">{stat.label}</p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      <section className="py-24 px-6 md:px-12 bg-[#e8eef5]">
+        <Reveal>
+          <h2 className="text-5xl font-light mb-12 text-[#0f1b2d]">Thought Leadership</h2>
+        </Reveal>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {ARTICLES.map((article, idx) => (
+            <Reveal key={idx} delay={idx * 0.1}>
+              <Card className="bg-white">
+                <CardContent className="p-6">
+                  <Badge className="mb-4 bg-[#0f1b2d] text-[#c9a84c]">{article.practice}</Badge>
+                  <h3 className="text-lg font-light text-[#0f1b2d] mb-3">{article.title}</h3>
+                  <p className="text-sm text-[#0f1b2d]/60">{new Date(article.date).toLocaleDateString()}</p>
+                  <button className="mt-4 text-[#c9a84c] font-light hover:underline">Read Article →</button>
+                </CardContent>
+              </Card>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      <section className="py-24 px-6 md:px-12">
+        <Reveal>
+          <h2 className="text-5xl font-light mb-12 text-[#0f1b2d]">Client Testimonials</h2>
+        </Reveal>
+        <Carousel className="w-full max-w-4xl mx-auto">
+          <CarouselContent>
+            {[1, 2, 3].map((idx) => (
+              <CarouselItem key={idx}>
+                <Card className="bg-[#e8eef5]">
+                  <CardContent className="p-8">
+                    <p className="text-lg text-[#0f1b2d] mb-6 italic">"APEX delivered exceptional results on our most complex litigation. Their expertise is unparalleled."</p>
+                    <div className="flex items-center gap-4">
+                      <Avatar className="w-12 h-12" style={{ backgroundColor: "#c9a84c" }}>
+                        <AvatarFallback className="text-[#0f1b2d]">C{idx}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-light text-[#0f1b2d]">Client {idx}</p>
+                        <p className="text-sm text-[#0f1b2d]/60">Fortune 500 General Counsel</p>
                       </div>
-                   </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious />
+          <CarouselNext />
+        </Carousel>
+      </section>
+
+      <section className="py-12 px-6 md:px-12 border-t border-[#c9a84c]/20">
+        <Reveal>
+          <p className="text-center text-sm text-[#0f1b2d]/60 mb-6">Recognized By</p>
+        </Reveal>
+        <div className="flex justify-center gap-8 flex-wrap">
+          {["Martindale", "Chambers USA", "Super Lawyers", "Best Lawyers"].map((badge, idx) => (
+            <Reveal key={idx} delay={idx * 0.05}>
+              <Badge variant="outline" className="border-[#c9a84c] text-[#c9a84c] font-light">{badge}</Badge>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      <section className="py-24 px-6 md:px-12 bg-[#0f1b2d]">
+        <Reveal>
+          <h2 className="text-5xl font-light mb-12 text-white">Retainer Process</h2>
+        </Reveal>
+        <Accordion type="single" collapsible className="max-w-2xl">
+          {[
+            { title: "Initial Consultation", desc: "Comprehensive case review and legal strategy discussion" },
+            { title: "Engagement Agreement", desc: "Transparent fee structure and scope of representation" },
+            { title: "Research & Planning", desc: "Detailed analysis and litigation roadmap development" },
+            { title: "Representation", desc: "Full legal representation throughout proceedings" },
+            { title: "Resolution & Follow-up", desc: "Case conclusion and ongoing advisory services" },
+          ].map((step, idx) => (
+            <AccordionItem key={idx} value={`step-${idx}`} className="border-[#c9a84c]/20">
+              <AccordionTrigger className="text-white">Step {idx + 1}: {step.title}</AccordionTrigger>
+              <AccordionContent className="text-white/70">{step.desc}</AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </section>
+
+      <section className="py-24 px-6 md:px-12">
+        <Reveal>
+          <h2 className="text-5xl font-light mb-12 text-[#0f1b2d]">FAQ</h2>
+        </Reveal>
+        <Accordion type="single" collapsible className="max-w-2xl">
+          {[
+            { q: "What is your consultation process?", a: "Initial consultations are confidential and at no charge. We review your matter and provide preliminary legal assessment." },
+            { q: "How do you structure fees?", a: "We offer hourly rates, flat fees, or contingency arrangements depending on case type and client needs." },
+            { q: "How long does litigation typically take?", a: "Most cases resolve within 18-36 months, though complex matters may extend longer. Early settlement is often possible." },
+            { q: "What about confidentiality?", a: "Attorney-client privilege protects all communications. We maintain strict confidentiality throughout representation." },
+          ].map((item, idx) => (
+            <AccordionItem key={idx} value={`item-${idx}`}>
+              <AccordionTrigger className="text-[#0f1b2d]">{item.q}</AccordionTrigger>
+              <AccordionContent className="text-[#0f1b2d]/70">{item.a}</AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </section>
+
+      <section className="py-24 px-6 md:px-12">
+        <Reveal>
+          <h2 className="text-5xl font-light mb-12 text-[#0f1b2d]">Our Firm</h2>
+        </Reveal>
+        <div className="max-w-3xl mx-auto">
+          <Reveal>
+            <p className="text-lg text-[#0f1b2d]/70 mb-6">APEX Law was founded in 1990 with a simple mission: provide exceptional legal representation to corporations, institutions, and individuals navigating complex legal challenges. Over 35 years, we've evolved into a full-service firm with 12 offices across North America and Europe.</p>
+          </Reveal>
+          <Reveal delay={0.1}>
+            <p className="text-lg text-[#0f1b2d]/70 mb-6">Our 150+ attorneys bring diverse expertise, with deep specialization in corporate law, litigation, real estate, intellectual property, and employment matters. We pride ourselves on our collaborative approach, combining senior expertise with emerging talent.</p>
+          </Reveal>
+          <Reveal delay={0.2}>
+            <p className="text-lg text-[#0f1b2d]/70">We measure success not just by case outcomes, but by long-term client relationships and our contribution to the legal profession.</p>
+          </Reveal>
+        </div>
+      </section>
+
+      <section className="py-24 px-6 md:px-12 bg-[#e8eef5]">
+        <Reveal>
+          <h2 className="text-5xl font-light mb-12 text-[#0f1b2d]">Notable Cases</h2>
+        </Reveal>
+        <div className="grid md:grid-cols-2 gap-12">
+          {[
+            { case: "Smith v. Corporate Giants LLC", outcome: "Won $475M settlement", practice: "Litigation" },
+            { case: "TechFlow International Acquisition", outcome: "$2.1B cross-border M&A", practice: "Corporate" },
+            { case: "IP Patent Infringement Defense", outcome: "Defeated claims, maintained patents", practice: "IP Law" },
+            { case: "Real Estate Development Project", outcome: "Completed $850M mixed-use development", practice: "Real Estate" },
+          ].map((notable, idx) => (
+            <Reveal key={idx} delay={idx * 0.1}>
+              <Card className="bg-white">
+                <CardContent className="p-6">
+                  <h4 className="text-lg font-light text-[#0f1b2d] mb-2">{notable.case}</h4>
+                  <p className="text-[#c9a84c] font-light mb-2">{notable.outcome}</p>
+                  <Badge className="bg-[#0f1b2d] text-[#c9a84c]">{notable.practice}</Badge>
+                </CardContent>
+              </Card>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      <section className="py-24 px-6 md:px-12">
+        <Reveal>
+          <h2 className="text-5xl font-light mb-12 text-[#0f1b2d]">Diversity & Inclusion</h2>
+        </Reveal>
+        <div className="grid md:grid-cols-3 gap-8">
+          {[
+            { stat: "40%", label: "Female Partners & Counsel" },
+            { stat: "38%", label: "Attorneys of Color" },
+            { stat: "$2.5M", label: "Pro Bono Hours Annually" },
+          ].map((diversity, idx) => (
+            <Reveal key={idx} delay={idx * 0.1}>
+              <div className="text-center">
+                <p className="text-4xl font-light text-[#c9a84c] mb-2">{diversity.stat}</p>
+                <p className="text-[#0f1b2d]/70">{diversity.label}</p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      <section className="py-24 px-6 md:px-12 bg-[#e8eef5]">
+        <Reveal>
+          <h2 className="text-5xl font-light mb-12 text-[#0f1b2d]">Practice Areas Deep Dive</h2>
+        </Reveal>
+        <Accordion type="single" collapsible className="max-w-2xl mx-auto">
+          {[
+            { area: "Corporate Law", sub: "M&A, Securities, Governance, Contracts" },
+            { area: "Litigation", sub: "Commercial, Civil, Appellate, Mediation" },
+            { area: "Real Estate", sub: "Commercial, Residential, Development, Finance" },
+            { area: "IP Law", sub: "Patents, Trademarks, Copyright, Licensing" },
+          ].map((practice, idx) => (
+            <AccordionItem key={idx} value={`practice-${idx}`}>
+              <AccordionTrigger className="text-[#0f1b2d]">{practice.area}</AccordionTrigger>
+              <AccordionContent className="text-[#0f1b2d]/70">{practice.sub}</AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </section>
+
+      <section className="py-24 px-6 md:px-12">
+        <Reveal>
+          <h2 className="text-5xl font-light mb-12 text-[#0f1b2d]">Professional Recognition</h2>
+        </Reveal>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          {["Best Law Firms 2024", "AV Preeminent Rating", "World Class Legal Firm", "Regional Leader", "Client Choice Award", "Innovative Practice", "Diversity Leader", "Pro Bono Champion"].map((recognition, idx) => (
+            <Reveal key={idx} delay={idx * 0.05}>
+              <Card className="bg-[#e8eef5] border-[#c9a84c]/10 text-center">
+                <CardContent className="p-6">
+                  <p className="text-sm font-light text-[#0f1b2d]">{recognition}</p>
+                </CardContent>
+              </Card>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      <section className="py-24 px-6 md:px-12 bg-[#e8eef5]">
+        <Reveal>
+          <h2 className="text-5xl font-light mb-12 text-[#0f1b2d]">Contact Information</h2>
+        </Reveal>
+        <div className="grid md:grid-cols-2 gap-12 max-w-4xl mx-auto">
+          <Reveal>
+            <div>
+              <h3 className="text-2xl font-light text-[#0f1b2d] mb-6">Main Office</h3>
+              <div className="space-y-3 text-[#0f1b2d]/70">
+                <p className="font-light text-[#c9a84c] text-sm">Address</p>
+                <p>500 Park Avenue South, Suite 1500</p>
+                <p>New York, NY 10010</p>
+              </div>
+            </div>
+          </Reveal>
+          <Reveal delay={0.1}>
+            <div>
+              <h3 className="text-2xl font-light text-[#0f1b2d] mb-6">Contact</h3>
+              <div className="space-y-3 text-[#0f1b2d]/70">
+                <div>
+                  <p className="font-light text-[#c9a84c] text-sm">Phone</p>
+                  <p>+1 (212) 555-0200</p>
                 </div>
-             </div>
-          </motion.div>
-        )}
-
-      </AnimatePresence>
-
-      {/* Global Status HUD */}
-      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em] italic text-emerald-400 leading-none font-mono">
-         <div className="flex gap-12 text-emerald-400">
-            <span>Verda_OS_Alpha</span>
-            <span>Uptime: 99.9%</span>
-         </div>
-         <div className="flex gap-4 items-end text-emerald-400">
-            <div className="text-right leading-tight italic">
-               Archival_Control <br /> v4.0.115
+                <div>
+                  <p className="font-light text-[#c9a84c] text-sm">Email</p>
+                  <p>info@apexlaw.com</p>
+                </div>
+              </div>
             </div>
-            <div className="flex gap-[4px] h-4">
-               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-full bg-emerald-500 opacity-${i*20}`}></div>)}
-            </div>
-         </div>
-      </footer>
+          </Reveal>
+        </div>
+      </section>
 
-      <style>{`
-        ::-webkit-scrollbar { width: 0px; }
-      `}</style>
+      <section className="py-24 px-6 md:px-12">
+        <Reveal>
+          <h2 className="text-5xl font-light mb-12 text-[#0f1b2d]">Schedule a Consultation</h2>
+        </Reveal>
+        <div className="text-center">
+          <p className="text-lg text-[#0f1b2d]/70 mb-8">Let us help protect and advance your interests. Our experts are ready to discuss your matter.</p>
+          <MagneticBtn className="px-12 py-4 rounded-lg font-light text-white transition-colors" style={{ backgroundColor: "#0f1b2d" }}>
+            Request Consultation
+          </MagneticBtn>
+        </div>
+      </section>
     </div>
-  );
+  )
 }

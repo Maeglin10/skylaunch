@@ -1,274 +1,374 @@
-"use client";
+"use client"
+import { motion, useScroll, useTransform, useInView, AnimatePresence, useMotionValue, useSpring } from "framer-motion"
+import { useState, useRef, useEffect } from "react"
+import Image from "next/image"
+import Link from "next/link"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
+import { Progress } from "@/components/ui/progress"
 
-import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from "framer-motion";
-import { useState, useRef } from "react";
-import Image from "next/image";
-import { X, Menu, Search, Award, Zap, Activity, Globe, Shield, Command, Plus, ArrowUpRight, Maximize2, MoveRight, Layers, Box, Compass, Sparkles, MoveVertical, Crown, Hexagon } from "lucide-react";
-import "../premium.css";
+const CODE_SNIPPETS = [
+  "const wallet = await blockbase.init()",
+  "const tx = await contract.deploy()",
+  "const hash = await eth.sendTransaction()",
+  "const data = await api.query(filters)",
+]
 
-const PHASES = [
-  { id: 1, title: "PRIME_UNIT", cat: "Infrastructure", value: "CENT_101", img: "https://images.unsplash.com/photo-1511447333015-45b65e60f6d5?q=80&w=1000&auto=format&fit=crop" },
-  { id: 2, title: "DATA_SPHERE", cat: "Neural", value: "Active", img: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=1000&auto=format&fit=crop" },
-  { id: 3, title: "VOID_VECTOR", cat: "Strategic", value: "Verified", img: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1000&auto=format&fit=crop" },
-];
+const PRODUCTS = [
+  { id: 1, name: "SDK", desc: "TypeScript SDK for all chains", features: ["Type-safe", "Auto-refresh", "Batch ops"], code: "npm install @blockbase/sdk" },
+  { id: 2, name: "API", desc: "RESTful + GraphQL endpoints", features: ["100% uptime", "Rate limits", "Webhooks"], code: "https://api.blockbase.dev" },
+  { id: 3, name: "Node", desc: "Self-hosted validator node", features: ["Easy setup", "Monitoring", "Rewards"], code: "docker pull blockbase/node" },
+  { id: 4, name: "Analytics", desc: "Real-time blockchain insights", features: ["Charts", "Alerts", "Export"], code: "blockbase.analytics.query()" },
+]
 
-export default function CenturionPrimeSPA() {
-  const [view, setView] = useState<"prime" | "phase" | "substrate">("prime");
-  const [activeItem, setActiveItem] = useState(0);
+const CHAINS = ["Ethereum", "Solana", "Base", "Polygon", "Arbitrum", "Avalanche", "BSC", "Optimism"]
+
+const PRICING = [
+  { tier: "Starter", price: "Free", features: ["100K calls/month", "Community support", "Public API"] },
+  { tier: "Growth", price: "$199", features: ["10M calls/month", "Email support", "Private API"] },
+  { tier: "Enterprise", price: "Custom", features: ["Unlimited", "24/7 support", "Custom infra"] },
+]
+
+const INTEGRATIONS = ["Hardhat", "Foundry", "Truffle", "Remix", "Ethers.js", "Web3.py"]
+
+const SECURITY = [
+  { q: "Is the code audited?", a: "Yes. Independent audits by Trail of Bits completed. Reports available." },
+  { q: "What's the bug bounty?", a: "Up to $100K for critical vulnerabilities. Coordinated disclosure on HackerOne." },
+  { q: "How do you handle keys?", a: "Zero-knowledge architecture. Keys never leave your device. Full encryption." },
+  { q: "What about compliance?", a: "SOC 2 Type II certified. GDPR compliant. Contracts available." },
+]
+
+const TESTIMONIALS = [
+  { text: "Blockbase saved us 6 months of infrastructure work. Production-ready immediately.", author: "CTO, DeFi Protocol", company: Badge },
+  { text: "The API performance is unmatched. 99.99% uptime guaranteed. Fantastic.", author: "Lead Dev, Trading Firm", company: Badge },
+  { text: "Support is incredible. Questions answered in minutes. Best DevTools.", author: "Founder, Web3 Startup", company: Badge },
+]
+
+const FAQ_ITEMS = [
+  { q: "Do you support testnet?", a: "Yes. Full support for Sepolia, Mumbai, Arbitrum Goerli, and all major testnets." },
+  { q: "What about RPC limits?", a: "No artificial limits. Horizontal scaling handles any load. Contact us for enterprise SLA." },
+  { q: "Can I self-host?", a: "Absolutely. Docker images available. Kubernetes configs included. Enterprise license required." },
+  { q: "What about data retention?", a: "Configurable. Keep on-chain indefinitely or set custom retention policies." },
+]
+
+const STATS = [{ value: "50K", label: "Devs" }, { value: "500M", label: "Txns" }, { value: "99.99%", label: "Uptime" }, { value: "200+", label: "Chains" }]
+
+function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: "-60px" })
+  return <motion.div ref={ref} initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, delay }}>{children}</motion.div>
+}
+
+function Counter({ target, suffix = "" }: { target: number; suffix?: string }) {
+  const [count, setCount] = useState(0)
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true })
+  useEffect(() => {
+    if (!inView) return
+    const step = Math.ceil(target / 60)
+    const t = setInterval(() => setCount(c => Math.min(c + step, target)), 16)
+    return () => clearInterval(t)
+  }, [inView, target])
+  return <span ref={ref}>{count.toLocaleString()}{suffix}</span>
+}
+
+function MagneticBtn({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  const x = useMotionValue(0); const y = useMotionValue(0)
+  const sx = useSpring(x, { stiffness: 500, damping: 25 })
+  const sy = useSpring(y, { stiffness: 500, damping: 25 })
+  const ref = useRef<HTMLButtonElement>(null)
+  const handleMouse = (e: React.MouseEvent) => {
+    const r = ref.current!.getBoundingClientRect()
+    x.set((e.clientX - r.left - r.width/2) * 0.35)
+    y.set((e.clientY - r.top - r.height/2) * 0.35)
+  }
+  return <motion.button ref={ref} style={{ x: sx, y: sy }} onMouseMove={handleMouse} onMouseLeave={() => { x.set(0); y.set(0) }} className={className}>{children}</motion.button>
+}
+
+function Terminal() {
+  const [index, setIndex] = useState(0)
+  useEffect(() => {
+    const interval = setInterval(() => setIndex((i) => (i + 1) % CODE_SNIPPETS.length), 3000)
+    return () => clearInterval(interval)
+  }, [])
 
   return (
-    <div className="premium-theme bg-[#050510] text-[#a855f7] min-h-screen selection:bg-[#a855f7] selection:text-white font-mono overflow-x-hidden">
-      
-      {/* Background HUD Layers */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[45vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase">
-           101
-        </div>
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.05] mix-blend-screen" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#050510_100%)] opacity-80" />
-        
-        {/* Synaptic Particles */}
-        <div className="absolute inset-0 z-10 opacity-20">
-           {Array.from({ length: 40 }).map((_, i) => (
-              <motion.div 
-                 key={i}
-                 initial={{ y: -10, x: `${Math.random() * 100}%` }}
-                 animate={{ y: "110vh" }}
-                 transition={{ duration: Math.random() * 5 + 5, repeat: Infinity, delay: Math.random() * 10, ease: "linear" }}
-                 className="absolute w-[1px] h-32 bg-purple-500"
-              />
-           ))}
-        </div>
+    <div className="bg-[#0a0a0f] border border-[#1e90ff]/30 rounded-lg p-6 font-mono text-sm">
+      <div className="flex gap-2 mb-4">
+        <div className="w-3 h-3 rounded-full bg-red-500" />
+        <div className="w-3 h-3 rounded-full bg-yellow-500" />
+        <div className="w-3 h-3 rounded-full bg-green-500" />
       </div>
+      <motion.div key={index} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
+        <span className="text-[#1e90ff]">{'>'}</span> <span className="text-[#00ff88]">{CODE_SNIPPETS[index]}</span>
+        <motion.span animate={{ opacity: [1, 0] }} transition={{ duration: 0.6, repeat: Infinity }}>
+          <span className="text-[#1e90ff]">|</span>
+        </motion.span>
+      </motion.div>
+    </div>
+  )
+}
 
-      {/* Editorial HUD Nav */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-center bg-black/40 backdrop-blur-3xl border-b border-purple-500/20">
-        <div className="flex gap-12 items-center">
-           <button onClick={() => setView("prime")} className="text-xl font-black italic tracking-tighter hover:text-white transition-colors flex items-center gap-4">
-              <Hexagon className="w-6 h-6 animate-pulse" /> CENTURY_OS&trade;
-           </button>
-           <div className="hidden lg:flex gap-8 text-[10px] font-black uppercase tracking-widest opacity-20 italic">
-              Status: Centurion_Active
-              <span className="text-white">Node: 0x101</span>
-           </div>
-        </div>
-        <div className="hidden md:flex gap-12 text-[10px] font-black uppercase tracking-[0.4em] opacity-30">
-           <button onClick={() => setView("prime")} className={`hover:opacity-100 transition-opacity ${view === 'prime' ? 'text-white opacity-100 underline decoration-white underline-offset-8 italic' : ''}`}>THE_PRIME</button>
-           <button onClick={() => setView("substrate")} className={`hover:opacity-100 transition-opacity ${view === 'substrate' ? 'text-white opacity-100 underline decoration-white underline-offset-8 italic' : ''}`}>THE_SUBSTRATE</button>
-        </div>
-        <div className="flex items-center gap-8">
-           <Search className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-           <Menu className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
+export default function BlockBase() {
+  const [selectedTab, setSelectedTab] = useState("SDK")
+  const { scrollY } = useScroll()
+  const heroOpacity = useTransform(scrollY, [0, 400], [1, 0])
+  const heroY = useTransform(scrollY, [0, 400], [0, 100])
+
+  return (
+    <div className="bg-[#05080f] text-white overflow-hidden font-mono">
+      <nav className="fixed top-0 left-0 right-0 h-16 bg-black/40 backdrop-blur-md border-b border-[#1e90ff]/10 z-50 flex items-center justify-between px-6">
+        <div className="text-2xl font-bold tracking-wider">{'<'}<span className="text-[#1e90ff]">BLOCKBASE</span>{'>'}</div>
+        <div className="hidden md:flex gap-8 text-sm">
+          <Link href="#products" className="hover:text-[#1e90ff] transition">Products</Link>
+          <Link href="#pricing" className="hover:text-[#1e90ff] transition">Pricing</Link>
+          <Link href="#security" className="hover:text-[#1e90ff] transition">Security</Link>
         </div>
       </nav>
 
-      <AnimatePresence mode="wait">
-        
-        {/* THE PRIME VIEW (LANDING) */}
-        {view === "prime" && (
-          <motion.div key="prime" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-48 pb-32 px-12 max-w-[1800px] mx-auto min-h-screen flex flex-col justify-center relative z-10">
-             <header className="mb-24 border-b-2 border-purple-500/20 pb-12 flex flex-col md:flex-row justify-between items-end gap-12">
-                <div>
-                   <span className="text-[10px] uppercase font-black tracking-[1em] opacity-40 mb-4 block underline decoration-purple-500/10 underline-offset-8 italic text-purple-400">Node_Architecture // Series_101</span>
-                   <h1 className="text-7xl md:text-[12vw] font-black italic uppercase tracking-tighter leading-[0.75] text-white">THE. <br/> <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-500 to-white">PRIME.</span></h1>
-                </div>
-                <div className="text-right flex flex-col items-end">
-                   <div className="text-3xl font-black mb-4 tracking-tighter uppercase opacity-10 italic text-white">Secure_Sync</div>
-                   <div className="w-64 h-1 bg-white/5 rounded-full overflow-hidden">
-                      <motion.div animate={{ width: ['20%', '90%', '40%', '75%'] }} transition={{ duration: 4, repeat: Infinity }} className="h-full bg-purple-500" />
-                   </div>
-                </div>
-             </header>
-
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {PHASES.map((p, i) => (
-                  <TiltCard 
-                    key={p.id} p={p} i={i} 
-                    onClick={() => { setActiveItem(i); setView("phase"); }}
-                  />
-                ))}
-             </div>
+      <motion.section style={{ opacity: heroOpacity, y: heroY }} className="relative h-screen flex items-center justify-center overflow-hidden pt-16">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#1e90ff]/10 to-[#00ff88]/10" />
+        <div className="relative z-10 max-w-4xl px-4">
+          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2 }} className="mb-8">
+            <Terminal />
           </motion.div>
-        )}
-
-        {/* THE PHASE VIEW (DETAIL) */}
-        {view === "phase" && (
-          <motion.div key="phase" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen">
-             <button onClick={() => setView("prime")} className="fixed top-12 left-12 z-[60] bg-white text-black p-5 rounded-full hover:scale-110 transition-transform shadow-2xl">
-                <X className="w-6 h-6" />
-             </button>
-
-             <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen pt-24 lg:pt-0">
-                <div className="lg:col-span-12 relative flex items-center justify-center p-8 md:p-32 overflow-hidden h-screen bg-[#050510]">
-                   <div className="absolute inset-0 opacity-10">
-                      <Image src={PHASES[activeItem].img} alt="Background" fill className="object-cover grayscale" />
-                   </div>
-                   <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[40vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase text-purple-500">
-                      PHASE
-                   </div>
-                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#050510_100%)]" />
-                   
-                   <div className="max-w-[1500px] w-full grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10">
-                      <motion.div initial={{ scale: 1.1, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1 }} className="relative aspect-square w-full rounded-[4rem] overflow-hidden border border-purple-500/20 group bg-white/5 shadow-2xl">
-                         <Image src={PHASES[activeItem].img} alt="Phase" fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[3s] opacity-80" priority />
-                         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                         <div className="absolute top-12 left-12 p-4 bg-black/60 backdrop-blur-3xl rounded-none border-2 border-white/10">
-                            <Layers className="w-6 h-6 text-white animate-pulse" />
-                         </div>
-                      </motion.div>
-
-                      <div className="flex flex-col justify-center space-y-12">
-                         <div className="space-y-6">
-                            <span className="text-[10px] uppercase tracking-[1em] font-black opacity-30 mb-8 block underline decoration-white decoration-4 underline-offset-8 italic text-purple-400">Centurion_Sync // {PHASES[activeItem].cat}</span>
-                            <h1 className="text-7xl md:text-[8vw] font-black italic uppercase tracking-tighter leading-none text-white">{PHASES[activeItem].title}</h1>
-                            <div className="text-4xl font-black italic tracking-tighter opacity-10 italic text-purple-500">State: SYNCHRONIZED</div>
-                         </div>
-
-                         <p className="text-3xl font-light italic leading-relaxed uppercase tracking-tight opacity-40 text-white leading-relaxed">
-                            Structural allocation for {PHASES[activeItem].title}. System integrity at 100%. Thermal load nominal at 32C. Every coordinate synchronized.
-                         </p>
-
-                         <div className="grid grid-cols-2 gap-12 py-12 border-y border-purple-500/20 text-white/60">
-                            {[
-                              { icon: <Globe className="w-5 h-5" />, l: "Region", v: "Global_East" },
-                              { icon: <Zap className="w-5 h-5" />, l: "Logic", v: "Phase_Shift" },
-                              { icon: <Shield className="w-5 h-5" />, l: "Security", v: "High_Impact" },
-                              { icon: <Activity className="w-5 h-5" />, l: "Sync", v: PHASES[activeItem].value },
-                            ].map((s, i) => (
-                              <div key={i} className="flex gap-6 items-center">
-                                 <div className="opacity-20 text-purple-500">{s.icon}</div>
-                                 <div className="text-left">
-                                    <div className="text-[10px] font-black opacity-30 uppercase tracking-widest mb-1 italic">{s.l}</div>
-                                    <div className="text-sm font-black uppercase italic tracking-tighter text-white">{s.v}</div>
-                                 </div>
-                              </div>
-                            ))}
-                         </div>
-
-                         <div className="flex gap-6 pt-8">
-                            <button onClick={() => setView("prime")} className="flex-grow py-8 bg-purple-600 text-white font-black uppercase text-xs tracking-[1em] hover:bg-purple-700 transition-all shadow-2xl">
-                               Return_to_Prime
-                            </button>
-                            <button className="px-12 py-8 border border-purple-500/20 text-[10px] font-black uppercase tracking-[0.5em] hover:scale-105 transition-all text-white">
-                               PDF_Spec
-                            </button>
-                         </div>
-                      </div>
-                   </div>
-                </div>
-             </div>
+          <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.4 }} className="text-6xl md:text-7xl font-bold mb-6 tracking-tight">
+            BLOCKCHAIN INFRASTRUCTURE
+          </motion.h1>
+          <motion.p initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.6 }} className="text-xl text-gray-300 mb-8 max-w-2xl">
+            Enterprise-grade APIs and SDKs for 200+ blockchains. Zero friction. Maximum uptime.
+          </motion.p>
+          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.8 }}>
+            <Dialog>
+              <DialogTrigger asChild>
+                <MagneticBtn className="px-8 py-4 bg-[#1e90ff] text-white font-bold rounded-full hover:bg-[#1e90ff]/80 transition">
+                  Get API Key
+                </MagneticBtn>
+              </DialogTrigger>
+              <DialogContent className="bg-[#0a0a0f] border-[#1e90ff]/20 max-w-md">
+                <DialogTitle>Get Started</DialogTitle>
+                <form className="space-y-4">
+                  <input type="text" placeholder="Your Name" className="w-full px-4 py-2 bg-[#0d0d15] border border-[#1e90ff]/30 rounded text-white font-mono" />
+                  <input type="email" placeholder="Email" className="w-full px-4 py-2 bg-[#0d0d15] border border-[#1e90ff]/30 rounded text-white font-mono" />
+                  <input type="text" placeholder="Project Name" className="w-full px-4 py-2 bg-[#0d0d15] border border-[#1e90ff]/30 rounded text-white font-mono" />
+                  <button type="submit" className="w-full px-4 py-3 bg-[#1e90ff] text-white font-bold rounded hover:bg-[#1e90ff]/80 transition font-mono">
+                    Create Account
+                  </button>
+                </form>
+              </DialogContent>
+            </Dialog>
           </motion.div>
-        )}
+        </div>
+      </motion.section>
 
-        {/* THE SUBSTRATE VIEW (INFO) */}
-        {view === "substrate" && (
-          <motion.div key="substrate" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen flex flex-col justify-center">
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center text-white">
-                <div className="space-y-16">
-                   <span className="text-[10px] uppercase font-black tracking-[1.5em] opacity-30 block underline decoration-purple-500 decoration-2 underline-offset-8 italic text-purple-400">The_Centurion_Protocol</span>
-                   <h2 className="text-7xl md:text-[10vw] font-black italic tracking-tighter leading-none text-white uppercase">The <br/> Truth.</h2>
-                   <p className="text-3xl md:text-4xl font-light italic opacity-60 leading-relaxed uppercase tracking-tight text-white/60">
-                      We treat architecture as code. Every structure is a function of its environmental variables and tectonic intent. 100% precision. Zero noise.
-                   </p>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t border-purple-500/20 text-purple-400">
-                      {[
-                        { icon: <Award className="w-6 h-6" />, t: "Adaptive Flow", v: "Dynamic Load Sync" },
-                        { icon: <Plus className="w-6 h-6" />, t: "Structural Sync", v: "Deep_Material_ID" },
-                      ].map((item, i) => (
-                        <div key={i} className="flex gap-8 group">
-                           <div className="w-16 h-16 rounded-none border border-purple-500 flex items-center justify-center text-purple-500 group-hover:bg-purple-500 group-hover:text-black transition-all shadow-xl">
-                              {item.icon}
-                           </div>
-                           <div className="text-left">
-                              <h4 className="text-2xl font-black uppercase italic tracking-tighter text-white leading-none mb-2">{item.t}</h4>
-                              <p className="text-[10px] opacity-30 uppercase tracking-[0.3em] font-black leading-relaxed text-purple-400/40">{item.v}</p>
-                           </div>
+      <section id="products" className="py-24 px-6 max-w-7xl mx-auto">
+        <Reveal delay={0.1}>
+          <h2 className="text-5xl font-bold mb-4 text-center">Products</h2>
+          <p className="text-gray-400 text-center mb-12 max-w-2xl mx-auto">Complete developer toolkit for blockchain applications.</p>
+        </Reveal>
+
+        <Tabs value={selectedTab} onValueChange={setSelectedTab}>
+          <TabsList className="grid w-full grid-cols-4 bg-[#0a0a0f] border border-[#1e90ff]/20 mb-8">
+            {PRODUCTS.map((prod) => (
+              <TabsTrigger key={prod.name} value={prod.name} className="data-[state=active]:bg-[#1e90ff] data-[state=active]:text-black">
+                {prod.name}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+
+          {PRODUCTS.map((prod) => (
+            <TabsContent key={prod.id} value={prod.name}>
+              <Card className="bg-[#0a0a0f] border-[#1e90ff]/20">
+                <CardContent className="p-8">
+                  <h3 className="text-3xl font-bold mb-4 text-[#1e90ff]">{prod.name}</h3>
+                  <p className="text-gray-300 mb-6">{prod.desc}</p>
+                  <div className="mb-6">
+                    <p className="text-sm text-gray-400 mb-3">Features:</p>
+                    <div className="space-y-2">
+                      {prod.features.map((feat, i) => (
+                        <div key={i} className="flex items-center gap-2">
+                          <span className="text-[#00ff88]">✓</span>
+                          <span>{feat}</span>
                         </div>
                       ))}
-                   </div>
-                </div>
-                <div className="relative aspect-square bg-[#1a1a1a] rounded-[4rem] p-12 overflow-hidden border border-purple-500/20 group shadow-2xl">
-                   <Image src="https://images.unsplash.com/photo-1541829070764-84a7d30dee62?q=80&w=1000&auto=format&fit=crop" alt="The Archive" fill className="object-cover opacity-20 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-[3s]" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                   <div className="absolute inset-x-0 bottom-12 flex justify-center">
-                      <div className="px-12 py-6 bg-purple-600 text-white text-[10px] font-black uppercase tracking-widest italic animate-bounce cursor-pointer hover:bg-purple-700 transition-all">
-                         Establish_Handshake
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
+                    </div>
+                  </div>
+                  <pre className="bg-[#0d0d15] border border-[#1e90ff]/20 rounded p-4 overflow-auto">
+                    <code className="text-[#00ff88]">{prod.code}</code>
+                  </pre>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          ))}
+        </Tabs>
+      </section>
 
-      </AnimatePresence>
+      <section className="py-24 px-6 bg-[#0a0a0f]">
+        <Reveal delay={0.1}>
+          <h2 className="text-5xl font-bold mb-4 text-center">Supported Chains</h2>
+          <p className="text-gray-400 text-center mb-12">200+ blockchains. One API.</p>
+        </Reveal>
 
-      {/* Global Status HUD */}
-      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em] italic text-purple-500 leading-none">
-         <div className="flex gap-12 text-purple-500">
-            <span>Centurion_Alpha</span>
-            <span>Uptime: 99.9%</span>
-         </div>
-         <div className="flex gap-4 items-end text-purple-500">
-            <div className="text-right leading-tight italic">
-               Archival_Control <br /> v4.0.101
-            </div>
-            <div className="flex gap-[4px] h-4">
-               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-full bg-purple-500 opacity-${i*20}`}></div>)}
-            </div>
-         </div>
-      </footer>
+        <div className="flex flex-wrap justify-center gap-4">
+          {CHAINS.map((chain, idx) => (
+            <Reveal key={idx} delay={idx * 0.05}>
+              <Badge className="bg-[#1e90ff] text-white px-6 py-3 text-base">{chain}</Badge>
+            </Reveal>
+          ))}
+        </div>
+      </section>
 
-      <style>{`
-        ::-webkit-scrollbar { width: 0px; }
-      `}</style>
+      <section id="pricing" className="py-24 px-6 max-w-7xl mx-auto">
+        <Reveal delay={0.1}>
+          <h2 className="text-5xl font-bold mb-4 text-center">Pricing</h2>
+          <p className="text-gray-400 text-center mb-12 max-w-2xl mx-auto">Pay as you grow. No lock-in.</p>
+        </Reveal>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {PRICING.map((plan, idx) => (
+            <Reveal key={idx} delay={idx * 0.1}>
+              <Card className="bg-[#0a0a0f] border-[#1e90ff]/20">
+                <CardContent className="p-8">
+                  <h3 className="text-2xl font-bold mb-2">{plan.tier}</h3>
+                  <p className="text-3xl font-bold text-[#1e90ff] mb-6">{plan.price}</p>
+                  <ul className="space-y-3">
+                    {plan.features.map((feat, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <span className="text-[#00ff88] mt-1">→</span>
+                        <span className="text-gray-300">{feat}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      <section className="py-24 px-6 bg-[#0a0a0f]">
+        <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
+          {STATS.map((stat, idx) => (
+            <Reveal key={idx} delay={idx * 0.1} className="text-center">
+              <div className="text-4xl font-bold text-[#1e90ff] mb-2"><Counter target={stat.value} suffix="" /></div>
+              <div className="text-sm text-gray-400">{stat.label}</div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      <section className="py-24 px-6 max-w-7xl mx-auto">
+        <Reveal delay={0.1} className="mb-16">
+          <h2 className="text-5xl font-bold text-center mb-4">Integrations</h2>
+          <p className="text-gray-400 text-center">Works with your favorite tools.</p>
+        </Reveal>
+
+        <div className="flex flex-wrap justify-center gap-4">
+          {INTEGRATIONS.map((tool, idx) => (
+            <Reveal key={idx} delay={idx * 0.05}>
+              <Badge variant="outline" className="border-[#1e90ff]/30 text-[#00ff88] px-6 py-3 text-base">{tool}</Badge>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      <section id="security" className="py-24 px-6 max-w-3xl mx-auto">
+        <Reveal delay={0.1} className="mb-12">
+          <h2 className="text-5xl font-bold text-center mb-4">Security</h2>
+        </Reveal>
+
+        <Accordion type="single" collapsible className="space-y-4">
+          {SECURITY.map((item, idx) => (
+            <AccordionItem key={idx} value={`item-${idx}`} className="border-[#1e90ff]/20">
+              <AccordionTrigger className="text-lg font-semibold hover:text-[#1e90ff] transition">
+                {item.q}
+              </AccordionTrigger>
+              <AccordionContent className="text-gray-400">
+                {item.a}
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </section>
+
+      <section className="py-24 px-6 max-w-7xl mx-auto">
+        <Reveal delay={0.1} className="mb-16">
+          <h2 className="text-5xl font-bold text-center mb-4">Developer Stories</h2>
+        </Reveal>
+
+        <Carousel className="w-full">
+          <CarouselContent>
+            {TESTIMONIALS.map((testi, idx) => (
+              <CarouselItem key={idx} className="basis-full md:basis-1/2 lg:basis-1/3">
+                <Card className="bg-[#0a0a0f] border-[#1e90ff]/20 h-full">
+                  <CardContent className="p-6 flex flex-col justify-between h-full">
+                    <p className="text-gray-300 italic mb-4 flex-1">"{testi.text}"</p>
+                    <div>
+                      <p className="text-sm text-[#1e90ff] font-semibold">— {testi.author}</p>
+                      <p className="text-xs text-gray-500">{testi.company}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="border-[#1e90ff]/30" />
+          <CarouselNext className="border-[#1e90ff]/30" />
+        </Carousel>
+      </section>
+
+      <section className="py-24 px-6 bg-[#0a0a0f]">
+        <div className="max-w-3xl mx-auto">
+          <Reveal delay={0.1} className="mb-12">
+            <h2 className="text-5xl font-bold text-center mb-4">FAQ</h2>
+          </Reveal>
+
+          <Accordion type="single" collapsible className="space-y-4">
+            {FAQ_ITEMS.map((item, idx) => (
+              <AccordionItem key={idx} value={`faq-${idx}`} className="border-[#1e90ff]/20">
+                <AccordionTrigger className="text-lg font-semibold hover:text-[#1e90ff] transition">
+                  {item.q}
+                </AccordionTrigger>
+                <AccordionContent className="text-gray-400">
+                  {item.a}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
+      </section>
+
+      <section className="py-24 px-6 text-center">
+        <Reveal>
+          <h2 className="text-4xl md:text-5xl font-bold mb-6">Build on Blockbase</h2>
+          <p className="text-gray-400 mb-8 max-w-2xl mx-auto">50K+ developers already trust us. Start building in minutes.</p>
+          <Dialog>
+            <DialogTrigger asChild>
+              <MagneticBtn className="px-8 py-4 bg-[#1e90ff] text-white font-bold rounded-full hover:bg-[#1e90ff]/80 transition">
+                Get Started Free
+              </MagneticBtn>
+            </DialogTrigger>
+            <DialogContent className="bg-[#0a0a0f] border-[#1e90ff]/20">
+              <DialogTitle>Create Account</DialogTitle>
+              <form className="space-y-4">
+                <input type="text" placeholder="Full Name" className="w-full px-4 py-2 bg-[#0d0d15] border border-[#1e90ff]/30 rounded text-white font-mono" />
+                <input type="email" placeholder="Email" className="w-full px-4 py-2 bg-[#0d0d15] border border-[#1e90ff]/30 rounded text-white font-mono" />
+                <input type="text" placeholder="Project Name" className="w-full px-4 py-2 bg-[#0d0d15] border border-[#1e90ff]/30 rounded text-white font-mono" />
+                <textarea placeholder="What are you building?" className="w-full px-4 py-2 bg-[#0d0d15] border border-[#1e90ff]/30 rounded text-white font-mono h-24" />
+                <button type="submit" className="w-full px-4 py-3 bg-[#1e90ff] text-white font-bold rounded hover:bg-[#1e90ff]/80 transition font-mono">
+                  Get API Key
+                </button>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </Reveal>
+      </section>
     </div>
-  );
-}
-
-function TiltCard({ p, i, onClick }: { p: any, i: number, onClick: () => void }) {
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-
-  const rotateX = useSpring(useTransform(y, [-0.5, 0.5], [10, -10]), { stiffness: 100, damping: 30 });
-  const rotateY = useSpring(useTransform(x, [-0.5, 0.5], [-10, 10]), { stiffness: 100, damping: 30 });
-
-  function handleMouseMove(e: React.MouseEvent) {
-    const rect = e.currentTarget.getBoundingClientRect();
-    x.set((e.clientX - rect.left) / rect.width - 0.5);
-    y.set((e.clientY - rect.top) / rect.height - 0.5);
-  }
-
-  function handleMouseLeave() {
-    x.set(0);
-    y.set(0);
-  }
-
-  return (
-    <motion.div 
-      style={{ rotateX, rotateY }}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      initial={{ opacity: 0, scale: 0.95, y: 30 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{ delay: i * 0.1 }}
-      className="group relative h-[60vh] rounded-[4rem] overflow-hidden border border-purple-500/20 hover:border-purple-500 transition-all cursor-pointer shadow-2xl bg-white/5 perspective-[1000px]"
-      onClick={onClick}
-    >
-       <Image src={p.img} alt={p.title} fill className="object-cover grayscale opacity-20 group-hover:opacity-40 transition-all duration-[2s] group-hover:scale-110" />
-       <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-       
-       <div className="absolute inset-10 flex flex-col justify-between">
-          <div className="flex justify-between items-start">
-             <div className="p-4 bg-white/5 border border-white/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity">
-                <Plus className="w-5 h-5 text-white" />
-             </div>
-             <div className="text-[10px] font-black uppercase tracking-widest opacity-20 group-hover:opacity-100 transition-opacity text-purple-400">UNIT_0x{i+101}</div>
-          </div>
-          <div>
-             <span className="text-[10px] uppercase font-black tracking-widest opacity-40 mb-2 block italic text-purple-300">{p.cat} // {p.value}</span>
-             <h3 className="text-5xl font-black italic uppercase tracking-tighter text-white group-hover:text-purple-400 transition-colors">{p.title}</h3>
-          </div>
-       </div>
-    </motion.div>
-  );
+  )
 }

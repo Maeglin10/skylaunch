@@ -1,232 +1,304 @@
-"use client";
+"use client"
+import { motion, useScroll, useTransform, useInView, AnimatePresence, useMotionValue, useSpring } from "framer-motion"
+import { useState, useRef, useEffect } from "react"
+import Image from "next/image"
+import Link from "next/link"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
+import { Progress } from "@/components/ui/progress"
 
-import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
-import Image from "next/image";
-import { X, Menu, Search, Briefcase, Zap, Activity, Globe, Shield, Command, Plus, ArrowUpRight, Maximize2, MoveRight, Layers, Box, Compass, Sparkles, MoveVertical, Target } from "lucide-react";
-import "../premium.css";
+function Reveal({ children, delay=0 }: { children: React.ReactNode; delay?: number }) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: "-60px" })
+  return <motion.div ref={ref} initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, delay }}>{children}</motion.div>
+}
 
-const PROJECTS = [
-  { id: 1, title: "BOLD_UNIT", cat: "Branding", value: "Verified", img: "https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?q=80&w=1000&auto=format&fit=crop" },
-  { id: 2, title: "VECT_SYNC", cat: "Motion", value: "Active", img: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1000&auto=format&fit=crop" },
-  { id: 3, title: "LIME_GRID", cat: "Web", value: "Locked", img: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=1000&auto=format&fit=crop" },
-];
+function Counter({ target, suffix="" }: { target: number; suffix?: string }) {
+  const [count, setCount] = useState(0)
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true })
+  useEffect(() => {
+    if (!inView) return
+    const step = Math.ceil(target / 60)
+    const t = setInterval(() => setCount(c => Math.min(c + step, target)), 16)
+    return () => clearInterval(t)
+  }, [inView, target])
+  return <span ref={ref}>{count.toLocaleString()}{suffix}</span>
+}
 
-export default function VectralBoldSPA() {
-  const [view, setView] = useState<"bold" | "work" | "studio">("bold");
-  const [activeItem, setActiveItem] = useState(0);
+function MagneticBtn({ children, className="" }: { children: React.ReactNode; className?: string }) {
+  const x = useMotionValue(0); const y = useMotionValue(0)
+  const sx = useSpring(x, { stiffness: 500, damping: 25 })
+  const sy = useSpring(y, { stiffness: 500, damping: 25 })
+  const ref = useRef<HTMLButtonElement>(null)
+  const handleMouse = (e: React.MouseEvent) => {
+    const r = ref.current!.getBoundingClientRect()
+    x.set((e.clientX - r.left - r.width/2) * 0.35)
+    y.set((e.clientY - r.top - r.height/2) * 0.35)
+  }
+  return <motion.button ref={ref} style={{ x: sx, y: sy }} onMouseMove={handleMouse} onMouseLeave={() => { x.set(0); y.set(0) }} className={className}>{children}</motion.button>
+}
+
+export default function ClarityData() {
+  const { scrollYProgress } = useScroll()
+  const opacity = useTransform(scrollYProgress, [0, 0.3], [1, 0])
+  const scale = useTransform(scrollYProgress, [0, 0.3], [1, 0.95])
+
+  const [showTrial, setShowTrial] = useState(false)
+  const [dashboardBars, setDashboardBars] = useState([45, 78, 32, 91, 67, 54])
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDashboardBars(prev => prev.map(() => Math.random() * 100))
+    }, 2000)
+    return () => clearInterval(interval)
+  }, [])
+
+  const integrations = [
+    { name: "Salesforce", logo: "SF" },
+    { name: "HubSpot", logo: "HS" },
+    { name: "Shopify", logo: "SH" },
+    { name: "Stripe", logo: "ST" },
+    { name: "PostgreSQL", logo: "PG" },
+    { name: "BigQuery", logo: "BQ" },
+  ]
+
+  const pricingPlans = [
+    { name: "Starter", price: "$49", features: ["5 data sources", "10M data points/mo", "Basic reports"] },
+    { name: "Pro", price: "$149", features: ["Unlimited sources", "1B data points/mo", "Advanced dashboards", "Custom alerts"], badge: true },
+    { name: "Enterprise", price: "Custom", features: ["Everything in Pro", "99.99% SLA", "Dedicated support"] },
+  ]
+
+  const testimonials = [
+    { text: "Clarity cut our data analysis time by 70%. Game changer.", company: "TechCorp", logo: "TC" },
+    { text: "The best analytics platform we've used. Seamless integrations.", company: "DataViz Inc", logo: "DV" },
+    { text: "Enterprise-grade insights at SaaS pricing. Incredible value.", company: "GrowthCo", logo: "GC" },
+  ]
 
   return (
-    <div className="premium-theme bg-[#0d0d0d] text-[#bef264] min-h-screen selection:bg-lime-400 selection:text-black font-sans overflow-x-hidden">
-      
-      {/* Background HUD Layers */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[45vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase">
-           VECTRAL
-        </div>
-        <div className="absolute inset-0 bg-[#0d0d0d]/40 backdrop-blur-[2px]" />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.05] mix-blend-screen" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#0d0d0d_100%)] opacity-80" />
-      </div>
+    <div className="bg-[#060b14] text-white min-h-screen overflow-x-hidden">
+      {/* ANIMATED HERO */}
+      <motion.section style={{ opacity, scale }} className="relative h-screen flex items-center justify-center overflow-hidden pt-20">
+        <div className="absolute inset-0 bg-gradient-to-b from-[#2563eb]/20 to-transparent" />
+        <div className="relative z-10 max-w-6xl mx-auto px-6 w-full">
+          <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="text-7xl md:text-8xl font-black mb-6">
+            DATA CLARITY
+          </motion.h1>
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="text-2xl text-[#14b8a6] mb-12">
+            Real-time analytics. Actionable insights. Enterprise scale.
+          </motion.p>
 
-      {/* Editorial HUD Nav */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-center bg-black/40 backdrop-blur-3xl border-b border-white/5 font-mono">
-        <div className="flex gap-12 items-center">
-           <button onClick={() => setView("bold")} className="text-xl font-black tracking-tighter hover:scale-105 transition-transform font-sans uppercase">
-              VECTRAL&trade;
-           </button>
-           <div className="hidden lg:flex gap-8 text-[10px] font-black uppercase tracking-widest opacity-20 italic">
-              Status: Bold_Sync_Active
-              <span className="text-white">Ref: 0x108</span>
-           </div>
+          {/* LIVE DASHBOARD MOCKUP */}
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.7 }} className="bg-black border-2 border-[#2563eb] p-12 rounded-xl">
+            <div className="grid grid-cols-6 gap-4">
+              {dashboardBars.map((height, i) => (
+                <motion.div key={i} className="relative h-32 bg-[#1a2332] rounded border border-[#14b8a6]">
+                  <motion.div animate={{ height: `${height}%` }} className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#2563eb] to-[#14b8a6]" transition={{ duration: 0.5 }} />
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
         </div>
-        <div className="hidden md:flex gap-12 text-[10px] font-black uppercase tracking-[0.4em] opacity-30">
-           <button onClick={() => setView("bold")} className={`hover:opacity-100 transition-opacity ${view === 'bold' ? 'text-white opacity-100 underline decoration-white decoration-2 underline-offset-8 italic' : ''}`}>THE_BOLD</button>
-           <button onClick={() => setView("studio")} className={`hover:opacity-100 transition-opacity ${view === 'studio' ? 'text-white opacity-100 underline decoration-white decoration-2 underline-offset-8 italic' : ''}`}>THE_STUDIO</button>
-        </div>
-        <div className="flex items-center gap-8">
-           <Search className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-           <Menu className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-        </div>
-      </nav>
+      </motion.section>
 
-      <AnimatePresence mode="wait">
-        
-        {/* THE BOLD VIEW (LANDING) */}
-        {view === "bold" && (
-          <motion.div key="bold" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-48 pb-32 px-12 max-w-[1800px] mx-auto min-h-screen flex flex-col justify-center relative z-10">
-             <header className="mb-24 border-b border-white/10 pb-12 flex flex-col md:flex-row justify-between items-end gap-12">
-                <div>
-                   <span className="text-[10px] uppercase font-black tracking-[1em] opacity-40 mb-4 block underline decoration-lime-400/10 underline-offset-8 italic font-mono text-lime-400">Creative_Sync // Series_108</span>
-                   <h1 className="text-7xl md:text-[12vw] font-black uppercase tracking-tighter leading-[0.75]">WE. <br/> <span className="text-stone-400">BUILD.</span></h1>
-                </div>
-                <div className="text-right flex flex-col items-end">
-                   <div className="text-3xl font-black mb-4 tracking-tighter uppercase opacity-10 italic font-mono text-white">Secure_Flow</div>
-                   <div className="w-64 h-[2px] bg-white/5 rounded-none overflow-hidden">
-                      <motion.div animate={{ width: ['20%', '90%', '40%', '75%'] }} transition={{ duration: 4, repeat: Infinity }} className="h-full bg-lime-400" />
-                   </div>
-                </div>
-             </header>
-
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 font-mono">
-                {PROJECTS.map((p, i) => (
-                  <motion.div 
-                    key={p.id} initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                    className="group relative h-[60vh] rounded-none overflow-hidden border border-white/5 hover:border-white/20 transition-all cursor-pointer shadow-2xl bg-white/5"
-                    onClick={() => { setActiveItem(i); setView("work"); }}
-                  >
-                     <Image src={p.img} alt={p.title} fill className="object-cover grayscale opacity-20 group-hover:opacity-40 transition-all duration-[2s] group-hover:scale-110" />
-                     <div className="absolute inset-0 bg-gradient-to-tr from-lime-400/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                     <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                     
-                     <div className="absolute inset-10 flex flex-col justify-between">
-                        <div className="flex justify-between items-start">
-                           <div className="p-4 bg-white/10 border border-white/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Target className="w-5 h-5 text-white" />
-                           </div>
-                           <div className="text-[10px] font-black uppercase tracking-widest opacity-20 italic text-white">NODE_0x{i+108}</div>
-                        </div>
-                        <div>
-                           <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-2 block italic text-lime-400">{p.cat} // {p.value}</span>
-                           <h3 className="text-5xl font-black italic uppercase tracking-tighter leading-none text-white transition-all group-hover:tracking-widest">{p.title}</h3>
-                        </div>
-                     </div>
-                  </motion.div>
+      {/* FEATURES TABS */}
+      <Reveal>
+        <section className="py-20 px-6 bg-[#0a1421]">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-5xl font-black mb-12">POWERFUL FEATURES</h2>
+            <Tabs defaultValue="reports" className="w-full">
+              <TabsList className="grid w-full grid-cols-4 bg-black border border-[#2563eb]">
+                {["reports", "dashboards", "alerts", "integrations"].map(tab => (
+                  <TabsTrigger key={tab} value={tab} className="uppercase text-sm font-bold text-[#14b8a6]">{tab}</TabsTrigger>
                 ))}
-             </div>
-          </motion.div>
-        )}
+              </TabsList>
+              {[
+                { id: "reports", title: "Custom Reports", desc: "Build and schedule reports in minutes. Export to any format." },
+                { id: "dashboards", title: "Live Dashboards", desc: "Real-time visualizations with 50ms average query latency." },
+                { id: "alerts", title: "Smart Alerts", desc: "Anomaly detection. Threshold monitoring. Instant notifications." },
+                { id: "integrations", title: "Native Integrations", desc: "Connect 100+ data sources. API-first architecture." },
+              ].map(feature => (
+                <TabsContent key={feature.id} value={feature.id} className="mt-12">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                    <div>
+                      <h3 className="text-4xl font-black mb-6 text-[#14b8a6]">{feature.title}</h3>
+                      <p className="text-xl text-gray-400 mb-8">{feature.desc}</p>
+                      <ul className="space-y-4">
+                        {["Point 1", "Point 2", "Point 3"].map((item, i) => (
+                          <li key={i} className="flex items-center gap-3">
+                            <Badge className="bg-[#2563eb]">✓</Badge>
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className="h-96 bg-gradient-to-br from-[#2563eb]/20 to-[#14b8a6]/20 rounded-xl border border-[#2563eb]" />
+                  </div>
+                </TabsContent>
+              ))}
+            </Tabs>
+          </div>
+        </section>
+      </Reveal>
 
-        {/* THE WORK VIEW (DETAIL) */}
-        {view === "work" && (
-          <motion.div key="work" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen">
-             <button onClick={() => setView("bold")} className="fixed top-12 left-12 z-[60] bg-white text-black p-5 rounded-none hover:scale-110 transition-transform shadow-2xl">
-                <X className="w-6 h-6" />
-             </button>
-
-             <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen pt-24 lg:pt-0">
-                <div className="lg:col-span-12 relative flex items-center justify-center p-8 md:p-32 overflow-hidden h-screen bg-[#0d0d0d]">
-                   <div className="absolute inset-0 opacity-10">
-                      <Image src={PROJECTS[activeItem].img} alt="Background" fill className="object-cover grayscale" />
-                   </div>
-                   <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[40vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase text-lime-600 font-sans">
-                      BOLD
-                   </div>
-                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#0d0d0d_100%)]" />
-                   
-                   <div className="max-w-[1500px] w-full grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10 font-sans">
-                      <motion.div initial={{ scale: 1.1, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1 }} className="relative aspect-square w-full rounded-none overflow-hidden border-8 border-white bg-neutral-900 shadow-2xl group">
-                         <div className="absolute inset-0 bg-lime-400/20 mix-blend-multiply z-10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                         <Image src={PROJECTS[activeItem].img} alt="Spec" fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[3s] opacity-80" priority />
-                         <div className="absolute bottom-12 left-12 p-4 bg-black/60 backdrop-blur-3xl rounded-none border-2 border-white/10 z-20">
-                            <Layers className="w-6 h-6 text-white animate-pulse" />
-                         </div>
-                      </motion.div>
-
-                      <div className="flex flex-col justify-center space-y-12">
-                         <div className="space-y-6">
-                            <span className="text-[10px] uppercase tracking-[1em] font-black opacity-30 mb-8 block underline decoration-white decoration-4 underline-offset-8 italic text-lime-400 font-mono">Bold_Sync // {PROJECTS[activeItem].cat}</span>
-                            <h1 className="text-7xl md:text-[8vw] font-black italic uppercase tracking-tighter leading-none text-white">{PROJECTS[activeItem].title}</h1>
-                            <div className="text-4xl font-black italic tracking-tighter opacity-10 italic text-lime-600">State: SYNCHRONIZED</div>
-                         </div>
-
-                         <p className="text-3xl font-light italic leading-relaxed uppercase tracking-tight opacity-40 text-white leading-relaxed">
-                            A sculptural architectural asset for {PROJECTS[activeItem].title}. System integrity at 100%. Thermal load nominal at 32C. Every coordinate synchronized.
-                         </p>
-
-                         <div className="grid grid-cols-2 gap-12 py-12 border-y border-white/10 font-mono text-white/60">
-                            {[
-                              { icon: <Globe className="w-5 h-5" />, l: "Region", v: "Global_East" },
-                              { icon: <Zap className="w-5 h-5" />, l: "Logic", v: "Phase_Shift" },
-                              { icon: <Shield className="w-5 h-5" />, l: "Security", v: "High_Impact" },
-                              { icon: <Activity className="w-5 h-5" />, l: "Sync", v: "Active" },
-                            ].map((s, i) => (
-                              <div key={i} className="flex gap-6 items-center">
-                                 <div className="opacity-20 text-lime-400">{s.icon}</div>
-                                 <div className="text-left">
-                                    <div className="text-[10px] font-black opacity-30 uppercase tracking-widest mb-1 italic">{s.l}</div>
-                                    <div className="text-sm font-black uppercase italic tracking-tighter text-white">{s.v}</div>
-                                 </div>
-                              </div>
-                            ))}
-                         </div>
-
-                         <div className="flex gap-6 pt-8 font-mono">
-                            <button onClick={() => setView("bold")} className="flex-grow py-8 bg-lime-400 text-black font-black uppercase text-xs tracking-[1em] hover:bg-white transition-all shadow-2xl">
-                               Return_to_Bold
-                            </button>
-                            <button className="px-12 py-8 border border-white/20 text-[10px] font-black uppercase tracking-[0.5em] hover:scale-105 transition-all text-white">
-                               PDF_Spec
-                            </button>
-                         </div>
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
-        {/* THE STUDIO VIEW (INFO) */}
-        {view === "studio" && (
-          <motion.div key="studio" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen flex flex-col justify-center">
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center text-white">
-                <div className="space-y-16">
-                   <span className="text-[10px] uppercase font-black tracking-[1.5em] opacity-30 block underline decoration-lime-400 decoration-2 underline-offset-8 italic font-mono text-lime-400">The_Bold_Protocol</span>
-                   <h2 className="text-7xl md:text-[10vw] font-black italic tracking-tighter leading-none text-white uppercase font-sans">The <br/> Truth.</h2>
-                   <p className="text-3xl md:text-4xl font-light italic opacity-60 leading-relaxed uppercase tracking-tight text-white/60 font-sans">
-                      We treat architecture as code. Every structure is a function of its environmental variables and tectonic intent. 100% precision. Zero noise.
-                   </p>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t border-white/10 font-mono text-lime-400">
-                      {[
-                        { icon: <Sparkles className="w-6 h-6" />, t: "Adaptive Flow", v: "Dynamic Load Sync" },
-                        { icon: <Plus className="w-6 h-6" />, t: "Structural Sync", v: "Deep_Material_ID" },
-                      ].map((item, i) => (
-                        <div key={i} className="flex gap-8 group">
-                           <div className="w-16 h-16 rounded-none border border-lime-400 flex items-center justify-center text-lime-400 group-hover:bg-lime-400 group-hover:text-black transition-all shadow-xl">
-                              {item.icon}
-                           </div>
-                           <div className="text-left">
-                              <h4 className="text-2xl font-black uppercase italic tracking-tighter text-white leading-none mb-2 font-sans">{item.t}</h4>
-                              <p className="text-[10px] opacity-30 uppercase tracking-[0.3em] font-black leading-relaxed text-lime-400/40">{item.v}</p>
-                           </div>
-                        </div>
-                      ))}
-                   </div>
-                </div>
-                <div className="relative aspect-square bg-lime-400/10 rounded-none p-12 overflow-hidden border border-lime-400/20 group shadow-2xl">
-                   <Image src="https://images.unsplash.com/photo-1541829070764-84a7d30dee62?q=80&w=1000&auto=format&fit=crop" alt="The Archive" fill className="object-cover opacity-20 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-[3s]" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                   <div className="absolute inset-x-0 bottom-12 flex justify-center font-mono">
-                      <div className="px-12 py-6 bg-lime-400 text-black text-[10px] font-black uppercase tracking-widest italic animate-bounce cursor-pointer hover:bg-white transition-all">
-                         Establish_Handshake
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
-      </AnimatePresence>
-
-      {/* Global Status HUD */}
-      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em] italic text-lime-400 leading-none font-mono">
-         <div className="flex gap-12 text-lime-400">
-            <span>Bold_OS_Alpha</span>
-            <span>Uptime: 99.9%</span>
-         </div>
-         <div className="flex gap-4 items-end text-lime-400">
-            <div className="text-right leading-tight italic">
-               Inventory_Control <br /> v4.0.108
+      {/* INTEGRATIONS MARQUEE */}
+      <Reveal>
+        <section className="py-20 px-6">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-5xl font-black mb-12 text-center">TRUSTED INTEGRATIONS</h2>
+            <div className="grid grid-cols-2 md:grid-cols-6 gap-6">
+              {integrations.map((int, i) => (
+                <motion.div key={i} whileHover={{ scale: 1.05 }} className="p-6 bg-[#0a1421] border border-[#2563eb] rounded-lg text-center">
+                  <div className="w-12 h-12 bg-[#2563eb] rounded-lg mx-auto mb-3 flex items-center justify-center font-black text-sm">{int.logo}</div>
+                  <p className="font-bold">{int.name}</p>
+                </motion.div>
+              ))}
             </div>
-            <div className="flex gap-[4px] h-4">
-               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-full bg-lime-400 opacity-${i*20}`}></div>)}
-            </div>
-         </div>
-      </footer>
+          </div>
+        </section>
+      </Reveal>
 
-      <style>{`
-        ::-webkit-scrollbar { width: 0px; }
-      `}</style>
+      {/* STATS */}
+      <Reveal>
+        <section className="py-20 px-6 bg-[#0a1421]">
+          <div className="max-w-6xl mx-auto">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+              {[
+                { label: "COMPANIES", value: 5000 },
+                { label: "DATA POINTS", value: 1000000000, suffix: "B" },
+                { label: "UPTIME", value: 99.9, suffix: "%" },
+                { label: "AVG QUERY", value: 50, suffix: "ms" },
+              ].map((stat, i) => (
+                <Reveal key={i} delay={i * 0.1}>
+                  <div>
+                    <div className="text-4xl font-black text-[#2563eb]"><Counter target={stat.value} suffix={stat.suffix} /></div>
+                    <p className="text-gray-400 text-sm mt-2">{stat.label}</p>
+                  </div>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
+      </Reveal>
+
+      {/* PRICING */}
+      <Reveal>
+        <section className="py-20 px-6">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-5xl font-black mb-12 text-center">SIMPLE PRICING</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {pricingPlans.map((plan, i) => (
+                <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} className={`p-8 rounded-xl border-2 ${plan.badge ? "border-[#14b8a6] bg-[#0a1421]" : "border-[#2563eb] bg-black"}`}>
+                  {plan.badge && <Badge className="bg-[#14b8a6] text-black mb-4">POPULAR</Badge>}
+                  <h3 className="text-2xl font-black mb-2">{plan.name}</h3>
+                  <div className="text-4xl font-black text-[#2563eb] mb-6">{plan.price}</div>
+                  <ul className="space-y-3 mb-8">
+                    {plan.features.map((feat, j) => (
+                      <li key={j} className="text-gray-300">✓ {feat}</li>
+                    ))}
+                  </ul>
+                  <button className={`w-full py-3 font-black rounded transition ${plan.badge ? "bg-[#14b8a6] text-black hover:bg-white" : "bg-[#2563eb] text-white hover:bg-blue-600"}`}>
+                    GET STARTED
+                  </button>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+      </Reveal>
+
+      {/* SECURITY */}
+      <Reveal>
+        <section className="py-20 px-6 bg-[#0a1421]">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-5xl font-black mb-12">ENTERPRISE GRADE</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {["SOC2 Type II", "GDPR Compliant", "ISO 27001"].map((cert, i) => (
+                <motion.div key={i} whileHover={{ scale: 1.05 }} className="p-8 bg-black border-2 border-[#2563eb] rounded-lg">
+                  <div className="text-3xl font-black text-[#14b8a6] mb-2">✓</div>
+                  <p className="font-bold">{cert}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+      </Reveal>
+
+      {/* TESTIMONIALS CAROUSEL */}
+      <Reveal>
+        <section className="py-20 px-6">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-5xl font-black mb-12">CUSTOMER LOVE</h2>
+            <Carousel className="w-full">
+              <CarouselContent>
+                {testimonials.map((testi, i) => (
+                  <CarouselItem key={i} className="basis-full md:basis-1/3">
+                    <div className="p-8 bg-black border border-[#2563eb] rounded-xl h-full">
+                      <p className="text-lg mb-6 italic">"{testi.text}"</p>
+                      <div className="flex items-center gap-3">
+                        <Avatar className="border border-[#2563eb]">
+                          <AvatarFallback className="bg-[#2563eb] text-white font-black">{testi.logo}</AvatarFallback>
+                        </Avatar>
+                        <span className="font-bold">{testi.company}</span>
+                      </div>
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious />
+              <CarouselNext />
+            </Carousel>
+          </div>
+        </section>
+      </Reveal>
+
+      {/* FAQ */}
+      <Reveal>
+        <section className="py-20 px-6 bg-[#0a1421]">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-5xl font-black mb-12">FAQS</h2>
+            <Accordion type="single" collapsible className="w-full">
+              {[
+                { q: "How do you protect data privacy?", a: "We're SOC2 Type II certified and GDPR compliant. All data is encrypted at rest and in transit." },
+                { q: "Can I migrate existing data?", a: "Yes. We offer free migration support for all plans. Zero downtime guaranteed." },
+                { q: "What are the API rate limits?", a: "Pro and Enterprise plans have unlimited API calls. Starter has 100K/month." },
+                { q: "What's your support SLA?", a: "Enterprise: 1hr response. Pro: 4hrs. Starter: 24hrs via community." },
+              ].map((faq, i) => (
+                <AccordionItem key={i} value={`item-${i}`} className="border-[#2563eb]">
+                  <AccordionTrigger className="text-lg font-black hover:text-[#14b8a6]">{faq.q}</AccordionTrigger>
+                  <AccordionContent className="text-gray-400">{faq.a}</AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </div>
+        </section>
+      </Reveal>
+
+      {/* CTA */}
+      <section className="py-20 px-6 text-center">
+        <h2 className="text-5xl font-black mb-6">START FREE TRIAL</h2>
+        <p className="text-gray-400 mb-8 text-lg">No credit card required. Full access for 14 days.</p>
+        <MagneticBtn onClick={() => setShowTrial(true)} className="px-8 py-4 bg-[#14b8a6] text-black font-black text-lg hover:bg-white transition rounded">
+          CLAIM FREE TRIAL
+        </MagneticBtn>
+        <Dialog open={showTrial} onOpenChange={setShowTrial}>
+          <DialogContent className="bg-[#0a1421] border-2 border-[#2563eb]">
+            <DialogHeader>
+              <DialogTitle className="text-[#14b8a6] text-2xl">START YOUR FREE TRIAL</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <input type="email" placeholder="your@company.com" className="w-full p-3 bg-black border border-[#2563eb] text-white placeholder-gray-600 rounded" />
+              <button className="w-full py-3 bg-[#14b8a6] text-black font-black hover:bg-white transition rounded">GET STARTED</button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </section>
     </div>
-  );
+  )
 }

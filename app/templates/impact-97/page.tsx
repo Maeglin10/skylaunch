@@ -1,250 +1,343 @@
-"use client";
+"use client"
+import { motion, useScroll, useTransform, useInView, AnimatePresence, useMotionValue, useSpring } from "framer-motion"
+import { useState, useRef, useEffect } from "react"
+import Image from "next/image"
+import Link from "next/link"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
+import { Progress } from "@/components/ui/progress"
 
-import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
-import Image from "next/image";
-import { X, Menu, Search, Box, Zap, Activity, Globe, Shield, Command, Plus, ArrowUpRight, Maximize2, MoveRight, Layers, Compass, Sparkles, MoveVertical, Square } from "lucide-react";
-import "../premium.css";
+const FILMS = [
+  { id: 1, title: "The Silent Canvas", director: "Marie Leclerc", type: "Narrative", image: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=500&auto=format&fit=crop", festivals: ["Cannes", "Berlin"], awards: "Palme d'Or" },
+  { id: 2, title: "Urban Echoes", director: "Jean Dupont", type: "Documentary", image: "https://images.unsplash.com/photo-1533050487297-86d7930ac412?q=80&w=500&auto=format&fit=crop", festivals: ["Venice"], awards: "Best Doc" },
+  { id: 3, title: "Chromatic Pulse", director: "Sofia Rossi", type: "Short", image: "https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?q=80&w=500&auto=format&fit=crop", festivals: ["Sundance"], awards: "Jury Prize" },
+  { id: 4, title: "Luminous Dreams", director: "Alex Nolan", type: "Animation", image: "https://images.unsplash.com/photo-1485579149c0-123123db6f42?q=80&w=500&auto=format&fit=crop", festivals: ["Annecy"], awards: "Grand Prize" },
+]
 
-const BLOCKS = [
-  { id: 1, title: "ATOMIC_BLOCK", cat: "Structural", value: "Locked", img: "https://images.unsplash.com/photo-1549416878-b9ca35c2d47b?q=80&w=1000&auto=format&fit=crop" },
-  { id: 2, title: "MONOLITH_CORE", cat: "Brutalist", value: "Active", img: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?q=80&w=1000&auto=format&fit=crop" },
-  { id: 3, title: "VOID_STRUCT", cat: "Speculative", value: "Verified", img: "https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?q=80&w=1000&auto=format&fit=crop" },
-];
+const FESTIVALS = [
+  { name: "Cannes Film Festival", year: 2024, award: "Palme d'Or", month: "May" },
+  { name: "Berlin Festival", year: 2024, award: "Golden Bear", month: "February" },
+  { name: "Venice Festival", year: 2024, award: "Golden Lion", month: "September" },
+  { name: "Sundance Festival", year: 2024, award: "Grand Jury Prize", month: "January" },
+]
 
-export default function BrutalistAtomicSPA() {
-  const [view, setView] = useState<"block" | "monolith" | "protocol">("block");
-  const [activeItem, setActiveItem] = useState(0);
+const DIRECTORS = [
+  { name: "Marie Leclerc", role: "Narrative Director", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop", bio: "3x Palme d'Or nominee" },
+  { name: "Jean Dupont", role: "Documentary Master", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop", bio: "Emmy Award winner" },
+  { name: "Sofia Rossi", role: "Short Films", image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=200&auto=format&fit=crop", bio: "Breakthrough 2023" },
+  { name: "Alex Nolan", role: "Animation", image: "https://images.unsplash.com/photo-1517849845537-1d51a20414de?q=80&w=200&auto=format&fit=crop", bio: "Annecy Champion" },
+]
+
+const TESTIMONIALS = [
+  { text: "Impact-97 transformed our film's career. Festival strategy to distribution was seamless.", author: "Director, Oscar Nominee" },
+  { text: "Their post-production excellence elevated everything. Color grading was extraordinary.", author: "Producer, International Selection" },
+  { text: "Finally a collective that understands independent cinema deeply.", author: "Emerging Filmmaker" },
+]
+
+const STATS = [{ value: 150, label: "Films" }, { value: 40, label: "Festivals" }, { value: 22, label: "Awards" }, { value: 15, label: "Countries" }]
+
+const FAQ_ITEMS = [
+  { q: "What formats do you accept?", a: "DCP, ProRes, 4K RAW. Minimum 2K for theatrical release eligibility." },
+  { q: "What are submission fees?", a: "Zero submission fees. We partner commission-based, aligned with your success." },
+  { q: "Distribution timeline?", a: "6-12 months from acquisition to theatrical release, depending on festival windows." },
+  { q: "Do you handle all rights?", a: "Yes. Theatrical, digital, ancillary, and international rights management included." },
+]
+
+function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: "-60px" })
+  return <motion.div ref={ref} initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, delay }}>{children}</motion.div>
+}
+
+function Counter({ target, suffix = "" }: { target: number; suffix?: string }) {
+  const [count, setCount] = useState(0)
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true })
+  useEffect(() => {
+    if (!inView) return
+    const step = Math.ceil(target / 60)
+    const t = setInterval(() => setCount(c => Math.min(c + step, target)), 16)
+    return () => clearInterval(t)
+  }, [inView, target])
+  return <span ref={ref}>{count.toLocaleString()}{suffix}</span>
+}
+
+function MagneticBtn({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  const x = useMotionValue(0); const y = useMotionValue(0)
+  const sx = useSpring(x, { stiffness: 500, damping: 25 })
+  const sy = useSpring(y, { stiffness: 500, damping: 25 })
+  const ref = useRef<HTMLButtonElement>(null)
+  const handleMouse = (e: React.MouseEvent) => {
+    const r = ref.current!.getBoundingClientRect()
+    x.set((e.clientX - r.left - r.width/2) * 0.35)
+    y.set((e.clientY - r.top - r.height/2) * 0.35)
+  }
+  return <motion.button ref={ref} style={{ x: sx, y: sy }} onMouseMove={handleMouse} onMouseLeave={() => { x.set(0); y.set(0) }} className={className}>{children}</motion.button>
+}
+
+export default function IndieFilmCollective() {
+  const [selectedTab, setSelectedTab] = useState("Narrative")
+  const { scrollY } = useScroll()
+  const heroOpacity = useTransform(scrollY, [0, 400], [1, 0])
+  const heroY = useTransform(scrollY, [0, 400], [0, 100])
 
   return (
-    <div className="premium-theme bg-[#ffffff] text-[#1a1a1a] min-h-screen selection:bg-black selection:text-white font-mono overflow-x-hidden">
-      
-      {/* Background HUD Layers */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_#00000005_0%,_transparent_70%)] opacity-40" />
-        <div 
-          className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[40vw] font-black opacity-[0.02] select-none pointer-events-none italic tracking-tighter text-center uppercase"
-        >
-           VOID
-        </div>
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.02] mix-blend-multiply" />
-      </div>
-
-      {/* Editorial HUD Nav */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-center bg-white/40 backdrop-blur-3xl border-b border-black/10">
-        <div className="flex gap-12 items-center">
-           <button onClick={() => setView("block")} className="text-xl font-black italic tracking-tighter hover:scale-105 transition-transform uppercase">
-              VOID_ED&trade;
-           </button>
-           <div className="hidden lg:flex gap-8 text-[10px] font-black uppercase tracking-widest opacity-20 italic">
-              Status: Monolith_Active
-              <span className="text-black">Ref: 0x97_V</span>
-           </div>
-        </div>
-        <div className="hidden md:flex gap-12 text-[10px] font-black uppercase tracking-[0.4em] opacity-30">
-           <button onClick={() => setView("block")} className={`hover:opacity-100 transition-opacity ${view === 'block' ? 'text-black opacity-100 underline decoration-black decoration-2 underline-offset-8 italic' : ''}`}>THE_BLOCK</button>
-           <button onClick={() => setView("protocol")} className={`hover:opacity-100 transition-opacity ${view === 'protocol' ? 'text-black opacity-100 underline decoration-black decoration-2 underline-offset-8 italic' : ''}`}>THE_PROTOCOL</button>
-        </div>
-        <div className="flex items-center gap-8">
-           <Search className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-           <Menu className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
+    <div className="bg-[#0d0d0d] text-white overflow-hidden">
+      <nav className="fixed top-0 left-0 right-0 h-16 bg-black/40 backdrop-blur-md border-b border-[#f5c842]/10 z-50 flex items-center justify-between px-6">
+        <div className="text-2xl font-bold tracking-wider">IMPACT-97</div>
+        <div className="hidden md:flex gap-8 text-sm">
+          <Link href="#films" className="hover:text-[#f5c842] transition">Films</Link>
+          <Link href="#festivals" className="hover:text-[#f5c842] transition">Festivals</Link>
+          <Link href="#directors" className="hover:text-[#f5c842] transition">Directors</Link>
         </div>
       </nav>
 
-      <AnimatePresence mode="wait">
-        
-        {/* THE BLOCK VIEW (LANDING) */}
-        {view === "block" && (
-          <motion.div key="block" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-48 pb-32 px-12 max-w-[1800px] mx-auto min-h-screen flex flex-col justify-center relative z-10">
-             <header className="mb-24 border-b-4 border-black pb-12 flex flex-col md:flex-row justify-between items-end gap-12">
-                <div>
-                   <span className="text-[10px] uppercase font-black tracking-[1em] opacity-40 mb-4 block underline decoration-black/10 underline-offset-8 italic">Structural_Sync // Series_097</span>
-                   <h1 className="text-7xl md:text-[12vw] font-black italic uppercase tracking-tighter leading-[0.75]">ATOMIC. <br/> <span className="text-stone-300">BLOCK.</span></h1>
-                </div>
-                <div className="text-right flex flex-col items-end">
-                   <div className="text-3xl font-black mb-4 tracking-tighter uppercase opacity-10 italic">Secure_Sync</div>
-                   <div className="w-64 h-3 bg-black/5 rounded-none overflow-hidden border border-black/10">
-                      <motion.div animate={{ width: ['20%', '90%', '40%', '75%'] }} transition={{ duration: 4, repeat: Infinity }} className="h-full bg-black" />
-                   </div>
-                </div>
-             </header>
-
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-                {BLOCKS.map((p, i) => (
-                  <motion.div 
-                    key={p.id} initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                    className="group relative h-[60vh] rounded-none overflow-hidden border-4 border-black hover:border-black transition-all cursor-pointer shadow-brutalist bg-neutral-100"
-                    onClick={() => { setActiveItem(i); setView("monolith"); }}
-                  >
-                     <Image src={p.img} alt={p.title} fill className="object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-[2s]" />
-                     <div className="absolute inset-0 bg-black/5 transition-colors group-hover:bg-transparent" />
-                     
-                     <div className="absolute inset-10 flex flex-col justify-between">
-                        <div className="flex justify-between items-start">
-                           <div className="p-4 bg-black text-white rounded-none opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Square className="w-5 h-5" />
-                           </div>
-                           <div className="text-[10px] font-black uppercase tracking-widest opacity-20 italic">REF_0x{p.id}</div>
-                        </div>
-                        <div className="mix-blend-difference text-white">
-                           <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-2 block italic">{p.cat} // {p.value}</span>
-                           <h3 className="text-5xl font-black italic uppercase tracking-tighter leading-none">{p.title}</h3>
-                        </div>
-                     </div>
-                  </motion.div>
-                ))}
-             </div>
-             
-             <style>{`
-               .shadow-brutalist {
-                 box-shadow: 20px 20px 0px 0px #000;
-               }
-               .group:hover.shadow-brutalist {
-                 box-shadow: 10px 10px 0px 0px #000;
-                 transform: translate(10px, 10px);
-               }
-             `}</style>
+      <motion.section style={{ opacity: heroOpacity, y: heroY }} className="relative h-screen flex items-center justify-center overflow-hidden pt-16">
+        <div className="absolute inset-0">
+          <Image src="https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=1600&auto=format&fit=crop" alt="Cinema" fill className="object-cover" unoptimized />
+          <div className="absolute inset-0 bg-black/50" />
+          <div className="absolute inset-0" style={{ backgroundImage: "radial-gradient(circle at 20% 50%, #f5c842 0%, transparent 50%)", opacity: 0.15 }} />
+        </div>
+        <div className="relative z-10 text-center max-w-4xl px-4">
+          <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2 }} className="text-6xl md:text-7xl font-bold mb-6 tracking-tight">
+            INDEPENDENT CINEMA COLLECTIVE
+          </motion.h1>
+          <motion.p initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.4 }} className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+            Empowering filmmakers worldwide. Festival strategy to theatrical distribution.
+          </motion.p>
+          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.6 }}>
+            <Dialog>
+              <DialogTrigger asChild>
+                <MagneticBtn className="px-8 py-4 bg-[#f5c842] text-black font-bold rounded-full hover:bg-[#f5c842]/90 transition">
+                  Submit Your Film
+                </MagneticBtn>
+              </DialogTrigger>
+              <DialogContent className="bg-[#1a1a1a] border-[#f5c842]/20 max-w-md">
+                <DialogTitle>Submit Your Film</DialogTitle>
+                <form className="space-y-4">
+                  <input type="text" placeholder="Film Title" className="w-full px-4 py-2 bg-[#0d0d0d] border border-[#f5c842]/30 rounded text-white" />
+                  <input type="email" placeholder="Your Email" className="w-full px-4 py-2 bg-[#0d0d0d] border border-[#f5c842]/30 rounded text-white" />
+                  <input type="text" placeholder="Director Name" className="w-full px-4 py-2 bg-[#0d0d0d] border border-[#f5c842]/30 rounded text-white" />
+                  <input type="url" placeholder="Trailer or Festival Link" className="w-full px-4 py-2 bg-[#0d0d0d] border border-[#f5c842]/30 rounded text-white" />
+                  <button type="submit" className="w-full px-4 py-3 bg-[#f5c842] text-black font-bold rounded hover:bg-[#f5c842]/90 transition">
+                    Submit Now
+                  </button>
+                </form>
+              </DialogContent>
+            </Dialog>
           </motion.div>
-        )}
+        </div>
+      </motion.section>
 
-        {/* THE MONOLITH VIEW (DETAIL) */}
-        {view === "monolith" && (
-          <motion.div key="monolith" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen">
-             <button onClick={() => setView("block")} className="fixed top-12 left-12 z-[60] bg-black text-white p-5 rounded-none hover:scale-110 transition-transform shadow-2xl">
-                <X className="w-6 h-6" />
-             </button>
+      <section id="films" className="py-24 px-6 max-w-7xl mx-auto">
+        <Reveal delay={0.1}>
+          <h2 className="text-5xl font-bold mb-4 text-center">Featured Catalog</h2>
+          <p className="text-gray-400 text-center mb-12 max-w-2xl mx-auto">Award-winning films across narrative, documentary, short, and animation formats.</p>
+        </Reveal>
 
-             <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen pt-24 lg:pt-0">
-                <div className="lg:col-span-12 relative flex items-center justify-center p-8 md:p-32 overflow-hidden h-screen bg-[#ffffff]">
-                   <div className="absolute inset-0 opacity-10">
-                      <Image src={BLOCKS[activeItem].img} alt="Background" fill className="object-cover grayscale" />
-                   </div>
-                   <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[40vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase">
-                      BLOCK
-                   </div>
-                   
-                   <div className="max-w-[1500px] w-full grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10">
-                      <motion.div initial={{ scale: 1.1, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1 }} className="relative aspect-square w-full rounded-none overflow-hidden border-8 border-black bg-white shadow-brutalist group">
-                         <Image src={BLOCKS[activeItem].img} alt="Monolith" fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[3s] opacity-80" priority />
-                         <div className="absolute top-12 left-12 p-4 bg-black text-white border-2 border-white">
-                            <Layers className="w-6 h-6 animate-pulse" />
-                         </div>
-                      </motion.div>
+        <Tabs value={selectedTab} onValueChange={setSelectedTab}>
+          <TabsList className="grid w-full grid-cols-4 bg-[#1a1a1a] border border-[#f5c842]/20 mb-8">
+            {["Narrative", "Documentary", "Short", "Animation"].map((type) => (
+              <TabsTrigger key={type} value={type} className="data-[state=active]:bg-[#f5c842] data-[state=active]:text-black">
+                {type}
+              </TabsTrigger>
+            ))}
+          </TabsList>
 
-                      <div className="flex flex-col justify-center space-y-12">
-                         <div className="space-y-6">
-                            <span className="text-[10px] uppercase tracking-[1em] font-black opacity-30 mb-8 block underline decoration-black decoration-4 underline-offset-8 italic">Phased_Sync // {BLOCKS[activeItem].cat}</span>
-                            <h1 className="text-7xl md:text-[8vw] font-black italic uppercase tracking-tighter leading-none text-black">{BLOCKS[activeItem].title}</h1>
-                            <div className="text-4xl font-black italic tracking-tighter opacity-10 italic">State: SYNCHRONIZED</div>
-                         </div>
-
-                         <p className="text-3xl font-light italic leading-relaxed uppercase tracking-tight opacity-40 text-black leading-relaxed">
-                            Structural allocation for {BLOCKS[activeItem].title}. System integrity at 100%. Thermal load nominal at 32C. Every coordinate synchronized.
-                         </p>
-
-                         <div className="grid grid-cols-2 gap-12 py-12 border-y-4 border-black text-black/60">
-                            {[
-                              { icon: <Globe className="w-5 h-5" />, l: "Region", v: "Global_East" },
-                              { icon: <Zap className="w-5 h-5" />, l: "Logic", v: "Phase_Shift" },
-                              { icon: <Shield className="w-5 h-5" />, l: "Security", v: "High_Impact" },
-                              { icon: <Activity className="w-5 h-5" />, l: "Sync", v: "Active" },
-                            ].map((s, i) => (
-                              <div key={i} className="flex gap-6 items-center">
-                                 <div className="opacity-20 text-black">{s.icon}</div>
-                                 <div className="text-left">
-                                    <div className="text-[10px] font-black opacity-30 uppercase tracking-widest mb-1 italic">{s.l}</div>
-                                    <div className="text-sm font-black uppercase italic tracking-tighter text-black">{s.v}</div>
-                                 </div>
-                              </div>
-                            ))}
-                         </div>
-
-                         <div className="flex gap-6 pt-8">
-                            <button onClick={() => setView("block")} className="flex-grow py-8 bg-black text-white font-black uppercase text-xs tracking-[1em] hover:bg-stone-800 transition-all shadow-brutalist">
-                               Return_to_Block
-                            </button>
-                            <button className="px-12 py-8 border-4 border-black text-[10px] font-black uppercase tracking-[0.5em] hover:scale-105 transition-all text-black">
-                               PDF_Spec
-                            </button>
-                         </div>
+          {["Narrative", "Documentary", "Short", "Animation"].map((type) => (
+            <TabsContent key={type} value={type} className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {FILMS.filter((f) => f.type === type).map((film, idx) => (
+                <Reveal key={film.id} delay={idx * 0.1}>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Card className="bg-[#1a1a1a] border-[#f5c842]/20 cursor-pointer hover:border-[#f5c842]/50 transition overflow-hidden group">
+                        <div className="relative h-64 overflow-hidden">
+                          <Image src={film.image} alt={film.title} fill className="object-cover group-hover:scale-110 transition" unoptimized />
+                          <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition flex items-center justify-center">
+                            <div className="w-12 h-12 text-[#f5c842] opacity-0 group-hover:opacity-100 transition">▶</div>
+                          </div>
+                        </div>
+                        <CardContent className="p-4">
+                          <h3 className="font-bold text-lg mb-2">{film.title}</h3>
+                          <p className="text-sm text-gray-400 mb-3">Director: {film.director}</p>
+                          <div className="flex gap-2">
+                            <Badge variant="outline" className="border-[#f5c842]/30 text-[#f5c842]">{film.awards}</Badge>
+                            <Badge variant="outline" className="border-[#f5c842]/30 text-gray-300">{film.festivals[0]}</Badge>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </DialogTrigger>
+                    <DialogContent className="bg-[#1a1a1a] border-[#f5c842]/20 max-w-2xl">
+                      <div className="space-y-4">
+                        <h2 className="text-3xl font-bold">{film.title}</h2>
+                        <div className="aspect-video bg-black rounded overflow-hidden">
+                          <Image src={film.image} alt={film.title} width={500} height={280} className="w-full h-full object-cover" unoptimized />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-gray-400 text-sm">Director</p>
+                            <p className="font-bold">{film.director}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-400 text-sm">Award</p>
+                            <p className="font-bold text-[#f5c842]">{film.awards}</p>
+                          </div>
+                          <div className="col-span-2">
+                            <p className="text-gray-400 text-sm">Festival Selections</p>
+                            <p className="font-bold">{film.festivals.join(", ")}</p>
+                          </div>
+                        </div>
                       </div>
-                   </div>
+                    </DialogContent>
+                  </Dialog>
+                </Reveal>
+              ))}
+            </TabsContent>
+          ))}
+        </Tabs>
+      </section>
+
+      <section id="festivals" className="py-24 px-6 bg-[#1a1a1a]">
+        <div className="max-w-7xl mx-auto">
+          <Reveal delay={0.1}>
+            <h2 className="text-5xl font-bold text-center mb-4">Festival Timeline</h2>
+            <p className="text-gray-400 text-center max-w-2xl mx-auto mb-16">Global premiere circuit across the world's most prestigious festivals.</p>
+          </Reveal>
+
+          <div className="space-y-8">
+            {FESTIVALS.map((fest, idx) => (
+              <Reveal key={idx} delay={idx * 0.1}>
+                <div className="flex items-center gap-6 group">
+                  <div className="w-32 flex-shrink-0">
+                    <p className="text-sm text-gray-400">{fest.month}</p>
+                    <p className="font-bold text-lg">{fest.year}</p>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold mb-1">{fest.name}</h3>
+                    <p className="text-gray-400">🏆 {fest.award}</p>
+                  </div>
+                  <Badge className="bg-[#f5c842] text-black font-bold">SELECTED</Badge>
                 </div>
-             </div>
-             <style>{`
-               .shadow-brutalist {
-                 box-shadow: 20px 20px 0px 0px #000;
-               }
-             `}</style>
-          </motion.div>
-        )}
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
 
-        {/* THE PROTOCOL VIEW (INFO) */}
-        {view === "protocol" && (
-          <motion.div key="protocol" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen flex flex-col justify-center">
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center text-black">
-                <div className="space-y-16">
-                   <span className="text-[10px] uppercase font-black tracking-[1.5em] opacity-30 block underline decoration-black decoration-2 underline-offset-8 italic">The_Structural_Protocol</span>
-                   <h2 className="text-7xl md:text-[10vw] font-black italic tracking-tighter leading-none text-black uppercase">The <br/> Truth.</h2>
-                   <p className="text-3xl md:text-4xl font-light italic opacity-60 leading-relaxed uppercase tracking-tight text-black/60">
-                      We treat architecture as code. Every structure is a function of its environmental variables and tectonic intent. 100% precision. Zero noise.
-                   </p>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t-4 border-black">
-                      {[
-                        { icon: <Sparkles className="w-6 h-6" />, t: "Adaptive Flow", v: "Dynamic Load Sync" },
-                        { icon: <Plus className="w-6 h-6" />, t: "Structural Sync", v: "Deep_Material_ID" },
-                      ].map((item, i) => (
-                        <div key={i} className="flex gap-8 group">
-                           <div className="w-20 h-20 rounded-none border-4 border-black flex items-center justify-center text-black group-hover:bg-black group-hover:text-white transition-all shadow-brutalist">
-                              {item.icon}
-                           </div>
-                           <div className="text-left">
-                              <h4 className="text-2xl font-black uppercase italic tracking-tighter text-black leading-none mb-2">{item.t}</h4>
-                              <p className="text-[10px] opacity-30 uppercase tracking-[0.3em] font-black leading-relaxed text-black/40">{item.v}</p>
-                           </div>
-                        </div>
-                      ))}
-                   </div>
-                </div>
-                <div className="relative aspect-square bg-[#ddd] rounded-none p-12 overflow-hidden border-8 border-black group shadow-brutalist">
-                   <Image src="https://images.unsplash.com/photo-1541829070764-84a7d30dee62?q=80&w=1000&auto=format&fit=crop" alt="The Protocol" fill className="object-cover opacity-20 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-[2s]" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-80" />
-                   <div className="absolute inset-x-0 bottom-12 flex justify-center">
-                      <div className="px-12 py-6 bg-black text-white text-[10px] font-black uppercase tracking-widest italic animate-pulse cursor-pointer hover:bg-stone-800 transition-all">
-                         Establish_Handshake
-                      </div>
-                   </div>
-                </div>
-             </div>
-             <style>{`
-               .shadow-brutalist {
-                 box-shadow: 20px 20px 0px 0px #000;
-               }
-             `}</style>
-          </motion.div>
-        )}
+      <section id="directors" className="py-24 px-6 max-w-7xl mx-auto">
+        <Reveal delay={0.1}>
+          <h2 className="text-5xl font-bold text-center mb-4">Director Spotlights</h2>
+          <p className="text-gray-400 text-center mb-12">Visionary storytellers shaping independent cinema.</p>
+        </Reveal>
 
-      </AnimatePresence>
+        <Carousel className="w-full max-w-4xl mx-auto">
+          <CarouselContent>
+            {DIRECTORS.map((dir) => (
+              <CarouselItem key={dir.name} className="basis-full md:basis-1/2 lg:basis-1/3">
+                <Card className="bg-[#1a1a1a] border-[#f5c842]/20 text-center">
+                  <CardContent className="p-6">
+                    <Avatar className="w-20 h-20 mx-auto mb-4">
+                      <AvatarImage src={dir.image} alt={dir.name} />
+                      <AvatarFallback>{dir.name[0]}</AvatarFallback>
+                    </Avatar>
+                    <h3 className="font-bold text-lg">{dir.name}</h3>
+                    <p className="text-sm text-[#f5c842] mb-2">{dir.role}</p>
+                    <p className="text-sm text-gray-400">{dir.bio}</p>
+                  </CardContent>
+                </Card>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="border-[#f5c842]/30" />
+          <CarouselNext className="border-[#f5c842]/30" />
+        </Carousel>
+      </section>
 
-      {/* Global Status HUD */}
-      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em] italic text-black leading-none">
-         <div className="flex gap-12">
-            <span>Void_Ed_Alpha</span>
-            <span>Uptime: 99.9%</span>
-         </div>
-         <div className="flex gap-4 items-end">
-            <div className="text-right leading-tight italic">
-               Structural_Control <br /> v4.0.21
-            </div>
-            <div className="flex gap-[4px] h-4">
-               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-full bg-black opacity-${i*20}`}></div>)}
-            </div>
-         </div>
-      </footer>
+      <section className="py-24 px-6 bg-[#1a1a1a]">
+        <div className="max-w-3xl mx-auto">
+          <Reveal delay={0.1} className="mb-12">
+            <h2 className="text-5xl font-bold text-center mb-4">Submissions FAQ</h2>
+          </Reveal>
 
-      <style>{`
-        ::-webkit-scrollbar { width: 0px; }
-      `}</style>
+          <Accordion type="single" collapsible className="space-y-4">
+            {FAQ_ITEMS.map((item, idx) => (
+              <AccordionItem key={idx} value={`item-${idx}`} className="border-[#f5c842]/20">
+                <AccordionTrigger className="text-lg font-semibold hover:text-[#f5c842] transition">
+                  {item.q}
+                </AccordionTrigger>
+                <AccordionContent className="text-gray-400">
+                  {item.a}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
+      </section>
+
+      <section className="py-24 px-6 max-w-7xl mx-auto">
+        <Reveal delay={0.1} className="mb-16">
+          <h2 className="text-5xl font-bold text-center mb-4">Press Recognition</h2>
+        </Reveal>
+
+        <Carousel className="w-full">
+          <CarouselContent>
+            {TESTIMONIALS.map((testi, idx) => (
+              <CarouselItem key={idx} className="basis-full md:basis-1/2 lg:basis-1/3">
+                <Card className="bg-[#1a1a1a] border-[#f5c842]/20 h-full">
+                  <CardContent className="p-6 flex flex-col justify-between h-full">
+                    <p className="text-gray-300 italic mb-4 flex-1">"{testi.text}"</p>
+                    <p className="text-sm text-[#f5c842] font-semibold">— {testi.author}</p>
+                  </CardContent>
+                </Card>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="border-[#f5c842]/30" />
+          <CarouselNext className="border-[#f5c842]/30" />
+        </Carousel>
+      </section>
+
+      <section className="py-24 px-6 bg-[#1a1a1a]">
+        <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
+          {STATS.map((stat, idx) => (
+            <Reveal key={idx} delay={idx * 0.1} className="text-center">
+              <div className="text-4xl font-bold text-[#f5c842] mb-2"><Counter target={stat.value} /></div>
+              <div className="text-sm text-gray-400">{stat.label}</div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      <section className="py-24 px-6 text-center">
+        <Reveal>
+          <h2 className="text-4xl md:text-5xl font-bold mb-6">Ready to Share Your Vision?</h2>
+          <p className="text-gray-400 mb-8 max-w-2xl mx-auto">Join 150+ filmmakers who transformed their careers with Impact-97.</p>
+          <Dialog>
+            <DialogTrigger asChild>
+              <MagneticBtn className="px-8 py-4 bg-[#f5c842] text-black font-bold rounded-full hover:bg-[#f5c842]/90 transition inline-flex items-center gap-2">
+                Start Your Journey
+              </MagneticBtn>
+            </DialogTrigger>
+            <DialogContent className="bg-[#1a1a1a] border-[#f5c842]/20">
+              <DialogTitle>Get Started</DialogTitle>
+              <form className="space-y-4">
+                <input type="text" placeholder="Your Name" className="w-full px-4 py-2 bg-[#0d0d0d] border border-[#f5c842]/30 rounded text-white" />
+                <input type="email" placeholder="Email Address" className="w-full px-4 py-2 bg-[#0d0d0d] border border-[#f5c842]/30 rounded text-white" />
+                <textarea placeholder="Tell us about your film..." className="w-full px-4 py-2 bg-[#0d0d0d] border border-[#f5c842]/30 rounded text-white h-24" />
+                <button type="submit" className="w-full px-4 py-3 bg-[#f5c842] text-black font-bold rounded hover:bg-[#f5c842]/90 transition">
+                  Submit
+                </button>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </Reveal>
+      </section>
     </div>
-  );
+  )
 }

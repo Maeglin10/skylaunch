@@ -1,240 +1,333 @@
-"use client";
+"use client"
+import { motion, useScroll, useTransform, useInView, AnimatePresence, useMotionValue, useSpring } from "framer-motion"
+import { useState, useRef, useEffect } from "react"
+import Image from "next/image"
+import Link from "next/link"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
+import { Progress } from "@/components/ui/progress"
 
-import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
-import { useState, useRef } from "react";
-import Image from "next/image";
-import { X, Menu, Search, Mountain, Zap, Activity, Globe, Shield, Command, Plus, ArrowUpRight, Maximize2, MoveRight, Layers, Box, Compass, Sparkles, MoveVertical, Map } from "lucide-react";
-import "../premium.css";
+function Reveal({ children, delay=0 }: { children: React.ReactNode; delay?: number }) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: "-60px" })
+  return <motion.div ref={ref} initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, delay }}>{children}</motion.div>
+}
 
-const CHAPTERS = [
-  { id: 1, title: "THE_AWAKENING", cat: "Fjords", value: "Verified", img: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=1000&auto=format&fit=crop", text: "Deep in the Norwegian fjords, where light bends around ancient stone." },
-  { id: 2, title: "THE_TRAVERSE", cat: "Glacial", value: "Active", img: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=1000&auto=format&fit=crop", text: "Across glacial ridges where silence becomes a language of its own." },
-  { id: 3, title: "THE_SUMMIT", cat: "Celestial", value: "Reserve", img: "https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=1000&auto=format&fit=crop", text: "Above the clouds, perspective shifts and the world reveals its architecture." },
-];
+function Counter({ target, suffix="" }: { target: number; suffix?: string }) {
+  const [count, setCount] = useState(0)
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true })
+  useEffect(() => {
+    if (!inView) return
+    const step = Math.ceil(target / 60)
+    const t = setInterval(() => setCount(c => Math.min(c + step, target)), 16)
+    return () => clearInterval(t)
+  }, [inView, target])
+  return <span ref={ref}>{count.toLocaleString()}{suffix}</span>
+}
 
-export default function MeridianStorySPA() {
-  const [view, setView] = useState<"journey" | "chapter" | "archive">("journey");
-  const [activeItem, setActiveItem] = useState(0);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: containerRef });
-  
-  const progress = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
+function MagneticBtn({ children, className="" }: { children: React.ReactNode; className?: string }) {
+  const x = useMotionValue(0); const y = useMotionValue(0)
+  const sx = useSpring(x, { stiffness: 500, damping: 25 })
+  const sy = useSpring(y, { stiffness: 500, damping: 25 })
+  const ref = useRef<HTMLButtonElement>(null)
+  const handleMouse = (e: React.MouseEvent) => {
+    const r = ref.current!.getBoundingClientRect()
+    x.set((e.clientX - r.left - r.width/2) * 0.35)
+    y.set((e.clientY - r.top - r.height/2) * 0.35)
+  }
+  return <motion.button ref={ref} style={{ x: sx, y: sy }} onMouseMove={handleMouse} onMouseLeave={() => { x.set(0); y.set(0) }} className={className}>{children}</motion.button>
+}
+
+export default function FluxStreeetwear() {
+  const { scrollYProgress } = useScroll()
+  const opacity = useTransform(scrollYProgress, [0, 0.3], [1, 0])
+  const scale = useTransform(scrollYProgress, [0, 0.3], [1, 0.95])
+
+  const [dropTimer, setDropTimer] = useState({ days: 3, hours: 12, minutes: 45, seconds: 30 })
+  const [selectedSize, setSelectedSize] = useState("M")
+  const [selectedColor, setSelectedColor] = useState("black")
+  const [showEarlyAccess, setShowEarlyAccess] = useState(false)
+  const [collectionTab, setCollectionTab] = useState("hoodies")
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDropTimer(t => {
+        let { days, hours, minutes, seconds } = t
+        if (seconds > 0) seconds--
+        else if (minutes > 0) { minutes--; seconds = 59 }
+        else if (hours > 0) { hours--; minutes = 59; seconds = 59 }
+        else if (days > 0) { days--; hours = 23; minutes = 59; seconds = 59 }
+        return { days, hours, minutes, seconds }
+      })
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [])
+
+  const products = [
+    { id: 1, name: "VOLT HOODIE", price: "$120", colors: ["black", "yellow"], image: "https://images.unsplash.com/photo-1556821552-7f41c5d440db?w=500&h=600&fit=crop" },
+    { id: 2, name: "SHOCK TEE", price: "$45", colors: ["black", "yellow"], image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=500&h=600&fit=crop" },
+    { id: 3, name: "CIRCUIT PANTS", price: "$95", colors: ["black"], image: "https://images.unsplash.com/photo-1542272604-787c62d465d1?w=500&h=600&fit=crop" },
+  ]
+
+  const lookbook = [
+    "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&h=600&fit=crop",
+    "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=800&h=600&fit=crop",
+    "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&h=600&fit=crop",
+    "https://images.unsplash.com/photo-1490578474895-699cd4e2cf6f?w=800&h=600&fit=crop",
+  ]
+
+  const collabs = [
+    { artist: "NEON KING", avatar: "NK", date: "DEC 15" },
+    { artist: "VOLT LAB", avatar: "VL", date: "JAN 10" },
+    { artist: "CIRCUIT CO", avatar: "CC", date: "FEB 20" },
+    { artist: "SPARK STUDIO", avatar: "SS", date: "MAR 05" },
+  ]
+
+  const testimonials = [
+    { text: "Best streetwear in the game. Pure heat.", author: "MAYA_", avatar: "M" },
+    { text: "Every drop sells out in minutes. Worth it.", author: "ALEX_FLUX", avatar: "A" },
+    { text: "The quality is insane for the price.", author: "JORDAN_HYPE", avatar: "J" },
+  ]
 
   return (
-    <div ref={containerRef} className="premium-theme bg-[#050505] text-[#2dd4bf] min-h-screen selection:bg-teal-500 selection:text-white font-serif overflow-x-hidden">
-      
-      {/* Background HUD Layers */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[45vw] font-black opacity-[0.02] select-none pointer-events-none italic tracking-tighter text-center uppercase">
-           MERIDIAN
+    <div className="bg-[#0a0a0a] text-white min-h-screen overflow-x-hidden">
+      {/* PARALLAX HERO */}
+      <motion.section style={{ opacity, scale }} className="relative h-screen flex items-center justify-center overflow-hidden">
+        <Image src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=1600&h=900&fit=crop" alt="Streetwear" fill className="object-cover brightness-50" />
+        <div className="relative z-10 text-center space-y-8">
+          <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="text-7xl md:text-8xl font-black uppercase tracking-tighter">
+            <span className="text-[#ffd700]">FLUX</span>
+          </motion.h1>
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="text-xl text-gray-300">
+            ELECTRIC STREETWEAR. LIMITED DROPS. INFINITE STYLE.
+          </motion.p>
         </div>
-        <div className="absolute inset-0 bg-[#050505]/40 backdrop-blur-[2px]" />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.05] mix-blend-screen" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#050505_100%)] opacity-80" />
-      </div>
+      </motion.section>
 
-      {/* Progress HUD */}
-      <div className="fixed top-0 left-0 h-1 bg-teal-500/20 w-full z-[100]">
-        <motion.div style={{ width: progress }} className="h-full bg-teal-400 shadow-[0_0_20px_rgba(45,212,191,0.5)]" />
-      </div>
+      {/* DROP COUNTDOWN */}
+      <Reveal>
+        <section className="py-20 px-6 bg-[#1a1a1a] border-y border-[#ffd700]">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-5xl font-black mb-12 text-center">NEXT DROP IN</h2>
+            <div className="grid grid-cols-4 gap-6 text-center">
+              {[
+                { label: "DAYS", value: dropTimer.days },
+                { label: "HOURS", value: dropTimer.hours },
+                { label: "MINS", value: dropTimer.minutes },
+                { label: "SECS", value: dropTimer.seconds },
+              ].map((item, i) => (
+                <motion.div key={i} initial={{ scale: 0.9 }} whileHover={{ scale: 1.05 }} className="p-6 bg-black border-2 border-[#ffd700] rounded">
+                  <div className="text-4xl font-black text-[#ffd700]">{String(item.value).padStart(2, '0')}</div>
+                  <div className="text-sm uppercase text-gray-400 mt-2">{item.label}</div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+      </Reveal>
 
-      {/* Editorial HUD Nav */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-center bg-black/40 backdrop-blur-3xl border-b border-teal-500/10 font-mono">
-        <div className="flex gap-12 items-center">
-           <button onClick={() => setView("journey")} className="text-xl font-light tracking-[0.3em] hover:scale-105 transition-transform font-serif uppercase text-[#f8f8f8]">
-              MERIDIAN_ED&trade;
-           </button>
-           <div className="hidden lg:flex gap-8 text-[10px] font-black uppercase tracking-widest opacity-20 italic">
-              Status: Narrative_Live
-              <span className="text-teal-400">Ref: 0x107</span>
-           </div>
-        </div>
-        <div className="hidden md:flex gap-12 text-[10px] font-black uppercase tracking-[0.4em] opacity-30">
-           <button onClick={() => setView("journey")} className={`hover:opacity-100 transition-opacity ${view === 'journey' ? 'text-teal-400 opacity-100 underline decoration-teal-400 decoration-2 underline-offset-8 italic' : ''}`}>THE_JOURNEY</button>
-           <button onClick={() => setView("archive")} className={`hover:opacity-100 transition-opacity ${view === 'archive' ? 'text-teal-400 opacity-100 underline decoration-teal-400 decoration-2 underline-offset-8 italic' : ''}`}>THE_ARCHIVE</button>
-        </div>
-        <div className="flex items-center gap-8">
-           <Search className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-           <Menu className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-        </div>
-      </nav>
-
-      <AnimatePresence mode="wait">
-        
-        {/* THE JOURNEY VIEW (LANDING) */}
-        {view === "journey" && (
-          <motion.div key="journey" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-48 pb-32 px-12 max-w-[1800px] mx-auto min-h-screen flex flex-col justify-center relative z-10">
-             <header className="mb-24 border-b border-teal-900/20 pb-12 flex flex-col md:flex-row justify-between items-end gap-12">
-                <div>
-                   <span className="text-[10px] uppercase font-black tracking-[1em] opacity-40 mb-4 block underline decoration-teal-900/10 underline-offset-8 italic font-mono text-teal-400">Narrative_Sync // Series_107</span>
-                   <h1 className="text-7xl md:text-[12vw] font-light uppercase tracking-tighter leading-[0.75]">LONG. <br/> <span className="text-teal-900">FORM.</span></h1>
-                </div>
-                <div className="text-right flex flex-col items-end">
-                   <div className="text-3xl font-black mb-4 tracking-tighter uppercase opacity-10 italic font-mono text-teal-400">Cinematic_Flow</div>
-                   <div className="w-64 h-[1px] bg-teal-900/20 rounded-none overflow-hidden">
-                      <motion.div animate={{ width: ['20%', '90%', '40%', '75%'] }} transition={{ duration: 4, repeat: Infinity }} className="h-full bg-teal-400" />
-                   </div>
-                </div>
-             </header>
-
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-16 font-mono">
-                {CHAPTERS.map((p, i) => (
-                  <motion.div 
-                    key={p.id} initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                    className="group relative h-[60vh] rounded-none overflow-hidden border border-teal-900/10 hover:border-teal-900/40 transition-all cursor-pointer shadow-2xl bg-[#0a0a0a]"
-                    onClick={() => { setActiveItem(i); setView("chapter"); }}
-                  >
-                     <Image src={p.img} alt={p.title} fill className="object-cover grayscale opacity-20 group-hover:opacity-40 transition-all duration-[2s] group-hover:scale-110" />
-                     <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                     
-                     <div className="absolute inset-10 flex flex-col justify-between">
-                        <div className="flex justify-between items-start">
-                           <div className="p-4 bg-teal-900/10 border border-teal-900/20 rounded-none opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Mountain className="w-5 h-5 text-teal-400" />
-                           </div>
-                           <div className="text-[10px] font-black uppercase tracking-widest opacity-20 italic text-teal-400">CHAPTER_0x0{i+1}</div>
-                        </div>
-                        <div>
-                           <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-2 block italic text-teal-600">{p.cat} // {p.value}</span>
-                           <h3 className="text-5xl font-light italic uppercase tracking-tighter leading-none font-serif text-[#f8f8f8] transition-all group-hover:tracking-widest">{p.title}</h3>
-                        </div>
-                     </div>
-                  </motion.div>
+      {/* COLLECTION GRID WITH TABS */}
+      <Reveal>
+        <section className="py-20 px-6">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-5xl font-black mb-12">COLLECTIONS</h2>
+            <Tabs defaultValue="hoodies" className="w-full">
+              <TabsList className="grid w-full grid-cols-4 bg-black border border-[#ffd700]">
+                {["hoodies", "tees", "pants", "accessories"].map(tab => (
+                  <TabsTrigger key={tab} value={tab} className="uppercase text-sm font-bold">{tab}</TabsTrigger>
                 ))}
-             </div>
-          </motion.div>
-        )}
-
-        {/* THE CHAPTER VIEW (DETAIL) */}
-        {view === "chapter" && (
-          <motion.div key="chapter" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen">
-             <button onClick={() => setView("journey")} className="fixed top-12 left-12 z-[60] bg-[#f8f8f8] text-black p-5 rounded-none hover:scale-110 transition-transform shadow-2xl">
-                <X className="w-6 h-6" />
-             </button>
-
-             <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen pt-24 lg:pt-0">
-                <div className="lg:col-span-12 relative flex items-center justify-center p-8 md:p-32 overflow-hidden h-screen bg-[#050505]">
-                   <div className="absolute inset-0 opacity-10">
-                      <Image src={CHAPTERS[activeItem].img} alt="Background" fill className="object-cover grayscale" />
-                   </div>
-                   <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[40vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase text-teal-800 font-serif">
-                      SCENE
-                   </div>
-                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#050505_100%)]" />
-                   
-                   <div className="max-w-[1500px] w-full grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10 font-serif">
-                      <motion.div initial={{ scale: 1.1, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1 }} className="relative aspect-square w-full rounded-none overflow-hidden border border-teal-900/10 group bg-neutral-900 shadow-2xl">
-                         <Image src={CHAPTERS[activeItem].img} alt="Spec" fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[3s] opacity-80" priority />
-                         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                         <div className="absolute top-12 left-12 p-4 bg-black/60 backdrop-blur-3xl rounded-none border-2 border-teal-900/10">
-                            <Layers className="w-6 h-6 text-teal-400 animate-pulse" />
-                         </div>
-                      </motion.div>
-
-                      <div className="flex flex-col justify-center space-y-12">
-                         <div className="space-y-6">
-                            <span className="text-[10px] uppercase tracking-[1em] font-black opacity-30 mb-8 block underline decoration-teal-400 decoration-4 underline-offset-8 italic text-teal-500 font-mono">Meridian_Sync // {CHAPTERS[activeItem].cat}</span>
-                            <h1 className="text-7xl md:text-[8vw] font-light italic uppercase tracking-tighter leading-none text-[#f8f8f8]">{CHAPTERS[activeItem].title}</h1>
-                            <div className="text-4xl font-light italic tracking-tighter opacity-10 italic text-teal-400">State: {CHAPTERS[activeItem].value}</div>
-                         </div>
-
-                         <p className="text-3xl font-light italic leading-relaxed uppercase tracking-tight opacity-40 text-[#f8f8f8] leading-relaxed">
-                            {CHAPTERS[activeItem].text}
-                         </p>
-
-                         <div className="grid grid-cols-2 gap-12 py-12 border-y border-teal-900/20 font-mono text-teal-400/60">
-                            {[
-                              { icon: <Globe className="w-5 h-5" />, l: "Region", v: "Nordic_West" },
-                              { icon: <Zap className="w-5 h-5" />, l: "Light", v: "Phase_Shift" },
-                              { icon: <Shield className="w-5 h-5" />, l: "Silence", v: "Absolute" },
-                              { icon: <Activity className="w-5 h-5" />, l: "Sync", v: "Active" },
-                            ].map((s, i) => (
-                              <div key={i} className="flex gap-6 items-center">
-                                 <div className="opacity-20 text-teal-400">{s.icon}</div>
-                                 <div className="text-left">
-                                    <div className="text-[10px] font-black opacity-30 uppercase tracking-widest mb-1 italic">{s.l}</div>
-                                    <div className="text-sm font-black uppercase italic tracking-tighter text-[#f8f8f8]">{s.v}</div>
-                                 </div>
+              </TabsList>
+              {["hoodies", "tees", "pants", "accessories"].map(tab => (
+                <TabsContent key={tab} value={tab} className="mt-12">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    {products.map((prod, i) => (
+                      <motion.div key={prod.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} className="group relative">
+                        <Dialog>
+                          <motion.button className="w-full aspect-square relative overflow-hidden bg-[#1a1a1a] border border-gray-700 hover:border-[#ffd700] transition">
+                            <Image src={prod.image} alt={prod.name} fill className="object-cover group-hover:scale-110 transition duration-500" />
+                            <Badge className="absolute top-4 right-4 bg-[#ffd700] text-black">LIMITED</Badge>
+                          </motion.button>
+                          <DialogContent className="bg-black border border-[#ffd700]">
+                            <DialogHeader>
+                              <DialogTitle className="text-[#ffd700] text-2xl">{prod.name}</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-6">
+                              <div className="aspect-square relative">
+                                <Image src={prod.image} alt={prod.name} fill className="object-cover" />
                               </div>
-                            ))}
-                         </div>
-
-                         <div className="flex gap-6 pt-8 font-mono">
-                            <button onClick={() => setView("journey")} className="flex-grow py-8 bg-white text-black font-black uppercase text-xs tracking-[1em] hover:bg-teal-400 transition-all shadow-2xl">
-                               Return_to_Journey
-                            </button>
-                            <button className="px-12 py-8 border border-teal-900/20 text-[10px] font-black uppercase tracking-[0.5em] hover:scale-105 transition-all text-white">
-                               PDF_Story
-                            </button>
-                         </div>
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
-        {/* THE ARCHIVE VIEW (INFO) */}
-        {view === "archive" && (
-          <motion.div key="archive" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen flex flex-col justify-center">
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center text-teal-100">
-                <div className="space-y-16">
-                   <span className="text-[10px] uppercase font-black tracking-[1.5em] opacity-30 block underline decoration-teal-400 decoration-2 underline-offset-8 italic font-mono text-teal-400">The_Archive_Protocol</span>
-                   <h2 className="text-7xl md:text-[10vw] font-light italic tracking-tighter leading-none text-white uppercase font-serif">The <br/> Truth.</h2>
-                   <p className="text-3xl md:text-4xl font-light italic opacity-60 leading-relaxed uppercase tracking-tight text-teal-100/60 font-serif">
-                      We treat architecture as code. Every story is a function of its environmental variables and tectonic intent. 100% precision. Zero noise.
-                   </p>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t border-teal-900/20 font-mono text-teal-400">
-                      {[
-                        { icon: <Sparkles className="w-6 h-6" />, t: "Adaptive Flow", v: "Dynamic Load Sync" },
-                        { icon: <Plus className="w-6 h-6" />, t: "Structural Sync", v: "Deep_Material_ID" },
-                      ].map((item, i) => (
-                        <div key={i} className="flex gap-8 group">
-                           <div className="w-16 h-16 rounded-none border border-teal-900 flex items-center justify-center text-teal-400 group-hover:bg-teal-400 group-hover:text-black transition-all shadow-xl">
-                              {item.icon}
-                           </div>
-                           <div className="text-left">
-                              <h4 className="text-2xl font-black uppercase italic tracking-tighter text-[#f8f8f8] leading-none mb-2 font-serif">{item.t}</h4>
-                              <p className="text-[10px] opacity-30 uppercase tracking-[0.3em] font-black leading-relaxed text-teal-400/40">{item.v}</p>
-                           </div>
+                              <div>
+                                <label className="block text-sm font-bold mb-3">SIZE</label>
+                                <div className="grid grid-cols-5 gap-2">
+                                  {["XS", "S", "M", "L", "XL", "XXL"].map(size => (
+                                    <button key={size} onClick={() => setSelectedSize(size)} className={`p-3 border font-bold ${selectedSize === size ? "bg-[#ffd700] text-black border-[#ffd700]" : "border-gray-600 hover:border-[#ffd700]"}`}>
+                                      {size}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                              <div>
+                                <label className="block text-sm font-bold mb-3">COLOR</label>
+                                <div className="flex gap-3">
+                                  {prod.colors.map(color => (
+                                    <button key={color} onClick={() => setSelectedColor(color)} className={`w-12 h-12 rounded border-2 ${selectedColor === color ? "border-[#ffd700]" : "border-gray-600"}`} style={{ backgroundColor: color === "yellow" ? "#ffd700" : "#000" }} />
+                                  ))}
+                                </div>
+                              </div>
+                              <button className="w-full py-3 bg-[#ffd700] text-black font-black text-lg hover:bg-white transition">
+                                ADD TO CART {prod.price}
+                              </button>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                        <div className="mt-4">
+                          <h3 className="font-black text-lg group-hover:text-[#ffd700] transition">{prod.name}</h3>
+                          <p className="text-gray-400">{prod.price}</p>
                         </div>
-                      ))}
-                   </div>
-                </div>
-                <div className="relative aspect-square bg-[#0a0a0a] rounded-none p-12 overflow-hidden border border-teal-900/20 group shadow-2xl">
-                   <Image src="https://images.unsplash.com/photo-1541829070764-84a7d30dee62?q=80&w=1000&auto=format&fit=crop" alt="The Archive" fill className="object-cover opacity-20 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-[3s]" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                   <div className="absolute inset-x-0 bottom-12 flex justify-center font-mono">
-                      <div className="px-12 py-6 bg-teal-400 text-black text-[10px] font-black uppercase tracking-widest italic animate-bounce cursor-pointer hover:bg-teal-300 transition-all">
-                         Establish_Handshake
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
+                      </motion.div>
+                    ))}
+                  </div>
+                </TabsContent>
+              ))}
+            </Tabs>
+          </div>
+        </section>
+      </Reveal>
 
-      </AnimatePresence>
+      {/* LOOKBOOK CAROUSEL */}
+      <Reveal>
+        <section className="py-20 px-6 bg-[#1a1a1a]">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-5xl font-black mb-12">STYLE LOOKBOOK</h2>
+            <Carousel className="w-full">
+              <CarouselContent>
+                {lookbook.map((img, i) => (
+                  <CarouselItem key={i}>
+                    <div className="aspect-video relative">
+                      <Image src={img} alt={`Look ${i}`} fill className="object-cover" />
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious />
+              <CarouselNext />
+            </Carousel>
+          </div>
+        </section>
+      </Reveal>
 
-      {/* Global Status HUD */}
-      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em] italic text-teal-400 leading-none font-mono">
-         <div className="flex gap-12 text-teal-400">
-            <span>Meridian_Alpha</span>
-            <span>Uptime: 99.9%</span>
-         </div>
-         <div className="flex gap-4 items-end text-teal-400">
-            <div className="text-right leading-tight italic">
-               Archival_Control <br /> v4.0.107
+      {/* COLLAB TIMELINE */}
+      <Reveal>
+        <section className="py-20 px-6">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-5xl font-black mb-12">COLLAB TIMELINE</h2>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              {collabs.map((collab, i) => (
+                <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} className="p-6 bg-black border border-[#ffd700] text-center">
+                  <Avatar className="mx-auto mb-4 w-16 h-16 border-2 border-[#ffd700]">
+                    <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${collab.avatar}`} />
+                    <AvatarFallback>{collab.avatar}</AvatarFallback>
+                  </Avatar>
+                  <h3 className="font-black text-lg text-[#ffd700]">{collab.artist}</h3>
+                  <p className="text-sm text-gray-400 mt-2">{collab.date}</p>
+                </motion.div>
+              ))}
             </div>
-            <div className="flex gap-[4px] h-4">
-               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-full bg-teal-400 opacity-${i*20}`}></div>)}
-            </div>
-         </div>
-      </footer>
+          </div>
+        </section>
+      </Reveal>
 
-      <style>{`
-        ::-webkit-scrollbar { width: 0px; }
-      `}</style>
+      {/* STATS COUNTER */}
+      <Reveal>
+        <section className="py-20 px-6 bg-[#1a1a1a]">
+          <div className="max-w-6xl mx-auto">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+              {[
+                { label: "COMMUNITY", value: 250000 },
+                { label: "DROPS", value: 12 },
+                { label: "COUNTRIES", value: 40 },
+                { label: "RATING", value: 4.9, suffix: "★" },
+              ].map((stat, i) => (
+                <Reveal key={i} delay={i * 0.1}>
+                  <div>
+                    <div className="text-4xl font-black text-[#ffd700]"><Counter target={stat.value} suffix={stat.suffix} /></div>
+                    <p className="text-gray-400 text-sm mt-2">{stat.label}</p>
+                  </div>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
+      </Reveal>
+
+      {/* TESTIMONIALS */}
+      <Reveal>
+        <section className="py-20 px-6">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-5xl font-black mb-12">COMMUNITY LOVE</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {testimonials.map((testi, i) => (
+                <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} className="p-8 bg-black border border-[#ffd700]">
+                  <p className="text-lg mb-6 italic">"{testi.text}"</p>
+                  <div className="flex items-center gap-3">
+                    <Avatar>
+                      <AvatarFallback className="bg-[#ffd700] text-black font-black">{testi.avatar}</AvatarFallback>
+                    </Avatar>
+                    <span className="font-black">{testi.author}</span>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+      </Reveal>
+
+      {/* FAQ */}
+      <Reveal>
+        <section className="py-20 px-6 bg-[#1a1a1a]">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-5xl font-black mb-12">FAQS</h2>
+            <Accordion type="single" collapsible className="w-full">
+              {[
+                { q: "What sizes do you carry?", a: "We offer XS to XXL in most items. Check product details for specific sizes." },
+                { q: "How fast is shipping?", a: "Standard shipping is 5-7 days. Express shipping available at checkout." },
+                { q: "What's your return policy?", a: "30-day returns on all unworn items with original tags." },
+              ].map((faq, i) => (
+                <AccordionItem key={i} value={`item-${i}`} className="border-[#ffd700]">
+                  <AccordionTrigger className="text-lg font-black hover:text-[#ffd700]">{faq.q}</AccordionTrigger>
+                  <AccordionContent className="text-gray-400">{faq.a}</AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </div>
+        </section>
+      </Reveal>
+
+      {/* EARLY ACCESS CTA */}
+      <section className="py-20 px-6 text-center bg-gradient-to-b from-black to-[#1a1a1a]">
+        <h2 className="text-5xl font-black mb-6">GET EARLY ACCESS</h2>
+        <p className="text-gray-400 mb-8">Join our VIP list for drops before they go public.</p>
+        <MagneticBtn onClick={() => setShowEarlyAccess(true)} className="px-8 py-4 bg-[#ffd700] text-black font-black text-lg hover:bg-white transition rounded">
+          SIGN UP NOW
+        </MagneticBtn>
+        <Dialog open={showEarlyAccess} onOpenChange={setShowEarlyAccess}>
+          <DialogContent className="bg-black border-2 border-[#ffd700]">
+            <DialogHeader>
+              <DialogTitle className="text-[#ffd700] text-2xl">EARLY ACCESS</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <input type="email" placeholder="your@email.com" className="w-full p-3 bg-[#1a1a1a] border border-[#ffd700] text-white placeholder-gray-600" />
+              <button className="w-full py-3 bg-[#ffd700] text-black font-black hover:bg-white transition">SUBSCRIBE</button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </section>
     </div>
-  );
+  )
 }

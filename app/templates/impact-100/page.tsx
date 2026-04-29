@@ -1,230 +1,381 @@
-"use client";
+"use client"
+import { motion, useScroll, useTransform, useInView, AnimatePresence, useMotionValue, useSpring } from "framer-motion"
+import { useState, useRef, useEffect } from "react"
+import Image from "next/image"
+import Link from "next/link"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
+import { Progress } from "@/components/ui/progress"
 
-import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect } from "react";
-import Image from "next/image";
-import { X, Menu, Search, Award, Zap, Activity, Globe, Shield, Command, Plus, ArrowUpRight, Maximize2, MoveRight, Layers, Box, Compass, Sparkles, MoveVertical, Crown } from "lucide-react";
-import "../premium.css";
+const PROPERTIES = [
+  { id: 1, city: "Paris", name: "Palais Lumière", image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=600&auto=format&fit=crop", rooms: 45, amenities: ["Michelin-Star Restaurant", "Spa", "Wine Cellar"], rating: 4.9 },
+  { id: 2, city: "Côte d'Azur", name: "Villa Azurea", image: "https://images.unsplash.com/photo-1564078516156-91b97c9eff7f?q=80&w=600&auto=format&fit=crop", rooms: 38, amenities: ["Private Beach", "Helipad", "Cinema"], rating: 4.8 },
+  { id: 3, city: "Marrakech", name: "Riad Étoile", image: "https://images.unsplash.com/photo-1515266623033-32e4864c1f2a?q=80&w=600&auto=format&fit=crop", rooms: 32, amenities: ["Hammam", "Rooftop Bar", "Garden"], rating: 4.9 },
+  { id: 4, city: "Maldives", name: "Coral Palace", image: "https://images.unsplash.com/photo-1559827260-dc66d52bef19?q=80&w=600&auto=format&fit=crop", rooms: 52, amenities: ["Overwater Villas", "Dive Center", "Sunset Bar"], rating: 5.0 },
+]
 
-const LANDMARKS = [
-  { id: 1, title: "AETHEL_ONE", cat: "Milestone", value: "CENTURY_01", img: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=1000&auto=format&fit=crop" },
-  { id: 2, title: "CORE_LANDMARK", cat: "Structural", value: "Verified", img: "https://images.unsplash.com/photo-1449156001533-cb39c7314260?q=80&w=1000&auto=format&fit=crop" },
-  { id: 3, title: "VOID_RESERVE", cat: "Strategic", value: "Alpha_Unit", img: "https://images.unsplash.com/photo-1492691523567-613d9685354e?q=80&w=1000&auto=format&fit=crop" },
-];
+const EXPERIENCES = [
+  { title: "Spa & Wellness", desc: "Rejuvenate with world-class treatments in serene sanctuaries." },
+  { title: "Gastronomy", desc: "Michelin-starred cuisine celebrating local and global flavors." },
+  { title: "Adventures", desc: "Curated excursions from private yachts to mountain treks." },
+  { title: "Culture", desc: "Exclusive access to art, heritage, and local masterpieces." },
+]
 
-export default function CenturyLandmarkSPA() {
-  const [view, setView] = useState<"century" | "landmark" | "protocol">("century");
-  const [activeItem, setActiveItem] = useState(0);
+const ROOM_TYPES = [
+  { name: "Deluxe Queen", price: "€450/night", size: "42m²", amenities: ["Marble Bath", "City View", "Nespresso"] },
+  { name: "Junior Suite", price: "€750/night", size: "62m²", amenities: ["Separate Living", "Spa Tub", "Terrace"] },
+  { name: "Presidential", price: "€2,500/night", size: "180m²", amenities: ["Private Elevator", "Cinema", "Full Kitchen"] },
+]
+
+const CONCIERGE_SERVICES = [
+  { service: "Private Transfers", desc: "Dedicated cars with English-speaking drivers worldwide." },
+  { service: "Restaurant Reservations", desc: "Access to the finest dining establishments globally." },
+  { service: "Private Tours", desc: "Expert-led immersive cultural and adventure experiences." },
+  { service: "Special Events", desc: "Bespoke celebrations and gatherings coordination." },
+]
+
+const CHEFS = [
+  { name: "Jean-Claude Arnaud", specialty: "French Cuisine", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop", dishes: ["Coq au Vin", "Crème Brûlée", "Soufflé"] },
+]
+
+const TESTIMONIALS = [
+  { text: "Palais Lumière redefined luxury for us. Every detail was perfection.", author: "The Marchands" },
+  { text: "A sanctuary from the world. Service anticipated our every need.", author: "Sophie & Laurent" },
+  { text: "Pure magic. We felt like royalty. Already planning our return.", author: "The Hakimi Family" },
+]
+
+const STATS = [
+  { value: "8", label: "Properties" },
+  { value: "500", label: "Rooms" },
+  { value: "95%", label: "Satisfaction" },
+  { value: "15", label: "Years Legacy" },
+]
+
+const FAQ_ITEMS = [
+  { q: "What is your check-in/check-out time?", a: "Check-in is 3 PM and check-out is 11 AM. Early check-in and late check-out available on request." },
+  { q: "What is your cancellation policy?", a: "Flexible cancellation up to 48 hours before arrival. Shorter notice incurs 50% charge." },
+  { q: "Do you allow pets?", a: "Yes, select properties welcome pets. Please inquire directly for specific policies." },
+  { q: "Can I host a wedding?", a: "Absolutely. We specialize in destination weddings with complete coordination." },
+]
+
+function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: "-60px" })
+  return <motion.div ref={ref} initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, delay }}>{children}</motion.div>
+}
+
+function Counter({ target, suffix = "" }: { target: number; suffix?: string }) {
+  const [count, setCount] = useState(0)
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true })
+  useEffect(() => {
+    if (!inView) return
+    const step = Math.ceil(target / 60)
+    const t = setInterval(() => setCount(c => Math.min(c + step, target)), 16)
+    return () => clearInterval(t)
+  }, [inView, target])
+  return <span ref={ref}>{count}{suffix}</span>
+}
+
+function MagneticBtn({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  const x = useMotionValue(0); const y = useMotionValue(0)
+  const sx = useSpring(x, { stiffness: 500, damping: 25 })
+  const sy = useSpring(y, { stiffness: 500, damping: 25 })
+  const ref = useRef<HTMLButtonElement>(null)
+  const handleMouse = (e: React.MouseEvent) => {
+    const r = ref.current!.getBoundingClientRect()
+    x.set((e.clientX - r.left - r.width/2) * 0.35)
+    y.set((e.clientY - r.top - r.height/2) * 0.35)
+  }
+  return <motion.button ref={ref} style={{ x: sx, y: sy }} onMouseMove={handleMouse} onMouseLeave={() => { x.set(0); y.set(0) }} className={className}>{children}</motion.button>
+}
+
+export default function LuxeStay() {
+  const [selectedTab, setSelectedTab] = useState("Paris")
+  const { scrollY } = useScroll()
+  const heroOpacity = useTransform(scrollY, [0, 400], [1, 0])
+  const heroY = useTransform(scrollY, [0, 400], [0, 100])
 
   return (
-    <div className="premium-theme bg-[#050505] text-[#f8f8f8] min-h-screen selection:bg-white selection:text-black font-serif overflow-x-hidden">
-      
-      {/* Background HUD Layers */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[45vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase">
-           100
-        </div>
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-screen" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#050505_100%)] opacity-80" />
-      </div>
-
-      {/* Editorial HUD Nav */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-center bg-black/40 backdrop-blur-3xl border-b border-white/10 font-mono">
-        <div className="flex gap-12 items-center">
-           <button onClick={() => setView("century")} className="text-xl font-black italic tracking-tighter hover:scale-105 transition-transform font-serif uppercase flex items-center gap-4">
-              <Crown className="w-6 h-6 animate-pulse" /> CENTURY_OS&trade;
-           </button>
-           <div className="hidden lg:flex gap-8 text-[10px] font-black uppercase tracking-widest opacity-20 italic">
-              Status: Landmark_Sync_Active
-              <span className="text-white">Batch: 0x100</span>
-           </div>
-        </div>
-        <div className="hidden md:flex gap-12 text-[10px] font-black uppercase tracking-[0.4em] opacity-30">
-           <button onClick={() => setView("century")} className={`hover:opacity-100 transition-opacity ${view === 'century' ? 'text-white opacity-100 underline decoration-white decoration-2 underline-offset-8 italic' : ''}`}>THE_CENTURY</button>
-           <button onClick={() => setView("protocol")} className={`hover:opacity-100 transition-opacity ${view === 'protocol' ? 'text-white opacity-100 underline decoration-white decoration-2 underline-offset-8 italic' : ''}`}>THE_PROTOCOL</button>
-        </div>
-        <div className="flex items-center gap-8">
-           <Search className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-           <Menu className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
+    <div className="bg-[#faf6f0] text-[#3d1f0f] overflow-hidden">
+      <nav className="fixed top-0 left-0 right-0 h-16 bg-white/80 backdrop-blur-md border-b border-[#c9a84c]/20 z-50 flex items-center justify-between px-6">
+        <div className="text-2xl font-serif tracking-wide">LUXE STAY</div>
+        <div className="hidden md:flex gap-8 text-sm">
+          <Link href="#properties" className="hover:text-[#c9a84c] transition">Properties</Link>
+          <Link href="#experiences" className="hover:text-[#c9a84c] transition">Experiences</Link>
+          <Link href="#concierge" className="hover:text-[#c9a84c] transition">Concierge</Link>
         </div>
       </nav>
 
-      <AnimatePresence mode="wait">
-        
-        {/* THE CENTURY VIEW (LANDING) */}
-        {view === "century" && (
-          <motion.div key="century" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-48 pb-32 px-12 max-w-[1800px] mx-auto min-h-screen flex flex-col justify-center relative z-10">
-             <header className="mb-24 border-b-2 border-white/20 pb-12 flex flex-col md:flex-row justify-between items-end gap-12">
-                <div>
-                   <span className="text-[10px] uppercase font-black tracking-[1em] opacity-40 mb-4 block underline decoration-white/10 underline-offset-8 italic font-mono">Milestone_Sync // Series_100</span>
-                   <h1 className="text-7xl md:text-[12vw] font-black italic uppercase tracking-tighter leading-[0.75] font-serif">CENTURY. <br/> <span className="text-stone-400">ONE.</span></h1>
-                </div>
-                <div className="text-right flex flex-col items-end">
-                   <div className="text-3xl font-black mb-4 tracking-tighter uppercase opacity-10 italic font-mono text-white">Secure_Sync</div>
-                   <div className="w-64 h-2 bg-white/5 rounded-full overflow-hidden">
-                      <motion.div animate={{ width: ['20%', '90%', '40%', '75%'] }} transition={{ duration: 4, repeat: Infinity }} className="h-full bg-white" />
-                   </div>
-                </div>
-             </header>
-
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-12 font-mono">
-                {LANDMARKS.map((p, i) => (
-                  <motion.div 
-                    key={p.id} initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                    className="group relative h-[60vh] rounded-[4rem] overflow-hidden border-8 border-white/10 hover:border-white transition-all cursor-pointer shadow-2xl bg-white/5"
-                    onClick={() => { setActiveItem(i); setView("landmark"); }}
-                  >
-                     <Image src={p.img} alt={p.title} fill className="object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-[4s]" />
-                     <div className="absolute inset-0 bg-black/40 group-hover:bg-transparent transition-colors duration-1000" />
-                     
-                     <div className="absolute inset-10 flex flex-col justify-between">
-                        <div className="flex justify-between items-start">
-                           <div className="p-4 bg-white text-black rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Plus className="w-5 h-5" />
-                           </div>
-                           <div className="text-[10px] font-black uppercase tracking-widest opacity-20 italic text-white">UNIT_0x{i+100}</div>
-                        </div>
-                        <div className="mix-blend-difference text-white">
-                           <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-2 block italic">{p.cat} // {p.value}</span>
-                           <h3 className="text-5xl font-black italic uppercase tracking-tighter leading-none font-serif">{p.title}</h3>
-                        </div>
-                     </div>
-                  </motion.div>
-                ))}
-             </div>
+      <motion.section style={{ opacity: heroOpacity, y: heroY }} className="relative h-screen flex items-center justify-center overflow-hidden pt-16">
+        <div className="absolute inset-0">
+          <Image src="https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=1600&auto=format&fit=crop" alt="Luxury Hotel" fill className="object-cover" unoptimized />
+          <div className="absolute inset-0 bg-black/40" />
+        </div>
+        <div className="relative z-10 text-center max-w-4xl px-4">
+          <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2 }} className="text-6xl md:text-7xl font-serif mb-6 text-white tracking-tight">
+            RESORT LUXURY
+          </motion.h1>
+          <motion.p initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.4 }} className="text-lg text-gray-100 mb-8 max-w-2xl mx-auto">
+            Eight exquisite properties across the globe's most coveted destinations.
+          </motion.p>
+          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.6 }}>
+            <Dialog>
+              <DialogTrigger asChild>
+                <MagneticBtn className="px-8 py-4 bg-[#c9a84c] text-[#3d1f0f] font-semibold rounded-full hover:bg-[#b8965f] transition">
+                  Reserve Now
+                </MagneticBtn>
+              </DialogTrigger>
+              <DialogContent className="bg-[#faf6f0] border-[#c9a84c]/20 max-w-md">
+                <DialogTitle>Plan Your Escape</DialogTitle>
+                <form className="space-y-4">
+                  <input type="text" placeholder="Guest Name" className="w-full px-4 py-2 bg-white border border-[#c9a84c]/30 rounded text-[#3d1f0f]" />
+                  <input type="email" placeholder="Email" className="w-full px-4 py-2 bg-white border border-[#c9a84c]/30 rounded text-[#3d1f0f]" />
+                  <input type="date" className="w-full px-4 py-2 bg-white border border-[#c9a84c]/30 rounded text-[#3d1f0f]" />
+                  <select className="w-full px-4 py-2 bg-white border border-[#c9a84c]/30 rounded text-[#3d1f0f]">
+                    <option>Select Property</option>
+                    {PROPERTIES.map((p) => <option key={p.id}>{p.city}</option>)}
+                  </select>
+                  <button type="submit" className="w-full px-4 py-3 bg-[#c9a84c] text-[#3d1f0f] font-semibold rounded hover:bg-[#b8965f] transition">
+                    Check Availability
+                  </button>
+                </form>
+              </DialogContent>
+            </Dialog>
           </motion.div>
-        )}
+        </div>
+      </motion.section>
 
-        {/* THE LANDMARK VIEW (DETAIL) */}
-        {view === "landmark" && (
-          <motion.div key="landmark" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen">
-             <button onClick={() => setView("century")} className="fixed top-12 left-12 z-[60] bg-white text-black p-5 rounded-full hover:scale-110 transition-transform shadow-2xl">
-                <X className="w-6 h-6" />
-             </button>
+      <section id="properties" className="py-24 px-6 max-w-7xl mx-auto">
+        <Reveal delay={0.1}>
+          <h2 className="text-5xl font-serif mb-4 text-center">Our Collection</h2>
+          <p className="text-gray-600 text-center mb-12 max-w-2xl mx-auto">Handpicked havens in Paris, Côte d'Azur, Marrakech, and the Maldives.</p>
+        </Reveal>
 
-             <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen pt-24 lg:pt-0">
-                <div className="lg:col-span-12 relative flex items-center justify-center p-8 md:p-32 overflow-hidden h-screen bg-[#050505]">
-                   <div className="absolute inset-0 opacity-10">
-                      <Image src={LANDMARKS[activeItem].img} alt="Background" fill className="object-cover grayscale" />
-                   </div>
-                   <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[40vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center font-serif uppercase">
-                      CENTURY
-                   </div>
-                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#050505_100%)]" />
-                   
-                   <div className="max-w-[1500px] w-full grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10">
-                      <motion.div initial={{ scale: 1.1, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1 }} className="relative aspect-square w-full rounded-[4rem] overflow-hidden border-8 border-white/10 group bg-white/5 shadow-2xl">
-                         <Image src={LANDMARKS[activeItem].img} alt="Landmark" fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[5s] opacity-80" priority />
-                         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                         <div className="absolute top-12 left-12 p-4 bg-black/60 backdrop-blur-3xl rounded-none border-2 border-white/10">
-                            <Layers className="w-6 h-6 text-white animate-pulse" />
-                         </div>
-                      </motion.div>
+        <Tabs value={selectedTab} onValueChange={setSelectedTab}>
+          <TabsList className="grid w-full grid-cols-4 bg-[#f0e6d2] border border-[#c9a84c]/30 mb-8">
+            {PROPERTIES.map((prop) => (
+              <TabsTrigger key={prop.id} value={prop.city} className="text-sm data-[state=active]:bg-[#c9a84c] data-[state=active]:text-[#faf6f0]">
+                {prop.city}
+              </TabsTrigger>
+            ))}
+          </TabsList>
 
-                      <div className="flex flex-col justify-center space-y-12">
-                         <div className="space-y-6 font-mono">
-                            <span className="text-[10px] uppercase tracking-[1em] font-black opacity-30 mb-8 block underline decoration-white decoration-4 underline-offset-8 italic">Phased_Sync // {LANDMARKS[activeItem].cat}</span>
-                            <h1 className="text-7xl md:text-[8vw] font-black italic uppercase tracking-tighter leading-none text-white font-serif">{LANDMARKS[activeItem].title}</h1>
-                            <div className="text-4xl font-black italic tracking-tighter opacity-10 italic">Tier: ARCHIVE_ALPHA</div>
-                         </div>
+          {PROPERTIES.map((prop) => (
+            <TabsContent key={prop.id} value={prop.city}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <Reveal delay={0.1}>
+                  <div className="relative h-96 rounded-lg overflow-hidden border border-[#c9a84c]/20">
+                    <Image src={prop.image} alt={prop.name} fill className="object-cover" unoptimized />
+                  </div>
+                </Reveal>
 
-                         <p className="text-3xl font-light italic leading-relaxed uppercase tracking-tight opacity-40 text-white leading-relaxed font-serif">
-                            Structural allocation for {LANDMARKS[activeItem].title}. System integrity at 100%. Thermal load nominal at 32C. Every coordinate synchronized for the next century of operation.
-                         </p>
+                <Reveal delay={0.2}>
+                  <h3 className="text-4xl font-serif mb-4">{prop.name}</h3>
+                  <p className="text-gray-600 mb-6">{prop.rooms} luxuriously appointed rooms across premier suite categories.</p>
 
-                         <div className="grid grid-cols-2 gap-12 py-12 border-y-2 border-white/10 font-mono text-white/60">
-                            {[
-                              { icon: <Globe className="w-5 h-5" />, l: "Region", v: "Global_East" },
-                              { icon: <Zap className="w-5 h-5" />, l: "Logic", v: "Phase_Shift" },
-                              { icon: <Shield className="w-5 h-5" />, l: "Security", v: "High_Impact" },
-                              { icon: <Activity className="w-5 h-5" />, l: "Sync", v: LANDMARKS[activeItem].value },
-                            ].map((s, i) => (
-                              <div key={i} className="flex gap-6 items-center">
-                                 <div className="opacity-20">{s.icon}</div>
-                                 <div className="text-left">
-                                    <div className="text-[10px] font-black opacity-30 uppercase tracking-widest mb-1 italic">{s.l}</div>
-                                    <div className="text-sm font-black uppercase italic tracking-tighter text-white">{s.v}</div>
-                                 </div>
-                              </div>
-                            ))}
-                         </div>
-
-                         <div className="flex gap-6 pt-8 font-mono">
-                            <button onClick={() => setView("century")} className="flex-grow py-8 bg-white text-black font-black uppercase text-xs tracking-[1em] hover:bg-stone-200 transition-all shadow-2xl">
-                               Return_to_Century
-                            </button>
-                            <button className="px-12 py-8 border border-white/20 text-[10px] font-black uppercase tracking-[0.5em] hover:scale-105 transition-all text-white">
-                               PDF_Spec
-                            </button>
-                         </div>
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
-        {/* THE PROTOCOL VIEW (ABOUT) */}
-        {view === "protocol" && (
-          <motion.div key="protocol" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen flex flex-col justify-center">
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center text-white">
-                <div className="space-y-16">
-                   <span className="text-[10px] uppercase font-black tracking-[1.5em] opacity-30 block underline decoration-white decoration-2 underline-offset-8 italic font-mono">The_Century_Protocol</span>
-                   <h2 className="text-7xl md:text-[10vw] font-black italic tracking-tighter leading-none text-white uppercase font-serif">The <br/> Truth.</h2>
-                   <p className="text-3xl md:text-4xl font-light italic opacity-60 leading-relaxed uppercase tracking-tight text-white/60 font-serif">
-                      We treat architecture as code. Every structure is a function of its environmental variables and tectonic intent. 100% precision. Zero noise. 100 iterations of perfection.
-                   </p>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t border-white/20 font-mono">
-                      {[
-                        { icon: <Award className="w-6 h-6" />, t: "E2E Mastery", v: "100_Batch_Verification" },
-                        { icon: <Plus className="w-6 h-6" />, t: "Structural Sync", v: "Deep_Material_ID" },
-                      ].map((item, i) => (
-                        <div key={i} className="flex gap-8 group">
-                           <div className="w-16 h-16 rounded-full border border-white flex items-center justify-center text-white group-hover:bg-white group-hover:text-black transition-all shadow-xl">
-                              {item.icon}
-                           </div>
-                           <div className="text-left">
-                              <h4 className="text-2xl font-black uppercase italic tracking-tighter text-white leading-none mb-2 font-serif">{item.t}</h4>
-                              <p className="text-[10px] opacity-30 uppercase tracking-[0.3em] font-black leading-relaxed text-white/40">{item.v}</p>
-                           </div>
-                        </div>
+                  <div className="mb-8">
+                    <p className="text-sm text-gray-600 mb-3 font-semibold">KEY AMENITIES</p>
+                    <div className="space-y-2">
+                      {prop.amenities.map((amenity, i) => (
+                        <Badge key={i} className="bg-[#c9a84c]/20 text-[#c9a84c] font-normal">{amenity}</Badge>
                       ))}
-                   </div>
-                </div>
-                <div className="relative aspect-square bg-[#1a1a1a] rounded-[4rem] p-12 overflow-hidden border-8 border-white/10 group shadow-2xl">
-                   <Image src="https://images.unsplash.com/photo-1541829070764-84a7d30dee62?q=80&w=1000&auto=format&fit=crop" alt="The Landmark" fill className="object-cover opacity-20 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-[3s]" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                   <div className="absolute inset-x-0 bottom-12 flex justify-center font-mono">
-                      <div className="px-12 py-6 bg-white text-black text-[10px] font-black uppercase tracking-widest italic animate-bounce cursor-pointer hover:bg-stone-200 transition-all">
-                         Establish_Handshake
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 mb-8">
+                    <span className="font-semibold">{prop.rating} / 5</span>
+                    <span className="text-sm text-gray-600">★★★★★</span>
+                  </div>
+
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <MagneticBtn className="px-6 py-3 bg-[#c9a84c] text-[#3d1f0f] font-semibold rounded hover:bg-[#b8965f] transition">
+                        View Rooms & Book
+                      </MagneticBtn>
+                    </DialogTrigger>
+                    <DialogContent className="bg-[#faf6f0] border-[#c9a84c]/20 max-w-2xl">
+                      <DialogTitle>Room Categories</DialogTitle>
+                      <div className="space-y-4">
+                        {ROOM_TYPES.map((room, idx) => (
+                          <Card key={idx} className="bg-white border-[#c9a84c]/20">
+                            <CardContent className="p-6">
+                              <h4 className="text-xl font-semibold mb-2">{room.name}</h4>
+                              <p className="text-[#c9a84c] font-semibold mb-3">{room.price}</p>
+                              <p className="text-sm text-gray-600 mb-4">{room.size}</p>
+                              <button className="text-[#c9a84c] font-semibold hover:underline">Select Room →</button>
+                            </CardContent>
+                          </Card>
+                        ))}
                       </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
+                    </DialogContent>
+                  </Dialog>
+                </Reveal>
+              </div>
+            </TabsContent>
+          ))}
+        </Tabs>
+      </section>
 
-      </AnimatePresence>
+      <section id="experiences" className="py-24 px-6 bg-[#f0e6d2]">
+        <div className="max-w-7xl mx-auto">
+          <Reveal delay={0.1} className="mb-16">
+            <h2 className="text-5xl font-serif text-center mb-4">Curated Experiences</h2>
+            <p className="text-gray-600 text-center max-w-2xl mx-auto">Beyond accommodation—moments that transform.</p>
+          </Reveal>
 
-      {/* Global Status HUD */}
-      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em] italic text-white leading-none font-mono">
-         <div className="flex gap-12 text-white">
-            <span>Century_OS_Milestone</span>
-            <span>Batch_Index: 100/100</span>
-         </div>
-         <div className="flex gap-4 items-end text-white">
-            <div className="text-right leading-tight italic">
-               Archival_Control <br /> v4.0.100
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {EXPERIENCES.map((exp, idx) => (
+              <Reveal key={idx} delay={idx * 0.1}>
+                <Card className="bg-white border-[#c9a84c]/20 h-full">
+                  <CardContent className="p-6 text-center">
+                    <h3 className="text-xl font-semibold mb-2">{exp.title}</h3>
+                    <p className="text-sm text-gray-600">{exp.desc}</p>
+                  </CardContent>
+                </Card>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="py-24 px-6 max-w-7xl mx-auto">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          {STATS.map((stat, idx) => (
+            <Reveal key={idx} delay={idx * 0.1} className="text-center">
+              <div className="text-4xl font-bold text-[#c9a84c] mb-2"><Counter target={parseInt(stat.value)} /></div>
+              <div className="text-sm text-gray-600">{stat.label}</div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      <section id="concierge" className="py-24 px-6 bg-[#f0e6d2]">
+        <div className="max-w-7xl mx-auto">
+          <Reveal delay={0.1} className="mb-16">
+            <h2 className="text-5xl font-serif text-center mb-4">24/7 Concierge</h2>
+            <p className="text-gray-600 text-center max-w-2xl mx-auto">Your personal wish-granter at your service.</p>
+          </Reveal>
+
+          <Accordion type="single" collapsible className="space-y-4 max-w-3xl mx-auto">
+            {CONCIERGE_SERVICES.map((item, idx) => (
+              <AccordionItem key={idx} value={`service-${idx}`} className="border-[#c9a84c]/20 bg-white rounded">
+                <AccordionTrigger className="text-lg font-semibold hover:text-[#c9a84c] transition px-6">
+                  {item.service}
+                </AccordionTrigger>
+                <AccordionContent className="text-gray-600 px-6 pb-4">
+                  {item.desc}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
+      </section>
+
+      <section className="py-24 px-6 max-w-7xl mx-auto">
+        <Reveal delay={0.1} className="mb-16">
+          <h2 className="text-5xl font-serif text-center mb-4">Culinary Excellence</h2>
+          <p className="text-gray-600 text-center">Michelin-starred cuisine at every property.</p>
+        </Reveal>
+
+        {CHEFS.map((chef, idx) => (
+          <Reveal key={idx} delay={0.2} className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            <div className="relative h-96 rounded-lg overflow-hidden border border-[#c9a84c]/20">
+              <Image src={chef.image} alt={chef.name} fill className="object-cover" unoptimized />
             </div>
-            <div className="flex gap-[4px] h-4">
-               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-full bg-white opacity-${i*20}`}></div>)}
+            <div>
+              <h3 className="text-3xl font-serif mb-2">{chef.name}</h3>
+              <p className="text-[#c9a84c] font-semibold mb-6">Executive Chef</p>
+              <p className="text-gray-600 mb-6">Specializing in {chef.specialty.toLowerCase()}, crafting signature dishes that define our culinary identity.</p>
+              <p className="text-sm text-gray-600 mb-4 font-semibold">SIGNATURE DISHES</p>
+              <div className="space-y-2">
+                {chef.dishes.map((dish, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <span className="text-[#c9a84c]">→</span>
+                    <span>{dish}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-         </div>
-      </footer>
+          </Reveal>
+        ))}
+      </section>
 
-      <style>{`
-        ::-webkit-scrollbar { width: 0px; }
-      `}</style>
+      <section className="py-24 px-6 bg-[#f0e6d2]">
+        <div className="max-w-7xl mx-auto">
+          <Reveal delay={0.1} className="mb-16">
+            <h2 className="text-5xl font-serif text-center mb-4">Guest Stories</h2>
+            <p className="text-gray-600 text-center">Cherished memories from our beloved guests.</p>
+          </Reveal>
+
+          <Carousel className="w-full">
+            <CarouselContent>
+              {TESTIMONIALS.map((testi, idx) => (
+                <CarouselItem key={idx} className="basis-full md:basis-1/2 lg:basis-1/3">
+                  <Card className="bg-white border-[#c9a84c]/20 h-full">
+                    <CardContent className="p-6 flex flex-col justify-between h-full">
+                      <p className="text-gray-700 italic mb-4 flex-1">"{testi.text}"</p>
+                      <p className="text-sm font-semibold text-[#3d1f0f]">— {testi.author}</p>
+                    </CardContent>
+                  </Card>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="border-[#c9a84c]/30" />
+            <CarouselNext className="border-[#c9a84c]/30" />
+          </Carousel>
+        </div>
+      </section>
+
+      <section className="py-24 px-6 max-w-7xl mx-auto">
+        <Reveal delay={0.1} className="mb-12">
+          <h2 className="text-5xl font-serif text-center mb-4">Frequently Asked</h2>
+        </Reveal>
+
+        <Accordion type="single" collapsible className="space-y-4 max-w-3xl mx-auto">
+          {FAQ_ITEMS.map((item, idx) => (
+            <AccordionItem key={idx} value={`faq-${idx}`} className="border-[#c9a84c]/20 bg-[#f0e6d2] rounded">
+              <AccordionTrigger className="text-lg font-semibold hover:text-[#c9a84c] transition px-6">
+                {item.q}
+              </AccordionTrigger>
+              <AccordionContent className="text-gray-600 px-6 pb-4">
+                {item.a}
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </section>
+
+      <section className="py-24 px-6 bg-[#f0e6d2] text-center">
+        <Reveal>
+          <h2 className="text-4xl md:text-5xl font-serif mb-6">Begin Your Journey</h2>
+          <p className="text-gray-600 mb-8 max-w-2xl mx-auto">Luxury awaits at one of our exquisite properties.</p>
+          <Dialog>
+            <DialogTrigger asChild>
+              <MagneticBtn className="px-8 py-4 bg-[#c9a84c] text-[#3d1f0f] font-semibold rounded-full hover:bg-[#b8965f] transition">
+                Plan Your Escape
+              </MagneticBtn>
+            </DialogTrigger>
+            <DialogContent className="bg-[#faf6f0] border-[#c9a84c]/20">
+              <DialogTitle>Get in Touch</DialogTitle>
+              <form className="space-y-4">
+                <input type="text" placeholder="Your Name" className="w-full px-4 py-2 bg-white border border-[#c9a84c]/30 rounded text-[#3d1f0f]" />
+                <input type="email" placeholder="Email Address" className="w-full px-4 py-2 bg-white border border-[#c9a84c]/30 rounded text-[#3d1f0f]" />
+                <textarea placeholder="Tell us about your ideal stay..." className="w-full px-4 py-2 bg-white border border-[#c9a84c]/30 rounded text-[#3d1f0f] h-24" />
+                <button type="submit" className="w-full px-4 py-3 bg-[#c9a84c] text-[#3d1f0f] font-semibold rounded hover:bg-[#b8965f] transition">
+                  Submit Request
+                </button>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </Reveal>
+      </section>
     </div>
-  );
+  )
 }

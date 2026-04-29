@@ -1,259 +1,372 @@
-"use client";
+"use client"
+import { motion, useScroll, useTransform, useInView, AnimatePresence, useMotionValue, useSpring } from "framer-motion"
+import { useState, useRef, useEffect } from "react"
+import Image from "next/image"
+import Link from "next/link"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
+import { Progress } from "@/components/ui/progress"
 
-import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from "framer-motion";
-import { useState } from "react";
-import Image from "next/image";
-import { X, Menu, Search, Rocket, Zap, Activity, Globe, Shield, Command, Plus, ArrowUpRight, Maximize2, MoveRight, Layers, Box, Compass, Sparkles, MoveVertical, Target } from "lucide-react";
-import "../premium.css";
+function Reveal({ children, delay=0 }: { children: React.ReactNode; delay?: number }) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: "-60px" })
+  return <motion.div ref={ref} initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, delay }}>{children}</motion.div>
+}
 
-const MISSIONS = [
-  { id: 1, title: "VOID_CORE", cat: "Deep_Space", value: "Verified", img: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1000&auto=format&fit=crop" },
-  { id: 2, title: "NEBULA_UNIT", cat: "Observatory", value: "Active", img: "https://images.unsplash.com/photo-1444703686981-a3abbc4d4fe3?q=80&w=1000&auto=format&fit=crop" },
-  { id: 3, title: "SIG_VECTOR", cat: "Search", value: "Locked", img: "https://images.unsplash.com/photo-1476242906366-d8eb64c2f661?q=80&w=1000&auto=format&fit=crop" },
-];
+function Counter({ target, suffix="" }: { target: number; suffix?: string }) {
+  const [count, setCount] = useState(0)
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true })
+  useEffect(() => {
+    if (!inView) return
+    const step = Math.ceil(target / 60)
+    const t = setInterval(() => setCount(c => Math.min(c + step, target)), 16)
+    return () => clearInterval(t)
+  }, [inView, target])
+  return <span ref={ref}>{count.toLocaleString()}{suffix}</span>
+}
 
-export default function CosmoSpaceSPA() {
-  const [view, setView] = useState<"void" | "mission" | "observatory">("void");
-  const [activeItem, setActiveItem] = useState(0);
-  
-  const mouseX = useMotionValue(0.5);
-  const mouseY = useMotionValue(0.5);
-  const bgX = useSpring(useTransform(mouseX, [0, 1], [-50, 50]), { stiffness: 50, damping: 30 });
-  const bgY = useSpring(useTransform(mouseY, [0, 1], [-50, 50]), { stiffness: 50, damping: 30 });
-
-  function handleMouseMove(e: React.MouseEvent) {
-    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
-    mouseX.set((e.clientX - left) / width);
-    mouseY.set((e.clientY - top) / height);
+function MagneticBtn({ children, className="" }: { children: React.ReactNode; className?: string }) {
+  const x = useMotionValue(0); const y = useMotionValue(0)
+  const sx = useSpring(x, { stiffness: 500, damping: 25 })
+  const sy = useSpring(y, { stiffness: 500, damping: 25 })
+  const ref = useRef<HTMLButtonElement>(null)
+  const handleMouse = (e: React.MouseEvent) => {
+    const r = ref.current!.getBoundingClientRect()
+    x.set((e.clientX - r.left - r.width/2) * 0.35)
+    y.set((e.clientY - r.top - r.height/2) * 0.35)
   }
+  return <motion.button ref={ref} style={{ x: sx, y: sy }} onMouseMove={handleMouse} onMouseLeave={() => { x.set(0); y.set(0) }} className={className}>{children}</motion.button>
+}
+
+export default function GrindCoffee() {
+  const { scrollYProgress } = useScroll()
+  const opacity = useTransform(scrollYProgress, [0, 0.3], [1, 0])
+  const scale = useTransform(scrollYProgress, [0, 0.3], [1, 0.95])
+
+  const [showSubBuilder, setShowSubBuilder] = useState(false)
+  const [subscriptionTab, setSubscriptionTab] = useState("bean")
+  const [frequency, setFrequency] = useState("monthly")
+
+  const origins = [
+    { name: "ETHIOPIA", notes: "Floral, Fruity, Balanced", farmers: "120 small farms" },
+    { name: "COLOMBIA", notes: "Smooth, Chocolate, Nutty", farmers: "80 co-ops" },
+    { name: "GUATEMALA", notes: "Bold, Spicy, Full-bodied", farmers: "60 estates" },
+    { name: "JAPAN", notes: "Clean, Bright, Delicate", farmers: "12 artisans" },
+  ]
+
+  const brewMethods = [
+    { name: "ESPRESSO", steps: 30, water: "1.5oz", grind: "Fine" },
+    { name: "POUR-OVER", steps: 4, water: "8oz", grind: "Medium" },
+    { name: "FRENCH PRESS", steps: 6, water: "8oz", grind: "Coarse" },
+    { name: "COLD BREW", steps: 2, water: "8oz", grind: "Coarse" },
+  ]
+
+  const cafes = [
+    { name: "ROASTERY BERLIN", address: "Friedrichshain District", roasters: "8 roasters" },
+    { name: "CAFE TOKYO", address: "Shibuya-ku", roasters: "4 roasters" },
+    { name: "ESPRESSO LAB NYC", address: "Brooklyn", roasters: "12 roasters" },
+  ]
+
+  const testimonials = [
+    { text: "Best coffee subscription I've tried. Beans arrive fresh and perfectly roasted.", author: "COFFEE_GURU", avatar: "C" },
+    { text: "The flavor profiles are incredible. Finally found my favorite origin.", author: "JAVA_LOVER", avatar: "J" },
+    { text: "Customer service is amazing. They remembered my roast preference.", author: "BREW_MASTER", avatar: "B" },
+  ]
 
   return (
-    <div className="premium-theme bg-[#050510] text-[#22d3ee] min-h-screen selection:bg-cyan-400 selection:text-black font-sans overflow-x-hidden" onMouseMove={handleMouseMove}>
-      
-      {/* Background HUD Layers */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <motion.div style={{ x: bgX, y: bgY }} className="absolute inset-[-100px] opacity-20">
-           <Image src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2000&auto=format&fit=crop" alt="Deep Space" fill className="object-cover" />
-        </motion.div>
-        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[45vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase">
-           COSMO
+    <div className="bg-[#fdf6ec] text-[#1a0d00] min-h-screen overflow-x-hidden">
+      {/* PARALLAX HERO */}
+      <motion.section style={{ opacity, scale }} className="relative h-screen flex items-center justify-center overflow-hidden">
+        <Image src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=1600&h=900&fit=crop" alt="Coffee" fill className="object-cover brightness-50" />
+        <div className="relative z-10 text-center space-y-8">
+          <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="text-7xl md:text-8xl font-black uppercase tracking-tighter text-white">
+            GRIND COFFEE
+          </motion.h1>
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="text-xl text-white">
+            CRAFT ROASTED. DIRECT FROM ORIGIN. DELIVERED FRESH.
+          </motion.p>
         </div>
-        <div className="absolute inset-0 bg-[#050510]/40 backdrop-blur-[2px]" />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.05] mix-blend-screen" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#050510_100%)] opacity-80" />
-        
-        {/* Dynamic Particles */}
-        <div className="absolute inset-0 z-10 opacity-30">
-           {Array.from({ length: 40 }).map((_, i) => (
-              <motion.div 
-                 key={i}
-                 initial={{ opacity: 0, scale: 0 }}
-                 animate={{ opacity: [0, 1, 0], scale: [0, 1.5, 0] }}
-                 transition={{ duration: 2 + Math.random() * 3, repeat: Infinity, delay: Math.random() * 10 }}
-                 className="absolute w-1 h-1 bg-cyan-400 rounded-full"
-                 style={{ left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%` }}
-              />
-           ))}
-        </div>
-      </div>
+      </motion.section>
 
-      {/* Editorial HUD Nav */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-center bg-black/40 backdrop-blur-3xl border-b border-cyan-500/20 font-mono">
-        <div className="flex gap-12 items-center">
-           <button onClick={() => setView("void")} className="text-xl font-black tracking-tighter hover:scale-105 transition-transform font-sans uppercase text-cyan-400 flex items-center gap-4">
-              <Rocket className="w-6 h-6 animate-pulse" /> COSMO_OS&trade;
-           </button>
-           <div className="hidden lg:flex gap-8 text-[10px] font-black uppercase tracking-widest opacity-20 italic">
-              Status: Mission_Lock_Active
-              <span className="text-white">Ref: 0x110</span>
-           </div>
-        </div>
-        <div className="hidden md:flex gap-12 text-[10px] font-black uppercase tracking-[0.4em] opacity-30">
-           <button onClick={() => setView("void")} className={`hover:opacity-100 transition-opacity ${view === 'void' ? 'text-white opacity-100 underline decoration-white underline-offset-8 italic' : ''}`}>THE_VOID</button>
-           <button onClick={() => setView("observatory")} className={`hover:opacity-100 transition-opacity ${view === 'observatory' ? 'text-white opacity-100 underline decoration-white underline-offset-8 italic' : ''}`}>THE_OBSERVATORY</button>
-        </div>
-        <div className="flex items-center gap-8">
-           <Search className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-           <Menu className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-        </div>
-      </nav>
-
-      <AnimatePresence mode="wait">
-        
-        {/* THE VOID VIEW (LANDING) */}
-        {view === "void" && (
-          <motion.div key="void" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-48 pb-32 px-12 max-w-[1800px] mx-auto min-h-screen flex flex-col justify-center relative z-10">
-             <header className="mb-24 border-b border-cyan-500/20 pb-12 flex flex-col md:flex-row justify-between items-end gap-12">
-                <div>
-                   <span className="text-[10px] uppercase font-black tracking-[1em] opacity-40 mb-4 block underline decoration-cyan-400/10 underline-offset-8 italic font-mono text-cyan-400">Mission_Sync // Series_110</span>
-                   <h1 className="text-7xl md:text-[12vw] font-black uppercase tracking-tighter leading-[0.75] text-white">BEYOND. <br/> <span className="text-cyan-900">THE_VOID.</span></h1>
-                </div>
-                <div className="text-right flex flex-col items-end">
-                   <div className="text-3xl font-black mb-4 tracking-tighter uppercase opacity-10 italic font-mono text-white">Secure_Sync</div>
-                   <div className="w-64 h-[2px] bg-white/5 rounded-none overflow-hidden">
-                      <motion.div animate={{ width: ['20%', '90%', '40%', '75%'] }} transition={{ duration: 4, repeat: Infinity }} className="h-full bg-cyan-400" />
-                   </div>
-                </div>
-             </header>
-
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 font-mono">
-                {MISSIONS.map((p, i) => (
-                  <motion.div 
-                    key={p.id} initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                    className="group relative h-[60vh] rounded-[4rem] overflow-hidden border border-cyan-500/10 hover:border-cyan-500/40 transition-all cursor-pointer shadow-2xl bg-white/5"
-                    onClick={() => { setActiveItem(i); setView("mission"); }}
-                  >
-                     <Image src={p.img} alt={p.title} fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[2s] group-hover:scale-110" />
-                     <div className="absolute inset-0 bg-gradient-to-tr from-cyan-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                     <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                     
-                     <div className="absolute inset-10 flex flex-col justify-between">
-                        <div className="flex justify-between items-start">
-                           <div className="p-4 bg-white/10 border border-white/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Target className="w-5 h-5 text-cyan-400" />
-                           </div>
-                           <div className="text-[10px] font-black uppercase tracking-widest opacity-20 italic text-cyan-400">MISSION_0x{i+110}</div>
+      {/* ORIGIN STORY TABS */}
+      <Reveal>
+        <section className="py-20 px-6 bg-[#6f4e37]">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-5xl font-black mb-12 text-[#fdf6ec]">ORIGINS</h2>
+            <Tabs defaultValue="Ethiopia" className="w-full">
+              <TabsList className="grid w-full grid-cols-4 bg-black/20 border-2 border-[#fdf6ec]">
+                {origins.map(origin => (
+                  <TabsTrigger key={origin.name} value={origin.name} className="uppercase text-sm font-bold text-[#fdf6ec]">{origin.name}</TabsTrigger>
+                ))}
+              </TabsList>
+              {origins.map(origin => (
+                <TabsContent key={origin.name} value={origin.name} className="mt-12">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                    <div>
+                      <h3 className="text-4xl font-black mb-6 text-[#fdf6ec]">{origin.name}</h3>
+                      <div className="space-y-6 text-[#fdf6ec]">
+                        <div>
+                          <p className="text-sm uppercase font-bold mb-2 opacity-80">FLAVOR PROFILE</p>
+                          <p className="text-2xl font-bold">{origin.notes}</p>
                         </div>
                         <div>
-                           <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-2 block italic text-cyan-400">{p.cat} // {p.value}</span>
-                           <h3 className="text-5xl font-black italic uppercase tracking-tighter leading-none text-white transition-all group-hover:tracking-widest">{p.title}</h3>
+                          <p className="text-sm uppercase font-bold mb-2 opacity-80">PARTNER FARMS</p>
+                          <p className="text-xl">{origin.farmers}</p>
                         </div>
-                     </div>
-                  </motion.div>
+                        <Badge className="bg-[#f97316] text-white text-base px-4 py-2">SPECIALTY</Badge>
+                      </div>
+                    </div>
+                    <div className="h-96 bg-black/20 rounded-xl border-2 border-[#fdf6ec]" />
+                  </div>
+                </TabsContent>
+              ))}
+            </Tabs>
+          </div>
+        </section>
+      </Reveal>
+
+      {/* BREW METHOD ACCORDION */}
+      <Reveal>
+        <section className="py-20 px-6">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-5xl font-black mb-12">BREW GUIDE</h2>
+            <Accordion type="single" collapsible className="w-full">
+              {brewMethods.map((method, i) => (
+                <AccordionItem key={i} value={`method-${i}`} className="border-[#6f4e37]">
+                  <AccordionTrigger className="text-2xl font-black hover:text-[#f97316] text-[#1a0d00]">
+                    {method.name}
+                  </AccordionTrigger>
+                  <AccordionContent className="text-gray-700 space-y-4">
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <p className="text-sm font-bold mb-1">TIME</p>
+                        <p className="text-lg font-black text-[#6f4e37]">{method.steps} sec</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold mb-1">WATER</p>
+                        <p className="text-lg font-black text-[#6f4e37]">{method.water}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold mb-1">GRIND</p>
+                        <p className="text-lg font-black text-[#6f4e37]">{method.grind}</p>
+                      </div>
+                    </div>
+                    <ol className="space-y-2 list-decimal list-inside">
+                      <li>Add ground coffee to vessel</li>
+                      <li>Pour hot water (200°F)</li>
+                      <li>Stir gently</li>
+                      <li>Let steep or drain</li>
+                    </ol>
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </div>
+        </section>
+      </Reveal>
+
+      {/* SUBSCRIPTION BUILDER */}
+      <Reveal>
+        <section className="py-20 px-6 bg-[#6f4e37]">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-5xl font-black mb-12 text-[#fdf6ec]">BUILD YOUR SUBSCRIPTION</h2>
+            <Tabs value={subscriptionTab} onValueChange={setSubscriptionTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-3 bg-black/20 border-2 border-[#fdf6ec]">
+                {["bean", "ground", "capsule"].map(tab => (
+                  <TabsTrigger key={tab} value={tab} className="uppercase text-sm font-bold text-[#fdf6ec]">{tab}</TabsTrigger>
                 ))}
-             </div>
-          </motion.div>
-        )}
-
-        {/* THE MISSION VIEW (DETAIL) */}
-        {view === "mission" && (
-          <motion.div key="mission" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen">
-             <button onClick={() => setView("void")} className="fixed top-12 left-12 z-[60] bg-white text-black p-5 rounded-full hover:scale-110 transition-transform shadow-2xl">
-                <X className="w-6 h-6" />
-             </button>
-
-             <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen pt-24 lg:pt-0">
-                <div className="lg:col-span-12 relative flex items-center justify-center p-8 md:p-32 overflow-hidden h-screen bg-[#050510]">
-                   <div className="absolute inset-0 opacity-10">
-                      <Image src={MISSIONS[activeItem].img} alt="Background" fill className="object-cover grayscale" />
-                   </div>
-                   <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[40vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase text-cyan-500 font-sans">
-                      CORE
-                   </div>
-                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#050510_100%)]" />
-                   
-                   <div className="max-w-[1500px] w-full grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10 font-sans">
-                      <motion.div initial={{ scale: 1.1, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1 }} className="relative aspect-square w-full rounded-[4rem] overflow-hidden border border-cyan-500/20 group bg-neutral-900 shadow-2xl">
-                         <Image src={MISSIONS[activeItem].img} alt="Spec" fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[3s] opacity-80" priority />
-                         <div className="absolute bottom-12 left-12 p-4 bg-black/60 backdrop-blur-3xl rounded-none border-2 border-white/10">
-                            <Layers className="w-6 h-6 text-cyan-400 animate-pulse" />
-                         </div>
-                      </motion.div>
-
-                      <div className="flex flex-col justify-center space-y-12">
-                         <div className="space-y-6">
-                            <span className="text-[10px] uppercase tracking-[1em] font-black opacity-30 mb-8 block underline decoration-white decoration-4 underline-offset-8 italic text-cyan-400 font-mono">Mission_Sync // {MISSIONS[activeItem].cat}</span>
-                            <h1 className="text-7xl md:text-[8vw] font-black italic uppercase tracking-tighter leading-none text-white">{MISSIONS[activeItem].title}</h1>
-                            <div className="text-4xl font-black italic tracking-tighter opacity-10 italic text-cyan-500">Tier: ARCHIVE_ALPHA</div>
-                         </div>
-
-                         <p className="text-3xl font-light italic leading-relaxed uppercase tracking-tight opacity-40 text-white leading-relaxed">
-                            Structural allocation for mission {MISSIONS[activeItem].title}. System integrity at 100%. Thermal load nominal at 32C. Every coordinate synchronized.
-                         </p>
-
-                         <div className="grid grid-cols-2 gap-12 py-12 border-y border-white/10 font-mono text-white/60">
-                            {[
-                              { icon: <Globe className="w-5 h-5" />, l: "Region", v: "Global_East" },
-                              { icon: <Zap className="w-5 h-5" />, l: "Logic", v: "Phase_Shift" },
-                              { icon: <Shield className="w-5 h-5" />, l: "Security", v: "High_Impact" },
-                              { icon: <Activity className="w-5 h-5" />, l: "Sync", v: "Active" },
-                            ].map((s, i) => (
-                              <div key={i} className="flex gap-6 items-center">
-                                 <div className="opacity-20 text-cyan-400">{s.icon}</div>
-                                 <div className="text-left">
-                                    <div className="text-[10px] font-black opacity-30 uppercase tracking-widest mb-1 italic">{s.l}</div>
-                                    <div className="text-sm font-black uppercase italic tracking-tighter text-white">{s.v}</div>
-                                 </div>
-                              </div>
-                            ))}
-                         </div>
-
-                         <div className="flex gap-6 pt-8 font-mono">
-                            <button onClick={() => setView("void")} className="flex-grow py-8 bg-cyan-400 text-black font-black uppercase text-xs tracking-[1em] hover:bg-white transition-all shadow-2xl rounded-full">
-                               Return_to_Void
-                            </button>
-                            <button className="px-12 py-8 border border-white/20 text-[10px] font-black uppercase tracking-[0.5em] hover:scale-105 transition-all text-white rounded-full">
-                               PDF_Spec
-                            </button>
-                         </div>
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
-        {/* THE OBSERVATORY VIEW (INFO) */}
-        {view === "observatory" && (
-          <motion.div key="observatory" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen flex flex-col justify-center">
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center text-white">
-                <div className="space-y-16">
-                   <span className="text-[10px] uppercase font-black tracking-[1.5em] opacity-30 block underline decoration-cyan-400 decoration-2 underline-offset-8 italic font-mono text-cyan-400">The_Cosmo_Protocol</span>
-                   <h2 className="text-7xl md:text-[10vw] font-black italic tracking-tighter leading-none text-white uppercase font-sans">The <br/> Truth.</h2>
-                   <p className="text-3xl md:text-4xl font-light italic opacity-60 leading-relaxed uppercase tracking-tight text-white/60 font-sans">
-                      We treat architecture as code. Every structure is a function of its environmental variables and tectonic intent. 100% precision. Zero noise.
-                   </p>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t border-white/10 font-mono text-cyan-400">
-                      {[
-                        { icon: <Sparkles className="w-6 h-6" />, t: "Adaptive Flow", v: "Dynamic Load Sync" },
-                        { icon: <Plus className="w-6 h-6" />, t: "Structural Sync", v: "Deep_Material_ID" },
-                      ].map((item, i) => (
-                        <div key={i} className="flex gap-8 group">
-                           <div className="w-16 h-16 rounded-full border border-cyan-400 flex items-center justify-center text-cyan-400 group-hover:bg-cyan-400 group-hover:text-black transition-all shadow-xl">
-                              {item.icon}
-                           </div>
-                           <div className="text-left">
-                              <h4 className="text-2xl font-black uppercase italic tracking-tighter text-white leading-none mb-2 font-sans">{item.t}</h4>
-                              <p className="text-[10px] opacity-30 uppercase tracking-[0.3em] font-black leading-relaxed text-cyan-400/40">{item.v}</p>
-                           </div>
+              </TabsList>
+              {["bean", "ground", "capsule"].map(tab => (
+                <TabsContent key={tab} value={tab} className="mt-12 space-y-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="p-8 bg-white rounded-xl">
+                      <h3 className="text-2xl font-black mb-6 text-[#1a0d00]">{tab.toUpperCase()}</h3>
+                      <div className="space-y-4">
+                        <div className="p-4 bg-[#fdf6ec] rounded border-2 border-[#6f4e37]">
+                          <p className="font-bold text-[#6f4e37]">Type: {tab === "bean" ? "Whole Beans" : tab === "ground" ? "Ground" : "Compostable Pods"}</p>
                         </div>
-                      ))}
-                   </div>
-                </div>
-                <div className="relative aspect-square bg-[#1a1a1a] rounded-none p-12 overflow-hidden border border-cyan-500/20 group shadow-2xl">
-                   <Image src="https://images.unsplash.com/photo-1541829070764-84a7d30dee62?q=80&w=1000&auto=format&fit=crop" alt="The Archive" fill className="object-cover opacity-20 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-[3s]" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                   <div className="absolute inset-x-0 bottom-12 flex justify-center font-mono">
-                      <div className="px-12 py-6 bg-cyan-400 text-black text-[10px] font-black uppercase tracking-widest italic animate-bounce cursor-pointer hover:bg-white transition-all rounded-full">
-                         Establish_Handshake
+                        <div>
+                          <label className="block text-sm font-bold mb-3 text-[#1a0d00]">FREQUENCY</label>
+                          <div className="grid grid-cols-3 gap-2">
+                            {["weekly", "biweekly", "monthly"].map(freq => (
+                              <button key={freq} onClick={() => setFrequency(freq)} className={`p-3 border-2 font-bold rounded ${frequency === freq ? "bg-[#6f4e37] text-white border-[#6f4e37]" : "border-[#6f4e37] text-[#6f4e37]"}`}>
+                                {freq}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
                       </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
+                    </div>
+                    <div className="p-8 bg-[#f97316] rounded-xl text-white">
+                      <h4 className="text-2xl font-black mb-6">PREVIEW</h4>
+                      <div className="space-y-3">
+                        <div className="flex justify-between">
+                          <span>1x Specialty Beans</span>
+                          <span className="font-black">$12</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>{frequency.charAt(0).toUpperCase() + frequency.slice(1)} Delivery</span>
+                          <span className="font-black">$2</span>
+                        </div>
+                        <div className="border-t border-white pt-3 flex justify-between text-xl font-black">
+                          <span>Total</span>
+                          <span>$14</span>
+                        </div>
+                      </div>
+                      <button className="w-full mt-6 py-3 bg-white text-[#f97316] font-black hover:bg-[#fdf6ec] transition rounded">
+                        SUBSCRIBE NOW
+                      </button>
+                    </div>
+                  </div>
+                </TabsContent>
+              ))}
+            </Tabs>
+          </div>
+        </section>
+      </Reveal>
 
-      </AnimatePresence>
-
-      {/* Global Status HUD */}
-      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em] italic text-cyan-400 leading-none font-mono">
-         <div className="flex gap-12 text-cyan-400">
-            <span>Cosmo_OS_Alpha</span>
-            <span>Uptime: 99.9%</span>
-         </div>
-         <div className="flex gap-4 items-end text-cyan-400">
-            <div className="text-right leading-tight italic">
-               Inventory_Control <br /> v4.0.110
+      {/* STATS */}
+      <Reveal>
+        <section className="py-20 px-6">
+          <div className="max-w-6xl mx-auto">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+              {[
+                { label: "ORIGINS", value: 12 },
+                { label: "ROASTERS", value: 8 },
+                { label: "SUBSCRIBERS", value: 50000 },
+                { label: "RATING", value: 4.9, suffix: "★" },
+              ].map((stat, i) => (
+                <Reveal key={i} delay={i * 0.1}>
+                  <div>
+                    <div className="text-4xl font-black text-[#6f4e37]"><Counter target={stat.value} suffix={stat.suffix} /></div>
+                    <p className="text-gray-600 text-sm mt-2">{stat.label}</p>
+                  </div>
+                </Reveal>
+              ))}
             </div>
-            <div className="flex gap-[4px] h-4">
-               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-full bg-cyan-400 opacity-${i*20}`}></div>)}
-            </div>
-         </div>
-      </footer>
+          </div>
+        </section>
+      </Reveal>
 
-      <style>{`
-        ::-webkit-scrollbar { width: 0px; }
-      `}</style>
+      {/* ROASTERY CAROUSEL */}
+      <Reveal>
+        <section className="py-20 px-6 bg-[#fdf6ec]">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-5xl font-black mb-12">ROASTERIES</h2>
+            <Carousel className="w-full">
+              <CarouselContent>
+                {[1, 2, 3, 4].map(i => (
+                  <CarouselItem key={i} className="basis-full md:basis-1/2">
+                    <div className="aspect-video bg-gradient-to-br from-[#6f4e37] to-[#f97316] rounded-xl flex items-center justify-center">
+                      <span className="text-3xl font-black text-white">Roastery {i}</span>
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious />
+              <CarouselNext />
+            </Carousel>
+          </div>
+        </section>
+      </Reveal>
+
+      {/* CAFE LOCATIONS */}
+      <Reveal>
+        <section className="py-20 px-6">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-5xl font-black mb-12">CAFE LOCATIONS</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {cafes.map((cafe, i) => (
+                <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} className="p-8 bg-[#f97316] rounded-xl text-white text-center">
+                  <h3 className="text-2xl font-black mb-4">{cafe.name}</h3>
+                  <p className="mb-4">{cafe.address}</p>
+                  <Badge className="bg-white text-[#f97316]">{cafe.roasters}</Badge>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+      </Reveal>
+
+      {/* TESTIMONIALS */}
+      <Reveal>
+        <section className="py-20 px-6 bg-[#6f4e37]">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-5xl font-black mb-12 text-[#fdf6ec]">COFFEE LOVERS</h2>
+            <Carousel className="w-full">
+              <CarouselContent>
+                {testimonials.map((testi, i) => (
+                  <CarouselItem key={i} className="basis-full md:basis-1/3">
+                    <div className="p-8 bg-[#fdf6ec] rounded-xl">
+                      <p className="text-lg mb-6 italic text-[#1a0d00]">"{testi.text}"</p>
+                      <div className="flex items-center gap-3">
+                        <Avatar>
+                          <AvatarFallback className="bg-[#6f4e37] text-white font-black">{testi.avatar}</AvatarFallback>
+                        </Avatar>
+                        <span className="font-black text-[#6f4e37]">{testi.author}</span>
+                      </div>
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious />
+              <CarouselNext />
+            </Carousel>
+          </div>
+        </section>
+      </Reveal>
+
+      {/* FAQ */}
+      <Reveal>
+        <section className="py-20 px-6">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-5xl font-black mb-12">FAQS</h2>
+            <Accordion type="single" collapsible className="w-full">
+              {[
+                { q: "How long do beans stay fresh?", a: "Best within 2 weeks of roasting. Unopened bags stay fresh for 4 weeks. Store in airtight containers away from light." },
+                { q: "What's your recommended grind?", a: "Depends on brew method. We include grind recommendations with each order. Ask our team anytime." },
+                { q: "Do you offer gifts?", a: "Yes! Gift subscriptions available. Perfect for coffee lovers. Custom messages included." },
+                { q: "Can I change my subscription?", a: "Absolutely. Skip weeks, change origins, or pause anytime. No penalty." },
+              ].map((faq, i) => (
+                <AccordionItem key={i} value={`item-${i}`} className="border-[#6f4e37]">
+                  <AccordionTrigger className="text-lg font-black hover:text-[#f97316] text-[#1a0d00]">{faq.q}</AccordionTrigger>
+                  <AccordionContent className="text-gray-600">{faq.a}</AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </div>
+        </section>
+      </Reveal>
+
+      {/* CTA */}
+      <section className="py-20 px-6 bg-gradient-to-b from-[#6f4e37] to-[#1a0d00]">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-5xl font-black mb-6 text-[#fdf6ec]">START YOUR SUBSCRIPTION</h2>
+          <p className="text-[#fdf6ec] mb-8 text-lg">Fresh beans delivered monthly. Perfect every time.</p>
+          <MagneticBtn onClick={() => setShowSubBuilder(true)} className="px-8 py-4 bg-[#f97316] text-white font-black text-lg hover:bg-[#fdf6ec] hover:text-[#6f4e37] transition rounded">
+            SUBSCRIBE NOW
+          </MagneticBtn>
+          <Dialog open={showSubBuilder} onOpenChange={setShowSubBuilder}>
+            <DialogContent className="bg-[#fdf6ec] border-2 border-[#6f4e37]">
+              <DialogHeader>
+                <DialogTitle className="text-[#6f4e37] text-2xl">CUSTOMIZE YOUR ORDER</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <input type="text" placeholder="Your name" className="w-full p-3 bg-white border-2 border-[#6f4e37] text-black placeholder-gray-600 rounded" />
+                <input type="email" placeholder="Email" className="w-full p-3 bg-white border-2 border-[#6f4e37] text-black placeholder-gray-600 rounded" />
+                <button className="w-full py-3 bg-[#6f4e37] text-white font-black hover:bg-[#1a0d00] transition rounded">CONTINUE</button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </section>
     </div>
-  );
+  )
 }

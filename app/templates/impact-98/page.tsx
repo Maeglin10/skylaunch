@@ -1,259 +1,331 @@
-"use client";
+"use client"
+import { motion, useScroll, useTransform, useInView, AnimatePresence, useMotionValue, useSpring } from "framer-motion"
+import { useState, useRef, useEffect } from "react"
+import Image from "next/image"
+import Link from "next/link"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
+import { Progress } from "@/components/ui/progress"
 
-import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
-import Image from "next/image";
-import { X, Menu, Search, Hexagon, Zap, Activity, Globe, Shield, Command, Plus, ArrowUpRight, Maximize2, MoveRight, Layers, Box, Compass, Sparkles, MoveVertical, GitCommit } from "lucide-react";
-import "../premium.css";
+const COLLECTIONS = [
+  { id: 1, name: "Rings", image: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?q=80&w=500&auto=format&fit=crop", pieces: [{ title: "Solitaire Diamond", carat: "1.5ct", material: "18k Gold" }] },
+  { id: 2, name: "Necklaces", image: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?q=80&w=500&auto=format&fit=crop", pieces: [{ title: "Heritage Pendant", carat: "Multi-gemstone", material: "Platinum" }] },
+  { id: 3, name: "Bracelets", image: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?q=80&w=500&auto=format&fit=crop", pieces: [{ title: "Tennis Bracelet", carat: "5ct", material: "Platinum" }] },
+  { id: 4, name: "Earrings", image: "https://images.unsplash.com/photo-1599551419256-ca3be0dbec37?q=80&w=500&auto=format&fit=crop", pieces: [{ title: "Pearl Drops", carat: "Natural Pearl", material: "18k Gold" }] },
+  { id: 5, name: "Bespoke", image: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?q=80&w=500&auto=format&fit=crop", pieces: [{ title: "Custom Creation", carat: "Bespoke", material: "Your Choice" }] },
+]
 
-const SHAPES = [
-  "M 20 20 L 80 20 L 80 80 L 20 80 Z", // Square
-  "M 50 10 A 40 40 0 1 1 50 90 A 40 40 0 1 1 50 10", // Circle
-  "M 50 15 L 90 85 L 10 85 Z", // Triangle
-  "M 50 0 L 100 50 L 50 100 L 0 50 Z" // Diamond
-];
+const MATERIALS = [
+  { title: "18k Gold", desc: "Pure and timeless, refined for elegance.", certs: ["Hallmark", "Assay"] },
+  { title: "Platinum", desc: "Ultimate luxury, 95% pure. Hypoallergenic.", certs: ["GIA", "Purity"] },
+  { title: "Ethically Sourced Gems", desc: "Diamonds, rubies, sapphires. Certified origin.", certs: ["GIA", "Origin", "Treatment"] },
+]
 
-const NODES = [
-  { id: 1, title: "CORE_GEOM", cat: "Structural", value: "Locked", img: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=1000&auto=format&fit=crop" },
-  { id: 2, title: "PHASE_NODE", cat: "Topology", value: "Active", img: "https://images.unsplash.com/photo-1541701494587-cb58502866ab?q=80&w=1000&auto=format&fit=crop" },
-  { id: 3, title: "VOID_MATH", cat: "Strategic", value: "Verified", img: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1000&auto=format&fit=crop" },
-];
+const ARTISANS = [
+  { name: "Isabelle Fontaine", role: "Master Craftsperson", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop", bio: "40 years excellence" },
+  { name: "Henri Beaumont", role: "Gemstone Curator", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop", bio: "Ethical sourcing pioneer" },
+  { name: "Claire Moreau", role: "Design Director", image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=200&auto=format&fit=crop", bio: "Contemporary legacy" },
+  { name: "Michel Rousseau", role: "Finishing Master", image: "https://images.unsplash.com/photo-1517849845537-1d51a20414de?q=80&w=200&auto=format&fit=crop", bio: "Precision perfectionist" },
+]
 
-export default function GeometricMorphSPA() {
-  const [view, setView] = useState<"grid" | "shape" | "topology">("grid");
-  const [activeItem, setActiveItem] = useState(0);
+const TESTIMONIALS = [
+  { text: "The most exquisite engagement ring. Worth every moment of anticipation.", author: "Sophie, Client" },
+  { text: "Lumière Bijoux doesn't just craft jewelry—they craft memories.", author: "Antoine, Client" },
+]
+
+const STATS = [{ value: 1978, label: "Est." }, { value: 12000, label: "Pieces" }, { value: 45, label: "Countries" }, { value: 4.9, label: "Rating" }]
+
+const FAQ_ITEMS = [
+  { q: "Can I customize my piece?", a: "Absolutely. Full bespoke design services tailored to your exact vision and preferences." },
+  { q: "What sizing options?", a: "Ring sizing for all collections. Expert resizing and adjustments guaranteed." },
+  { q: "Do you provide certificates?", a: "Yes. All pieces include official hallmark certification and authenticity documentation." },
+  { q: "Shipping process?", a: "Insured international shipping with white-glove delivery and full insurance." },
+]
+
+function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: "-60px" })
+  return <motion.div ref={ref} initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, delay }}>{children}</motion.div>
+}
+
+function Counter({ target, suffix = "" }: { target: number; suffix?: string }) {
+  const [count, setCount] = useState(0)
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true })
+  useEffect(() => {
+    if (!inView) return
+    const step = Math.ceil(target / 60)
+    const t = setInterval(() => setCount(c => Math.min(c + step, target)), 16)
+    return () => clearInterval(t)
+  }, [inView, target])
+  return <span ref={ref}>{count}{suffix}</span>
+}
+
+function MagneticBtn({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  const x = useMotionValue(0); const y = useMotionValue(0)
+  const sx = useSpring(x, { stiffness: 500, damping: 25 })
+  const sy = useSpring(y, { stiffness: 500, damping: 25 })
+  const ref = useRef<HTMLButtonElement>(null)
+  const handleMouse = (e: React.MouseEvent) => {
+    const r = ref.current!.getBoundingClientRect()
+    x.set((e.clientX - r.left - r.width/2) * 0.35)
+    y.set((e.clientY - r.top - r.height/2) * 0.35)
+  }
+  return <motion.button ref={ref} style={{ x: sx, y: sy }} onMouseMove={handleMouse} onMouseLeave={() => { x.set(0); y.set(0) }} className={className}>{children}</motion.button>
+}
+
+export default function LumiereBijoux() {
+  const [selectedTab, setSelectedTab] = useState("Rings")
+  const { scrollY } = useScroll()
+  const heroOpacity = useTransform(scrollY, [0, 400], [1, 0])
+  const heroY = useTransform(scrollY, [0, 400], [0, 100])
 
   return (
-    <div className="premium-theme bg-[#050510] text-[#00ff9d] min-h-screen selection:bg-[#00ff9d] selection:text-black font-mono overflow-x-hidden">
-      
-      {/* Background HUD Layers */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_#00ff9d05_0%,_transparent_70%)] opacity-40" />
-        <div 
-          className="absolute inset-0 opacity-[0.05]"
-          style={{ backgroundImage: `radial-gradient(circle at 2px 2px, #fff 1px, transparent 0)`, backgroundSize: '40px 40px' }}
-        />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-screen" />
-      </div>
-
-      {/* Editorial HUD Nav */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-center bg-black/40 backdrop-blur-3xl border-b border-[#00ff9d]/10">
-        <div className="flex gap-12 items-center">
-           <button onClick={() => setView("grid")} className="text-xl font-black italic tracking-tighter hover:text-white transition-colors flex items-center gap-4">
-              <Hexagon className="w-6 h-6 animate-pulse" /> MORPH_OS&trade;
-           </button>
-           <div className="hidden lg:flex gap-8 text-[10px] font-black uppercase tracking-widest opacity-20 italic">
-              Status: Geometry_Dist_Active
-              <span className="text-white">Ref: 0x98_G</span>
-           </div>
-        </div>
-        <div className="hidden md:flex gap-12 text-[10px] font-black uppercase tracking-[0.4em] opacity-30">
-           <button onClick={() => setView("grid")} className={`hover:opacity-100 transition-opacity ${view === 'grid' ? 'text-white opacity-100 underline decoration-white underline-offset-8 italic' : ''}`}>THE_GRID</button>
-           <button onClick={() => setView("topology")} className={`hover:opacity-100 transition-opacity ${view === 'topology' ? 'text-white opacity-100 underline decoration-white underline-offset-8 italic' : ''}`}>THE_TOPOLOGY</button>
-        </div>
-        <div className="flex items-center gap-8">
-           <Search className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-           <Menu className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
+    <div className="bg-[#fdf8f0] text-[#080808] overflow-hidden">
+      <nav className="fixed top-0 left-0 right-0 h-16 bg-white/60 backdrop-blur-md border-b border-[#d4af37]/10 z-50 flex items-center justify-between px-6">
+        <div className="text-2xl font-bold tracking-wider text-[#d4af37]">LUMIÈRE BIJOUX</div>
+        <div className="hidden md:flex gap-8 text-sm text-[#080808]">
+          <Link href="#collections" className="hover:text-[#d4af37] transition">Collections</Link>
+          <Link href="#bespoke" className="hover:text-[#d4af37] transition">Bespoke</Link>
+          <Link href="#heritage" className="hover:text-[#d4af37] transition">Artisans</Link>
         </div>
       </nav>
 
-      <AnimatePresence mode="wait">
-        
-        {/* THE GRID VIEW (LANDING) */}
-        {view === "grid" && (
-          <motion.div key="grid" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-48 pb-32 px-12 max-w-[1800px] mx-auto min-h-screen flex flex-col justify-center relative z-10">
-             <header className="mb-24 border-b-2 border-[#00ff9d]/20 pb-12 flex flex-col md:flex-row justify-between items-end gap-12">
-                <div>
-                   <span className="text-[10px] uppercase font-black tracking-[1em] text-[#00ff9d] opacity-40 mb-4 block underline decoration-[#00ff9d]/10 underline-offset-8 italic">Geometric_Sync // Series_098</span>
-                   <h1 className="text-7xl md:text-[12vw] font-black italic uppercase tracking-tighter leading-[0.75] text-white">THE. <br/> <span className="text-[#00ff9d]">SHAPE.</span></h1>
-                </div>
-                <div className="text-right flex flex-col items-end">
-                   <div className="text-3xl font-black mb-4 tracking-tighter uppercase opacity-10 italic">Secure_Sync</div>
-                   <div className="w-64 h-1 bg-white/5 rounded-full overflow-hidden">
-                      <motion.div animate={{ width: ['20%', '90%', '40%', '75%'] }} transition={{ duration: 4, repeat: Infinity }} className="h-full bg-[#00ff9d]" />
-                   </div>
-                </div>
-             </header>
-
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {NODES.map((p, i) => (
-                  <motion.div 
-                    key={p.id} initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                    className="group relative h-[60vh] rounded-[3rem] overflow-hidden border border-[#00ff9d]/10 hover:border-[#00ff9d]/40 transition-all cursor-pointer shadow-2xl bg-white/5"
-                    onClick={() => { setActiveItem(i); setView("shape"); }}
-                  >
-                     <Image src={p.img} alt={p.title} fill className="object-cover grayscale opacity-20 group-hover:opacity-40 transition-all duration-[2s] group-hover:scale-110" />
-                     <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                     
-                     <div className="absolute inset-10 flex flex-col justify-between">
-                        <div className="flex justify-between items-start">
-                           <div className="p-4 bg-white/5 border border-white/10 rounded-2xl">
-                              <MorphLogo />
-                           </div>
-                           <div className="text-[10px] font-black uppercase tracking-widest opacity-20 group-hover:opacity-100 transition-opacity text-[#00ff9d]">REF_0x{p.id}</div>
-                        </div>
-                        <div>
-                           <span className="text-[10px] uppercase font-black tracking-widest text-[#00ff9d]/40 mb-2 block italic">{p.cat} // {p.value}</span>
-                           <h3 className="text-5xl font-black italic uppercase tracking-tighter text-white group-hover:text-[#00ff9d] transition-colors">{p.title}</h3>
-                        </div>
-                     </div>
-                  </motion.div>
-                ))}
-             </div>
+      <motion.section style={{ opacity: heroOpacity, y: heroY }} className="relative h-screen flex items-center justify-center overflow-hidden pt-16">
+        <div className="absolute inset-0">
+          <Image src="https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?q=80&w=1600&auto=format&fit=crop" alt="Jewelry" fill className="object-cover" unoptimized />
+          <div className="absolute inset-0 bg-black/30" />
+        </div>
+        <div className="relative z-10 text-center max-w-4xl px-4">
+          <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2 }} className="text-6xl md:text-7xl font-bold mb-6 tracking-tight text-white">
+            FINE JEWELRY ATELIER
+          </motion.h1>
+          <motion.p initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.4 }} className="text-xl text-gray-200 mb-8 max-w-2xl mx-auto">
+            Timeless elegance crafted by master artisans since 1978.
+          </motion.p>
+          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.6 }}>
+            <Dialog>
+              <DialogTrigger asChild>
+                <MagneticBtn className="px-8 py-4 bg-[#d4af37] text-[#080808] font-bold rounded-full hover:bg-[#c99d2f] transition">
+                  Explore Collections
+                </MagneticBtn>
+              </DialogTrigger>
+              <DialogContent className="bg-[#fdf8f0] border-[#d4af37]/20 max-w-md">
+                <DialogTitle>Discover Collections</DialogTitle>
+                <form className="space-y-4">
+                  <input type="text" placeholder="Your Name" className="w-full px-4 py-2 bg-white border border-[#d4af37]/30 rounded text-[#080808]" />
+                  <input type="email" placeholder="Your Email" className="w-full px-4 py-2 bg-white border border-[#d4af37]/30 rounded text-[#080808]" />
+                  <input type="text" placeholder="Collection Interest" className="w-full px-4 py-2 bg-white border border-[#d4af37]/30 rounded text-[#080808]" />
+                  <button type="submit" className="w-full px-4 py-3 bg-[#d4af37] text-[#080808] font-bold rounded hover:bg-[#c99d2f] transition">
+                    Request Consultation
+                  </button>
+                </form>
+              </DialogContent>
+            </Dialog>
           </motion.div>
-        )}
+        </div>
+      </motion.section>
 
-        {/* THE SHAPE VIEW (DETAIL) */}
-        {view === "shape" && (
-          <motion.div key="shape" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen">
-             <button onClick={() => setView("grid")} className="fixed top-12 left-12 z-[60] bg-white text-black p-5 rounded-full hover:scale-110 transition-transform shadow-2xl">
-                <X className="w-6 h-6" />
-             </button>
+      <section id="collections" className="py-24 px-6 max-w-7xl mx-auto">
+        <Reveal delay={0.1}>
+          <h2 className="text-5xl font-bold mb-4 text-center text-[#080808]">Collections</h2>
+          <p className="text-gray-600 text-center mb-12 max-w-2xl mx-auto">Curated selections of timeless pieces for every occasion and dream.</p>
+        </Reveal>
 
-             <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen pt-24 lg:pt-0">
-                <div className="lg:col-span-12 relative flex items-center justify-center p-8 md:p-32 overflow-hidden h-screen bg-[#050510]">
-                   <div className="absolute inset-0 opacity-10">
-                      <Image src={NODES[activeItem].img} alt="Background" fill className="object-cover grayscale" />
-                   </div>
-                   <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[40vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase text-[#00ff9d]">
-                      NODES
-                   </div>
-                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#050510_100%)]" />
-                   
-                   <div className="max-w-[1500px] w-full grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10">
-                      <motion.div initial={{ scale: 1.1, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1 }} className="relative aspect-square w-full rounded-[4rem] overflow-hidden border border-[#00ff9d]/10 group bg-white/5 shadow-2xl">
-                         <Image src={NODES[activeItem].img} alt="Spec" fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[3s] opacity-80" priority />
-                         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                         <div className="absolute top-12 left-12 p-4 bg-black/60 backdrop-blur-3xl rounded-2xl border border-white/10">
-                            <Layers className="w-6 h-6 text-white animate-pulse" />
-                         </div>
-                      </motion.div>
+        <Tabs value={selectedTab} onValueChange={setSelectedTab}>
+          <TabsList className="grid w-full grid-cols-5 bg-white border border-[#d4af37]/20 mb-8">
+            {["Rings", "Necklaces", "Bracelets", "Earrings", "Bespoke"].map((type) => (
+              <TabsTrigger key={type} value={type} className="data-[state=active]:bg-[#d4af37] data-[state=active]:text-[#080808]">
+                {type}
+              </TabsTrigger>
+            ))}
+          </TabsList>
 
-                      <div className="flex flex-col justify-center space-y-12">
-                         <div className="space-y-6">
-                            <span className="text-[10px] uppercase tracking-[1em] font-black text-[#00ff9d]/40 mb-8 block underline decoration-white decoration-4 underline-offset-8 italic">Phased_Sync // {NODES[activeItem].cat}</span>
-                            <h1 className="text-7xl md:text-[10vw] font-black italic uppercase tracking-tighter leading-none text-white">{NODES[activeItem].title}</h1>
-                            <div className="text-4xl font-black italic tracking-tighter opacity-10 italic text-[#00ff9d]">State: SYNCHRONIZED</div>
-                         </div>
-
-                         <p className="text-3xl font-light italic leading-relaxed uppercase tracking-tight opacity-40 text-white leading-relaxed">
-                            Structural allocation for {NODES[activeItem].title}. System integrity at 100%. Thermal load nominal at 32C. Every coordinate synchronized.
-                         </p>
-
-                         <div className="grid grid-cols-2 gap-12 py-12 border-y border-[#00ff9d]/10 text-[#00ff9d]">
-                            {[
-                              { icon: <Globe className="w-5 h-5" />, l: "Region", v: "Global_East" },
-                              { icon: <Zap className="w-5 h-5" />, l: "Logic", v: "Phase_Shift" },
-                              { icon: <Shield className="w-5 h-5" />, l: "Security", v: "High_Impact" },
-                              { icon: <Activity className="w-5 h-5" />, l: "Sync", v: NODES[activeItem].value },
-                            ].map((s, i) => (
-                              <div key={i} className="flex gap-6 items-center">
-                                 <div className="opacity-20">{s.icon}</div>
-                                 <div className="text-left">
-                                    <div className="text-[10px] font-black opacity-30 uppercase tracking-widest mb-1 italic">{s.l}</div>
-                                    <div className="text-sm font-black uppercase italic tracking-tighter text-white">{s.v}</div>
-                                 </div>
-                              </div>
-                            ))}
-                         </div>
-
-                         <div className="flex gap-6 pt-8">
-                            <button onClick={() => setView("grid")} className="flex-grow py-8 bg-white text-black font-black uppercase text-xs tracking-[1em] hover:bg-white/80 transition-all shadow-2xl">
-                               Return_to_Grid
-                            </button>
-                            <button className="px-12 py-8 border border-[#00ff9d]/20 text-[10px] font-black uppercase tracking-[0.5em] hover:scale-105 transition-all text-[#00ff9d]">
-                               PDF_Spec
-                            </button>
-                         </div>
+          {COLLECTIONS.map((collection) => (
+            <TabsContent key={collection.id} value={collection.name} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[collection].map((col, idx) => (
+                <Reveal key={idx} delay={idx * 0.1}>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Card className="bg-white border-[#d4af37]/20 cursor-pointer hover:border-[#d4af37]/50 transition overflow-hidden group">
+                        <div className="relative h-72 overflow-hidden">
+                          <Image src={col.image} alt={col.name} fill className="object-cover group-hover:scale-105 transition" unoptimized />
+                        </div>
+                        <CardContent className="p-6">
+                          <h3 className="font-bold text-xl mb-2 text-[#080808]">{col.name}</h3>
+                          <Badge className="bg-[#d4af37] text-[#080808]">{col.pieces[0].title}</Badge>
+                        </CardContent>
+                      </Card>
+                    </DialogTrigger>
+                    <DialogContent className="bg-[#fdf8f0] border-[#d4af37]/20 max-w-2xl">
+                      <div className="space-y-4">
+                        <h2 className="text-3xl font-bold text-[#080808]">{col.pieces[0].title}</h2>
+                        <div className="aspect-video bg-gray-200 rounded overflow-hidden">
+                          <Image src={col.image} alt={col.pieces[0].title} width={500} height={280} className="w-full h-full object-cover" unoptimized />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-gray-600 text-sm">Material</p>
+                            <p className="font-bold text-[#080808]">{col.pieces[0].material}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-600 text-sm">Carat/Weight</p>
+                            <p className="font-bold text-[#d4af37]">{col.pieces[0].carat}</p>
+                          </div>
+                        </div>
                       </div>
-                   </div>
+                    </DialogContent>
+                  </Dialog>
+                </Reveal>
+              ))}
+            </TabsContent>
+          ))}
+        </Tabs>
+      </section>
+
+      <section id="bespoke" className="py-24 px-6 bg-white">
+        <div className="max-w-7xl mx-auto">
+          <Reveal delay={0.1} className="mb-16">
+            <h2 className="text-5xl font-bold text-center mb-4 text-[#080808]">Bespoke Experience</h2>
+            <p className="text-gray-600 text-center max-w-2xl mx-auto">Our 4-step design process brings your dream piece to life.</p>
+          </Reveal>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            {[
+              { step: 1, title: "Consultation", desc: "Discuss vision with master designer" },
+              { step: 2, title: "Design Sketches", desc: "Detailed drawings and material selection" },
+              { step: 3, title: "Craftsmanship", desc: "Expert artisans create your piece" },
+              { step: 4, title: "Delivery", desc: "White-glove handoff and certification" },
+            ].map((item, idx) => (
+              <Reveal key={idx} delay={idx * 0.1}>
+                <div className="text-center">
+                  <div className="w-16 h-16 rounded-full bg-[#d4af37] text-white font-bold text-2xl flex items-center justify-center mx-auto mb-4">{item.step}</div>
+                  <h3 className="font-bold text-lg mb-2 text-[#080808]">{item.title}</h3>
+                  <p className="text-gray-600">{item.desc}</p>
                 </div>
-             </div>
-          </motion.div>
-        )}
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
 
-        {/* THE TOPOLOGY VIEW (INFO) */}
-        {view === "topology" && (
-          <motion.div key="topology" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen flex flex-col justify-center">
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center text-white">
-                <div className="space-y-16">
-                   <span className="text-[10px] uppercase font-black tracking-[1.5em] text-[#00ff9d] opacity-60 block underline decoration-[#00ff9d]/20 underline-offset-8 italic">The_Topology_Protocol</span>
-                   <h2 className="text-7xl md:text-[10vw] font-black italic tracking-tighter leading-none text-white uppercase">The <br/> Truth.</h2>
-                   <p className="text-3xl md:text-4xl font-light italic opacity-60 leading-relaxed uppercase tracking-tight text-[#00ff9d]/60">
-                      We treat architecture as code. Every structure is a function of its environmental variables and tectonic intent. 100% precision. Zero noise.
-                   </p>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t border-[#00ff9d]/20 text-[#00ff9d]">
-                      {[
-                        { icon: <Activity className="w-6 h-6" />, t: "Adaptive Flow", v: "Dynamic Load Sync" },
-                        { icon: <Plus className="w-6 h-6" />, t: "Structural Sync", v: "Deep_Material_ID" },
-                      ].map((item, i) => (
-                        <div key={i} className="flex gap-8 group">
-                           <div className="w-16 h-16 rounded-full border border-[#00ff9d] flex items-center justify-center text-[#00ff9d] group-hover:bg-[#00ff9d] group-hover:text-black transition-all shadow-xl">
-                              {item.icon}
-                           </div>
-                           <div className="text-left">
-                              <h4 className="text-2xl font-black uppercase italic tracking-tighter text-white leading-none mb-2">{item.t}</h4>
-                              <p className="text-[10px] opacity-30 uppercase tracking-[0.3em] font-black leading-relaxed text-[#00ff9d]/40">{item.v}</p>
-                           </div>
-                        </div>
-                      ))}
-                   </div>
-                </div>
-                <div className="relative aspect-square bg-[#1a1a1a] rounded-[4rem] p-12 overflow-hidden border border-[#00ff9d]/10 group shadow-2xl">
-                   <Image src="https://images.unsplash.com/photo-1541829070764-84a7d30dee62?q=80&w=1000&auto=format&fit=crop" alt="The Archive" fill className="object-cover opacity-20 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-[2s]" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                   <div className="absolute inset-x-0 bottom-12 flex justify-center">
-                      <div className="px-12 py-6 border border-[#00ff9d] text-[#00ff9d] text-[10px] font-black uppercase tracking-widest italic animate-bounce cursor-pointer hover:bg-[#00ff9d] hover:text-black transition-all">
-                         Establish_Handshake
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
+      <section className="py-24 px-6 max-w-7xl mx-auto">
+        <Reveal delay={0.1} className="mb-16">
+          <h2 className="text-5xl font-bold text-center mb-4 text-[#080808]">Materials & Certifications</h2>
+        </Reveal>
 
-      </AnimatePresence>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {MATERIALS.map((mat, idx) => (
+            <Reveal key={idx} delay={idx * 0.1}>
+              <Card className="bg-white border-[#d4af37]/20">
+                <CardContent className="p-8">
+                  <h3 className="text-2xl font-bold mb-4 text-[#d4af37]">{mat.title}</h3>
+                  <p className="text-gray-600 mb-6">{mat.desc}</p>
+                  <div className="space-y-2">
+                    {mat.certs.map((cert, i) => (
+                      <Badge key={i} variant="outline" className="border-[#d4af37]/30 text-[#d4af37]">{cert}</Badge>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </Reveal>
+          ))}
+        </div>
+      </section>
 
-      {/* Global Status HUD */}
-      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em] italic text-[#00ff9d] leading-none">
-         <div className="flex gap-12 text-[#00ff9d]">
-            <span>Morph_OS_Alpha</span>
-            <span>Uptime: 99.9%</span>
-         </div>
-         <div className="flex gap-4 items-end text-[#00ff9d]">
-            <div className="text-right leading-tight italic">
-               Topology_Control <br /> v4.0.21
-            </div>
-            <div className="flex gap-[4px] h-4">
-               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-full bg-[#00ff9d] opacity-${i*20}`}></div>)}
-            </div>
-         </div>
-      </footer>
+      <section id="heritage" className="py-24 px-6 bg-white">
+        <div className="max-w-7xl mx-auto">
+          <Reveal delay={0.1} className="mb-16">
+            <h2 className="text-5xl font-bold text-center mb-4 text-[#080808]">Artisan Masters</h2>
+            <p className="text-gray-600 text-center">Generations of excellence at your service.</p>
+          </Reveal>
 
-      <style>{`
-        ::-webkit-scrollbar { width: 0px; }
-      `}</style>
+          <Carousel className="w-full max-w-4xl mx-auto">
+            <CarouselContent>
+              {ARTISANS.map((artisan) => (
+                <CarouselItem key={artisan.name} className="basis-full md:basis-1/2">
+                  <Card className="bg-[#fdf8f0] border-[#d4af37]/20 text-center">
+                    <CardContent className="p-6">
+                      <Avatar className="w-20 h-20 mx-auto mb-4">
+                        <AvatarImage src={artisan.image} alt={artisan.name} />
+                        <AvatarFallback>{artisan.name[0]}</AvatarFallback>
+                      </Avatar>
+                      <h3 className="font-bold text-lg text-[#080808]">{artisan.name}</h3>
+                      <p className="text-sm text-[#d4af37] mb-2">{artisan.role}</p>
+                      <p className="text-sm text-gray-600">{artisan.bio}</p>
+                    </CardContent>
+                  </Card>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="border-[#d4af37]/30" />
+            <CarouselNext className="border-[#d4af37]/30" />
+          </Carousel>
+        </div>
+      </section>
+
+      <section className="py-24 px-6 bg-[#fdf8f0]">
+        <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
+          {STATS.map((stat, idx) => (
+            <Reveal key={idx} delay={idx * 0.1} className="text-center">
+              <div className="text-4xl font-bold text-[#d4af37] mb-2"><Counter target={stat.value} /></div>
+              <div className="text-sm text-gray-600">{stat.label}</div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      <section className="py-24 px-6 bg-white">
+        <div className="max-w-3xl mx-auto">
+          <Reveal delay={0.1} className="mb-12">
+            <h2 className="text-5xl font-bold text-center mb-4 text-[#080808]">Customer Care</h2>
+          </Reveal>
+
+          <Accordion type="single" collapsible className="space-y-4">
+            {FAQ_ITEMS.map((item, idx) => (
+              <AccordionItem key={idx} value={`item-${idx}`} className="border-[#d4af37]/20">
+                <AccordionTrigger className="text-lg font-semibold text-[#080808] hover:text-[#d4af37] transition">
+                  {item.q}
+                </AccordionTrigger>
+                <AccordionContent className="text-gray-600">
+                  {item.a}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
+      </section>
+
+      <section className="py-24 px-6 text-center bg-[#fdf8f0]">
+        <Reveal>
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-[#080808]">Begin Your Bespoke Journey</h2>
+          <p className="text-gray-600 mb-8 max-w-2xl mx-auto">Schedule a private consultation with our master designers.</p>
+          <Dialog>
+            <DialogTrigger asChild>
+              <MagneticBtn className="px-8 py-4 bg-[#d4af37] text-[#080808] font-bold rounded-full hover:bg-[#c99d2f] transition">
+                Request Consultation
+              </MagneticBtn>
+            </DialogTrigger>
+            <DialogContent className="bg-[#fdf8f0] border-[#d4af37]/20">
+              <DialogTitle>Bespoke Consultation</DialogTitle>
+              <form className="space-y-4">
+                <input type="text" placeholder="Full Name" className="w-full px-4 py-2 bg-white border border-[#d4af37]/30 rounded text-[#080808]" />
+                <input type="email" placeholder="Email Address" className="w-full px-4 py-2 bg-white border border-[#d4af37]/30 rounded text-[#080808]" />
+                <textarea placeholder="Describe your vision..." className="w-full px-4 py-2 bg-white border border-[#d4af37]/30 rounded text-[#080808] h-24" />
+                <button type="submit" className="w-full px-4 py-3 bg-[#d4af37] text-[#080808] font-bold rounded hover:bg-[#c99d2f] transition">
+                  Book Consultation
+                </button>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </Reveal>
+      </section>
     </div>
-  );
-}
-
-function MorphLogo() {
-  const [index, setIndex] = useState(0);
-  useEffect(() => {
-    const interval = setInterval(() => setIndex(p => (p + 1) % SHAPES.length), 2000);
-    return () => clearInterval(interval);
-  }, []);
-
-  return (
-    <svg viewBox="0 0 100 100" className="w-5 h-5">
-      <motion.path 
-         animate={{ d: SHAPES[index] }}
-         transition={{ duration: 1, ease: [0.76, 0, 0.24, 1] }}
-         fill="none"
-         stroke="currentColor"
-         strokeWidth="4"
-         className="text-[#00ff9d]"
-      />
-    </svg>
-  );
+  )
 }
