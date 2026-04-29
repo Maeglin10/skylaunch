@@ -1,224 +1,508 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect } from "react";
+import { motion, AnimatePresence, useScroll, useTransform, useMotionValue, useSpring, useInView } from "framer-motion";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { X, Menu, Search, BookOpen, Zap, Activity, Globe, Shield, Command, Plus, ArrowUpRight, Maximize2, MoveRight, Layers, Box, Compass, Sparkles, Volume2 } from "lucide-react";
-import "../premium.css";
+import Link from "next/link";
+import { X, Menu, MapPin, Users, Check, ChevronDown } from "lucide-react";
 
-const ARTICLES = [
-  { id: 1, title: "STRUCT_VOX", cat: "Theory", value: "Entropy_V1", img: "https://images.unsplash.com/photo-1492691523567-613d9685354e?q=80&w=1000&auto=format&fit=crop" },
-  { id: 2, title: "NULL_FRAME", cat: "Visuals", value: "Decomposed", img: "https://images.unsplash.com/photo-1549490349-8643362247b5?q=80&w=1000&auto=format&fit=crop" },
-  { id: 3, title: "STATIC_ERA", cat: "Curation", value: "Verified", img: "https://images.unsplash.com/photo-1523424296224-8d91b72a696c?q=80&w=1000&auto=format&fit=crop" },
+const SPACE_TYPES = [
+  { type: "Hot Desk", price: "$299/mo", capacity: "Unlimited access", img: "https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=400&auto=format&fit=crop" },
+  { type: "Dedicated", price: "$599/mo", capacity: "Reserved desk", img: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=400&auto=format&fit=crop" },
+  { type: "Private Office", price: "$1,299/mo", capacity: "Up to 6 people", img: "https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=400&auto=format&fit=crop" },
+  { type: "Event Space", price: "Custom", capacity: "50-200 people", img: "https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=400&auto=format&fit=crop" },
 ];
 
-export default function EditorialGlitchSPA() {
-  const [view, setView] = useState<"struct" | "vox" | "entropy">("struct");
-  const [activeItem, setActiveItem] = useState(0);
+const TESTIMONIALS = [
+  { author: "Sarah Chen", company: "TechStart", text: "The community here is incredible. Found my co-founder at the coffee bar!" },
+  { author: "Marcus Brown", company: "Consulting Co", text: "Excellent facilities, fantastic support team. Best workspace investment." },
+];
+
+function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-60px" });
 
   return (
-    <div className="premium-theme bg-[#f8f8f8] text-[#1a1a1a] min-h-screen selection:bg-black selection:text-white font-serif overflow-x-hidden">
-      
-      {/* Background HUD Layers */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#f8f8f8_100%)] opacity-80" />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.02] mix-blend-multiply" />
-      </div>
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 20 }}
+      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+      transition={{ delay, duration: 0.6 }}
+    >
+      {children}
+    </motion.div>
+  );
+}
 
-      {/* Editorial HUD Nav */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-center bg-white/40 backdrop-blur-3xl border-b border-black/5">
-        <div className="flex gap-12 items-center">
-           <button onClick={() => setView("struct")} className="text-xl font-black italic tracking-tighter hover:scale-105 transition-transform font-serif uppercase">
-              GLITCH_ED&trade;
-           </button>
-           <div className="hidden lg:flex gap-8 text-[10px] font-black uppercase tracking-widest opacity-20 italic font-mono">
-              Status: Printing_Entropy
-              <span className="text-black">Vol: 0x90</span>
-           </div>
+function Counter({ target, label }: { target: number; label: string }) {
+  const [count, setCount] = useState(0);
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-60px" });
+
+  useEffect(() => {
+    if (!isInView) return;
+    let current = 0;
+    const interval = setInterval(() => {
+      current += Math.ceil(target / 50);
+      if (current > target) current = target;
+      setCount(current);
+      if (current === target) clearInterval(interval);
+    }, 30);
+    return () => clearInterval(interval);
+  }, [isInView, target]);
+
+  return (
+    <div ref={ref} className="text-center">
+      <div className="text-4xl md:text-5xl font-bold text-[#d97706]">{count.toLocaleString()}</div>
+      <div className="text-sm text-gray-600 mt-2">{label}</div>
+    </div>
+  );
+}
+
+function MagneticBtn({ children }: { children: React.ReactNode }) {
+  const ref = useRef(null);
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const springX = useSpring(x, { damping: 20, stiffness: 300 });
+  const springY = useSpring(y, { damping: 20, stiffness: 300 });
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!ref.current) return;
+    const { left, top, width, height } = (ref.current as HTMLDivElement).getBoundingClientRect();
+    const centerX = left + width / 2;
+    const centerY = top + height / 2;
+    x.set((e.clientX - centerX) * 0.2);
+    y.set((e.clientY - centerY) * 0.2);
+  };
+
+  const handleMouseLeave = () => {
+    x.set(0);
+    y.set(0);
+  };
+
+  return (
+    <motion.button
+      ref={ref}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={{ x: springX, y: springY }}
+      className="px-8 py-3 bg-[#d97706] text-white font-bold rounded-lg hover:shadow-lg hover:shadow-[#d97706]/30 transition-shadow"
+    >
+      {children}
+    </motion.button>
+  );
+}
+
+function FAQAccordion() {
+  const [openIndex, setOpenIndex] = useState(0);
+  const faqs = [
+    { q: "What's the contract term?", a: "Flexible month-to-month for hot desks, 12-month for dedicated desks. Cancel anytime with 30 days notice." },
+    { q: "Is parking included?", a: "Yes! Unlimited parking in our 5-level garage. Reserved spots available for dedicated members." },
+    { q: "Can we host client meetings?", a: "Absolutely. Private meeting rooms available for hourly booking or included with memberships." },
+  ];
+
+  return (
+    <div className="space-y-4">
+      {faqs.map((faq, i) => (
+        <motion.div key={i} className="border-2 border-[#d97706]/20 rounded-lg overflow-hidden">
+          <button
+            onClick={() => setOpenIndex(openIndex === i ? -1 : i)}
+            className="w-full p-4 flex justify-between items-center bg-white hover:bg-orange-50 transition-colors"
+          >
+            <span className="text-left font-semibold text-[#1e293b]">{faq.q}</span>
+            <motion.div animate={{ rotate: openIndex === i ? 180 : 0 }}>
+              <ChevronDown className="w-5 h-5 text-[#d97706]" />
+            </motion.div>
+          </button>
+          <AnimatePresence>
+            {openIndex === i && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="bg-orange-50 border-t-2 border-[#d97706]/10 p-4"
+              >
+                <p className="text-gray-700">{faq.a}</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      ))}
+    </div>
+  );
+}
+
+export default function StudioHivePage() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeCity, setActiveCity] = useState("San Francisco");
+  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [showTourModal, setShowTourModal] = useState(false);
+  const containerRef = useRef(null);
+  const { scrollYProgress } = useScroll({ target: containerRef });
+  const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", "40%"]);
+
+  const cities = [
+    { name: "San Francisco", members: 450, events: 12, amenities: ["WiFi", "Parking", "Kitchen"] },
+    { name: "New York", members: 520, events: 15, amenities: ["WiFi", "Parking", "Gym"] },
+    { name: "Austin", members: 380, events: 10, amenities: ["WiFi", "Kitchen", "Phone Booths"] },
+  ];
+
+  const amenities = [
+    { name: "High-Speed WiFi", icon: "📡" },
+    { name: "Parking Included", icon: "🅿️" },
+    { name: "Professional Kitchen", icon: "🍽️" },
+    { name: "Meeting Rooms", icon: "🤝" },
+    { name: "Phone Booths", icon: "☎️" },
+    { name: "Lounge Areas", icon: "🛋️" },
+  ];
+
+  return (
+    <div
+      ref={containerRef}
+      className="min-h-screen bg-[#fafaf8] text-[#1e293b] overflow-x-hidden"
+    >
+      {/* Parallax Background */}
+      <motion.div
+        className="fixed inset-0 pointer-events-none z-0 opacity-15"
+        style={{ y: backgroundY }}
+      >
+        <Image
+          src="https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=1200&auto=format&fit=crop"
+          alt="bg"
+          fill
+          className="object-cover"
+          unoptimized
+        />
+      </motion.div>
+
+      {/* Nav */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#fafaf8]/95 backdrop-blur-xl border-b border-[#d97706]/10 p-6">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+            <Users className="w-6 h-6 text-[#d97706]" />
+            <span className="font-bold text-lg">STUDIO HIVE</span>
+          </Link>
+          <div className="hidden md:flex gap-8 text-sm">
+            <a href="#spaces" className="hover:text-[#d97706] transition-colors">Spaces</a>
+            <a href="#locations" className="hover:text-[#d97706] transition-colors">Locations</a>
+            <a href="#community" className="hover:text-[#d97706] transition-colors">Community</a>
+            <a href="#faq" className="hover:text-[#d97706] transition-colors">FAQ</a>
+          </div>
+          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden">
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
         </div>
-        <div className="hidden md:flex gap-12 text-[10px] font-black uppercase tracking-[0.4em] opacity-30 font-mono">
-           <button onClick={() => setView("struct")} className={`hover:opacity-100 transition-opacity ${view === 'struct' ? 'text-black opacity-100 underline decoration-black decoration-2 underline-offset-8 italic' : ''}`}>THE_STRUCT</button>
-           <button onClick={() => setView("entropy")} className={`hover:opacity-100 transition-opacity ${view === 'entropy' ? 'text-black opacity-100 underline decoration-black decoration-2 underline-offset-8 italic' : ''}`}>THE_ENTROPY</button>
-        </div>
-        <div className="flex items-center gap-8">
-           <Search className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-           <Menu className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-        </div>
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="mt-4 flex flex-col gap-4 text-sm">
+              <a href="#spaces">Spaces</a>
+              <a href="#locations">Locations</a>
+              <a href="#community">Community</a>
+              <a href="#faq">FAQ</a>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </nav>
 
-      <AnimatePresence mode="wait">
-        
-        {/* THE STRUCT VIEW (LANDING) */}
-        {view === "struct" && (
-          <motion.div key="struct" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-48 pb-32 px-12 max-w-[1800px] mx-auto min-h-screen flex flex-col justify-center relative z-10">
-             <header className="mb-24 border-b-2 border-black/20 pb-12 flex flex-col md:flex-row justify-between items-end gap-12">
-                <div>
-                   <span className="text-[10px] uppercase font-black tracking-[1em] opacity-40 mb-4 block underline decoration-black/10 underline-offset-8 italic font-mono">Fragmentation_Sync // Series_090</span>
-                   <h1 className="text-7xl md:text-[12vw] font-black italic uppercase tracking-tighter leading-[0.75] font-serif">STRUCT. <br/> <span className="text-rose-600">VOX.</span></h1>
-                </div>
-                <div className="text-right flex flex-col items-end">
-                   <div className="text-3xl font-black mb-4 tracking-tighter uppercase opacity-10 italic">Secure_Sync</div>
-                   <div className="w-64 h-2 bg-black/5 rounded-full overflow-hidden">
-                      <motion.div animate={{ width: ['20%', '90%', '40%', '75%'] }} transition={{ duration: 4, repeat: Infinity }} className="h-full bg-black" />
-                   </div>
-                </div>
-             </header>
+      <main className="relative z-10 pt-24">
+        {/* Hero */}
+        <section className="min-h-screen flex items-center justify-center px-6 py-20">
+          <div className="max-w-5xl mx-auto text-center">
+            <Reveal delay={0}>
+              <div className="text-[#d97706] text-sm font-bold mb-4">MODERN COWORKING SPACES</div>
+            </Reveal>
+            <Reveal delay={0.1}>
+              <h1 className="text-6xl md:text-7xl font-bold mb-6 leading-tight">
+                Where Teams <span className="text-[#d97706]">Grow Together</span>
+              </h1>
+            </Reveal>
+            <Reveal delay={0.2}>
+              <p className="text-gray-700 text-lg mb-8 max-w-2xl mx-auto">1,200 members. 3 locations. 50+ events per month. Your space to succeed.</p>
+            </Reveal>
+            <Reveal delay={0.3}>
+              <MagneticBtn>TOUR NOW</MagneticBtn>
+            </Reveal>
+          </div>
+        </section>
 
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {ARTICLES.map((p, i) => (
-                  <motion.div 
-                    key={p.id} initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                    className="group relative h-[60vh] rounded-[3rem] overflow-hidden border-8 border-white shadow-2xl bg-neutral-100 cursor-pointer"
-                    onClick={() => { setActiveItem(i); setView("vox"); }}
+        {/* Space Types */}
+        <section id="spaces" className="py-20 px-6 bg-gradient-to-b from-[#fafaf8] to-white">
+          <div className="max-w-6xl mx-auto">
+            <Reveal>
+              <h2 className="text-4xl font-bold mb-12 text-center">WORKSPACE OPTIONS</h2>
+            </Reveal>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {SPACE_TYPES.map((space, i) => (
+                <Reveal key={i} delay={i * 0.1}>
+                  <motion.div
+                    whileHover={{ y: -8 }}
+                    className="bg-white rounded-2xl overflow-hidden border-2 border-[#d97706]/10 hover:border-[#d97706]/30 transition-colors shadow-lg hover:shadow-2xl"
                   >
-                     <Image src={p.img} alt={p.title} fill className="object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-[2s]" />
-                     <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
-                     
-                     <div className="absolute inset-10 flex flex-col justify-between font-mono">
-                        <div className="flex justify-between items-start">
-                           <div className="p-4 bg-white/80 backdrop-blur-xl rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Plus className="w-5 h-5 text-black" />
-                           </div>
-                           <div className="text-[10px] font-black uppercase tracking-widest opacity-20 group-hover:opacity-100 transition-opacity italic">REF_0x{p.id}</div>
-                        </div>
-                        <div className="text-white mix-blend-difference">
-                           <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-2 block italic">{p.cat}</span>
-                           <h3 className="text-5xl font-black italic uppercase tracking-tighter leading-none font-serif">{p.title}</h3>
-                        </div>
-                     </div>
+                    <div className="relative h-40 bg-gray-200">
+                      <Image
+                        src={space.img}
+                        alt={space.type}
+                        fill
+                        className="object-cover"
+                        unoptimized
+                      />
+                    </div>
+                    <div className="p-6">
+                      <h3 className="text-xl font-bold mb-2">{space.type}</h3>
+                      <p className="text-sm text-gray-600 mb-4">{space.capacity}</p>
+                      <p className="text-2xl font-bold text-[#d97706] mb-4">{space.price}</p>
+                      <button
+                        onClick={() => setShowBookingModal(true)}
+                        className="w-full py-2 bg-[#d97706] text-white rounded-lg hover:bg-[#b45309] transition-colors font-semibold"
+                      >
+                        BOOK NOW
+                      </button>
+                    </div>
                   </motion.div>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Amenities */}
+        <section className="py-20 px-6">
+          <div className="max-w-4xl mx-auto">
+            <Reveal>
+              <h2 className="text-4xl font-bold mb-12 text-center">INCLUDED AMENITIES</h2>
+            </Reveal>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+              {amenities.map((amenity, i) => (
+                <Reveal key={i} delay={i * 0.08}>
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    className="p-6 bg-white border-2 border-[#d97706]/20 rounded-xl text-center hover:border-[#d97706] transition-colors"
+                  >
+                    <div className="text-3xl mb-3">{amenity.icon}</div>
+                    <p className="font-semibold text-sm">{amenity.name}</p>
+                  </motion.div>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Locations */}
+        <section id="locations" className="py-20 px-6 bg-white">
+          <div className="max-w-4xl mx-auto">
+            <Reveal>
+              <h2 className="text-4xl font-bold mb-8 text-center">OUR LOCATIONS</h2>
+            </Reveal>
+            <Reveal delay={0.1}>
+              <div className="flex gap-3 mb-8 flex-wrap justify-center">
+                {cities.map((city) => (
+                  <button
+                    key={city.name}
+                    onClick={() => setActiveCity(city.name)}
+                    className={`px-4 py-2 rounded-lg transition-all ${
+                      activeCity === city.name
+                        ? "bg-[#d97706] text-white"
+                        : "border-2 border-[#d97706]/30 hover:border-[#d97706]"
+                    }`}
+                  >
+                    {city.name}
+                  </button>
                 ))}
-             </div>
-          </motion.div>
-        )}
-
-        {/* THE VOX VIEW (DETAIL) */}
-        {view === "vox" && (
-          <motion.div key="vox" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen">
-             <button onClick={() => setView("struct")} className="fixed top-12 left-12 z-[60] bg-black text-white p-5 rounded-full hover:scale-110 transition-transform shadow-2xl">
-                <X className="w-6 h-6" />
-             </button>
-
-             <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen pt-24 lg:pt-0">
-                <div className="lg:col-span-12 relative flex items-center justify-center p-8 md:p-32 overflow-hidden h-screen bg-[#f8f8f8]">
-                   <div className="absolute inset-0 opacity-10">
-                      <Image src={ARTICLES[activeItem].img} alt="Background" fill className="object-cover grayscale" />
-                   </div>
-                   <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[40vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center font-serif uppercase">
-                      VOICE
-                   </div>
-                   
-                   <div className="max-w-[1500px] w-full grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10">
-                      <motion.div initial={{ scale: 1.1, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1 }} className="relative aspect-square w-full rounded-[4rem] overflow-hidden border-8 border-white bg-white shadow-2xl group">
-                         <Image src={ARTICLES[activeItem].img} alt="Editorial" fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[3s] opacity-80" priority />
-                         <div className="absolute top-12 left-12 p-4 bg-white/80 backdrop-blur-xl rounded-2xl border border-black/5">
-                            <Layers className="w-6 h-6 text-black animate-pulse" />
-                         </div>
-                      </motion.div>
-
-                      <div className="flex flex-col justify-center space-y-12">
-                         <div className="space-y-6 font-mono">
-                            <span className="text-[10px] uppercase tracking-[1em] font-black opacity-30 mb-8 block underline decoration-black decoration-4 underline-offset-8 italic">Archive_Sync // {ARTICLES[activeItem].cat}</span>
-                            <h1 className="text-7xl md:text-[10vw] font-black italic uppercase tracking-tighter leading-none text-black font-serif">{ARTICLES[activeItem].title}</h1>
-                            <div className="text-4xl font-black italic tracking-tighter opacity-10 italic">Allocation: SYNCHRONIZED</div>
-                         </div>
-
-                         <p className="text-3xl font-light italic leading-relaxed uppercase tracking-tight opacity-40 text-black leading-relaxed font-serif">
-                            Structural allocation for {ARTICLES[activeItem].title}. System integrity at 100%. Thermal load nominal at 32C. Every coordinate synchronized.
-                         </p>
-
-                         <div className="grid grid-cols-2 gap-12 py-12 border-y border-black/10 font-mono">
-                            {[
-                              { icon: <Globe className="w-5 h-5" />, l: "Region", v: "Global_East" },
-                              { icon: <Zap className="w-5 h-5" />, l: "Logic", v: "Phase_Shift" },
-                              { icon: <Shield className="w-5 h-5" />, l: "Security", v: "High_Impact" },
-                              { icon: <Activity className="w-5 h-5" />, l: "Sync", v: ARTICLES[activeItem].value },
-                            ].map((s, i) => (
-                              <div key={i} className="flex gap-6 items-center text-black">
-                                 <div className="opacity-20">{s.icon}</div>
-                                 <div className="text-left">
-                                    <div className="text-[10px] font-black opacity-30 uppercase tracking-widest mb-1 italic">{s.l}</div>
-                                    <div className="text-sm font-black uppercase italic tracking-tighter">{s.v}</div>
-                                 </div>
-                              </div>
-                            ))}
-                         </div>
-
-                         <div className="flex gap-6 pt-8 font-mono">
-                            <button onClick={() => setView("struct")} className="flex-grow py-8 bg-black text-white font-black uppercase text-xs tracking-[1em] hover:bg-rose-600 transition-all shadow-2xl">
-                               Return_to_Struct
-                            </button>
-                            <button className="px-12 py-8 border border-black/20 text-[10px] font-black uppercase tracking-[0.5em] hover:scale-105 transition-all text-black">
-                               PDF_Spec
-                            </button>
-                         </div>
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
-        {/* THE ENTROPY VIEW (ABOUT) */}
-        {view === "entropy" && (
-          <motion.div key="entropy" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen flex flex-col justify-center">
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center text-black">
-                <div className="space-y-16">
-                   <span className="text-[10px] uppercase font-black tracking-[1.5em] opacity-30 block underline decoration-black decoration-2 underline-offset-8 italic font-mono">The_Inquiry_Protocol</span>
-                   <h2 className="text-7xl md:text-[10vw] font-black italic tracking-tighter leading-none uppercase font-serif">The <br/> Truth.</h2>
-                   <p className="text-3xl md:text-4xl font-light italic opacity-60 leading-relaxed uppercase tracking-tight text-black/60 font-serif">
-                      We treat architecture as code. Every structure is a function of its environmental variables and tectonic intent. 100% precision. Zero noise.
-                   </p>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t border-black/10 font-mono">
-                      {[
-                        { icon: <BookOpen className="w-6 h-6" />, t: "E2E Rendering", v: "Molecular Accuracy" },
-                        { icon: <Plus className="w-6 h-6" />, t: "Visual Sync", v: "Deep_Material_ID" },
-                      ].map((item, i) => (
-                        <div key={i} className="flex gap-8 group">
-                           <div className="w-16 h-16 rounded-full border border-black flex items-center justify-center text-black group-hover:bg-black group-hover:text-white transition-all shadow-xl">
-                              {item.icon}
-                           </div>
-                           <div className="text-left">
-                              <h4 className="text-2xl font-black uppercase italic tracking-tighter leading-none mb-2">{item.t}</h4>
-                              <p className="text-[10px] opacity-30 uppercase tracking-[0.3em] font-black leading-relaxed text-black/40">{item.v}</p>
-                           </div>
+              </div>
+            </Reveal>
+            <Reveal delay={0.2}>
+              <div className="bg-gradient-to-br from-[#fafaf8] to-white p-8 rounded-2xl border-2 border-[#d97706]/20">
+                {cities.map((city) => (
+                  activeCity === city.name && (
+                    <motion.div key={city.name} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                      <h3 className="text-2xl font-bold mb-4">{city.name}</h3>
+                      <div className="grid md:grid-cols-3 gap-6 mb-6">
+                        <div>
+                          <p className="text-[#d97706] font-bold text-lg">{city.members}</p>
+                          <p className="text-gray-600">Active Members</p>
                         </div>
-                      ))}
-                   </div>
-                </div>
-                <div className="relative aspect-square bg-[#ddd] rounded-[4rem] p-12 overflow-hidden border-8 border-white group shadow-2xl">
-                   <Image src="https://images.unsplash.com/photo-1541829070764-84a7d30dee62?q=80&w=1000&auto=format&fit=crop" alt="The Protocol" fill className="object-cover opacity-20 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-[2s]" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-80" />
-                   <div className="absolute inset-x-0 bottom-12 flex justify-center font-mono">
-                      <div className="px-12 py-6 bg-black text-white text-[10px] font-black uppercase tracking-widest italic animate-bounce cursor-pointer hover:bg-rose-600 transition-all">
-                         Establish_Handshake
+                        <div>
+                          <p className="text-[#d97706] font-bold text-lg">{city.events}</p>
+                          <p className="text-gray-600">Events/Month</p>
+                        </div>
+                        <div>
+                          <p className="text-[#d97706] font-bold">98%</p>
+                          <p className="text-gray-600">Satisfaction</p>
+                        </div>
                       </div>
-                   </div>
+                      <div className="space-y-2">
+                        {city.amenities.map((amenity, i) => (
+                          <div key={i} className="flex gap-2 items-center text-sm">
+                            <Check className="w-4 h-4 text-[#d97706]" />
+                            {amenity}
+                          </div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )
+                ))}
+              </div>
+            </Reveal>
+          </div>
+        </section>
+
+        {/* Stats */}
+        <section className="py-20 px-6">
+          <div className="max-w-6xl mx-auto">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+              <Reveal delay={0}>
+                <Counter target={1200} label="Members" />
+              </Reveal>
+              <Reveal delay={0.1}>
+                <div className="text-center">
+                  <div className="text-4xl md:text-5xl font-bold text-[#d97706]">3</div>
+                  <div className="text-sm text-gray-600 mt-2">Locations</div>
                 </div>
-             </div>
+              </Reveal>
+              <Reveal delay={0.2}>
+                <div className="text-center">
+                  <div className="text-4xl md:text-5xl font-bold text-[#d97706]">50</div>
+                  <div className="text-sm text-gray-600 mt-2">Events/Month</div>
+                </div>
+              </Reveal>
+              <Reveal delay={0.3}>
+                <div className="text-center">
+                  <div className="text-4xl md:text-5xl font-bold text-[#d97706]">98%</div>
+                  <div className="text-sm text-gray-600 mt-2">Satisfaction</div>
+                </div>
+              </Reveal>
+            </div>
+          </div>
+        </section>
+
+        {/* Community Testimonials */}
+        <section id="community" className="py-20 px-6 bg-white">
+          <div className="max-w-4xl mx-auto">
+            <Reveal>
+              <h2 className="text-4xl font-bold mb-12 text-center">MEMBER STORIES</h2>
+            </Reveal>
+            <div className="grid md:grid-cols-2 gap-6">
+              {TESTIMONIALS.map((testimonial, i) => (
+                <Reveal key={i} delay={i * 0.1}>
+                  <div className="p-6 bg-gradient-to-br from-orange-50 to-white border-2 border-[#d97706]/20 rounded-xl">
+                    <p className="text-gray-700 mb-4">"{testimonial.text}"</p>
+                    <p className="font-bold text-[#1e293b]">{testimonial.author}</p>
+                    <p className="text-sm text-[#d97706]">{testimonial.company}</p>
+                  </div>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Virtual Tour */}
+        <section className="py-20 px-6">
+          <div className="max-w-2xl mx-auto text-center">
+            <Reveal>
+              <h2 className="text-3xl font-bold mb-6">Experience Our Spaces</h2>
+            </Reveal>
+            <Reveal delay={0.1}>
+              <p className="text-gray-700 mb-8">Take a 360° virtual tour of our facilities and see where you'll work.</p>
+            </Reveal>
+            <Reveal delay={0.2}>
+              <button
+                onClick={() => setShowTourModal(true)}
+                className="px-8 py-3 bg-[#d97706] text-white rounded-lg font-bold hover:shadow-lg transition-shadow"
+              >
+                START VIRTUAL TOUR
+              </button>
+            </Reveal>
+          </div>
+        </section>
+
+        {/* FAQ */}
+        <section id="faq" className="py-20 px-6 bg-gradient-to-b from-white to-[#fafaf8]">
+          <div className="max-w-2xl mx-auto">
+            <Reveal>
+              <h2 className="text-4xl font-bold mb-12 text-center">QUESTIONS?</h2>
+            </Reveal>
+            <Reveal delay={0.1}>
+              <FAQAccordion />
+            </Reveal>
+          </div>
+        </section>
+
+        {/* Final CTA */}
+        <section className="py-20 px-6 text-center">
+          <Reveal>
+            <h2 className="text-4xl font-bold mb-6">Ready to Join the Hive?</h2>
+          </Reveal>
+          <Reveal delay={0.1}>
+            <MagneticBtn>BOOK A TOUR TODAY</MagneticBtn>
+          </Reveal>
+        </section>
+      </main>
+
+      {/* Booking Modal */}
+      <AnimatePresence>
+        {showBookingModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-2xl p-8 max-w-md"
+            >
+              <h3 className="text-2xl font-bold mb-4">Book Your Tour</h3>
+              <p className="text-gray-600 mb-6">Select a date and time that works best for you.</p>
+              <input type="date" className="w-full p-3 border-2 border-[#d97706]/20 rounded-lg mb-4" />
+              <input type="time" className="w-full p-3 border-2 border-[#d97706]/20 rounded-lg mb-6" />
+              <button
+                onClick={() => setShowBookingModal(false)}
+                className="w-full py-3 bg-[#d97706] text-white rounded-lg font-bold"
+              >
+                CONFIRM BOOKING
+              </button>
+            </motion.div>
           </motion.div>
         )}
-
       </AnimatePresence>
 
-      {/* Global Status HUD */}
-      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em] italic text-black font-mono">
-         <div className="flex gap-12 text-black">
-            <span>Glitch_Ed_Alpha</span>
-            <span>Uptime: 99.9%</span>
-         </div>
-         <div className="flex gap-4 items-end text-black">
-            <div className="text-right leading-tight italic">
-               Inventory_Control <br /> v4.0.21
-            </div>
-            <div className="flex gap-[4px] h-4">
-               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-full bg-black opacity-${i*20}`}></div>)}
-            </div>
-         </div>
-      </footer>
+      {/* Tour Modal */}
+      <AnimatePresence>
+        {showTourModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-2xl p-8 max-w-md"
+            >
+              <h3 className="text-2xl font-bold mb-4">Virtual Tour Starting...</h3>
+              <p className="text-gray-600 mb-6">Exploring Studio Hive San Francisco</p>
+              <div className="w-full aspect-video bg-gray-300 rounded-lg mb-6 flex items-center justify-center">
+                <span className="text-gray-600">360° Video Player</span>
+              </div>
+              <button
+                onClick={() => setShowTourModal(false)}
+                className="w-full py-3 bg-[#d97706] text-white rounded-lg font-bold"
+              >
+                CLOSE
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <style>{`
-        ::-webkit-scrollbar { width: 0px; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #fafaf8; }
+        ::-webkit-scrollbar-thumb { background: #d97706; border-radius: 4px; }
       `}</style>
     </div>
   );

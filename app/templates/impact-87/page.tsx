@@ -1,234 +1,410 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { motion, AnimatePresence, useScroll, useTransform, useMotionValue, useSpring, useInView } from "framer-motion";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { X, Menu, Search, ShoppingBag, Zap, Activity, Globe, Shield, Command, Plus, ArrowUpRight, Maximize2, MoveRight, Layers, Box, Compass, Sparkles, ShoppingCart } from "lucide-react";
-import "../premium.css";
+import Link from "next/link";
+import { X, Menu, Shield, Lock, Eye, AlertTriangle, CheckCircle2, TrendingUp, Zap, Search } from "lucide-react";
 
-const PRODUCTS = [
-  { id: 1, title: "IGNITE_PRO_B", cat: "Performance", price: "$199", value: "Stock_High", img: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=1000&auto=format&fit=crop" },
-  { id: 2, title: "AETHER_DASH", cat: "Athletic", price: "$249", value: "Verified", img: "https://images.unsplash.com/photo-1551107696-a4b0c5a0d9a2?q=80&w=1000&auto=format&fit=crop" },
-  { id: 3, title: "VOID_RUNNER", cat: "Urban", price: "$179", value: "Limited", img: "https://images.unsplash.com/photo-1491553895911-0055eca6402d?q=80&w=1000&auto=format&fit=crop" },
+const SERVICES = [
+  { icon: Shield, title: "Penetration Testing", risk: 92 },
+  { icon: Lock, title: "SOC Services", risk: 87 },
+  { icon: Eye, title: "Incident Response", risk: 95 },
+  { icon: AlertTriangle, title: "Compliance Audit", risk: 78 },
 ];
 
-export default function KineticEcommerceSPA() {
-  const [view, setView] = useState<"showcase" | "order" | "protocol">("showcase");
-  const [activeItem, setActiveItem] = useState(0);
+const CASE_STUDIES = [
+  { title: "Financial Data Breach Prevention", category: "Finance", year: 2024 },
+  { title: "Healthcare Infrastructure Hardening", category: "Healthcare", year: 2024 },
+  { title: "Government Cybersecurity Audit", category: "Gov", year: 2023 },
+  { title: "Retail POS System Protection", category: "Retail", year: 2024 },
+];
+
+const FAQS = [
+  { q: "What is penetration testing?", a: "Simulated attacks to identify security vulnerabilities before real threats exploit them." },
+  { q: "How often should we audit?", a: "We recommend quarterly audits for enterprise, monthly for high-risk sectors." },
+  { q: "Is SOC 2 compliance required?", a: "Not always, but essential for enterprise clients handling sensitive data." },
+];
+
+function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-60px" });
 
   return (
-    <div className="premium-theme bg-[#050505] text-[#f43f5e] min-h-screen selection:bg-[#f43f5e] selection:text-white font-mono overflow-x-hidden">
-      
-      {/* Background Cinematic Layer */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-[#050505] z-10" />
-        <motion.div 
-           animate={{ scale: [1, 1.05, 1], rotate: [0, 1, 0] }}
-           transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
-           className="w-full h-full opacity-30 grayscale contrast-150 brightness-50"
-        >
-           <Image src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=2000&auto=format&fit=crop" alt="Showcase" fill className="object-cover" priority />
-        </motion.div>
-        {/* HUD Grid Overlay */}
-        <div className="absolute inset-0 z-20 pointer-events-none opacity-[0.05]" style={{ backgroundImage: 'linear-gradient(#f43f5e 1px, transparent 1px), linear-gradient(90deg, #f43f5e 1px, transparent 1px)', backgroundSize: '80px 80px' }} />
-      </div>
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 20 }}
+      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+      transition={{ delay, duration: 0.6 }}
+    >
+      {children}
+    </motion.div>
+  );
+}
 
-      {/* Editorial HUD Nav */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-center bg-black/40 backdrop-blur-xl border-b border-[#f43f5e]/10">
-        <div className="flex gap-12 items-center">
-           <button onClick={() => setView("showcase")} className="text-xl font-black italic tracking-tighter hover:text-white transition-colors flex items-center gap-4">
-              <ShoppingCart className="w-6 h-6 animate-pulse" /> PURE_ECOM&trade;
-           </button>
-           <div className="hidden lg:flex gap-8 text-[10px] font-black uppercase tracking-widest opacity-20 italic">
-              Status: Inventory_Online
-              <span className="text-white">Ref: 0x87_E</span>
-           </div>
+function Counter({ target, label }: { target: number; label: string }) {
+  const [count, setCount] = useState(0);
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-60px" });
+
+  useEffect(() => {
+    if (!isInView) return;
+    let current = 0;
+    const interval = setInterval(() => {
+      current += Math.ceil(target / 50);
+      if (current > target) current = target;
+      setCount(current);
+      if (current === target) clearInterval(interval);
+    }, 30);
+    return () => clearInterval(interval);
+  }, [isInView, target]);
+
+  return (
+    <div ref={ref} className="text-center">
+      <div className="text-4xl md:text-5xl font-bold text-[#00ffcc] font-mono">{count.toLocaleString()}+</div>
+      <div className="text-sm text-gray-400 mt-2">{label}</div>
+    </div>
+  );
+}
+
+function MagneticBtn({ children }: { children: React.ReactNode }) {
+  const ref = useRef(null);
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const springX = useSpring(x, { damping: 20, stiffness: 300 });
+  const springY = useSpring(y, { damping: 20, stiffness: 300 });
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!ref.current) return;
+    const { left, top, width, height } = (ref.current as HTMLDivElement).getBoundingClientRect();
+    const centerX = left + width / 2;
+    const centerY = top + height / 2;
+    x.set((e.clientX - centerX) * 0.2);
+    y.set((e.clientY - centerY) * 0.2);
+  };
+
+  const handleMouseLeave = () => {
+    x.set(0);
+    y.set(0);
+  };
+
+  return (
+    <motion.button
+      ref={ref}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={{ x: springX, y: springY }}
+      className="px-8 py-3 bg-[#00ffcc] text-[#060810] font-bold rounded-lg hover:shadow-lg hover:shadow-[#00ffcc]/50 transition-shadow"
+    >
+      {children}
+    </motion.button>
+  );
+}
+
+function LoadBar({ value }: { value: number }) {
+  const width = useTransform(() => `${value}%`);
+  return (
+    <motion.div className="h-1 bg-[#00ffcc] rounded-full" style={{ width: width as any }} />
+  );
+}
+
+function InfiniteMarquee({ items }: { items: string[] }) {
+  return (
+    <div className="relative overflow-hidden py-8 bg-[#0a1628]">
+      <motion.div
+        className="flex gap-12"
+        animate={{ x: [0, -1000] }}
+        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+      >
+        {[...items, ...items].map((item, i) => (
+          <span key={i} className="text-gray-600 whitespace-nowrap font-mono text-sm">
+            {item}
+          </span>
+        ))}
+      </motion.div>
+    </div>
+  );
+}
+
+function FAQAccordion() {
+  const [openIndex, setOpenIndex] = useState(0);
+
+  return (
+    <div className="space-y-4">
+      {FAQS.map((faq, i) => (
+        <motion.div key={i} className="border border-[#00ffcc]/20 rounded-lg overflow-hidden">
+          <button
+            onClick={() => setOpenIndex(openIndex === i ? -1 : i)}
+            className="w-full p-4 flex justify-between items-center bg-[#0a1628] hover:bg-[#0f1f32] transition-colors"
+          >
+            <span className="text-left font-mono text-sm">{faq.q}</span>
+            <motion.div animate={{ rotate: openIndex === i ? 180 : 0 }}>
+              <AlertTriangle className="w-4 h-4 text-[#00ffcc]" />
+            </motion.div>
+          </button>
+          <AnimatePresence>
+            {openIndex === i && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="bg-[#060810] border-t border-[#00ffcc]/10 p-4"
+              >
+                <p className="text-sm text-gray-400">{faq.a}</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      ))}
+    </div>
+  );
+}
+
+export default function CipherShieldPage() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [threatCounter, setThreatCounter] = useState(0);
+  const [filterTab, setFilterTab] = useState("Finance");
+  const [showLightbox, setShowLightbox] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+  const containerRef = useRef(null);
+  const { scrollYProgress } = useScroll({ target: containerRef });
+  const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setThreatCounter((prev) => (prev + Math.floor(Math.random() * 50) + 10) % 10000);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const filteredCases = CASE_STUDIES.filter((cs) => !filterTab || cs.category === filterTab);
+
+  return (
+    <div
+      ref={containerRef}
+      className="min-h-screen bg-[#060810] text-white font-mono overflow-x-hidden"
+      style={{ backgroundImage: "linear-gradient(135deg, #060810 0%, #0a1628 100%)" }}
+    >
+      {/* Fixed Background */}
+      <motion.div
+        className="fixed inset-0 pointer-events-none z-0 opacity-30"
+        style={{ y: backgroundY }}
+      >
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_#00ffcc10_0%,_transparent_70%)]" />
+      </motion.div>
+
+      {/* Grid Overlay */}
+      <div
+        className="fixed inset-0 pointer-events-none z-0 opacity-[0.03]"
+        style={{ backgroundImage: "linear-gradient(#00ffcc 1px, transparent 1px), linear-gradient(90deg, #00ffcc 1px, transparent 1px)", backgroundSize: "60px 60px" }}
+      />
+
+      {/* Scanline Effect */}
+      <div className="fixed inset-0 pointer-events-none z-0 opacity-[0.02]" style={{ backgroundImage: "repeating-linear-gradient(0deg, #00ffcc 0, #00ffcc 1px, transparent 1px, transparent 2px)" }} />
+
+      {/* Nav */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#060810]/80 backdrop-blur-xl border-b border-[#00ffcc]/10 p-6">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+            <Shield className="w-6 h-6 text-[#00ffcc]" />
+            <span className="font-bold text-lg">CIPHER_SHIELD</span>
+          </Link>
+          <div className="hidden md:flex gap-8 text-sm">
+            <a href="#services" className="hover:text-[#00ffcc] transition-colors">Services</a>
+            <a href="#clients" className="hover:text-[#00ffcc] transition-colors">Clients</a>
+            <a href="#cases" className="hover:text-[#00ffcc] transition-colors">Cases</a>
+            <a href="#faq" className="hover:text-[#00ffcc] transition-colors">FAQ</a>
+          </div>
+          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden">
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
         </div>
-        <div className="hidden md:flex gap-12 text-[10px] font-black uppercase tracking-[0.4em] opacity-30">
-           <button onClick={() => setView("showcase")} className={`hover:opacity-100 transition-opacity ${view === 'showcase' ? 'text-white opacity-100 underline decoration-white underline-offset-8 italic' : ''}`}>THE_SHOWCASE</button>
-           <button onClick={() => setView("protocol")} className={`hover:opacity-100 transition-opacity ${view === 'protocol' ? 'text-white opacity-100 underline decoration-white underline-offset-8 italic' : ''}`}>THE_PROTOCOL</button>
-        </div>
-        <div className="flex items-center gap-8">
-           <div className="relative cursor-pointer">
-              <ShoppingBag className="w-5 h-5 opacity-40 hover:opacity-100" />
-              <div className="absolute -top-2 -right-2 w-4 h-4 bg-rose-600 rounded-full flex items-center justify-center text-[8px] font-black text-white">3</div>
-           </div>
-           <Menu className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-        </div>
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="mt-4 flex flex-col gap-4 text-sm">
+              <a href="#services">Services</a>
+              <a href="#clients">Clients</a>
+              <a href="#cases">Cases</a>
+              <a href="#faq">FAQ</a>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </nav>
 
-      <AnimatePresence mode="wait">
-        
-        {/* THE SHOWCASE VIEW (LANDING) */}
-        {view === "showcase" && (
-          <motion.div key="showcase" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-48 pb-32 px-12 max-w-[1800px] mx-auto min-h-screen flex flex-col justify-center relative z-10">
-             <header className="mb-24 border-b-2 border-[#f43f5e]/20 pb-12 flex flex-col md:flex-row justify-between items-end gap-12">
-                <div>
-                   <span className="text-[10px] uppercase font-black tracking-[1em] text-[#f43f5e] opacity-40 mb-4 block underline decoration-[#f43f5e]/10 underline-offset-8 italic">Inventory_Sync // Series_087</span>
-                   <h1 className="text-7xl md:text-[12vw] font-black italic uppercase tracking-tighter leading-[0.75] text-white">THE. <br/> <span className="text-[#f43f5e]">KINETIC.</span></h1>
-                </div>
-                <div className="text-right flex flex-col items-end">
-                   <div className="text-3xl font-black mb-4 tracking-tighter uppercase opacity-10 italic">Secure_Sync</div>
-                   <div className="w-64 h-1 bg-white/5 rounded-full overflow-hidden">
-                      <motion.div animate={{ width: ['20%', '90%', '40%', '75%'] }} transition={{ duration: 4, repeat: Infinity }} className="h-full bg-[#f43f5e]" />
-                   </div>
-                </div>
-             </header>
+      <main className="relative z-10 pt-24">
+        {/* Hero */}
+        <section className="min-h-screen flex items-center justify-center px-6 py-20 relative overflow-hidden">
+          <div className="absolute inset-0 pointer-events-none">
+            <motion.div animate={{ opacity: [0.3, 0.5, 0.3] }} transition={{ duration: 4, repeat: Infinity }} className="absolute top-20 right-10 w-96 h-96 rounded-full blur-3xl" style={{ background: "radial-gradient(circle, #00ffcc15, transparent)" }} />
+          </div>
+          <div className="max-w-5xl mx-auto text-center relative z-10">
+            <Reveal delay={0}>
+              <div className="text-[#00ffcc] text-sm font-bold mb-4 tracking-widest">// CYBER DEFENSE PLATFORM</div>
+            </Reveal>
+            <Reveal delay={0.1}>
+              <h1 className="text-6xl md:text-7xl font-bold mb-6 leading-tight">
+                THREAT DETECTION <br /> IN <span className="text-[#00ffcc]">REAL-TIME</span>
+              </h1>
+            </Reveal>
+            <Reveal delay={0.2}>
+              <p className="text-gray-400 text-lg mb-8 max-w-2xl mx-auto">Enterprise-grade security for Fortune 500. Zero breaches. 99.9% detection rate.</p>
+            </Reveal>
+            <Reveal delay={0.3}>
+              <MagneticBtn>
+                GET SECURITY AUDIT
+              </MagneticBtn>
+            </Reveal>
 
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {PRODUCTS.map((p, i) => (
-                  <motion.div 
-                    key={p.id} initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                    className="group relative h-[60vh] rounded-[3rem] overflow-hidden border border-[#f43f5e]/10 hover:border-[#f43f5e]/40 transition-all cursor-pointer shadow-2xl"
-                    onClick={() => { setActiveItem(i); setView("order"); }}
+            {/* Live Threat Counter */}
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5, duration: 1 }} className="mt-16 p-8 bg-[#0a1628] border border-[#00ffcc]/20 rounded-lg inline-block">
+              <div className="text-3xl font-bold text-[#00ffcc] font-mono">{threatCounter} THREATS/DAY</div>
+              <div className="text-xs text-gray-500 mt-2">Live Detection</div>
+            </motion.div>
+          </div>
+        </section>
+
+        {/* Services Grid */}
+        <section id="services" className="py-20 px-6 bg-[#0a1628]">
+          <div className="max-w-6xl mx-auto">
+            <Reveal>
+              <h2 className="text-4xl font-bold mb-12 text-center">CORE SERVICES</h2>
+            </Reveal>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {SERVICES.map((svc, i) => {
+                const Icon = svc.icon;
+                return (
+                  <Reveal key={i} delay={i * 0.1}>
+                    <motion.div whileHover={{ scale: 1.05 }} className="p-6 bg-[#060810] border border-[#00ffcc]/20 rounded-lg group hover:border-[#00ffcc]/40 transition-colors cursor-pointer">
+                      <Icon className="w-8 h-8 text-[#00ffcc] mb-4 group-hover:animate-pulse" />
+                      <h3 className="font-bold mb-4">{svc.title}</h3>
+                      <div className="space-y-2">
+                        <div className="text-xs text-gray-400">Risk Score</div>
+                        <LoadBar value={svc.risk} />
+                        <div className="text-xs text-[#00ffcc]">{svc.risk}%</div>
+                      </div>
+                    </motion.div>
+                  </Reveal>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* Client Logos Marquee */}
+        <section id="clients" className="py-12">
+          <Reveal>
+            <InfiniteMarquee items={["FORTUNE 500", "TECH GIANTS", "FINANCIAL INSTITUTIONS", "GOVERNMENT AGENCIES", "HEALTHCARE NETWORKS"]} />
+          </Reveal>
+        </section>
+
+        {/* Stats */}
+        <section className="py-20 px-6">
+          <div className="max-w-6xl mx-auto">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+              <Reveal delay={0}>
+                <Counter target={500} label="Clients Secured" />
+              </Reveal>
+              <Reveal delay={0.1}>
+                <Counter target={10000} label="Threats Blocked/Day" />
+              </Reveal>
+              <Reveal delay={0.2}>
+                <Counter target={99} label="% Detection Rate" />
+              </Reveal>
+              <Reveal delay={0.3}>
+                <div className="text-center">
+                  <div className="text-4xl md:text-5xl font-bold text-[#00ffcc] font-mono">0</div>
+                  <div className="text-sm text-gray-400 mt-2">Confirmed Breaches</div>
+                </div>
+              </Reveal>
+            </div>
+          </div>
+        </section>
+
+        {/* Case Studies */}
+        <section id="cases" className="py-20 px-6 bg-[#0a1628]">
+          <div className="max-w-6xl mx-auto">
+            <Reveal>
+              <h2 className="text-4xl font-bold mb-8 text-center">CASE STUDIES</h2>
+            </Reveal>
+            <Reveal delay={0.1}>
+              <div className="flex gap-3 mb-8 flex-wrap justify-center">
+                {["Finance", "Healthcare", "Gov", "Retail"].map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setFilterTab(cat)}
+                    className={`px-4 py-2 rounded border transition-all ${
+                      filterTab === cat
+                        ? "bg-[#00ffcc] text-[#060810]"
+                        : "border-[#00ffcc]/20 hover:border-[#00ffcc]/40"
+                    }`}
                   >
-                     <Image src={p.img} alt={p.title} fill className="object-cover grayscale opacity-20 group-hover:opacity-40 transition-all duration-[2s] group-hover:scale-110" />
-                     <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                     
-                     <div className="absolute inset-10 flex flex-col justify-between">
-                        <div className="flex justify-between items-start">
-                           <div className="p-4 bg-white/5 border border-white/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity">
-                              <ShoppingCart className="w-5 h-5 text-[#f43f5e]" />
-                           </div>
-                           <div className="text-[10px] font-black uppercase tracking-widest opacity-20 group-hover:opacity-100 transition-opacity text-[#f43f5e]">{p.price}</div>
-                        </div>
-                        <div>
-                           <span className="text-[10px] uppercase font-black tracking-widest text-[#f43f5e]/40 mb-2 block italic">{p.cat}</span>
-                           <h3 className="text-5xl font-black italic uppercase tracking-tighter text-white group-hover:text-[#f43f5e] transition-colors">{p.title}</h3>
-                        </div>
-                     </div>
-                  </motion.div>
+                    {cat}
+                  </button>
                 ))}
-             </div>
-          </motion.div>
-        )}
-
-        {/* THE ORDER VIEW (DETAIL) */}
-        {view === "order" && (
-          <motion.div key="order" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen">
-             <button onClick={() => setView("showcase")} className="fixed top-12 left-12 z-[60] bg-white text-black p-5 rounded-full hover:scale-110 transition-transform shadow-2xl">
-                <X className="w-6 h-6" />
-             </button>
-
-             <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen pt-24 lg:pt-0">
-                <div className="lg:col-span-12 relative flex items-center justify-center p-8 md:p-32 overflow-hidden h-screen bg-[#050505]">
-                   <div className="absolute inset-0 opacity-10">
-                      <Image src={PRODUCTS[activeItem].img} alt="Background" fill className="object-cover grayscale" />
-                   </div>
-                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#050505_100%)]" />
-                   
-                   <div className="max-w-[1500px] w-full grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10">
-                      <motion.div initial={{ scale: 1.1, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1 }} className="relative aspect-square w-full rounded-[4rem] overflow-hidden border border-[#f43f5e]/10 group bg-white/5 shadow-2xl">
-                         <Image src={PRODUCTS[activeItem].img} alt="Spec" fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[3s] opacity-80" priority />
-                         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                         <div className="absolute top-12 left-12 p-4 bg-black/60 backdrop-blur-3xl rounded-2xl border border-white/10">
-                            <Layers className="w-6 h-6 text-white animate-pulse" />
-                         </div>
-                      </motion.div>
-
-                      <div className="flex flex-col justify-center space-y-12">
-                         <div className="space-y-6">
-                            <span className="text-[10px] uppercase tracking-[1em] font-black text-[#f43f5e]/40 mb-8 block underline decoration-white decoration-4 underline-offset-8 italic">Archive_Sync // {PRODUCTS[activeItem].cat}</span>
-                            <h1 className="text-7xl md:text-[8vw] font-black italic uppercase tracking-tighter leading-none text-white">{PRODUCTS[activeItem].title}</h1>
-                            <div className="text-4xl font-black italic tracking-tighter opacity-10 italic text-[#f43f5e]">Price: {PRODUCTS[activeItem].price}</div>
-                         </div>
-
-                         <p className="text-3xl font-light italic leading-relaxed uppercase tracking-tight opacity-40 text-white leading-relaxed">
-                            Structural allocation for {PRODUCTS[activeItem].title}. Performance integrity at 100%. Traction load nominal at critical stress points.
-                         </p>
-
-                         <div className="grid grid-cols-2 gap-12 py-12 border-y border-[#f43f5e]/10 text-[#f43f5e]">
-                            {[
-                              { icon: <Globe className="w-5 h-5" />, l: "Region", v: "Global_East" },
-                              { icon: <Zap className="w-5 h-5" />, l: "Logic", v: "Phase_Shift" },
-                              { icon: <Shield className="w-5 h-5" />, l: "Security", v: "High_Impact" },
-                              { icon: <Activity className="w-5 h-5" />, l: "Sync", v: PRODUCTS[activeItem].value },
-                            ].map((s, i) => (
-                              <div key={i} className="flex gap-6 items-center">
-                                 <div className="opacity-20">{s.icon}</div>
-                                 <div className="text-left">
-                                    <div className="text-[10px] font-black opacity-30 uppercase tracking-widest mb-1 italic">{s.l}</div>
-                                    <div className="text-sm font-black uppercase italic tracking-tighter text-white">{s.v}</div>
-                                 </div>
-                              </div>
-                            ))}
-                         </div>
-
-                         <div className="flex gap-6 pt-8">
-                            <button onClick={() => setView("showcase")} className="flex-grow py-8 bg-white text-black font-black uppercase text-xs tracking-[1em] hover:bg-white/80 transition-all shadow-2xl">
-                               Initialize_Order
-                            </button>
-                            <button className="px-12 py-8 border border-[#f43f5e]/20 text-[10px] font-black uppercase tracking-[0.5em] hover:scale-105 transition-all text-[#f43f5e]">
-                               PDF_Spec
-                            </button>
-                         </div>
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
-        {/* THE PROTOCOL VIEW (ABOUT) */}
-        {view === "protocol" && (
-          <motion.div key="protocol" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen flex flex-col justify-center">
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center text-white">
-                <div className="space-y-16">
-                   <span className="text-[10px] uppercase font-black tracking-[1.5em] text-[#f43f5e] opacity-60 block underline decoration-[#f43f5e]/20 underline-offset-8 italic">The_Inquiry_Protocol</span>
-                   <h2 className="text-7xl md:text-[10vw] font-black italic tracking-tighter leading-none text-white uppercase">The <br/> Truth.</h2>
-                   <p className="text-3xl md:text-4xl font-light italic opacity-60 leading-relaxed uppercase tracking-tight text-[#f43f5e]/60">
-                      We treat commerce as code. Every transaction is a function of its mechanical variables and tectonic intent. 100% precision. Zero noise.
-                   </p>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t border-[#f43f5e]/20 text-[#f43f5e]">
-                      {[
-                        { icon: <Activity className="w-6 h-6" />, t: "Adaptive Flow", v: "Dynamic Load Sync" },
-                        { icon: <Plus className="w-6 h-6" />, t: "Structural Sync", v: "Deep_Material_ID" },
-                      ].map((item, i) => (
-                        <div key={i} className="flex gap-8 group">
-                           <div className="w-16 h-16 rounded-full border border-[#f43f5e] flex items-center justify-center text-[#f43f5e] group-hover:bg-[#f43f5e] group-hover:text-black transition-all shadow-xl">
-                              {item.icon}
-                           </div>
-                           <div className="text-left">
-                              <h4 className="text-2xl font-black uppercase italic tracking-tighter text-white leading-none mb-2">{item.t}</h4>
-                              <p className="text-[10px] opacity-30 uppercase tracking-[0.3em] font-black leading-relaxed text-[#f43f5e]/40">{item.v}</p>
-                           </div>
-                        </div>
-                      ))}
-                   </div>
-                </div>
-                <div className="relative aspect-square bg-[#1a1a1a] rounded-[4rem] p-12 overflow-hidden border border-[#f43f5e]/10 group shadow-2xl">
-                   <Image src="https://images.unsplash.com/photo-1541829070764-84a7d30dee62?q=80&w=1000&auto=format&fit=crop" alt="The Archive" fill className="object-cover opacity-20 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-[2s]" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                   <div className="absolute inset-x-0 bottom-12 flex justify-center">
-                      <div className="px-12 py-6 border border-[#f43f5e] text-[#f43f5e] text-[10px] font-black uppercase tracking-widest italic animate-bounce cursor-pointer hover:bg-[#f43f5e] hover:text-black transition-all">
-                         Establish_Handshake
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
-      </AnimatePresence>
-
-      {/* Global Status HUD */}
-      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em] italic text-[#f43f5e]">
-         <div className="flex gap-12 text-rose-600">
-            <span>Kinetic_Ecom_Alpha</span>
-            <span>Uptime: 99.9%</span>
-         </div>
-         <div className="flex gap-4 items-end text-rose-600">
-            <div className="text-right leading-tight italic">
-               Inventory_Control <br /> v4.0.21
+              </div>
+            </Reveal>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {filteredCases.map((cs, i) => (
+                <Reveal key={i} delay={i * 0.1}>
+                  <motion.div whileHover={{ y: -4 }} className="p-6 bg-[#060810] border border-[#00ffcc]/20 rounded-lg hover:border-[#00ffcc]/40 transition-colors cursor-pointer">
+                    <h3 className="font-bold mb-2">{cs.title}</h3>
+                    <p className="text-xs text-[#00ffcc]">{cs.category} • {cs.year}</p>
+                  </motion.div>
+                </Reveal>
+              ))}
             </div>
-            <div className="flex gap-[4px] h-4">
-               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-full bg-[#f43f5e] opacity-${i*20}`}></div>)}
+          </div>
+        </section>
+
+        {/* Certifications */}
+        <section className="py-20 px-6">
+          <div className="max-w-6xl mx-auto">
+            <Reveal>
+              <h2 className="text-4xl font-bold mb-12 text-center">CERTIFIED & COMPLIANT</h2>
+            </Reveal>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+              {["ISO 27001", "SOC 2 Type II", "CISA", "NIST", "GDPR", "HIPAA"].map((cert, i) => (
+                <Reveal key={i} delay={i * 0.08}>
+                  <div className="p-6 bg-[#0a1628] border border-[#00ffcc]/20 rounded-lg text-center">
+                    <CheckCircle2 className="w-8 h-8 text-[#00ffcc] mx-auto mb-2" />
+                    <p className="font-bold text-sm">{cert}</p>
+                  </div>
+                </Reveal>
+              ))}
             </div>
-         </div>
-      </footer>
+          </div>
+        </section>
+
+        {/* FAQ */}
+        <section id="faq" className="py-20 px-6 bg-[#0a1628]">
+          <div className="max-w-2xl mx-auto">
+            <Reveal>
+              <h2 className="text-4xl font-bold mb-12 text-center">FREQUENTLY ASKED</h2>
+            </Reveal>
+            <Reveal delay={0.1}>
+              <FAQAccordion />
+            </Reveal>
+          </div>
+        </section>
+
+        {/* CTA Footer */}
+        <section className="py-20 px-6 text-center">
+          <Reveal>
+            <h2 className="text-4xl font-bold mb-6">Ready to Secure Your Enterprise?</h2>
+          </Reveal>
+          <Reveal delay={0.1}>
+            <p className="text-gray-400 mb-8">Get a free threat assessment in 24 hours.</p>
+          </Reveal>
+          <Reveal delay={0.2}>
+            <MagneticBtn>SCHEDULE AUDIT NOW</MagneticBtn>
+          </Reveal>
+        </section>
+      </main>
 
       <style>{`
-        ::-webkit-scrollbar { width: 0px; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #060810; }
+        ::-webkit-scrollbar-thumb { background: #00ffcc; border-radius: 4px; }
       `}</style>
     </div>
   );

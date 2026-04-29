@@ -1,229 +1,468 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
-import Image from "next/image";
-import { X, Menu, Search, Globe, Zap, Activity, Shield, Command, Plus, ArrowUpRight, Cpu, Layers, Maximize2, MoveRight, Network } from "lucide-react";
-import "../premium.css";
+import { useEffect, useRef, useState } from "react";
+import { useInView } from "framer-motion";
 
-const NODES = [
-  { id: 1, title: "CORE_BONE", cat: "Infrastructure", region: "Global_East", load: "42%", img: "https://images.unsplash.com/photo-1558494949-ef010cbdcc51?q=80&w=1000&auto=format&fit=crop" },
-  { id: 2, title: "LINK_SYNC", cat: "Connectivity", region: "Orbital_04", load: "12%", img: "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1000&auto=format&fit=crop" },
-  { id: 3, title: "VOID_SHELL", cat: "Security", region: "Static_Void", load: "08%", img: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=1000&auto=format&fit=crop" },
-  { id: 4, title: "AETHER_HUB", cat: "Provisioning", region: "High_Mesa", load: "67%", img: "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?q=80&w=1000&auto=format&fit=crop" },
-];
+/* ====== REVEAL COMPONENT ====== */
+function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-60px" });
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 30 }}
+      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+      transition={{ duration: 0.6, delay }}
+    >
+      {children}
+    </motion.div>
+  );
+}
 
-export default function NodeNetworkSPA() {
-  const [view, setView] = useState<"unit" | "grid" | "link">("unit");
-  const [activeItem, setActiveItem] = useState(0);
+/* ====== COUNTER COMPONENT ====== */
+function Counter({ target }: { target: number }) {
+  const [count, setCount] = useState(0);
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-60px" });
+
+  useEffect(() => {
+    if (!isInView) return;
+    const increment = target / 100;
+    const interval = setInterval(() => {
+      setCount((c) => (c < target ? c + increment : target));
+    }, 20);
+    return () => clearInterval(interval);
+  }, [isInView, target]);
+
+  return <div ref={ref}>{Math.floor(count)}</div>;
+}
+
+/* ====== WAVE AUDIO VISUALIZATION ====== */
+function WaveBar() {
+  return (
+    <div className="flex items-end gap-1 h-12">
+      {[...Array(20)].map((_, i) => (
+        <motion.div
+          key={i}
+          className="flex-1 bg-[#7c5cbf] rounded-sm"
+          animate={{ height: ["20%", "80%", "40%"] }}
+          transition={{ duration: 0.8, delay: i * 0.05, repeat: Infinity }}
+        />
+      ))}
+    </div>
+  );
+}
+
+/* ====== FLOATING PARTICLE DOTS ====== */
+function FloatingParticles() {
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {[...Array(8)].map((_, i) => (
+        <motion.div
+          key={i}
+          className="absolute w-2 h-2 bg-[#7c5cbf] rounded-full"
+          initial={{
+            x: Math.random() * 400 - 200,
+            y: Math.random() * 400 - 200,
+            opacity: 0.3,
+          }}
+          animate={{
+            x: Math.random() * 600 - 300,
+            y: Math.random() * 600 - 300,
+            opacity: [0.3, 0.8, 0.3],
+          }}
+          transition={{ duration: 6 + i, repeat: Infinity }}
+        />
+      ))}
+    </div>
+  );
+}
+
+/* ====== INFINITE MARQUEE ====== */
+function InfiniteMarquee({ items }: { items: string[] }) {
+  return (
+    <div className="overflow-hidden bg-[#0f0d1a] border-y border-[#7c5cbf]/20 py-6">
+      <motion.div
+        className="flex gap-8 whitespace-nowrap"
+        animate={{ x: [0, -1000] }}
+        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+      >
+        {[...items, ...items].map((item, i) => (
+          <span key={i} className="text-[#7c5cbf] font-bold text-lg tracking-widest flex-shrink-0">
+            ✦ {item}
+          </span>
+        ))}
+      </motion.div>
+    </div>
+  );
+}
+
+/* ====== TESTIMONIALS CAROUSEL ====== */
+function TestimonialsCarousel({
+  testimonials,
+}: {
+  testimonials: Array<{ name: string; role: string; text: string }>;
+}) {
+  const [current, setCurrent] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrent((c) => (c + 1) % testimonials.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [testimonials.length]);
 
   return (
-    <div className="premium-theme bg-[#050505] text-[#38bdf8] min-h-screen selection:bg-[#38bdf8] selection:text-black font-mono overflow-x-hidden">
-      
-      {/* Background HUD Layers */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_#38bdf805_0%,_transparent_70%)] opacity-40" />
-        <div 
-          className="absolute inset-0 opacity-[0.05]"
-          style={{ backgroundImage: `linear-gradient(#ffffff05 1px, transparent 1px), linear-gradient(90deg, #ffffff05 1px, transparent 1px)`, backgroundSize: '40px 40px' }}
-        />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-screen" />
-      </div>
-
-      {/* Editorial HUD Nav */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-center bg-black/40 backdrop-blur-3xl border-b border-[#38bdf8]/10">
-        <div className="flex gap-12 items-center">
-           <button onClick={() => setView("unit")} className="text-xl font-black italic tracking-tighter hover:text-white transition-colors flex items-center gap-4">
-              <Network className="w-6 h-6 animate-pulse" /> NODE_UNIT&trade;
-           </button>
-           <div className="hidden lg:flex gap-8 text-[10px] font-black uppercase tracking-widest opacity-20 italic">
-              Status: Uplink_Verified
-              <span className="text-white">Ref: 0x75_N</span>
-           </div>
-        </div>
-        <div className="hidden md:flex gap-12 text-[10px] font-black uppercase tracking-[0.4em] opacity-30">
-           <button onClick={() => setView("unit")} className={`hover:opacity-100 transition-opacity ${view === 'unit' ? 'text-white opacity-100 underline decoration-white underline-offset-8 italic' : ''}`}>THE_UNIT</button>
-           <button onClick={() => setView("link")} className={`hover:opacity-100 transition-opacity ${view === 'link' ? 'text-white opacity-100 underline decoration-white underline-offset-8 italic' : ''}`}>THE_LINK</button>
-        </div>
-        <div className="flex items-center gap-8">
-           <Search className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-           <Menu className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-        </div>
-      </nav>
-
+    <div className="relative">
       <AnimatePresence mode="wait">
-        
-        {/* THE UNIT VIEW (LANDING) */}
-        {view === "unit" && (
-          <motion.div key="unit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-48 pb-32 px-12 max-w-[1800px] mx-auto min-h-screen flex flex-col justify-center">
-             <header className="mb-24 border-b-2 border-[#38bdf8]/20 pb-12 flex flex-col md:flex-row justify-between items-end gap-12">
-                <div>
-                   <span className="text-[10px] uppercase font-black tracking-[1em] text-[#38bdf8] opacity-40 mb-4 block underline decoration-[#38bdf8]/10 underline-offset-8 italic">Node_Deployment // Series_075</span>
-                   <h1 className="text-7xl md:text-[12vw] font-black italic uppercase tracking-tighter leading-[0.75] text-white">THE. <br/> <span className="text-[#38bdf8]">UNIT.</span></h1>
-                </div>
-                <div className="text-right flex flex-col items-end">
-                   <div className="text-3xl font-black mb-4 tracking-tighter uppercase opacity-10 italic">Secure_Sync</div>
-                   <div className="w-64 h-1 bg-white/5 rounded-full overflow-hidden">
-                      <motion.div animate={{ width: ['20%', '80%', '40%', '60%'] }} transition={{ duration: 4, repeat: Infinity }} className="h-full bg-[#38bdf8]" />
-                   </div>
-                </div>
-             </header>
-
-             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                {NODES.map((p, i) => (
-                  <motion.div 
-                    key={p.id} initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                    className="group relative h-[60vh] rounded-[3rem] overflow-hidden border border-[#38bdf8]/10 hover:border-[#38bdf8]/40 transition-all cursor-pointer shadow-2xl"
-                    onClick={() => { setActiveItem(i); setView("grid"); }}
-                  >
-                     <Image src={p.img} alt={p.title} fill className="object-cover grayscale opacity-20 group-hover:opacity-40 transition-all duration-[2s] group-hover:scale-110" />
-                     <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                     
-                     <div className="absolute inset-10 flex flex-col justify-between">
-                        <div className="flex justify-between items-start">
-                           <div className="p-4 bg-white/5 border border-white/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Plus className="w-5 h-5 text-[#38bdf8]" />
-                           </div>
-                           <div className="text-[10px] font-black uppercase tracking-widest opacity-20 group-hover:opacity-100 transition-opacity text-[#38bdf8]">REF_0x{p.id}</div>
-                        </div>
-                        <div>
-                           <span className="text-[10px] uppercase font-black tracking-widest text-[#38bdf8]/40 mb-2 block italic">{p.cat}</span>
-                           <h3 className="text-5xl font-black italic uppercase tracking-tighter text-white group-hover:text-[#38bdf8] transition-colors">{p.title}</h3>
-                        </div>
-                     </div>
-                  </motion.div>
-                ))}
-             </div>
-          </motion.div>
-        )}
-
-        {/* THE GRID VIEW (RESOURCE VIZ) */}
-        {view === "grid" && (
-          <motion.div key="grid" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen">
-             <button onClick={() => setView("unit")} className="fixed top-12 left-12 z-[60] bg-white text-black p-5 rounded-full hover:scale-110 transition-transform shadow-2xl">
-                <X className="w-6 h-6" />
-             </button>
-
-             <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen pt-24 lg:pt-0">
-                <div className="lg:col-span-12 relative flex items-center justify-center p-8 md:p-32 overflow-hidden h-screen bg-[#050505]">
-                   <div className="absolute inset-0 opacity-10">
-                      <Image src={NODES[activeItem].img} alt="Background" fill className="object-cover grayscale" />
-                   </div>
-                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#050505_100%)]" />
-                   
-                   <div className="max-w-[1500px] w-full grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10">
-                      <motion.div initial={{ scale: 1.1, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1 }} className="relative aspect-square w-full rounded-[4rem] overflow-hidden border border-[#38bdf8]/10 group bg-white/5 shadow-2xl">
-                         <Image src={NODES[activeItem].img} alt="Spec" fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[3s] opacity-80" priority />
-                         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                         <div className="absolute top-12 left-12 p-4 bg-black/60 backdrop-blur-3xl rounded-2xl border border-white/10">
-                            <Layers className="w-6 h-6 text-white animate-pulse" />
-                         </div>
-                      </motion.div>
-
-                      <div className="flex flex-col justify-center space-y-12">
-                         <div className="space-y-6">
-                            <span className="text-[10px] uppercase tracking-[1em] font-black text-[#38bdf8]/40 mb-8 block underline decoration-white decoration-4 underline-offset-8 italic">Archive_Sync // {NODES[activeItem].cat}</span>
-                            <h1 className="text-7xl md:text-[10vw] font-black italic uppercase tracking-tighter leading-none text-white">{NODES[activeItem].title}</h1>
-                            <div className="text-4xl font-black italic tracking-tighter opacity-10 italic text-[#38bdf8]">State: SYNCHRONIZED</div>
-                         </div>
-
-                         <p className="text-3xl font-light italic leading-relaxed uppercase tracking-tight opacity-40 text-white leading-relaxed">
-                            Structural allocation for {NODES[activeItem].title}. System integrity at 100%. Thermal load nominal at 32C. Every coordinate synchronized.
-                         </p>
-
-                         <div className="grid grid-cols-2 gap-12 py-12 border-y border-[#38bdf8]/10 text-[#38bdf8]">
-                            {[
-                              { icon: <Globe className="w-5 h-5" />, l: "Region", v: NODES[activeItem].region },
-                              { icon: <Zap className="w-5 h-5" />, l: "Logic", v: "Class_A_Core" },
-                              { icon: <Shield className="w-5 h-5" />, l: "Security", v: "High_Impact" },
-                              { icon: <Activity className="w-5 h-5" />, l: "Sync", v: NODES[activeItem].load },
-                            ].map((s, i) => (
-                              <div key={i} className="flex gap-6 items-center">
-                                 <div className="opacity-20">{s.icon}</div>
-                                 <div className="text-left">
-                                    <div className="text-[10px] font-black opacity-30 uppercase tracking-widest mb-1 italic">{s.l}</div>
-                                    <div className="text-sm font-black uppercase italic tracking-tighter text-white">{s.v}</div>
-                                 </div>
-                              </div>
-                            ))}
-                         </div>
-
-                         <div className="flex gap-6 pt-8">
-                            <button onClick={() => setView("unit")} className="flex-grow py-8 bg-white text-black font-black uppercase text-xs tracking-[1em] hover:bg-white/80 transition-all shadow-2xl">
-                               Establish_Link
-                            </button>
-                            <button className="px-12 py-8 border border-[#38bdf8]/20 text-[10px] font-black uppercase tracking-[0.5em] hover:scale-105 transition-all text-[#38bdf8]">
-                               PDF_Spec
-                            </button>
-                         </div>
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
-        {/* THE LINK VIEW (INFO) */}
-        {view === "link" && (
-          <motion.div key="link" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen flex flex-col justify-center">
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center text-white">
-                <div className="space-y-16">
-                   <span className="text-[10px] uppercase font-black tracking-[1.5em] text-[#38bdf8] opacity-60 block underline decoration-[#38bdf8]/20 underline-offset-8 italic">The_Identity_Protocol</span>
-                   <h2 className="text-7xl md:text-[10vw] font-black italic tracking-tighter leading-none text-white uppercase">The <br/> Truth.</h2>
-                   <p className="text-3xl md:text-4xl font-light italic opacity-60 leading-relaxed uppercase tracking-tight text-[#38bdf8]/60">
-                      We treat architecture as code. Every structure is a function of its environmental variables and tectonic intent. 100% precision. Zero noise.
-                   </p>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t border-[#38bdf8]/20 text-[#38bdf8]">
-                      {[
-                        { icon: <Cpu className="w-6 h-6" />, t: "Adaptive Flow", v: "Dynamic Load Sync" },
-                        { icon: <Plus className="w-6 h-6" />, t: "Structural Sync", v: "Deep_Material_ID" },
-                      ].map((item, i) => (
-                        <div key={i} className="flex gap-8 group">
-                           <div className="w-16 h-16 rounded-full border border-[#38bdf8] flex items-center justify-center text-[#38bdf8] group-hover:bg-[#38bdf8] group-hover:text-black transition-all shadow-xl">
-                              {item.icon}
-                           </div>
-                           <div className="text-left">
-                              <h4 className="text-2xl font-black uppercase italic tracking-tighter text-white leading-none mb-2">{item.t}</h4>
-                              <p className="text-[10px] opacity-30 uppercase tracking-[0.3em] font-black leading-relaxed text-[#38bdf8]/40">{item.v}</p>
-                           </div>
-                        </div>
-                      ))}
-                   </div>
-                </div>
-                <div className="relative aspect-square bg-white/5 rounded-[4rem] p-12 overflow-hidden border border-[#38bdf8]/10 group shadow-2xl">
-                   <Image src="https://images.unsplash.com/photo-1541829070764-84a7d30dee62?q=80&w=1000&auto=format&fit=crop" alt="The Network" fill className="object-cover opacity-20 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-[2s]" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                   <div className="absolute inset-x-0 bottom-12 flex justify-center">
-                      <div className="px-12 py-6 border border-[#38bdf8] text-[#38bdf8] text-[10px] font-black uppercase tracking-widest italic animate-bounce cursor-pointer hover:bg-[#38bdf8] hover:text-black transition-all">
-                         Establish_Handshake
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
+        <motion.div
+          key={current}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          className="text-center px-6"
+        >
+          <p className="text-2xl mb-6 italic opacity-80">&quot;{testimonials[current].text}&quot;</p>
+          <p className="text-lg font-black text-[#7c5cbf]">{testimonials[current].name}</p>
+          <p className="text-sm opacity-60">{testimonials[current].role}</p>
+        </motion.div>
       </AnimatePresence>
 
-      {/* Global Status HUD */}
-      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em] italic text-[#38bdf8]">
-         <div className="flex gap-12 text-[#38bdf8]">
-            <span>Node_Unit_Alpha</span>
-            <span>Uptime: 99.9%</span>
-         </div>
-         <div className="flex gap-4 items-end text-[#38bdf8]">
-            <div className="text-right leading-tight italic">
-               Inventory_Control <br /> v4.0.21
-            </div>
-            <div className="flex gap-[4px] h-4">
-               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-full bg-[#38bdf8] opacity-${i*20}`}></div>)}
-            </div>
-         </div>
-      </footer>
+      <div className="flex gap-3 justify-center mt-8">
+        {testimonials.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => setCurrent(i)}
+            className={`w-2 h-2 rounded-full transition-all ${
+              i === current ? "bg-[#7c5cbf] w-8" : "bg-[#7c5cbf]/30"
+            }`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
 
-      <style>{`
-        ::-webkit-scrollbar { width: 0px; }
-      `}</style>
+/* ====== PRICING CARD ====== */
+function PricingCard({
+  tier,
+  price,
+  features,
+  cta,
+}: {
+  tier: string;
+  price: string;
+  features: string[];
+  cta: string;
+}) {
+  return (
+    <motion.div
+      whileHover={{ y: -8 }}
+      className="border border-[#7c5cbf]/20 rounded-2xl p-8 hover:border-[#7c5cbf] transition-all"
+    >
+      <h3 className="text-2xl font-black mb-2 text-[#7c5cbf]">{tier}</h3>
+      <div className="mb-6">
+        {price === "Free" ? (
+          <p className="text-3xl font-black text-white">{price}</p>
+        ) : (
+          <>
+            <p className="text-4xl font-black text-white">{price}</p>
+            <p className="text-sm opacity-60">/month</p>
+          </>
+        )}
+      </div>
+      <div className="space-y-3 mb-8">
+        {features.map((f, i) => (
+          <div key={i} className="flex gap-3 items-start">
+            <span className="text-[#7c5cbf] font-black mt-1">✓</span>
+            <span className="opacity-70">{f}</span>
+          </div>
+        ))}
+      </div>
+      <button className="w-full py-3 bg-[#7c5cbf] text-white font-black rounded-lg hover:bg-[#6a4fb0] transition-colors">
+        {cta}
+      </button>
+    </motion.div>
+  );
+}
+
+/* ====== FAQ ACCORDION ====== */
+function FAQAccordion({
+  items,
+}: {
+  items: Array<{ q: string; a: string }>;
+}) {
+  const [open, setOpen] = useState<number | null>(0);
+
+  return (
+    <div className="space-y-4">
+      {items.map((item, i) => (
+        <motion.div key={i} className="border border-[#7c5cbf]/20 rounded-lg overflow-hidden">
+          <button
+            onClick={() => setOpen(open === i ? null : i)}
+            className="w-full px-6 py-4 flex justify-between items-center bg-[#0f0d1a] text-white hover:bg-[#1a1820] transition-colors"
+          >
+            <span className="font-bold text-left">{item.q}</span>
+            <motion.div animate={{ rotate: open === i ? 180 : 0 }}>
+              ▼
+            </motion.div>
+          </button>
+          <AnimatePresence>
+            {open === i && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="bg-[#1a1820] px-6 py-4 text-white/70 border-t border-[#7c5cbf]/10"
+              >
+                {item.a}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      ))}
+    </div>
+  );
+}
+
+/* ====== MAIN PAGE ====== */
+export default function StillMeditation() {
+  const sessions = [
+    { name: "Sleep", color: "#7c5cbf", desc: "Deep sleep journeys" },
+    { name: "Breathe", color: "#9366d9", desc: "Breathing techniques" },
+    { name: "Focus", color: "#7c5cbf", desc: "Concentration sessions" },
+    { name: "Move", color: "#9366d9", desc: "Mindful movement" },
+  ];
+
+  const testimonials = [
+    {
+      name: "Sarah M.",
+      role: "Meditation Enthusiast",
+      text: "Still has transformed my daily routine. I sleep better and feel more focused than ever.",
+    },
+    {
+      name: "Marcus L.",
+      role: "Busy Professional",
+      text: "Finally found a meditation app that fits my schedule. Just 10 minutes a day makes a difference.",
+    },
+    {
+      name: "Jessica K.",
+      role: "Yoga Instructor",
+      text: "Recommend Still to all my students. The quality of guidance is exceptional.",
+    },
+  ];
+
+  const faqs = [
+    {
+      q: "Do I need meditation experience?",
+      a: "No! Still is designed for beginners and experienced meditators alike. Start with any session that appeals to you.",
+    },
+    {
+      q: "How long are sessions?",
+      a: "Sessions range from 5 to 45 minutes. Choose what fits your schedule.",
+    },
+    {
+      q: "Can I download sessions?",
+      a: "Premium members can download sessions for offline access.",
+    },
+  ];
+
+  return (
+    <div className="bg-gradient-to-b from-[#0f0d1a] to-[#1a1820] text-[#f8f7ff] min-h-screen overflow-x-hidden">
+      {/* Hero with Floating Particles */}
+      <section className="relative h-screen flex items-center justify-center overflow-hidden px-12">
+        <FloatingParticles />
+
+        <div className="relative z-10 text-center">
+          <Reveal>
+            <h1 className="text-7xl md:text-8xl font-black uppercase tracking-tighter leading-none mb-6">
+              Still
+            </h1>
+          </Reveal>
+          <Reveal delay={0.1}>
+            <p className="text-2xl opacity-70 font-light max-w-2xl mx-auto">
+              Meditation for modern life. Find your calm, build your practice.
+            </p>
+          </Reveal>
+
+          <Reveal delay={0.2}>
+            <div className="mt-16 max-w-md mx-auto">
+              <WaveBar />
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* Session Categories */}
+      <section className="py-20 px-12 max-w-7xl mx-auto">
+        <Reveal>
+          <h2 className="text-5xl font-black mb-12 text-center uppercase tracking-tighter">
+            Session Types
+          </h2>
+        </Reveal>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {sessions.map((session, i) => (
+            <Reveal key={i} delay={i * 0.1}>
+              <div className="border border-[#7c5cbf]/20 rounded-2xl p-8 hover:border-[#7c5cbf] transition-all group cursor-pointer">
+                <div className="w-12 h-12 rounded-full bg-[#7c5cbf]/20 mb-4 flex items-center justify-center group-hover:bg-[#7c5cbf]/40 transition-colors">
+                  <span className="text-[#7c5cbf] font-black">♫</span>
+                </div>
+                <h3 className="text-2xl font-black mb-2 text-[#7c5cbf]">{session.name}</h3>
+                <p className="opacity-60">{session.desc}</p>
+                <div className="mt-6 pt-6 border-t border-[#7c5cbf]/10">
+                  <WaveBar />
+                </div>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* 30-Day Streak Stats */}
+      <section className="py-20 px-12 bg-[#1a1820]">
+        <div className="max-w-7xl mx-auto">
+          <Reveal>
+            <h2 className="text-5xl font-black mb-12 text-center uppercase tracking-tighter">
+              Your Progress
+            </h2>
+          </Reveal>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <Reveal delay={0.1}>
+              <div className="text-center border border-[#7c5cbf]/20 rounded-lg p-8">
+                <div className="text-5xl font-black text-[#7c5cbf] mb-2">
+                  <Counter target={30} />
+                </div>
+                <p className="text-sm opacity-60 uppercase tracking-widest">Day Streak</p>
+              </div>
+            </Reveal>
+            <Reveal delay={0.2}>
+              <div className="text-center border border-[#7c5cbf]/20 rounded-lg p-8">
+                <div className="text-5xl font-black text-[#7c5cbf] mb-2">
+                  <Counter target={127} />
+                </div>
+                <p className="text-sm opacity-60 uppercase tracking-widest">Sessions Complete</p>
+              </div>
+            </Reveal>
+            <Reveal delay={0.3}>
+              <div className="text-center border border-[#7c5cbf]/20 rounded-lg p-8">
+                <div className="text-5xl font-black text-[#7c5cbf] mb-2">
+                  <Counter target={1250} />
+                </div>
+                <p className="text-sm opacity-60 uppercase tracking-widest">Minutes Meditated</p>
+              </div>
+            </Reveal>
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="py-20 px-12 max-w-4xl mx-auto">
+        <Reveal>
+          <h2 className="text-5xl font-black mb-12 text-center uppercase tracking-tighter">
+            What People Say
+          </h2>
+        </Reveal>
+        <div className="border border-[#7c5cbf]/20 rounded-2xl p-12">
+          <TestimonialsCarousel testimonials={testimonials} />
+        </div>
+      </section>
+
+      {/* Daily Inspiration Marquee */}
+      <InfiniteMarquee
+        items={[
+          "Breathe",
+          "Be Present",
+          "Find Peace",
+          "Let Go",
+          "Embrace Calm",
+        ]}
+      />
+
+      {/* Pricing */}
+      <section className="py-20 px-12 max-w-7xl mx-auto">
+        <Reveal>
+          <h2 className="text-5xl font-black mb-12 text-center uppercase tracking-tighter">
+            Choose Your Plan
+          </h2>
+        </Reveal>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <Reveal delay={0.1}>
+            <PricingCard
+              tier="Free"
+              price="Free"
+              features={["3 sessions/week", "Basic library", "Mobile app"]}
+              cta="Get Started"
+            />
+          </Reveal>
+          <Reveal delay={0.2}>
+            <motion.div whileHover={{ scale: 1.05 }}>
+              <PricingCard
+                tier="Premium"
+                price="$9.99"
+                features={[
+                  "Unlimited sessions",
+                  "Full library",
+                  "Offline downloads",
+                  "Ad-free",
+                  "Personalized playlists",
+                ]}
+                cta="Start Free Trial"
+              />
+            </motion.div>
+          </Reveal>
+          <Reveal delay={0.3}>
+            <PricingCard
+              tier="Teams"
+              price="$29.99"
+              features={[
+                "Up to 10 users",
+                "All Premium features",
+                "Team analytics",
+                "Priority support",
+                "Custom sessions",
+              ]}
+              cta="Contact Sales"
+            />
+          </Reveal>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="py-20 px-12 bg-[#1a1820] max-w-4xl mx-auto w-full">
+        <Reveal>
+          <h2 className="text-5xl font-black mb-12 text-center uppercase tracking-tighter">
+            Questions?
+          </h2>
+        </Reveal>
+        <FAQAccordion items={faqs} />
+      </section>
+
+      {/* CTA Footer */}
+      <footer className="py-20 px-12 bg-gradient-to-t from-[#7c5cbf]/10 to-transparent">
+        <div className="max-w-7xl mx-auto text-center">
+          <Reveal>
+            <h2 className="text-5xl font-black mb-6 uppercase tracking-tighter">
+              Download Still Today
+            </h2>
+          </Reveal>
+          <Reveal delay={0.1}>
+            <p className="text-xl opacity-60 mb-12 max-w-xl mx-auto">
+              Available on iOS and Android. Start your 14-day free trial.
+            </p>
+          </Reveal>
+          <Reveal delay={0.2}>
+            <div className="flex gap-6 justify-center flex-wrap">
+              <button className="px-8 py-4 bg-[#7c5cbf] text-white font-black uppercase text-sm tracking-[0.1em] rounded-full hover:shadow-[0_0_40px_rgba(124,92,191,0.3)] transition-shadow">
+                App Store
+              </button>
+              <button className="px-8 py-4 border border-[#7c5cbf] text-[#7c5cbf] font-black uppercase text-sm tracking-[0.1em] rounded-full hover:bg-[#7c5cbf] hover:text-white transition-all">
+                Google Play
+              </button>
+            </div>
+          </Reveal>
+        </div>
+      </footer>
     </div>
   );
 }

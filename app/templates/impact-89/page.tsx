@@ -1,230 +1,459 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect } from "react";
+import { motion, AnimatePresence, useScroll, useTransform, useMotionValue, useSpring, useInView } from "framer-motion";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { X, Menu, Search, Terminal, Zap, Activity, Globe, Shield, Command, Plus, ArrowUpRight, Maximize2, MoveRight, Layers, Box, Compass, Sparkles, Binary } from "lucide-react";
-import "../premium.css";
+import Link from "next/link";
+import { X, Menu, Play, Pause, ChevronDown, Music, Users } from "lucide-react";
 
-const CIPHERS = [
-  { id: 1, title: "0x74_VOID", cat: "Logic", value: "Locked", img: "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1000&auto=format&fit=crop" },
-  { id: 2, title: "NULL_POINTER", cat: "Static", value: "Active", img: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=1000&auto=format&fit=crop" },
-  { id: 3, title: "SYST_ERROR", cat: "Dynamic", value: "Verified", img: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1000&auto=format&fit=crop" },
+const SHOWS = [
+  { id: 1, title: "Crime Files", genre: "True Crime", episodes: 124, img: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=300&auto=format&fit=crop" },
+  { id: 2, title: "Tech Trends", genre: "Tech", episodes: 87, img: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?q=80&w=300&auto=format&fit=crop" },
+  { id: 3, title: "Business Bytes", genre: "Business", episodes: 156, img: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=300&auto=format&fit=crop" },
+  { id: 4, title: "Laugh Track", genre: "Comedy", episodes: 203, img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=300&auto=format&fit=crop" },
+  { id: 5, title: "Sports Talk", genre: "Sports", episodes: 167, img: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?q=80&w=300&auto=format&fit=crop" },
+  { id: 6, title: "Culture Cast", genre: "Comedy", episodes: 92, img: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?q=80&w=300&auto=format&fit=crop" },
 ];
 
-export default function MatrixCipherSPA() {
-  const [view, setView] = useState<"void" | "stream" | "cipher">("void");
-  const [activeItem, setActiveItem] = useState(0);
+const STATS = [
+  { value: "2M", label: "Monthly Listeners" },
+  { value: "48", label: "Active Shows" },
+  { value: "850", label: "Total Episodes" },
+  { value: "12", label: "Industry Awards" },
+];
+
+function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-60px" });
 
   return (
-    <div className="premium-theme bg-[#050505] text-[#00ff41] min-h-screen selection:bg-[#00ff41] selection:text-black font-mono overflow-x-hidden">
-      
-      {/* Background HUD Layers */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_#00ff4105_0%,_transparent_70%)] opacity-40" />
-        <div 
-          className="absolute inset-0 opacity-[0.05]"
-          style={{ backgroundImage: `linear-gradient(#00ff4110 1px, transparent 1px), linear-gradient(90deg, #00ff4110 1px, transparent 1px)`, backgroundSize: '80px 80px' }}
-        />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-screen" />
-      </div>
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 20 }}
+      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+      transition={{ delay, duration: 0.6 }}
+    >
+      {children}
+    </motion.div>
+  );
+}
 
-      {/* Editorial HUD Nav */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-center bg-black/40 backdrop-blur-xl border-b border-[#00ff41]/10">
-        <div className="flex gap-12 items-center">
-           <button onClick={() => setView("void")} className="text-xl font-black italic tracking-tighter hover:text-white transition-colors flex items-center gap-4">
-              <Terminal className="w-6 h-6 animate-pulse" /> MATRIX_OS&trade;
-           </button>
-           <div className="hidden lg:flex gap-8 text-[10px] font-black uppercase tracking-widest opacity-20 italic">
-              Status: Crypt_Sync_Active
-              <span className="text-white">Ref: 0x89_C</span>
-           </div>
+function Counter({ target, label }: { target: number; label: string }) {
+  const [count, setCount] = useState(0);
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-60px" });
+
+  useEffect(() => {
+    if (!isInView) return;
+    let current = 0;
+    const interval = setInterval(() => {
+      current += Math.ceil(target / 50);
+      if (current > target) current = target;
+      setCount(current);
+      if (current === target) clearInterval(interval);
+    }, 30);
+    return () => clearInterval(interval);
+  }, [isInView, target]);
+
+  return (
+    <div ref={ref} className="text-center">
+      <div className="text-4xl md:text-5xl font-bold text-[#f59e0b]">{count}M+</div>
+      <div className="text-sm text-gray-400 mt-2">{label}</div>
+    </div>
+  );
+}
+
+function MagneticBtn({ children }: { children: React.ReactNode }) {
+  const ref = useRef(null);
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const springX = useSpring(x, { damping: 20, stiffness: 300 });
+  const springY = useSpring(y, { damping: 20, stiffness: 300 });
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!ref.current) return;
+    const { left, top, width, height } = (ref.current as HTMLDivElement).getBoundingClientRect();
+    const centerX = left + width / 2;
+    const centerY = top + height / 2;
+    x.set((e.clientX - centerX) * 0.2);
+    y.set((e.clientY - centerY) * 0.2);
+  };
+
+  const handleMouseLeave = () => {
+    x.set(0);
+    y.set(0);
+  };
+
+  return (
+    <motion.button
+      ref={ref}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={{ x: springX, y: springY }}
+      className="px-8 py-3 bg-[#6d28d9] text-white font-bold rounded-lg hover:shadow-lg hover:shadow-[#6d28d9]/30 transition-shadow"
+    >
+      {children}
+    </motion.button>
+  );
+}
+
+function WaveBar() {
+  return (
+    <div className="flex items-center gap-1 h-12">
+      {[...Array(30)].map((_, i) => (
+        <motion.div
+          key={i}
+          animate={{ height: [8, Math.random() * 40 + 8, 8] }}
+          transition={{ duration: 0.4, delay: i * 0.02, repeat: Infinity }}
+          className="flex-1 bg-gradient-to-t from-[#6d28d9] to-[#f59e0b] rounded-sm"
+        />
+      ))}
+    </div>
+  );
+}
+
+function InfiniteMarquee({ items }: { items: string[] }) {
+  return (
+    <div className="relative overflow-hidden py-8 bg-[#1a1a2e]">
+      <motion.div
+        className="flex gap-12"
+        animate={{ x: [0, -1000] }}
+        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+      >
+        {[...items, ...items].map((item, i) => (
+          <span key={i} className="text-gray-600 whitespace-nowrap font-bold text-sm">
+            {item}
+          </span>
+        ))}
+      </motion.div>
+    </div>
+  );
+}
+
+function FAQAccordion() {
+  const [openIndex, setOpenIndex] = useState(0);
+  const faqs = [
+    { q: "Which platforms are supported?", a: "Apple Podcasts, Spotify, Google Podcasts, Amazon Music, and all major podcast apps." },
+    { q: "Can I download episodes?", a: "Yes! Download unlimited episodes on premium membership." },
+    { q: "How often are new episodes released?", a: "Varies by show - from weekly to daily updates. Check each show's schedule." },
+  ];
+
+  return (
+    <div className="space-y-4">
+      {faqs.map((faq, i) => (
+        <motion.div key={i} className="border border-[#6d28d9]/20 rounded-lg overflow-hidden">
+          <button
+            onClick={() => setOpenIndex(openIndex === i ? -1 : i)}
+            className="w-full p-4 flex justify-between items-center bg-[#1a1a2e] hover:bg-[#262645] transition-colors"
+          >
+            <span className="text-left font-semibold text-sm">{faq.q}</span>
+            <motion.div animate={{ rotate: openIndex === i ? 180 : 0 }}>
+              <ChevronDown className="w-5 h-5 text-[#f59e0b]" />
+            </motion.div>
+          </button>
+          <AnimatePresence>
+            {openIndex === i && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="bg-[#0f0f1e] border-t border-[#6d28d9]/10 p-4"
+              >
+                <p className="text-sm text-gray-400">{faq.a}</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      ))}
+    </div>
+  );
+}
+
+export default function ResonanceFMPage() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [filterGenre, setFilterGenre] = useState("All");
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [liveListeners, setLiveListeners] = useState(42000);
+  const [showSubscribeModal, setShowSubscribeModal] = useState(false);
+  const containerRef = useRef(null);
+  const { scrollYProgress } = useScroll({ target: containerRef });
+  const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", "40%"]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLiveListeners((prev) => Math.max(prev + Math.floor(Math.random() * 100) - 50, 35000));
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const filteredShows = filterGenre === "All" ? SHOWS : SHOWS.filter((s) => s.genre === filterGenre);
+  const genres = ["All", "True Crime", "Tech", "Business", "Comedy", "Sports"];
+
+  return (
+    <div
+      ref={containerRef}
+      className="min-h-screen bg-gradient-to-br from-[#0c0a14] via-[#1a1a2e] to-[#0c0a14] text-white overflow-x-hidden"
+    >
+      {/* Parallax Background */}
+      <motion.div
+        className="fixed inset-0 pointer-events-none z-0 opacity-30"
+        style={{ y: backgroundY }}
+      >
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_#6d28d920_0%,_#f59e0b10_50%,_transparent_100%)]" />
+      </motion.div>
+
+      {/* Grid */}
+      <div
+        className="fixed inset-0 pointer-events-none z-0 opacity-[0.05]"
+        style={{ backgroundImage: "linear-gradient(#6d28d9 1px, transparent 1px), linear-gradient(90deg, #6d28d9 1px, transparent 1px)", backgroundSize: "60px 60px" }}
+      />
+
+      {/* Nav */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0c0a14]/80 backdrop-blur-xl border-b border-[#6d28d9]/10 p-6">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+            <Music className="w-6 h-6 text-[#f59e0b]" />
+            <span className="font-bold text-lg">RESONANCE FM</span>
+          </Link>
+          <div className="hidden md:flex gap-8 text-sm">
+            <a href="#shows" className="hover:text-[#f59e0b] transition-colors">Shows</a>
+            <a href="#featured" className="hover:text-[#f59e0b] transition-colors">Featured</a>
+            <a href="#faq" className="hover:text-[#f59e0b] transition-colors">FAQ</a>
+          </div>
+          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden">
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
         </div>
-        <div className="hidden md:flex gap-12 text-[10px] font-black uppercase tracking-[0.4em] opacity-30">
-           <button onClick={() => setView("void")} className={`hover:opacity-100 transition-opacity ${view === 'void' ? 'text-white opacity-100 underline decoration-white underline-offset-8 italic' : ''}`}>THE_VOID</button>
-           <button onClick={() => setView("cipher")} className={`hover:opacity-100 transition-opacity ${view === 'cipher' ? 'text-white opacity-100 underline decoration-white underline-offset-8 italic' : ''}`}>THE_CIPHER</button>
-        </div>
-        <div className="flex items-center gap-8">
-           <Search className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-           <Menu className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-        </div>
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="mt-4 flex flex-col gap-4 text-sm">
+              <a href="#shows">Shows</a>
+              <a href="#featured">Featured</a>
+              <a href="#faq">FAQ</a>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </nav>
 
-      <AnimatePresence mode="wait">
-        
-        {/* THE VOID VIEW (LANDING) */}
-        {view === "void" && (
-          <motion.div key="void" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-48 pb-32 px-12 max-w-[1800px] mx-auto min-h-screen flex flex-col justify-center relative z-10">
-             <header className="mb-24 border-b-2 border-[#00ff41]/20 pb-12 flex flex-col md:flex-row justify-between items-end gap-12">
-                <div>
-                   <span className="text-[10px] uppercase font-black tracking-[1em] text-[#00ff41] opacity-40 mb-4 block underline decoration-[#00ff41]/10 underline-offset-8 italic">Cipher_Deployment // Series_089</span>
-                   <h1 className="text-7xl md:text-[12vw] font-black italic uppercase tracking-tighter leading-[0.75] text-white">THE. <br/> <span className="text-[#00ff41]">VOID.</span></h1>
-                </div>
-                <div className="text-right flex flex-col items-end">
-                   <div className="text-3xl font-black mb-4 tracking-tighter uppercase opacity-10 italic">Secure_Sync</div>
-                   <div className="w-64 h-1 bg-white/5 rounded-full overflow-hidden">
-                      <motion.div animate={{ width: ['20%', '90%', '40%', '75%'] }} transition={{ duration: 4, repeat: Infinity }} className="h-full bg-[#00ff41]" />
-                   </div>
-                </div>
-             </header>
+      <main className="relative z-10 pt-24">
+        {/* Hero */}
+        <section className="min-h-screen flex items-center justify-center px-6 py-20">
+          <div className="max-w-5xl mx-auto text-center">
+            <Reveal delay={0}>
+              <div className="text-[#f59e0b] text-sm font-bold mb-4 tracking-widest">LIVE PODCAST NETWORK</div>
+            </Reveal>
+            <Reveal delay={0.1}>
+              <h1 className="text-6xl md:text-7xl font-bold mb-6 leading-tight">
+                Your Daily <span className="text-[#f59e0b]">Audio</span> Escape
+              </h1>
+            </Reveal>
+            <Reveal delay={0.2}>
+              <p className="text-gray-400 text-lg mb-8 max-w-2xl mx-auto">48 shows, 850+ episodes, 2M monthly listeners. Find your next favorite podcast.</p>
+            </Reveal>
 
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {CIPHERS.map((p, i) => (
-                  <motion.div 
-                    key={p.id} initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                    className="group relative h-[60vh] rounded-[3rem] overflow-hidden border border-[#00ff41]/10 hover:border-[#00ff41]/40 transition-all cursor-pointer shadow-2xl"
-                    onClick={() => { setActiveItem(i); setView("stream"); }}
+            {/* Live Counter */}
+            <Reveal delay={0.3}>
+              <div className="flex justify-center gap-4 mb-8">
+                <div className="px-6 py-3 bg-[#6d28d9]/20 border border-[#6d28d9]/30 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-[#f59e0b] rounded-full animate-pulse" />
+                    <span className="text-sm font-semibold">{liveListeners.toLocaleString()} listening now</span>
+                  </div>
+                </div>
+              </div>
+            </Reveal>
+
+            <Reveal delay={0.4}>
+              <MagneticBtn>EXPLORE NOW</MagneticBtn>
+            </Reveal>
+          </div>
+        </section>
+
+        {/* Featured Episode Player */}
+        <section id="featured" className="py-20 px-6">
+          <div className="max-w-4xl mx-auto bg-gradient-to-r from-[#6d28d9]/20 to-[#f59e0b]/10 border border-[#6d28d9]/20 rounded-2xl p-8">
+            <Reveal>
+              <div className="flex flex-col md:flex-row gap-8">
+                <div className="flex-1">
+                  <div className="text-[#f59e0b] text-sm font-bold mb-2">LATEST EPISODE</div>
+                  <h3 className="text-2xl font-bold mb-4">Crime Files: The Unsolved Case</h3>
+                  <p className="text-gray-400 mb-6">Episode 124 • 52 minutes • Season 4</p>
+                  <WaveBar />
+                </div>
+                <div className="flex items-center justify-center">
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    onClick={() => setIsPlaying(!isPlaying)}
+                    className="w-16 h-16 bg-[#f59e0b] text-[#0c0a14] rounded-full flex items-center justify-center"
                   >
-                     <Image src={p.img} alt={p.title} fill className="object-cover grayscale opacity-20 group-hover:opacity-40 transition-all duration-[2s] group-hover:scale-110" />
-                     <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                     
-                     <div className="absolute inset-10 flex flex-col justify-between">
-                        <div className="flex justify-between items-start">
-                           <div className="p-4 bg-white/5 border border-white/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Binary className="w-5 h-5 text-[#00ff41]" />
-                           </div>
-                           <div className="text-[10px] font-black uppercase tracking-widest opacity-20 group-hover:opacity-100 transition-opacity text-[#00ff41]">REF_0x{p.id}</div>
-                        </div>
-                        <div>
-                           <span className="text-[10px] uppercase font-black tracking-widest text-[#00ff41]/40 mb-2 block italic">{p.cat}</span>
-                           <h3 className="text-5xl font-black italic uppercase tracking-tighter text-white group-hover:text-[#00ff41] transition-colors">{p.title}</h3>
-                        </div>
-                     </div>
-                  </motion.div>
+                    {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6 ml-1" />}
+                  </motion.button>
+                </div>
+              </div>
+            </Reveal>
+          </div>
+        </section>
+
+        {/* Shows Grid */}
+        <section id="shows" className="py-20 px-6 bg-[#1a1a2e]/50">
+          <div className="max-w-6xl mx-auto">
+            <Reveal>
+              <h2 className="text-4xl font-bold mb-8 text-center">SHOW ROSTER</h2>
+            </Reveal>
+            <Reveal delay={0.1}>
+              <div className="flex gap-3 mb-12 flex-wrap justify-center">
+                {genres.map((genre) => (
+                  <button
+                    key={genre}
+                    onClick={() => setFilterGenre(genre)}
+                    className={`px-4 py-2 rounded-full transition-all ${
+                      filterGenre === genre
+                        ? "bg-[#6d28d9] text-white"
+                        : "border border-[#6d28d9]/30 hover:border-[#6d28d9]"
+                    }`}
+                  >
+                    {genre}
+                  </button>
                 ))}
-             </div>
+              </div>
+            </Reveal>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredShows.map((show, i) => (
+                <Reveal key={show.id} delay={i * 0.08}>
+                  <motion.div
+                    whileHover={{ y: -8 }}
+                    className="bg-[#1a1a2e] border border-[#6d28d9]/20 rounded-xl overflow-hidden hover:border-[#6d28d9]/40 transition-colors"
+                  >
+                    <div className="relative h-40 bg-gray-900">
+                      <Image
+                        src={show.img}
+                        alt={show.title}
+                        fill
+                        className="object-cover hover:scale-105 transition-transform"
+                        unoptimized
+                      />
+                    </div>
+                    <div className="p-4">
+                      <p className="text-xs text-[#f59e0b] font-bold mb-2">{show.genre.toUpperCase()}</p>
+                      <h3 className="font-bold mb-1">{show.title}</h3>
+                      <p className="text-xs text-gray-500">{show.episodes} episodes</p>
+                    </div>
+                  </motion.div>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Sponsors Marquee */}
+        <section className="py-12">
+          <Reveal>
+            <InfiniteMarquee items={["Spotify", "Apple Podcasts", "Google", "Amazon Music", "Patreon", "Audible"]} />
+          </Reveal>
+        </section>
+
+        {/* Stats */}
+        <section className="py-20 px-6">
+          <div className="max-w-6xl mx-auto">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+              <Reveal delay={0}>
+                <Counter target={2} label="Listeners" />
+              </Reveal>
+              <Reveal delay={0.1}>
+                <div className="text-center">
+                  <div className="text-4xl md:text-5xl font-bold text-[#f59e0b]">48</div>
+                  <div className="text-sm text-gray-400 mt-2">Active Shows</div>
+                </div>
+              </Reveal>
+              <Reveal delay={0.2}>
+                <div className="text-center">
+                  <div className="text-4xl md:text-5xl font-bold text-[#f59e0b]">850</div>
+                  <div className="text-sm text-gray-400 mt-2">Episodes Total</div>
+                </div>
+              </Reveal>
+              <Reveal delay={0.3}>
+                <div className="text-center">
+                  <div className="text-4xl md:text-5xl font-bold text-[#f59e0b]">12</div>
+                  <div className="text-sm text-gray-400 mt-2">Awards Won</div>
+                </div>
+              </Reveal>
+            </div>
+          </div>
+        </section>
+
+        {/* FAQ */}
+        <section id="faq" className="py-20 px-6 bg-[#1a1a2e]/50">
+          <div className="max-w-2xl mx-auto">
+            <Reveal>
+              <h2 className="text-4xl font-bold mb-12 text-center">FAQ</h2>
+            </Reveal>
+            <Reveal delay={0.1}>
+              <FAQAccordion />
+            </Reveal>
+          </div>
+        </section>
+
+        {/* Subscribe CTA */}
+        <section className="py-20 px-6 text-center">
+          <Reveal>
+            <h2 className="text-4xl font-bold mb-6">Never Miss an Episode</h2>
+          </Reveal>
+          <Reveal delay={0.1}>
+            <p className="text-gray-400 mb-8">Subscribe on your favorite platform or join our premium network.</p>
+          </Reveal>
+          <Reveal delay={0.2}>
+            <button
+              onClick={() => setShowSubscribeModal(true)}
+              className="px-8 py-3 bg-[#6d28d9] text-white rounded-lg font-bold hover:shadow-lg hover:shadow-[#6d28d9]/30 transition-shadow"
+            >
+              SUBSCRIBE NOW
+            </button>
+          </Reveal>
+        </section>
+      </main>
+
+      {/* Subscribe Modal */}
+      <AnimatePresence>
+        {showSubscribeModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-[#1a1a2e] border border-[#6d28d9]/20 rounded-2xl p-8 max-w-md"
+            >
+              <h3 className="text-2xl font-bold mb-4">Subscribe</h3>
+              <p className="text-gray-400 mb-6">Choose your favorite platform:</p>
+              <div className="space-y-2">
+                {["Apple Podcasts", "Spotify", "Google Podcasts", "Amazon Music"].map((platform) => (
+                  <button
+                    key={platform}
+                    className="w-full p-3 border border-[#6d28d9]/30 rounded-lg hover:bg-[#6d28d9]/10 transition-colors"
+                  >
+                    {platform}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={() => setShowSubscribeModal(false)}
+                className="w-full mt-6 py-3 bg-[#6d28d9] rounded-lg font-bold"
+              >
+                CLOSE
+              </button>
+            </motion.div>
           </motion.div>
         )}
-
-        {/* THE STREAM VIEW (DETAIL) */}
-        {view === "stream" && (
-          <motion.div key="stream" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen">
-             <button onClick={() => setView("void")} className="fixed top-12 left-12 z-[60] bg-white text-black p-5 rounded-full hover:scale-110 transition-transform shadow-2xl">
-                <X className="w-6 h-6" />
-             </button>
-
-             <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen pt-24 lg:pt-0">
-                <div className="lg:col-span-12 relative flex items-center justify-center p-8 md:p-32 overflow-hidden h-screen bg-[#050505]">
-                   <div className="absolute inset-0 opacity-10">
-                      <Image src={CIPHERS[activeItem].img} alt="Background" fill className="object-cover grayscale" />
-                   </div>
-                   <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[40vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase text-[#00ff41]">
-                      DATA
-                   </div>
-                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#050505_100%)]" />
-                   
-                   <div className="max-w-[1500px] w-full grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10">
-                      <motion.div initial={{ scale: 1.1, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1 }} className="relative aspect-square w-full rounded-[4rem] overflow-hidden border border-[#00ff41]/10 group bg-white/5 shadow-2xl">
-                         <Image src={CIPHERS[activeItem].img} alt="Spec" fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[3s] opacity-80" priority />
-                         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                         <div className="absolute top-12 left-12 p-4 bg-black/60 backdrop-blur-3xl rounded-2xl border border-white/10">
-                            <Layers className="w-6 h-6 text-white animate-pulse" />
-                         </div>
-                      </motion.div>
-
-                      <div className="flex flex-col justify-center space-y-12">
-                         <div className="space-y-6">
-                            <span className="text-[10px] uppercase tracking-[1em] font-black text-[#00ff41]/40 mb-8 block underline decoration-white decoration-4 underline-offset-8 italic">Stream_Active // {CIPHERS[activeItem].cat}</span>
-                            <h1 className="text-7xl md:text-[10vw] font-black italic uppercase tracking-tighter leading-none text-white">{CIPHERS[activeItem].title}</h1>
-                            <div className="text-4xl font-black italic tracking-tighter opacity-10 italic text-[#00ff41]">State: SYNCHRONIZED</div>
-                         </div>
-
-                         <p className="text-3xl font-light italic leading-relaxed uppercase tracking-tight opacity-40 text-white leading-relaxed">
-                            Structural allocation for {CIPHERS[activeItem].title}. System integrity at 100%. Thermal load nominal at 32C. Every coordinate synchronized.
-                         </p>
-
-                         <div className="grid grid-cols-2 gap-12 py-12 border-y border-[#00ff41]/10 text-[#00ff41]">
-                            {[
-                              { icon: <Globe className="w-5 h-5" />, l: "Region", v: "Global_East" },
-                              { icon: <Zap className="w-5 h-5" />, l: "Logic", v: "Phase_Shift" },
-                              { icon: <Shield className="w-5 h-5" />, l: "Security", v: "High_Impact" },
-                              { icon: <Activity className="w-5 h-5" />, l: "Sync", v: CIPHERS[activeItem].value },
-                            ].map((s, i) => (
-                              <div key={i} className="flex gap-6 items-center">
-                                 <div className="opacity-20">{s.icon}</div>
-                                 <div className="text-left">
-                                    <div className="text-[10px] font-black opacity-30 uppercase tracking-widest mb-1 italic">{s.l}</div>
-                                    <div className="text-sm font-black uppercase italic tracking-tighter text-white">{s.v}</div>
-                                 </div>
-                              </div>
-                            ))}
-                         </div>
-
-                         <div className="flex gap-6 pt-8">
-                            <button onClick={() => setView("void")} className="flex-grow py-8 bg-white text-black font-black uppercase text-xs tracking-[1em] hover:bg-white/80 transition-all shadow-2xl">
-                               Return_to_Void
-                            </button>
-                            <button className="px-12 py-8 border border-[#00ff41]/20 text-[10px] font-black uppercase tracking-[0.5em] hover:scale-105 transition-all text-[#00ff41]">
-                               PDF_Spec
-                            </button>
-                         </div>
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
-        {/* THE CIPHER VIEW (INFO) */}
-        {view === "cipher" && (
-          <motion.div key="cipher" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen flex flex-col justify-center">
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center text-white">
-                <div className="space-y-16">
-                   <span className="text-[10px] uppercase font-black tracking-[1.5em] text-[#00ff41] opacity-60 block underline decoration-[#00ff41]/20 underline-offset-8 italic">The_Inquiry_Protocol</span>
-                   <h2 className="text-7xl md:text-[10vw] font-black italic tracking-tighter leading-none text-white uppercase">The <br/> Truth.</h2>
-                   <p className="text-3xl md:text-4xl font-light italic opacity-60 leading-relaxed uppercase tracking-tight text-[#00ff41]/60">
-                      We treat architecture as code. Every structure is a function of its environmental variables and tectonic intent. 100% precision. Zero noise.
-                   </p>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t border-[#00ff41]/20 text-[#00ff41]">
-                      {[
-                        { icon: <Binary className="w-6 h-6" />, t: "Adaptive Flow", v: "Dynamic Load Sync" },
-                        { icon: <Plus className="w-6 h-6" />, t: "Structural Sync", v: "Deep_Material_ID" },
-                      ].map((item, i) => (
-                        <div key={i} className="flex gap-8 group">
-                           <div className="w-16 h-16 rounded-full border border-[#00ff41] flex items-center justify-center text-[#00ff41] group-hover:bg-[#00ff41] group-hover:text-black transition-all shadow-xl">
-                              {item.icon}
-                           </div>
-                           <div className="text-left">
-                              <h4 className="text-2xl font-black uppercase italic tracking-tighter text-white leading-none mb-2">{item.t}</h4>
-                              <p className="text-[10px] opacity-30 uppercase tracking-[0.3em] font-black leading-relaxed text-[#00ff41]/40">{item.v}</p>
-                           </div>
-                        </div>
-                      ))}
-                   </div>
-                </div>
-                <div className="relative aspect-square bg-[#1a1a1a] rounded-[4rem] p-12 overflow-hidden border border-[#00ff41]/10 group shadow-2xl">
-                   <Image src="https://images.unsplash.com/photo-1541829070764-84a7d30dee62?q=80&w=1000&auto=format&fit=crop" alt="The Archive" fill className="object-cover opacity-20 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-[2s]" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                   <div className="absolute inset-x-0 bottom-12 flex justify-center">
-                      <div className="px-12 py-6 border border-[#00ff41] text-[#00ff41] text-[10px] font-black uppercase tracking-widest italic animate-bounce cursor-pointer hover:bg-[#00ff41] hover:text-black transition-all">
-                         Establish_Handshake
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
       </AnimatePresence>
 
-      {/* Global Status HUD */}
-      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em] italic text-[#00ff41]">
-         <div className="flex gap-12 text-[#00ff41]">
-            <span>Matrix_OS_Alpha</span>
-            <span>Uptime: 99.9%</span>
-         </div>
-         <div className="flex gap-4 items-end text-[#00ff41]">
-            <div className="text-right leading-tight italic">
-               Inventory_Control <br /> v4.0.21
-            </div>
-            <div className="flex gap-[4px] h-4">
-               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-full bg-[#00ff41] opacity-${i*20}`}></div>)}
-            </div>
-         </div>
-      </footer>
-
       <style>{`
-        ::-webkit-scrollbar { width: 0px; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0c0a14; }
+        ::-webkit-scrollbar-thumb { background: #6d28d9; border-radius: 4px; }
       `}</style>
     </div>
   );
