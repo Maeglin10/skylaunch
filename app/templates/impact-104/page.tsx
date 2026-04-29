@@ -1,230 +1,337 @@
-"use client";
+"use client"
+import { motion, useScroll, useTransform, useInView, AnimatePresence, useMotionValue, useSpring } from "framer-motion"
+import { useState, useRef, useEffect } from "react"
+import Image from "next/image"
+import Link from "next/link"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
+import { Progress } from "@/components/ui/progress"
 
-import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
-import Image from "next/image";
-import { X, Menu, Search, Utensils, Zap, Activity, Globe, Shield, Command, Plus, ArrowUpRight, Maximize2, MoveRight, Layers, Box, Compass, Sparkles, MoveVertical, Wine } from "lucide-react";
-import "../premium.css";
+function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: "-60px" })
+  return <motion.div ref={ref} initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, delay }}>{children}</motion.div>
+}
 
-const PLATES = [
-  { id: 1, title: "WAGYU_A5", cat: "Terroir", value: "€120", img: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=1000&auto=format&fit=crop" },
-  { id: 2, title: "TRUFFLE_NODE", cat: "Season", value: "€85", img: "https://images.unsplash.com/photo-1476124369491-e7addf5db371?q=80&w=1000&auto=format&fit=crop" },
-  { id: 3, title: "VOID_LOBSTER", cat: "Reserve", value: "€95", img: "https://images.unsplash.com/photo-1559339352-11d035aa65de?q=80&w=1000&auto=format&fit=crop" },
-];
+function Counter({ target, suffix = "" }: { target: number; suffix?: string }) {
+  const [count, setCount] = useState(0)
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true })
+  useEffect(() => {
+    if (!inView) return
+    const step = Math.ceil(target / 60)
+    const t = setInterval(() => setCount(c => Math.min(c + step, target)), 16)
+    return () => clearInterval(t)
+  }, [inView, target])
+  return <span ref={ref}>{count.toLocaleString()}{suffix}</span>
+}
 
-export default function GastronomyMaisonSPA() {
-  const [view, setView] = useState<"menu" | "plate" | "terroir">("menu");
-  const [activeItem, setActiveItem] = useState(0);
+function MagneticBtn({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  const x = useMotionValue(0); const y = useMotionValue(0)
+  const sx = useSpring(x, { stiffness: 500, damping: 25 })
+  const sy = useSpring(y, { stiffness: 500, damping: 25 })
+  const ref = useRef<HTMLButtonElement>(null)
+  const handleMouse = (e: React.MouseEvent) => {
+    const r = ref.current!.getBoundingClientRect()
+    x.set((e.clientX - r.left - r.width / 2) * 0.35)
+    y.set((e.clientY - r.top - r.height / 2) * 0.35)
+  }
+  return <motion.button ref={ref} style={{ x: sx, y: sy }} onMouseMove={handleMouse} onMouseLeave={() => { x.set(0); y.set(0) }} className={className}>{children}</motion.button>
+}
+
+const FACILITIES = [
+  { id: 1, name: "Bouldering", image: "https://images.unsplash.com/photo-1522163182402-834f871fd851?w=800&auto=format&fit=crop", description: "200+ indoor problems, all difficulty levels" },
+  { id: 2, name: "Lead Climbing", image: "https://images.unsplash.com/photo-1464207687429-7505649dae38?w=800&auto=format&fit=crop", description: "45ft walls with top-rope and lead courses" },
+  { id: 3, name: "Top-Rope", image: "https://images.unsplash.com/photo-1516960022422-92426e4e6bcd?w=800&auto=format&fit=crop", description: "Classic rope climbing with safety progression" },
+  { id: 4, name: "Training Zone", image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&auto=format&fit=crop", description: "Strength & conditioning equipment" },
+  { id: 5, name: "Yoga Studio", image: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800&auto=format&fit=crop", description: "Flexibility & injury prevention classes" },
+]
+
+const MEMBERSHIPS = [
+  { tier: "Day Pass", price: "€15", features: ["Full gym access", "Equipment rental", "Beginner orientation"] },
+  { tier: "Monthly", price: "€49", features: ["Unlimited visits", "Locker access", "Community events", "Discount lessons"] },
+  { tier: "Annual", price: "€399", features: ["All monthly benefits", "Guest passes (12)", "Priority classes", "Exclusive merchandise"] },
+]
+
+const GRADES = [
+  { range: "V0-V2", climbers: 45, color: "#ff6b2b" },
+  { range: "V3-V5", climbers: 38, color: "#ff6b2b" },
+  { range: "V6-V8", climbers: 15, color: "#2d5a3d" },
+  { range: "V9+", climbers: 8, color: "#2d5a3d" },
+]
+
+const EVENTS = [
+  { type: "Competition", description: "Monthly local & regional climbing competitions" },
+  { type: "Social", description: "Weekly hangouts, film nights, group climbs" },
+  { type: "Clinic", description: "Expert-led technique workshops and training sessions" },
+  { type: "Youth", description: "After-school programs for ages 6-18" },
+]
+
+const COACHES = [
+  { name: "Alex Rivera", cert: "IFSC Level 2", image: "https://i.pravatar.cc/150?img=9" },
+  { name: "Jamie Park", cert: "Professional Guide", image: "https://i.pravatar.cc/150?img=10" },
+  { name: "Chris Nowak", cert: "Youth Specialist", image: "https://i.pravatar.cc/150?img=11" },
+  { name: "Sofia Mendez", cert: "Strength Coach", image: "https://i.pravatar.cc/150?img=12" },
+]
+
+export default function SummitClimbingPage() {
+  const [selectedFacility, setSelectedFacility] = useState(0)
 
   return (
-    <div className="premium-theme bg-[#0a0806] text-[#e8dcc8] min-h-screen selection:bg-amber-600 selection:text-white font-serif overflow-x-hidden">
-      
-      {/* Background HUD Layers */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[45vw] font-black opacity-[0.02] select-none pointer-events-none italic tracking-tighter text-center uppercase">
-           MAISON
-        </div>
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.05] mix-blend-screen" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#0a0806_100%)] opacity-80" />
-      </div>
+    <div className="min-h-screen" style={{ background: "#f8f8f6" }}>
+      {/* Hero with Particles */}
+      <section className="relative h-screen overflow-hidden flex flex-col items-center justify-center">
+        <Image
+          src="https://images.unsplash.com/photo-1522163182402-834f871fd851?w=1600&auto=format&fit=crop"
+          alt="Summit Climbing"
+          fill
+          className="object-cover"
+          priority
+        />
+        <div className="absolute inset-0 bg-black/40" />
 
-      {/* Editorial HUD Nav */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-center bg-transparent backdrop-blur-3xl border-b border-amber-900/10 font-mono">
-        <div className="flex gap-12 items-center">
-           <button onClick={() => setView("menu")} className="text-xl font-light tracking-[0.3em] hover:scale-105 transition-transform font-serif uppercase text-[#e8dcc8]">
-              MAISON_DORÉE&trade;
-           </button>
-           <div className="hidden lg:flex gap-8 text-[10px] font-black uppercase tracking-widest opacity-20 italic">
-              Status: Service_Active
-              <span className="text-amber-600">Ref: 0x104</span>
-           </div>
-        </div>
-        <div className="hidden md:flex gap-12 text-[10px] font-black uppercase tracking-[0.4em] opacity-30">
-           <button onClick={() => setView("menu")} className={`hover:opacity-100 transition-opacity ${view === 'menu' ? 'text-amber-600 opacity-100 underline decoration-amber-600 decoration-2 underline-offset-8 italic' : ''}`}>THE_MENU</button>
-           <button onClick={() => setView("terroir")} className={`hover:opacity-100 transition-opacity ${view === 'terroir' ? 'text-amber-600 opacity-100 underline decoration-amber-600 decoration-2 underline-offset-8 italic' : ''}`}>THE_TERROIR</button>
-        </div>
-        <div className="flex items-center gap-8">
-           <Search className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-           <Menu className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-        </div>
-      </nav>
+        {/* Chalk particles */}
+        {[...Array(8)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-3 h-3 rounded-full"
+            style={{ background: "#f8f8f6", opacity: 0.6 }}
+            animate={{
+              y: [0, -400],
+              x: [Math.random() * 200 - 100, Math.random() * 200 - 100],
+              opacity: [1, 0],
+            }}
+            transition={{ duration: 4 + Math.random() * 2, repeat: Infinity }}
+            initial={{ x: Math.random() * window.innerWidth, y: window.innerHeight }}
+          />
+        ))}
 
-      <AnimatePresence mode="wait">
-        
-        {/* THE MENU VIEW (LANDING) */}
-        {view === "menu" && (
-          <motion.div key="menu" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-48 pb-32 px-12 max-w-[1800px] mx-auto min-h-screen flex flex-col justify-center relative z-10">
-             <header className="mb-24 border-b border-amber-900/20 pb-12 flex flex-col md:flex-row justify-between items-end gap-12">
-                <div>
-                   <span className="text-[10px] uppercase font-black tracking-[1em] opacity-40 mb-4 block underline decoration-amber-900/10 underline-offset-8 italic font-mono">Saison_Deployment // Series_104</span>
-                   <h1 className="text-7xl md:text-[12vw] font-light uppercase tracking-tighter leading-[0.75] font-serif">CARTE. <br/> <span className="text-amber-900">BLANCHE.</span></h1>
-                </div>
-                <div className="text-right flex flex-col items-end">
-                   <div className="text-3xl font-black mb-4 tracking-tighter uppercase opacity-10 italic font-mono text-amber-600">Fine_Dining</div>
-                   <div className="w-64 h-[1px] bg-amber-900/20 rounded-none overflow-hidden">
-                      <motion.div animate={{ width: ['20%', '90%', '40%', '75%'] }} transition={{ duration: 4, repeat: Infinity }} className="h-full bg-amber-600" />
-                   </div>
-                </div>
-             </header>
+        <motion.div className="relative z-10 text-center text-white">
+          <h1 className="text-7xl md:text-8xl font-bold mb-4 uppercase tracking-tighter">SUMMIT</h1>
+          <h2 className="text-5xl md:text-6xl font-light mb-6 uppercase tracking-wider">Climbing Gym</h2>
+          <p className="text-xl opacity-90">Indoor climbing • Community • Challenge</p>
+        </motion.div>
+      </section>
 
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-16 font-mono">
-                {PLATES.map((p, i) => (
-                  <motion.div 
-                    key={p.id} initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                    className="group relative h-[60vh] rounded-none overflow-hidden border border-amber-900/10 hover:border-amber-900/40 transition-all cursor-pointer shadow-2xl bg-[#141210]"
-                    onClick={() => { setActiveItem(i); setView("plate"); }}
-                  >
-                     <Image src={p.img} alt={p.title} fill className="object-cover grayscale opacity-20 group-hover:opacity-40 transition-all duration-[2s] group-hover:scale-110" />
-                     <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                     
-                     <div className="absolute inset-10 flex flex-col justify-between">
-                        <div className="flex justify-between items-start">
-                           <div className="p-4 bg-amber-900/10 border border-amber-900/20 rounded-none opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Utensils className="w-5 h-5 text-amber-600" />
-                           </div>
-                           <div className="text-[10px] font-black uppercase tracking-widest opacity-20 italic text-amber-600">PLATE_0x{i+104}</div>
-                        </div>
-                        <div>
-                           <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-2 block italic text-amber-700">{p.cat} // {p.value}</span>
-                           <h3 className="text-5xl font-light italic uppercase tracking-tighter leading-none font-serif text-[#e8dcc8] transition-all group-hover:tracking-widest">{p.title}</h3>
-                        </div>
-                     </div>
-                  </motion.div>
+      {/* Facilities Tabs */}
+      <section className="py-24 px-8 md:px-20" style={{ background: "#f8f8f6" }}>
+        <Reveal>
+          <div className="max-w-7xl mx-auto">
+            <h2 className="text-5xl font-bold mb-16" style={{ color: "#1c1c1a" }}>Our Facilities</h2>
+            <Tabs defaultValue="0" className="w-full">
+              <TabsList className="grid w-full grid-cols-5 mb-12" style={{ background: "transparent" }}>
+                {FACILITIES.map((f, idx) => (
+                  <TabsTrigger key={idx} value={`${idx}`} style={{ color: "#ff6b2b" }}>
+                    {f.name}
+                  </TabsTrigger>
                 ))}
-             </div>
-          </motion.div>
-        )}
+              </TabsList>
 
-        {/* THE PLATE VIEW (DETAIL) */}
-        {view === "plate" && (
-          <motion.div key="plate" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen">
-             <button onClick={() => setView("menu")} className="fixed top-12 left-12 z-[60] bg-[#e8dcc8] text-black p-5 rounded-none hover:scale-110 transition-transform shadow-2xl">
-                <X className="w-6 h-6" />
-             </button>
+              {FACILITIES.map((facility, idx) => (
+                <TabsContent key={idx} value={`${idx}`}>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                    <Image
+                      src={facility.image}
+                      alt={facility.name}
+                      width={600}
+                      height={400}
+                      className="w-full rounded-lg"
+                    />
+                    <div>
+                      <h3 className="text-4xl font-bold mb-4" style={{ color: "#1c1c1a" }}>{facility.name}</h3>
+                      <p className="text-xl mb-8" style={{ color: "#ff6b2b" }}>{facility.description}</p>
+                      <Badge style={{ background: "#ff6b2b", color: "white" }}>Featured</Badge>
+                    </div>
+                  </div>
+                </TabsContent>
+              ))}
+            </Tabs>
+          </div>
+        </Reveal>
+      </section>
 
-             <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen pt-24 lg:pt-0">
-                <div className="lg:col-span-12 relative flex items-center justify-center p-8 md:p-32 overflow-hidden h-screen bg-[#0a0806]">
-                   <div className="absolute inset-0 opacity-10">
-                      <Image src={PLATES[activeItem].img} alt="Background" fill className="object-cover grayscale" />
-                   </div>
-                   <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[40vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase text-amber-800 font-serif">
-                      CUISINE
-                   </div>
-                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#0a0806_100%)]" />
-                   
-                   <div className="max-w-[1500px] w-full grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10 font-serif">
-                      <motion.div initial={{ scale: 1.1, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1 }} className="relative aspect-square w-full rounded-full overflow-hidden border-8 border-amber-900/10 group bg-neutral-900 shadow-2xl">
-                         <Image src={PLATES[activeItem].img} alt="Spec" fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[3s] opacity-80" priority />
-                         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                         <div className="absolute top-12 left-12 p-4 bg-black/60 backdrop-blur-3xl rounded-none border-2 border-amber-900/10">
-                            <Layers className="w-6 h-6 text-amber-600 animate-pulse" />
-                         </div>
-                      </motion.div>
-
-                      <div className="flex flex-col justify-center space-y-12">
-                         <div className="space-y-6">
-                            <span className="text-[10px] uppercase tracking-[1em] font-black opacity-30 mb-8 block underline decoration-amber-600 decoration-4 underline-offset-8 italic text-amber-500 font-mono">Gastronomy_Sync // {PLATES[activeItem].cat}</span>
-                            <h1 className="text-7xl md:text-[8vw] font-light italic uppercase tracking-tighter leading-none text-[#e8dcc8]">{PLATES[activeItem].title}</h1>
-                            <div className="text-4xl font-light italic tracking-tighter opacity-10 italic text-amber-600">Price: {PLATES[activeItem].value}</div>
-                         </div>
-
-                         <p className="text-3xl font-light italic leading-relaxed uppercase tracking-tight opacity-40 text-[#e8dcc8] leading-relaxed">
-                            A sculptural exploration of {PLATES[activeItem].title}. Prepared with precision at the intersection of terroir and tectonic intent. Season Spring MMXXVI.
-                         </p>
-
-                         <div className="grid grid-cols-2 gap-12 py-12 border-y border-amber-900/20 font-mono text-[#e8dcc8]/60">
-                            {[
-                              { icon: <Globe className="w-5 h-5" />, l: "Terroir", v: "Alpine_High" },
-                              { icon: <Wine className="w-5 h-5" />, l: "Pairing", v: "Reserve_2012" },
-                              { icon: <Shield className="w-5 h-5" />, l: "Source", v: "Traceable_ID" },
-                              { icon: <Activity className="w-5 h-5" />, l: "Service", v: "Active" },
-                            ].map((s, i) => (
-                              <div key={i} className="flex gap-6 items-center">
-                                 <div className="opacity-20 text-amber-600">{s.icon}</div>
-                                 <div className="text-left">
-                                    <div className="text-[10px] font-black opacity-30 uppercase tracking-widest mb-1 italic">{s.l}</div>
-                                    <div className="text-sm font-black uppercase italic tracking-tighter text-[#e8dcc8]">{s.v}</div>
-                                 </div>
-                              </div>
-                            ))}
-                         </div>
-
-                         <div className="flex gap-6 pt-8 font-mono">
-                            <button onClick={() => setView("menu")} className="flex-grow py-8 bg-[#e8dcc8] text-black font-black uppercase text-xs tracking-[1em] hover:bg-white transition-all shadow-2xl">
-                               Return_to_Menu
-                            </button>
-                            <button className="px-12 py-8 border border-amber-900/20 text-[10px] font-black uppercase tracking-[0.5em] hover:scale-105 transition-all text-[#e8dcc8]">
-                               PDF_Carte
-                            </button>
-                         </div>
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
-        {/* THE TERROIR VIEW (INFO) */}
-        {view === "terroir" && (
-          <motion.div key="terroir" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen flex flex-col justify-center">
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center text-[#e8dcc8]">
-                <div className="space-y-16">
-                   <span className="text-[10px] uppercase font-black tracking-[1.5em] opacity-30 block underline decoration-amber-600 decoration-2 underline-offset-8 italic font-mono text-amber-500">The_Terroir_Protocol</span>
-                   <h2 className="text-7xl md:text-[10vw] font-light italic tracking-tighter leading-none text-white uppercase font-serif">The <br/> Truth.</h2>
-                   <p className="text-3xl md:text-4xl font-light italic opacity-60 leading-relaxed uppercase tracking-tight text-[#e8dcc8]/60 font-serif">
-                      We treat architecture as code. Every plate is a function of its environmental variables and tectonic intent. 100% precision. Zero noise.
-                   </p>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t border-amber-900/20 font-mono text-amber-500">
-                      {[
-                        { icon: <Sparkles className="w-6 h-6" />, t: "Adaptive Flow", v: "Dynamic Load Sync" },
-                        { icon: <Plus className="w-6 h-6" />, t: "Structural Sync", v: "Deep_Material_ID" },
-                      ].map((item, i) => (
-                        <div key={i} className="flex gap-8 group">
-                           <div className="w-16 h-16 rounded-none border border-amber-900 flex items-center justify-center text-amber-500 group-hover:bg-amber-600 group-hover:text-black transition-all shadow-xl">
-                              {item.icon}
-                           </div>
-                           <div className="text-left">
-                              <h4 className="text-2xl font-black uppercase italic tracking-tighter text-[#e8dcc8] leading-none mb-2 font-serif">{item.t}</h4>
-                              <p className="text-[10px] opacity-30 uppercase tracking-[0.3em] font-black leading-relaxed text-amber-500/40">{item.v}</p>
-                           </div>
-                        </div>
+      {/* Memberships */}
+      <section className="py-24 px-8 md:px-20" style={{ background: "#f0ebe0" }}>
+        <Reveal>
+          <div className="max-w-7xl mx-auto">
+            <h2 className="text-5xl font-bold mb-12" style={{ color: "#1c1c1a" }}>Membership Plans</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {MEMBERSHIPS.map((m, idx) => (
+                <Card key={idx} style={{ background: "#f8f8f6", borderColor: "#ff6b2b", borderWidth: "2px" }}>
+                  <CardContent className="pt-8">
+                    <h3 className="text-2xl font-bold mb-2" style={{ color: "#1c1c1a" }}>{m.tier}</h3>
+                    <div className="text-4xl font-bold mb-6" style={{ color: "#ff6b2b" }}>{m.price}</div>
+                    <ul className="space-y-3">
+                      {m.features.map((f, i) => (
+                        <li key={i} className="flex items-center gap-2">
+                          <span style={{ color: "#ff6b2b" }}>✓</span>
+                          <span style={{ color: "#1c1c1a" }}>{f}</span>
+                        </li>
                       ))}
-                   </div>
-                </div>
-                <div className="relative aspect-square bg-[#1a1210] rounded-none p-12 overflow-hidden border border-amber-900/20 group shadow-2xl">
-                   <Image src="https://images.unsplash.com/photo-1541829070764-84a7d30dee62?q=80&w=1000&auto=format&fit=crop" alt="The Archive" fill className="object-cover opacity-20 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-[3s]" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                   <div className="absolute inset-x-0 bottom-12 flex justify-center font-mono">
-                      <div className="px-12 py-6 bg-amber-600 text-white text-[10px] font-black uppercase tracking-widest italic animate-bounce cursor-pointer hover:bg-amber-700 transition-all">
-                         Establish_Handshake
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
-      </AnimatePresence>
-
-      {/* Global Status HUD */}
-      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em] italic text-amber-600 leading-none font-mono">
-         <div className="flex gap-12 text-amber-600">
-            <span>Maison_Alpha</span>
-            <span>Uptime: 99.9%</span>
-         </div>
-         <div className="flex gap-4 items-end text-amber-600">
-            <div className="text-right leading-tight italic">
-               Inventory_Control <br /> v4.0.104
+                    </ul>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
-            <div className="flex gap-[4px] h-4">
-               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-full bg-amber-600 opacity-${i*20}`}></div>)}
-            </div>
-         </div>
-      </footer>
+          </div>
+        </Reveal>
+      </section>
 
-      <style>{`
-        ::-webkit-scrollbar { width: 0px; }
-      `}</style>
+      {/* Grade Progress */}
+      <section className="py-24 px-8 md:px-20" style={{ background: "#f8f8f6" }}>
+        <Reveal>
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-5xl font-bold mb-12" style={{ color: "#1c1c1a" }}>Community Progress</h2>
+            <div className="space-y-8">
+              {GRADES.map((g, idx) => (
+                <div key={idx}>
+                  <div className="flex justify-between mb-2">
+                    <span className="font-bold" style={{ color: "#1c1c1a" }}>{g.range}</span>
+                    <span style={{ color: "#ff6b2b" }}>{g.climbers} climbers</span>
+                  </div>
+                  <Progress value={(g.climbers / 50) * 100} className="h-3" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </Reveal>
+      </section>
+
+      {/* Events Accordion */}
+      <section className="py-24 px-8 md:px-20" style={{ background: "#f0ebe0" }}>
+        <Reveal>
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-5xl font-bold mb-12" style={{ color: "#1c1c1a" }}>Upcoming Events</h2>
+            <Accordion type="single" collapsible>
+              {EVENTS.map((e, idx) => (
+                <AccordionItem key={idx} value={`event-${idx}`}>
+                  <AccordionTrigger style={{ color: "#1c1c1a" }}>{e.type}</AccordionTrigger>
+                  <AccordionContent style={{ color: "#ff6b2b" }}>{e.description}</AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </div>
+        </Reveal>
+      </section>
+
+      {/* Stats */}
+      <section className="py-24 px-8 md:px-20" style={{ background: "#ff6b2b" }}>
+        <Reveal>
+          <div className="max-w-7xl mx-auto">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-12 text-center text-white">
+              <div><div className="text-5xl font-bold mb-2"><Counter target={2000} /></div><p className="text-sm opacity-80">Members</p></div>
+              <div><div className="text-5xl font-bold mb-2"><Counter target={500} /></div><p className="text-sm opacity-80">Routes Set</p></div>
+              <div><div className="text-5xl font-bold mb-2"><Counter target={15} /></div><p className="text-sm opacity-80">m Wall Height</p></div>
+              <div><div className="text-5xl font-bold mb-2">Weekly</div><p className="text-sm opacity-80">New Routes</p></div>
+            </div>
+          </div>
+        </Reveal>
+      </section>
+
+      {/* Coaching Team */}
+      <section className="py-24 px-8 md:px-20" style={{ background: "#f8f8f6" }}>
+        <Reveal>
+          <div className="max-w-7xl mx-auto">
+            <h2 className="text-5xl font-bold mb-12" style={{ color: "#1c1c1a" }}>Our Coaches</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+              {COACHES.map((c, idx) => (
+                <div key={idx} className="text-center">
+                  <Avatar className="w-20 h-20 mx-auto mb-4">
+                    <AvatarImage src={c.image} />
+                    <AvatarFallback>{c.name[0]}</AvatarFallback>
+                  </Avatar>
+                  <p className="font-bold text-lg" style={{ color: "#1c1c1a" }}>{c.name}</p>
+                  <Badge style={{ background: "#ff6b2b", color: "white" }}>{c.cert}</Badge>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Reveal>
+      </section>
+
+      {/* Testimonials */}
+      <section className="py-24 px-8 md:px-20" style={{ background: "#f0ebe0" }}>
+        <Reveal>
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-5xl font-bold mb-12 text-center" style={{ color: "#1c1c1a" }}>Member Stories</h2>
+            <Carousel>
+              <CarouselContent>
+                {[
+                  { text: "Summit changed my life. I found my community here.", author: "Emma L." },
+                  { text: "The coaches are patient, knowledgeable, and genuinely supportive.", author: "Marco K." },
+                ].map((t, idx) => (
+                  <CarouselItem key={idx}>
+                    <div className="p-12 rounded-lg text-center" style={{ background: "#f8f8f6" }}>
+                      <p className="text-xl italic mb-6" style={{ color: "#ff6b2b" }}>"{t.text}"</p>
+                      <p className="font-bold" style={{ color: "#1c1c1a" }}>— {t.author}</p>
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious />
+              <CarouselNext />
+            </Carousel>
+          </div>
+        </Reveal>
+      </section>
+
+      {/* FAQ */}
+      <section className="py-24 px-8 md:px-20" style={{ background: "#f8f8f6" }}>
+        <Reveal>
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-5xl font-bold mb-12" style={{ color: "#1c1c1a" }}>FAQ</h2>
+            <Accordion type="single" collapsible>
+              {[
+                { q: "Do I need experience to start?", a: "No! We offer beginner orientations and classes for all levels." },
+                { q: "What should I bring?", a: "Just yourself. We provide climbing shoes, harnesses, and chalk." },
+              ].map((item, idx) => (
+                <AccordionItem key={idx} value={`faq-${idx}`}>
+                  <AccordionTrigger style={{ color: "#1c1c1a" }}>{item.q}</AccordionTrigger>
+                  <AccordionContent style={{ color: "#ff6b2b" }}>{item.a}</AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </div>
+        </Reveal>
+      </section>
+
+      {/* Trial CTA */}
+      <section className="py-24 px-8 md:px-20 text-center" style={{ background: "#2d5a3d" }}>
+        <Reveal>
+          <h2 className="text-5xl font-bold text-white mb-8">Start Your Climbing Journey</h2>
+          <Dialog>
+            <motion.button
+              className="px-12 py-4 bg-white font-bold"
+              style={{ color: "#ff6b2b" }}
+              whileHover={{ scale: 1.05 }}
+            >
+              Book Free Trial
+            </motion.button>
+            <DialogContent style={{ background: "#f8f8f6" }}>
+              <DialogHeader>
+                <DialogTitle>Book Your Free Trial</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <input type="text" placeholder="Your Name" className="w-full p-3 border rounded" />
+                <input type="email" placeholder="Email" className="w-full p-3 border rounded" />
+                <select className="w-full p-3 border rounded">
+                  <option>Select Experience Level</option>
+                  <option>Beginner</option>
+                  <option>Intermediate</option>
+                  <option>Advanced</option>
+                </select>
+                <button className="w-full py-3 text-white font-bold" style={{ background: "#ff6b2b" }}>Reserve Trial</button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </Reveal>
+      </section>
     </div>
-  );
+  )
 }

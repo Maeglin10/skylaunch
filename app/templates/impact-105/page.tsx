@@ -1,231 +1,334 @@
-"use client";
+"use client"
+import { motion, useScroll, useTransform, useInView, AnimatePresence, useMotionValue, useSpring } from "framer-motion"
+import { useState, useRef, useEffect } from "react"
+import Image from "next/image"
+import Link from "next/link"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
+import { Progress } from "@/components/ui/progress"
 
-import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
-import Image from "next/image";
-import { X, Menu, Search, Home, Zap, Activity, Globe, Shield, Command, Plus, ArrowUpRight, Maximize2, MoveRight, Layers, Box, Compass, Sparkles, MoveVertical, Building } from "lucide-react";
-import "../premium.css";
+function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: "-60px" })
+  return <motion.div ref={ref} initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, delay }}>{children}</motion.div>
+}
 
-const SLIDES = [
-  { id: 1, title: "VILLA_MERIDIAN", cat: "Coastal", value: "$12.5M", img: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=1000&auto=format&fit=crop", loc: "Malibu, CA" },
-  { id: 2, title: "HAUS_ELYSIUM", cat: "Alpine", value: "CHF 9.8M", img: "https://images.unsplash.com/photo-1613490493576-7fde63acd811?q=80&w=1000&auto=format&fit=crop", loc: "Zurich, CH" },
-  { id: 3, title: "LE_DOMAINE", cat: "Estate", value: "€7.2M", img: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?q=80&w=1000&auto=format&fit=crop", loc: "Provence, FR" },
-];
+function Counter({ target, suffix = "" }: { target: number; suffix?: string }) {
+  const [count, setCount] = useState(0)
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true })
+  useEffect(() => {
+    if (!inView) return
+    const step = Math.ceil(target / 60)
+    const t = setInterval(() => setCount(c => Math.min(c + step, target)), 16)
+    return () => clearInterval(t)
+  }, [inView, target])
+  return <span ref={ref}>{count.toLocaleString()}{suffix}</span>
+}
 
-export default function ElysiumEstatesSPA() {
-  const [view, setView] = useState<"estates" | "residence" | "collection">("estates");
-  const [activeItem, setActiveItem] = useState(0);
+function MagneticBtn({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  const x = useMotionValue(0); const y = useMotionValue(0)
+  const sx = useSpring(x, { stiffness: 500, damping: 25 })
+  const sy = useSpring(y, { stiffness: 500, damping: 25 })
+  const ref = useRef<HTMLButtonElement>(null)
+  const handleMouse = (e: React.MouseEvent) => {
+    const r = ref.current!.getBoundingClientRect()
+    x.set((e.clientX - r.left - r.width / 2) * 0.35)
+    y.set((e.clientY - r.top - r.height / 2) * 0.35)
+  }
+  return <motion.button ref={ref} style={{ x: sx, y: sy }} onMouseMove={handleMouse} onMouseLeave={() => { x.set(0); y.set(0) }} className={className}>{children}</motion.button>
+}
+
+function PulsingVital() {
+  return (
+    <motion.div
+      className="w-4 h-4 rounded-full"
+      style={{ background: "#0284c7" }}
+      animate={{ scale: [1, 1.2, 1], opacity: [1, 0.6, 1] }}
+      transition={{ duration: 1.5, repeat: Infinity }}
+    />
+  )
+}
+
+const SPECIALTIES = [
+  { name: "Primary Care", icon: "🏥", description: "General health, preventive care, chronic management" },
+  { name: "Mental Health", icon: "🧠", description: "Therapy, counseling, stress management" },
+  { name: "Dermatology", icon: "💆", description: "Skin conditions, acne, anti-aging consultation" },
+  { name: "Nutrition", icon: "🥗", description: "Diet planning, metabolic health, supplements" },
+  { name: "Pediatrics", icon: "👶", description: "Child health, development, vaccinations" },
+]
+
+const DOCTORS = [
+  { name: "Dr. Sarah Chen", specialty: "Primary Care", rating: 4.9, image: "https://i.pravatar.cc/150?img=13", credentials: "MD, Board Certified" },
+  { name: "Dr. James Wilson", specialty: "Mental Health", rating: 4.8, image: "https://i.pravatar.cc/150?img=14", credentials: "PhD Psychology" },
+  { name: "Dr. Lisa Rodriguez", specialty: "Dermatology", rating: 5.0, image: "https://i.pravatar.cc/150?img=15", credentials: "MD Dermatology" },
+  { name: "Dr. Ahmed Patel", specialty: "Nutrition", rating: 4.7, image: "https://i.pravatar.cc/150?img=16", credentials: "RD, CNS" },
+]
+
+const INSURANCE = [
+  { name: "United Healthcare", status: "Accepted" },
+  { name: "Blue Cross Blue Shield", status: "Accepted" },
+  { name: "Aetna", status: "Accepted" },
+  { name: "Self-pay", status: "$50 flat fee" },
+]
+
+export default function HelioHealthPage() {
+  const [selectedDoctor, setSelectedDoctor] = useState(0)
+  const [isDoctorOpen, setIsDoctorOpen] = useState(false)
 
   return (
-    <div className="premium-theme bg-[#050505] text-[#f8f8f8] min-h-screen selection:bg-white selection:text-black font-sans overflow-x-hidden">
-      
-      {/* Background HUD Layers */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[45vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase">
-           ELYSIUM
-        </div>
-        <div className="absolute inset-0 bg-[#050505]/40 backdrop-blur-[2px]" />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-screen" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#050505_100%)] opacity-80" />
-      </div>
+    <div className="min-h-screen" style={{ background: "#f8fafc" }}>
+      {/* Hero with Pulsing Vitals */}
+      <section className="relative h-screen overflow-hidden flex flex-col items-center justify-center" style={{ background: "linear-gradient(135deg, #f8fafc 0%, #e0f2fe 100%)" }}>
+        <motion.div className="absolute top-20 right-20 text-center">
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <PulsingVital />
+            <span style={{ color: "#0284c7", fontSize: "0.875rem" }}>Vitals: Optimal</span>
+          </div>
+        </motion.div>
 
-      {/* Editorial HUD Nav */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-center bg-black/40 backdrop-blur-3xl border-b border-white/5 font-mono">
-        <div className="flex gap-12 items-center">
-           <button onClick={() => setView("estates")} className="text-xl font-light tracking-[0.4em] hover:scale-105 transition-transform font-sans uppercase">
-              ELYSIUM_ESTATES&trade;
-           </button>
-           <div className="hidden lg:flex gap-8 text-[10px] font-black uppercase tracking-widest opacity-20 italic">
-              Status: Portfolio_Live
-              <span className="text-white">Ref: 0x105</span>
-           </div>
-        </div>
-        <div className="hidden md:flex gap-12 text-[10px] font-black uppercase tracking-[0.4em] opacity-30">
-           <button onClick={() => setView("estates")} className={`hover:opacity-100 transition-opacity ${view === 'estates' ? 'text-white opacity-100 underline decoration-white decoration-2 underline-offset-8 italic' : ''}`}>THE_ESTATES</button>
-           <button onClick={() => setView("collection")} className={`hover:opacity-100 transition-opacity ${view === 'collection' ? 'text-white opacity-100 underline decoration-white decoration-2 underline-offset-8 italic' : ''}`}>THE_COLLECTION</button>
-        </div>
-        <div className="flex items-center gap-8">
-           <Search className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-           <Menu className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-        </div>
-      </nav>
+        <motion.div className="text-center z-10">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1 }}
+          >
+            <h1 className="text-7xl md:text-8xl font-light mb-4" style={{ color: "#0f172a", fontFamily: "Georgia, serif" }}>HELIO HEALTH</h1>
+            <p className="text-xl" style={{ color: "#0284c7" }}>Telemedicine • 24/7 Care • Board-Certified Doctors</p>
+          </motion.div>
+        </motion.div>
+      </section>
 
-      <AnimatePresence mode="wait">
-        
-        {/* THE ESTATES VIEW (LANDING) */}
-        {view === "estates" && (
-          <motion.div key="estates" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-48 pb-32 px-12 max-w-[1800px] mx-auto min-h-screen flex flex-col justify-center relative z-10">
-             <header className="mb-24 border-b border-white/10 pb-12 flex flex-col md:flex-row justify-between items-end gap-12">
-                <div>
-                   <span className="text-[10px] uppercase font-black tracking-[1em] opacity-40 mb-4 block underline decoration-white/10 underline-offset-8 italic font-mono">Asset_Deployment // Series_105</span>
-                   <h1 className="text-7xl md:text-[12vw] font-extralight uppercase tracking-tighter leading-[0.75]">PRIVATE. <br/> <span className="opacity-40">HOLDINGS.</span></h1>
-                </div>
-                <div className="text-right flex flex-col items-end">
-                   <div className="text-3xl font-black mb-4 tracking-tighter uppercase opacity-10 italic font-mono text-white">Curated_Vault</div>
-                   <div className="w-64 h-[1px] bg-white/5 rounded-none overflow-hidden">
-                      <motion.div animate={{ width: ['20%', '90%', '40%', '75%'] }} transition={{ duration: 4, repeat: Infinity }} className="h-full bg-white" />
-                   </div>
-                </div>
-             </header>
-
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 font-mono">
-                {SLIDES.map((p, i) => (
-                  <motion.div 
-                    key={p.id} initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                    className="group relative h-[60vh] rounded-none overflow-hidden border border-white/5 hover:border-white/20 transition-all cursor-pointer shadow-2xl bg-white/5"
-                    onClick={() => { setActiveItem(i); setView("residence"); }}
-                  >
-                     <Image src={p.img} alt={p.title} fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[2s] group-hover:scale-110" />
-                     <div className="absolute inset-0 bg-black/40 group-hover:bg-transparent transition-colors duration-1000" />
-                     
-                     <div className="absolute inset-10 flex flex-col justify-between">
-                        <div className="flex justify-between items-start">
-                           <div className="p-4 bg-white/10 border border-white/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Home className="w-5 h-5 text-white" />
-                           </div>
-                           <div className="text-[10px] font-black uppercase tracking-widest opacity-20 italic text-white">UNIT_0x{i+105}</div>
-                        </div>
-                        <div>
-                           <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-2 block italic text-white">{p.loc} // {p.value}</span>
-                           <h3 className="text-5xl font-extralight italic uppercase tracking-tighter leading-none text-white transition-all group-hover:tracking-widest">{p.title}</h3>
-                        </div>
-                     </div>
-                  </motion.div>
+      {/* Specialties Tabs with Doctor Cards */}
+      <section className="py-24 px-8 md:px-20" style={{ background: "#f8fafc" }}>
+        <Reveal>
+          <div className="max-w-7xl mx-auto">
+            <h2 className="text-5xl font-light mb-16" style={{ color: "#0f172a" }}>Our Specialties</h2>
+            <Tabs defaultValue="0" className="w-full">
+              <TabsList className="grid w-full grid-cols-5 mb-12" style={{ background: "transparent" }}>
+                {SPECIALTIES.map((s, idx) => (
+                  <TabsTrigger key={idx} value={`${idx}`} style={{ color: "#0284c7" }}>
+                    {s.icon} {s.name}
+                  </TabsTrigger>
                 ))}
-             </div>
-          </motion.div>
-        )}
+              </TabsList>
 
-        {/* THE RESIDENCE VIEW (DETAIL) */}
-        {view === "residence" && (
-          <motion.div key="residence" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen">
-             <button onClick={() => setView("estates")} className="fixed top-12 left-12 z-[60] bg-white text-black p-5 rounded-full hover:scale-110 transition-transform shadow-2xl">
-                <X className="w-6 h-6" />
-             </button>
-
-             <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen pt-24 lg:pt-0">
-                <div className="lg:col-span-12 relative flex items-center justify-center p-8 md:p-32 overflow-hidden h-screen bg-[#050505]">
-                   <div className="absolute inset-0 opacity-10">
-                      <Image src={SLIDES[activeItem].img} alt="Background" fill className="object-cover" />
-                   </div>
-                   <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[40vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase text-white font-sans">
-                      ELYS
-                   </div>
-                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#050505_100%)]" />
-                   
-                   <div className="max-w-[1500px] w-full grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10 font-sans">
-                      <motion.div initial={{ scale: 1.1, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1 }} className="relative aspect-square w-full rounded-none overflow-hidden border border-white/10 group bg-neutral-900 shadow-2xl">
-                         <Image src={SLIDES[activeItem].img} alt="Residence" fill className="object-cover group-hover:scale-110 transition-all duration-[5s] opacity-80" priority />
-                         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                         <div className="absolute top-12 left-12 p-4 bg-black/60 backdrop-blur-3xl rounded-none border-2 border-white/10">
-                            <Layers className="w-6 h-6 text-white animate-pulse" />
-                         </div>
-                      </motion.div>
-
-                      <div className="flex flex-col justify-center space-y-12">
-                         <div className="space-y-6">
-                            <span className="text-[10px] uppercase tracking-[1em] font-black opacity-30 mb-8 block underline decoration-white decoration-4 underline-offset-8 italic text-white font-mono">Estate_Sync // {SLIDES[activeItem].cat}</span>
-                            <h1 className="text-7xl md:text-[8vw] font-extralight uppercase tracking-tighter leading-none text-white">{SLIDES[activeItem].title}</h1>
-                            <div className="text-4xl font-extralight italic tracking-tighter opacity-10 italic text-white">Market: {SLIDES[activeItem].value}</div>
-                         </div>
-
-                         <p className="text-3xl font-extralight italic leading-relaxed uppercase tracking-tight opacity-40 text-white leading-relaxed">
-                            A sculptural architectural asset in {SLIDES[activeItem].loc}. System integrity at 100%. Climate control nominal. Every coordinate synchronized for the ultimate residence experience.
-                         </p>
-
-                         <div className="grid grid-cols-2 gap-12 py-12 border-y border-white/10 font-mono text-white/60">
-                            {[
-                              { icon: <Globe className="w-5 h-5" />, l: "Region", v: SLIDES[activeItem].loc },
-                              { icon: <Building className="w-5 h-5" />, l: "Type", v: "Private_Core" },
-                              { icon: <Shield className="w-5 h-5" />, l: "Security", v: "High_Impact" },
-                              { icon: <Activity className="w-5 h-5" />, l: "Status", v: "Tier_Alpha" },
-                            ].map((s, i) => (
-                              <div key={i} className="flex gap-6 items-center">
-                                 <div className="opacity-20 text-white">{s.icon}</div>
-                                 <div className="text-left">
-                                    <div className="text-[10px] font-black opacity-30 uppercase tracking-widest mb-1 italic">{s.l}</div>
-                                    <div className="text-sm font-black uppercase italic tracking-tighter text-white">{s.v}</div>
-                                 </div>
-                              </div>
-                            ))}
-                         </div>
-
-                         <div className="flex gap-6 pt-8 font-mono">
-                            <button onClick={() => setView("estates")} className="flex-grow py-8 bg-white text-black font-black uppercase text-xs tracking-[1em] hover:bg-stone-200 transition-all shadow-2xl">
-                               Return_to_Vault
-                            </button>
-                            <button className="px-12 py-8 border border-white/20 text-[10px] font-black uppercase tracking-[0.5em] hover:scale-105 transition-all text-white">
-                               Request_Visit
-                            </button>
-                         </div>
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
-        {/* THE COLLECTION VIEW (INFO) */}
-        {view === "collection" && (
-          <motion.div key="collection" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen flex flex-col justify-center">
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center text-white">
-                <div className="space-y-16">
-                   <span className="text-[10px] uppercase font-black tracking-[1.5em] opacity-30 block underline decoration-white decoration-2 underline-offset-8 italic font-mono">The_Collection_Protocol</span>
-                   <h2 className="text-7xl md:text-[10vw] font-extralight italic tracking-tighter leading-none text-white uppercase font-sans">The <br/> Truth.</h2>
-                   <p className="text-3xl md:text-4xl font-extralight italic opacity-60 leading-relaxed uppercase tracking-tight text-white/60 font-sans">
-                      We treat architecture as code. Every structure is a function of its environmental variables and tectonic intent. 100% precision. Zero noise.
-                   </p>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t border-white/10 font-mono text-white">
-                      {[
-                        { icon: <Sparkles className="w-6 h-6" />, t: "Adaptive Flow", v: "Dynamic Load Sync" },
-                        { icon: <Plus className="w-6 h-6" />, t: "Structural Sync", v: "Deep_Material_ID" },
-                      ].map((item, i) => (
-                        <div key={i} className="flex gap-8 group">
-                           <div className="w-16 h-16 rounded-none border border-white flex items-center justify-center text-white group-hover:bg-white group-hover:text-black transition-all shadow-xl">
-                              {item.icon}
-                           </div>
-                           <div className="text-left">
-                              <h4 className="text-2xl font-black uppercase italic tracking-tighter text-white leading-none mb-2 font-sans">{item.t}</h4>
-                              <p className="text-[10px] opacity-30 uppercase tracking-[0.3em] font-black leading-relaxed text-white/40">{item.v}</p>
-                           </div>
-                        </div>
+              {SPECIALTIES.map((specialty, idx) => (
+                <TabsContent key={idx} value={`${idx}`}>
+                  <div className="mb-12">
+                    <p className="text-lg mb-8" style={{ color: "#16a34a" }}>{specialty.description}</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      {DOCTORS.slice(0, 2).map((d, i) => (
+                        <motion.div
+                          key={i}
+                          className="p-8 rounded-lg cursor-pointer group"
+                          style={{ background: "#e0f2fe", border: "1px solid #0284c7" }}
+                          onClick={() => {
+                            setSelectedDoctor(i)
+                            setIsDoctorOpen(true)
+                          }}
+                          whileHover={{ scale: 1.05 }}
+                        >
+                          <div className="flex items-center gap-4 mb-4">
+                            <Avatar className="w-16 h-16">
+                              <AvatarImage src={d.image} />
+                              <AvatarFallback>{d.name[0]}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="font-light text-lg" style={{ color: "#0f172a" }}>{d.name}</p>
+                              <Badge style={{ background: "#0284c7", color: "white" }}>{d.credentials}</Badge>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span style={{ color: "#16a34a" }}>★ {d.rating}</span>
+                          </div>
+                        </motion.div>
                       ))}
-                   </div>
+                    </div>
+                  </div>
+                </TabsContent>
+              ))}
+            </Tabs>
+          </div>
+        </Reveal>
+      </section>
+
+      {/* Doctor Dialog */}
+      <Dialog open={isDoctorOpen} onOpenChange={setIsDoctorOpen}>
+        <DialogContent className="max-w-2xl" style={{ background: "#f8fafc" }}>
+          <DialogHeader>
+            <DialogTitle className="text-3xl font-light">{DOCTORS[selectedDoctor].name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6">
+            <div className="flex items-start gap-6">
+              <Avatar className="w-24 h-24">
+                <AvatarImage src={DOCTORS[selectedDoctor].image} />
+                <AvatarFallback>{DOCTORS[selectedDoctor].name[0]}</AvatarFallback>
+              </Avatar>
+              <div>
+                <Badge style={{ background: "#0284c7", color: "white" }} className="mb-2">{DOCTORS[selectedDoctor].credentials}</Badge>
+                <p className="text-lg font-light mb-2">{DOCTORS[selectedDoctor].specialty}</p>
+                <div className="flex items-center gap-2">
+                  <span style={{ color: "#16a34a" }}>★ {DOCTORS[selectedDoctor].rating} avg rating</span>
                 </div>
-                <div className="relative aspect-square bg-[#1a1a1a] rounded-none p-12 overflow-hidden border border-white/5 group shadow-2xl">
-                   <Image src="https://images.unsplash.com/photo-1541829070764-84a7d30dee62?q=80&w=1000&auto=format&fit=crop" alt="The Archive" fill className="object-cover opacity-20 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-[3s]" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                   <div className="absolute inset-x-0 bottom-12 flex justify-center font-mono">
-                      <div className="px-12 py-6 bg-white text-black text-[10px] font-black uppercase tracking-widest italic animate-bounce cursor-pointer hover:bg-stone-200 transition-all">
-                         Establish_Handshake
-                      </div>
-                   </div>
+              </div>
+            </div>
+            <div>
+              <p className="text-sm opacity-70 mb-2">Availability</p>
+              <p className="font-light">Monday - Friday: 9 AM - 6 PM</p>
+              <p className="font-light">Saturday: 10 AM - 2 PM</p>
+            </div>
+            <button className="w-full py-3 text-white font-light" style={{ background: "#0284c7" }}>Schedule Appointment</button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* How It Works */}
+      <section className="py-24 px-8 md:px-20" style={{ background: "#e0f2fe" }}>
+        <Reveal>
+          <div className="max-w-7xl mx-auto">
+            <h2 className="text-5xl font-light mb-16" style={{ color: "#0f172a" }}>How It Works</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+              {[
+                { step: "1", title: "Book", description: "Select your doctor, date, and time within minutes" },
+                { step: "2", title: "Connect", description: "Join video call from home, work, or anywhere" },
+                { step: "3", title: "Get Care", description: "Receive diagnosis, prescriptions, and follow-up" },
+              ].map((item, idx) => (
+                <div key={idx} className="text-center">
+                  <div className="text-5xl font-light mb-4" style={{ color: "#0284c7" }}>{item.step}</div>
+                  <h3 className="text-2xl font-light mb-2" style={{ color: "#0f172a" }}>{item.title}</h3>
+                  <p style={{ color: "#64748b" }}>{item.description}</p>
                 </div>
-             </div>
-          </motion.div>
-        )}
-
-      </AnimatePresence>
-
-      {/* Global Status HUD */}
-      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em] italic text-white leading-none font-mono">
-         <div className="flex gap-12 text-white">
-            <span>Elysium_Estates_Alpha</span>
-            <span>Uptime: 99.9%</span>
-         </div>
-         <div className="flex gap-4 items-end text-white">
-            <div className="text-right leading-tight italic">
-               Inventory_Control <br /> v4.0.105
+              ))}
             </div>
-            <div className="flex gap-[4px] h-4">
-               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-full bg-white opacity-${i*20}`}></div>)}
-            </div>
-         </div>
-      </footer>
+          </div>
+        </Reveal>
+      </section>
 
-      <style>{`
-        ::-webkit-scrollbar { width: 0px; }
-      `}</style>
+      {/* Stats */}
+      <section className="py-24 px-8 md:px-20" style={{ background: "#0284c7" }}>
+        <Reveal>
+          <div className="max-w-7xl mx-auto">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-12 text-center text-white">
+              <div><div className="text-5xl font-light mb-2"><Counter target={50000} suffix="K" /></div><p className="text-sm opacity-80">Patients Served</p></div>
+              <div><div className="text-5xl font-light mb-2"><Counter target={500} /></div><p className="text-sm opacity-80">Doctors</p></div>
+              <div><div className="text-5xl font-light mb-2">24/7</div><p className="text-sm opacity-80">Availability</p></div>
+              <div><div className="text-5xl font-light mb-2"><Counter target={49} suffix="/10" /></div><p className="text-sm opacity-80">Avg Rating</p></div>
+            </div>
+          </div>
+        </Reveal>
+      </section>
+
+      {/* Insurance */}
+      <section className="py-24 px-8 md:px-20" style={{ background: "#f8fafc" }}>
+        <Reveal>
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-5xl font-light mb-12" style={{ color: "#0f172a" }}>Insurance & Pricing</h2>
+            <Accordion type="single" collapsible>
+              {INSURANCE.map((ins, idx) => (
+                <AccordionItem key={idx} value={`ins-${idx}`} style={{ borderColor: "#0284c7" }}>
+                  <AccordionTrigger style={{ color: "#0f172a" }}>{ins.name}</AccordionTrigger>
+                  <AccordionContent style={{ color: "#0284c7" }}>{ins.status}</AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </div>
+        </Reveal>
+      </section>
+
+      {/* Security & Trust */}
+      <section className="py-24 px-8 md:px-20" style={{ background: "#e0f2fe" }}>
+        <Reveal>
+          <div className="max-w-7xl mx-auto text-center">
+            <h2 className="text-5xl font-light mb-12" style={{ color: "#0f172a" }}>Trust & Security</h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
+              {["HIPAA Compliant", "End-to-End Encrypted", "SSL Secure", "FDA Approved", "CLIA Certified", "24/7 Support"].map((item, idx) => (
+                <Badge key={idx} style={{ background: "#16a34a", color: "white", padding: "1rem" }} className="text-center justify-center">
+                  {item}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        </Reveal>
+      </section>
+
+      {/* Testimonials */}
+      <section className="py-24 px-8 md:px-20" style={{ background: "#f8fafc" }}>
+        <Reveal>
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-5xl font-light mb-12 text-center" style={{ color: "#0f172a" }}>Patient Testimonials</h2>
+            <Carousel>
+              <CarouselContent>
+                {[
+                  { text: "Incredibly convenient. No more waiting rooms, just quality care.", author: "Jennifer M." },
+                  { text: "The doctors are thorough and compassionate. Highly recommend.", author: "Robert K." },
+                ].map((t, idx) => (
+                  <CarouselItem key={idx}>
+                    <div className="p-12 rounded-lg text-center" style={{ background: "#e0f2fe" }}>
+                      <p className="text-xl italic mb-6" style={{ color: "#0284c7" }}>"{t.text}"</p>
+                      <p className="font-light" style={{ color: "#0f172a" }}>— {t.author}</p>
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious />
+              <CarouselNext />
+            </Carousel>
+          </div>
+        </Reveal>
+      </section>
+
+      {/* FAQ */}
+      <section className="py-24 px-8 md:px-20" style={{ background: "#f8fafc" }}>
+        <Reveal>
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-5xl font-light mb-12" style={{ color: "#0f172a" }}>FAQ</h2>
+            <Accordion type="single" collapsible>
+              {[
+                { q: "Is telemedicine as effective as in-person visits?", a: "Yes, for most conditions. Video consultations allow thorough assessment and treatment." },
+                { q: "How are prescriptions handled?", a: "Prescriptions are sent directly to your pharmacy for pickup or delivery." },
+              ].map((item, idx) => (
+                <AccordionItem key={idx} value={`faq-${idx}`}>
+                  <AccordionTrigger style={{ color: "#0f172a" }}>{item.q}</AccordionTrigger>
+                  <AccordionContent style={{ color: "#0284c7" }}>{item.a}</AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </div>
+        </Reveal>
+      </section>
+
+      {/* CTA */}
+      <section className="py-24 px-8 md:px-20 text-center" style={{ background: "#0284c7" }}>
+        <Reveal>
+          <h2 className="text-5xl font-light text-white mb-8">Start Your Consultation Today</h2>
+          <Dialog>
+            <MagneticBtn className="px-12 py-4 bg-white text-center font-light" style={{ color: "#0284c7" }}>
+              Book Appointment
+            </MagneticBtn>
+            <DialogContent style={{ background: "#f8fafc" }}>
+              <DialogHeader>
+                <DialogTitle>Schedule Your Appointment</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <input type="text" placeholder="Your Name" className="w-full p-3 border rounded" />
+                <input type="email" placeholder="Email" className="w-full p-3 border rounded" />
+                <select className="w-full p-3 border rounded">
+                  <option>Select Specialty</option>
+                  {SPECIALTIES.map(s => <option key={s.name}>{s.name}</option>)}
+                </select>
+                <button className="w-full py-3 text-white font-light" style={{ background: "#0284c7" }}>Continue Booking</button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </Reveal>
+      </section>
     </div>
-  );
+  )
 }
