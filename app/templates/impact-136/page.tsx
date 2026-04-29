@@ -1,238 +1,547 @@
-"use client";
+"use client"
 
-import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
-import { useState, useRef } from "react";
-import Image from "next/image";
-import { X, Menu, Search, Award, Zap, Activity, Globe, Shield, Command, Plus, ArrowUpRight, Maximize2, MoveRight, Layers, Box, Compass, Sparkles, MoveVertical, Target, Radio, CheckCircle2 } from "lucide-react";
-import "../premium.css";
+import { motion, useScroll, useTransform, useInView, AnimatePresence, useMotionValue, useSpring } from "framer-motion"
+import { useState, useRef, useEffect } from "react"
+import Image from "next/image"
+import Link from "next/link"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
+import { Progress } from "@/components/ui/progress"
+import { Heart, MapPin, Calendar } from "lucide-react"
 
-const PROJECTS = [
-  { id: 1, title: "CORE_REVEAL", cat: "Studio", value: "Verified", img: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=1000&auto=format&fit=crop" },
-  { id: 2, title: "VOID_SCAPE", cat: "Branding", value: "Active", img: "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?q=80&w=1000&auto=format&fit=crop" },
-  { id: 3, title: "NEON_SHELL", cat: "Motion", value: "Locked", img: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=1000&auto=format&fit=crop" },
-];
+function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: "-60px" })
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 30 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.6, delay }}
+    >
+      {children}
+    </motion.div>
+  )
+}
 
-export default function RevealCreativeSPA() {
-  const [view, setView] = useState<"reveal" | "project" | "logic">("reveal");
-  const [activeItem, setActiveItem] = useState(0);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: containerRef });
-  
-  const clipPath = useTransform(scrollYProgress, [0, 0.5], ["inset(30% 20% 30% 20%)", "inset(0% 0% 0% 0%)"]);
+function Counter({ target, suffix = "" }: { target: number; suffix?: string }) {
+  const [count, setCount] = useState(0)
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true })
+
+  useEffect(() => {
+    if (!inView) return
+    const step = Math.ceil(target / 60)
+    const t = setInterval(() => setCount((c) => Math.min(c + step, target)), 16)
+    return () => clearInterval(t)
+  }, [inView, target])
 
   return (
-    <div ref={containerRef} className="premium-theme bg-[#1a1a1a] text-amber-400 min-h-screen selection:bg-amber-600 selection:text-white font-sans overflow-x-hidden">
-      
-      {/* Background HUD Layers */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[45vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase">
-           REVEAL
-        </div>
-        <div className="absolute inset-x-0 top-0 bottom-0 left-1/2 -translate-x-1/2 w-[1px] bg-white/5" />
-        <div className="absolute inset-0 bg-[#1a1a1a]/40 backdrop-blur-[2px]" />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.05] mix-blend-screen" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#1a1a1a_100%)] opacity-80" />
-      </div>
+    <span ref={ref}>
+      {count.toLocaleString()}
+      {suffix}
+    </span>
+  )
+}
 
-      {/* Editorial HUD Nav */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-center bg-transparent backdrop-blur-3xl border-b border-amber-500/10 font-mono text-white">
-        <div className="flex gap-12 items-center">
-           <button onClick={() => setView("reveal")} className="text-xl font-black italic tracking-tighter hover:text-white transition-colors flex items-center gap-4 text-amber-500">
-              REVEAL_OS&trade;
-           </button>
-           <div className="hidden lg:flex gap-8 text-[10px] font-black uppercase tracking-widest opacity-20 italic">
-              Status: Studio_Sync_Active
-              <span className="text-white">Ref: 0x136</span>
-           </div>
-        </div>
-        <div className="hidden md:flex gap-12 text-[10px] font-black uppercase tracking-[0.4em] opacity-30">
-           <button onClick={() => setView("reveal")} className={`hover:opacity-100 transition-opacity ${view === 'reveal' ? 'text-white opacity-100 underline decoration-white underline-offset-8 italic' : ''}`}>THE_REVEAL</button>
-           <button onClick={() => setView("logic")} className={`hover:opacity-100 transition-opacity ${view === 'logic' ? 'text-white opacity-100 underline decoration-white underline-offset-8 italic' : ''}`}>THE_LOGIC</button>
-        </div>
-        <div className="flex items-center gap-8 text-white">
-           <Search className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-           <Menu className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-        </div>
-      </nav>
+function MagneticBtn({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  const x = useMotionValue(0)
+  const y = useMotionValue(0)
+  const sx = useSpring(x, { stiffness: 500, damping: 25 })
+  const sy = useSpring(y, { stiffness: 500, damping: 25 })
+  const ref = useRef<HTMLButtonElement>(null)
 
-      <AnimatePresence mode="wait">
-        
-        {/* THE REVEAL VIEW (LANDING) */}
-        {view === "reveal" && (
-          <motion.div key="reveal" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-48 pb-32 px-12 max-w-[1800px] mx-auto min-h-screen flex flex-col justify-center relative z-10">
-             <header className="mb-24 border-b border-amber-500/20 pb-12 flex flex-col md:flex-row justify-between items-end gap-12 text-white">
-                <div>
-                   <span className="text-[10px] uppercase font-black tracking-[1em] opacity-40 mb-4 block underline decoration-amber-500/10 underline-offset-8 italic font-mono text-amber-500">Visual_Capture // Series_136</span>
-                   <h1 className="text-7xl md:text-[12vw] font-black italic uppercase tracking-tighter leading-[0.75]">PURE. <br/> <span className="text-transparent" style={{ WebkitTextStroke: "2px rgba(245,158,11,0.6)" }}>REVEAL.</span></h1>
-                </div>
-                <div className="text-right flex flex-col items-end">
-                   <div className="text-3xl font-black mb-4 tracking-tighter uppercase opacity-10 italic font-mono text-amber-600">Dynamic_Sync</div>
-                   <div className="w-64 h-[2px] bg-white/5 rounded-none overflow-hidden">
-                      <motion.div animate={{ width: ['20%', '90%', '40%', '75%'] }} transition={{ duration: 4, repeat: Infinity }} className="h-full bg-amber-500" />
-                   </div>
-                </div>
-             </header>
+  const handleMouse = (e: React.MouseEvent) => {
+    const r = ref.current!.getBoundingClientRect()
+    x.set((e.clientX - r.left - r.width / 2) * 0.35)
+    y.set((e.clientY - r.top - r.height / 2) * 0.35)
+  }
 
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {PROJECTS.map((p, i) => (
-                  <motion.div 
-                    key={p.id} initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                    className="group relative h-[60vh] rounded-none overflow-hidden border border-amber-500/10 hover:border-amber-500/40 transition-all cursor-pointer shadow-2xl bg-white/5"
-                    onClick={() => { setActiveItem(i); setView("project"); }}
-                  >
-                     <motion.div style={{ clipPath }} className="absolute inset-0">
-                        <Image src={p.img} alt={p.title} fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[2s] group-hover:scale-110" />
-                     </motion.div>
-                     <div className="absolute inset-0 bg-amber-500/10 group-hover:bg-transparent transition-colors duration-1000" />
-                     <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                     
-                     <div className="absolute inset-10 flex flex-col justify-between">
-                        <div className="flex justify-between items-start text-white">
-                           <div className="p-4 bg-white/10 border border-white/20 rounded-none opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Target className="w-5 h-5" />
-                           </div>
-                           <div className="text-[10px] font-black uppercase tracking-widest opacity-20 italic text-amber-400">UNIT_0x{i+136}</div>
+  return (
+    <motion.button
+      ref={ref}
+      style={{ x: sx, y: sy }}
+      onMouseMove={handleMouse}
+      onMouseLeave={() => {
+        x.set(0)
+        y.set(0)
+      }}
+      className={className}
+    >
+      {children}
+    </motion.button>
+  )
+}
+
+const SERVICES = [
+  {
+    name: "Full Planning",
+    price: "€4,500+",
+    desc: "Complete wedding management from engagement to honeymoon",
+    items: ["Venue selection", "Vendor coordination", "Design & styling", "Budget management", "Day-of coordination"],
+  },
+  {
+    name: "Partial Planning",
+    price: "€2,500+",
+    desc: "Focused planning for specific elements you need",
+    items: ["Vendor selection", "Timeline creation", "Partial coordination", "Design consultation"],
+  },
+  {
+    name: "Day-of Coordination",
+    price: "€1,200+",
+    desc: "Expert management on your wedding day only",
+    items: ["Timeline execution", "Vendor liaison", "Emergency handling", "Guest management"],
+  },
+  {
+    name: "Destination Weddings",
+    price: "€5,000+",
+    desc: "Complete management for weddings abroad",
+    items: ["International logistics", "Local vendor networks", "Travel coordination", "Cultural planning"],
+  },
+]
+
+const WEDDINGS = [
+  { id: 1, venue: "Villa Tuscany", season: "Spring", style: "Romantic", img: "https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=500" },
+  { id: 2, venue: "Château Provence", season: "Summer", style: "Elegant", img: "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?q=80&w=500" },
+  { id: 3, venue: "Mountain Lodge", season: "Fall", style: "Intimate", img: "https://images.unsplash.com/photo-1507838871357-7326363a3f81?q=80&w=500" },
+  { id: 4, venue: "Beachfront Resort", season: "Summer", style: "Modern", img: "https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=500" },
+  { id: 5, venue: "Urban Loft", season: "Winter", style: "Contemporary", img: "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?q=80&w=500" },
+  { id: 6, venue: "Garden Estate", season: "Spring", style: "Whimsical", img: "https://images.unsplash.com/photo-1507838871357-7326363a3f81?q=80&w=500" },
+]
+
+const VENDORS = [
+  { name: "Venues", count: 200, icon: "🏛️" },
+  { name: "Catering", count: 150, icon: "🍽️" },
+  { name: "Photography", count: 120, icon: "📷" },
+  { name: "Florals", count: 85, icon: "🌹" },
+  { name: "Music & DJ", count: 90, icon: "🎵" },
+  { name: "Transport", count: 70, icon: "🚗" },
+]
+
+const TIMELINE = [
+  { phase: "12 Months Before", tasks: "Vision setting, budget planning, save-the-date design" },
+  { phase: "6 Months Before", tasks: "Venue booking, catering tasting, vendor contracts" },
+  { phase: "3 Months Before", tasks: "Invitations sent, final fittings, seating charts" },
+  { phase: "Final Week", tasks: "Rehearsal, vendor confirmations, timeline execution" },
+]
+
+export default function PrismWeddingsLanding() {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const { scrollYProgress } = useScroll({ target: containerRef })
+  const parallax = useTransform(scrollYProgress, [0, 1], ["0%", "20%"])
+
+  const [selectedWedding, setSelectedWedding] = useState<(typeof WEDDINGS)[0] | null>(null)
+  const [showWeddingDialog, setShowWeddingDialog] = useState(false)
+  const [showInquiryDialog, setShowInquiryDialog] = useState(false)
+
+  return (
+    <div ref={containerRef} className="bg-fdf8f0 text-gray-900 min-h-screen overflow-hidden">
+      {/* Romantic Hero */}
+      <section className="relative h-screen overflow-hidden flex items-center justify-center">
+        <motion.div
+          style={{ y: parallax }}
+          className="absolute inset-0 -z-10"
+        >
+          <Image
+            src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?q=80&w=1200"
+            alt="Wedding ceremony"
+            fill
+            className="object-cover"
+          />
+          <div className="absolute inset-0 bg-black/30" />
+        </motion.div>
+
+        <div className="relative z-10 max-w-5xl mx-auto text-center text-white px-4 space-y-8">
+          <Reveal>
+            <motion.div
+              animate={{ scale: [1, 1.1, 1] }}
+              transition={{ duration: 3, repeat: Infinity }}
+              className="mb-4"
+            >
+              <Heart className="w-16 h-16 mx-auto text-rose-300" />
+            </motion.div>
+          </Reveal>
+
+          <Reveal delay={0.1}>
+            <h1 className="text-7xl md:text-8xl font-bold tracking-tight">
+              Your Day,<br />Perfectly Planned
+            </h1>
+          </Reveal>
+
+          <Reveal delay={0.3}>
+            <p className="text-2xl font-light max-w-3xl mx-auto">
+              Expert planning & coordination for every wedding style. From intimate gatherings to destination celebrations.
+            </p>
+          </Reveal>
+
+          <Reveal delay={0.5}>
+            <MagneticBtn
+              onClick={() => setShowInquiryDialog(true)}
+              className="px-12 py-4 bg-rose-500 text-white text-lg font-semibold rounded-full hover:bg-rose-600 transition-colors"
+            >
+              Plan Your Wedding
+            </MagneticBtn>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* Service Offerings */}
+      <section className="py-24 px-4 bg-gradient-to-b from-fdf8f0 to-white">
+        <div className="max-w-6xl mx-auto">
+          <Reveal>
+            <h2 className="text-5xl font-bold mb-16">Our Services</h2>
+          </Reveal>
+
+          <Tabs defaultValue="full" className="w-full">
+            <TabsList className="grid w-full grid-cols-4 mb-12 bg-white border border-rose-200">
+              {SERVICES.map((service) => (
+                <TabsTrigger
+                  key={service.name}
+                  value={service.name.toLowerCase()}
+                  className="font-semibold data-[state=active]:bg-rose-500 data-[state=active]:text-white"
+                >
+                  {service.name.split(" ")[0]}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+
+            {SERVICES.map((service) => (
+              <TabsContent
+                key={service.name}
+                value={service.name.toLowerCase()}
+                className="mt-12"
+              >
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="space-y-6"
+                >
+                  <Reveal>
+                    <Card className="bg-gradient-to-br from-rose-50 to-white border-rose-200">
+                      <CardContent className="p-8 space-y-6">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h3 className="text-3xl font-bold">{service.name}</h3>
+                            <p className="text-gray-600 mt-2">{service.desc}</p>
+                          </div>
+                          <p className="text-3xl font-bold text-rose-600">{service.price}</p>
                         </div>
-                        <div className="text-white">
-                           <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-2 block italic text-amber-300">{p.cat} // {p.value}</span>
-                           <h3 className="text-5xl font-black italic uppercase tracking-tighter leading-none transition-all group-hover:tracking-widest">{p.title}</h3>
-                        </div>
-                     </div>
-                  </motion.div>
-                ))}
-             </div>
-          </motion.div>
-        )}
-
-        {/* THE PROJECT VIEW (DETAIL) */}
-        {view === "project" && (
-          <motion.div key="project" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen">
-             <button onClick={() => setView("reveal")} className="fixed top-12 left-12 z-[60] bg-white text-black p-5 rounded-none hover:scale-110 transition-transform shadow-2xl">
-                <X className="w-6 h-6" />
-             </button>
-
-             <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen pt-24 lg:pt-0">
-                <div className="lg:col-span-12 relative flex items-center justify-center p-8 md:p-32 overflow-hidden h-screen bg-[#1a1a1a]">
-                   <div className="absolute inset-0 opacity-10">
-                      <Image src={PROJECTS[activeItem].img} alt="Background" fill className="object-cover grayscale" />
-                   </div>
-                   <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[40vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase text-amber-500 font-sans">
-                      CORE
-                   </div>
-                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#1a1a1a_100%)]" />
-                   
-                   <div className="max-w-[1500px] w-full grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10 font-sans text-white">
-                      <motion.div initial={{ scale: 1.1, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1 }} className="relative aspect-square w-full rounded-none overflow-hidden border border-amber-500/20 group bg-neutral-900 shadow-2xl">
-                         <Image src={PROJECTS[activeItem].img} alt="Spec" fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[3s] opacity-80" priority />
-                         <div className="absolute top-12 left-12 p-4 bg-black/60 backdrop-blur-3xl rounded-none border-2 border-white/10 z-20">
-                            <Layers className="w-6 h-6 text-amber-400 animate-pulse" />
-                         </div>
-                      </motion.div>
-
-                      <div className="flex flex-col justify-center space-y-12">
-                         <div className="space-y-6">
-                            <span className="text-[10px] uppercase tracking-[1em] font-black opacity-30 mb-8 block underline decoration-white decoration-4 underline-offset-8 italic text-amber-400 font-mono">Dynamic_Sync // {PROJECTS[activeItem].cat}</span>
-                            <h1 className="text-7xl md:text-[8vw] font-black italic uppercase tracking-tighter leading-none text-white">{PROJECTS[activeItem].title}</h1>
-                            <div className="text-4xl font-black italic tracking-tighter opacity-10 italic text-amber-500">State: {PROJECTS[activeItem].value}</div>
-                         </div>
-
-                         <p className="text-3xl font-light italic leading-relaxed uppercase tracking-tight opacity-40 text-white leading-relaxed">
-                            Structural allocation for mission {PROJECTS[activeItem].title}. System integrity at 100%. Thermal load nominal at 32C. Every coordinate synchronized.
-                         </p>
-
-                         <div className="grid grid-cols-2 gap-12 py-12 border-y border-white/10 font-mono text-white/60">
-                            {[
-                              { icon: <Globe className="w-5 h-5" />, l: "Region", v: "Global_East" },
-                              { icon: <Zap className="w-5 h-5" />, l: "Logic", v: "Phase_Shift" },
-                              { icon: <Shield className="w-5 h-5" />, l: "Security", v: "High_Impact" },
-                              { icon: <Activity className="w-5 h-5" />, l: "Sync", v: "Active" },
-                            ].map((s, i) => (
-                              <div key={i} className="flex gap-6 items-center">
-                                 <div className="opacity-20 text-amber-400">{s.icon}</div>
-                                 <div className="text-left">
-                                    <div className="text-[10px] font-black opacity-30 uppercase tracking-widest mb-1 italic text-white">{s.l}</div>
-                                    <div className="text-sm font-black uppercase italic tracking-tighter text-white">{s.v}</div>
-                                 </div>
-                              </div>
+                        <div className="space-y-3 pt-6 border-t border-rose-200">
+                          <p className="font-semibold">What's Included:</p>
+                          <ul className="space-y-2">
+                            {service.items.map((item, i) => (
+                              <li key={i} className="flex items-center gap-3">
+                                <Heart className="w-4 h-4 text-rose-500" />
+                                <span>{item}</span>
+                              </li>
                             ))}
-                         </div>
-
-                         <div className="flex gap-6 pt-8 font-mono">
-                            <button onClick={() => setView("reveal")} className="flex-grow py-8 bg-amber-600 text-white font-black uppercase text-xs tracking-[1em] hover:bg-amber-500 transition-all shadow-2xl">
-                               Return_to_Reveal
-                            </button>
-                            <button className="px-12 py-8 border border-white/20 text-[10px] font-black uppercase tracking-[0.5em] hover:scale-105 transition-all text-white">
-                               PDF_Spec
-                            </button>
-                         </div>
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
-        {/* THE LOGIC VIEW (INFO) */}
-        {view === "logic" && (
-          <motion.div key="logic" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen flex flex-col justify-center">
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center text-white">
-                <div className="space-y-16">
-                   <span className="text-[10px] uppercase font-black tracking-[1.5em] opacity-30 block underline decoration-amber-400 decoration-2 underline-offset-8 italic font-mono text-amber-400">The_Logic_Protocol</span>
-                   <h2 className="text-7xl md:text-[10vw] font-black italic tracking-tighter leading-none text-white uppercase font-sans">The <br/> Truth.</h2>
-                   <p className="text-3xl md:text-4xl font-light italic opacity-60 leading-relaxed uppercase tracking-tight text-white/60 font-sans">
-                      We treat architecture as code. Every structure is a function of its environmental variables and tectonic intent. 100% precision. Zero noise.
-                   </p>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t border-white/10 font-mono text-amber-400">
-                      {[
-                        { icon: <Sparkles className="w-6 h-6" />, t: "Adaptive Flow", v: "Dynamic Load Sync" },
-                        { icon: <Plus className="w-6 h-6" />, t: "Structural Sync", v: "Deep_Material_ID" },
-                      ].map((item, i) => (
-                        <div key={i} className="flex gap-8 group">
-                           <div className="w-16 h-16 rounded-none border border-amber-500 flex items-center justify-center text-amber-500 group-hover:bg-amber-500 group-hover:text-black transition-all shadow-xl">
-                              {item.icon}
-                           </div>
-                           <div className="text-left">
-                              <h4 className="text-2xl font-black uppercase italic tracking-tighter text-white leading-none mb-2 font-sans">{item.t}</h4>
-                              <p className="text-[10px] opacity-30 uppercase tracking-[0.3em] font-black leading-relaxed text-amber-400/40">{item.v}</p>
-                           </div>
+                          </ul>
                         </div>
-                      ))}
-                   </div>
+                      </CardContent>
+                    </Card>
+                  </Reveal>
+                </motion.div>
+              </TabsContent>
+            ))}
+          </Tabs>
+        </div>
+      </section>
+
+      {/* Real Wedding Gallery */}
+      <section className="py-24 px-4 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <Reveal>
+            <h2 className="text-5xl font-bold mb-16">Real Weddings</h2>
+          </Reveal>
+
+          <Carousel className="w-full">
+            <CarouselContent>
+              {WEDDINGS.map((wedding, i) => (
+                <CarouselItem key={wedding.id} className="basis-full md:basis-1/2">
+                  <Reveal>
+                    <Card
+                      className="group cursor-pointer hover:shadow-2xl transition-shadow overflow-hidden"
+                      onClick={() => {
+                        setSelectedWedding(wedding)
+                        setShowWeddingDialog(true)
+                      }}
+                    >
+                      <CardContent className="p-0">
+                        <div className="relative h-96 overflow-hidden bg-gray-200">
+                          <Image
+                            src={wedding.img}
+                            alt={wedding.venue}
+                            fill
+                            className="object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
+                        </div>
+                        <div className="p-6 space-y-3">
+                          <h3 className="text-2xl font-bold group-hover:text-rose-600 transition-colors">
+                            {wedding.venue}
+                          </h3>
+                          <div className="flex gap-3">
+                            <Badge className="bg-rose-500">{wedding.season}</Badge>
+                            <Badge variant="outline">{wedding.style}</Badge>
+                          </div>
+                          <p className="text-sm text-gray-600">Explore how we brought this vision to life</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Reveal>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselNext />
+            <CarouselPrevious />
+          </Carousel>
+        </div>
+      </section>
+
+      {/* Vendor Network */}
+      <section className="py-24 px-4 bg-rose-50">
+        <div className="max-w-6xl mx-auto">
+          <Reveal>
+            <h2 className="text-5xl font-bold mb-16">Our Vendor Network</h2>
+          </Reveal>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+            {VENDORS.map((vendor, i) => (
+              <Reveal key={vendor.name} delay={i * 0.08}>
+                <Card className="text-center hover:shadow-lg transition-shadow cursor-pointer hover:border-rose-500">
+                  <CardContent className="p-6 space-y-4">
+                    <div className="text-5xl">{vendor.icon}</div>
+                    <div>
+                      <h3 className="font-bold">{vendor.name}</h3>
+                      <Badge className="bg-rose-500 mt-2">{vendor.count}+ partners</Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Planning Timeline */}
+      <section className="py-24 px-4 bg-white">
+        <div className="max-w-4xl mx-auto">
+          <Reveal>
+            <h2 className="text-5xl font-bold mb-16">Planning Timeline</h2>
+          </Reveal>
+
+          <Accordion type="single" collapsible className="space-y-4">
+            {TIMELINE.map((item, i) => (
+              <AccordionItem key={i} value={`timeline-${i}`} className="border border-rose-200 rounded-lg px-6">
+                <AccordionTrigger className="font-semibold text-lg text-rose-600">
+                  {item.phase}
+                </AccordionTrigger>
+                <AccordionContent className="text-gray-600">{item.tasks}</AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
+      </section>
+
+      {/* Stats */}
+      <section className="py-24 px-4 bg-gradient-to-r from-rose-500 to-rose-600 text-white">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-12 text-center">
+            {[
+              { value: 250, suffix: "", label: "Weddings Planned" },
+              { value: 10, suffix: " years", label: "Experience" },
+              { value: 4.9, suffix: "★", label: "Rating" },
+              { value: 100, suffix: "%", label: "Happy Couples" },
+            ].map((stat, i) => (
+              <Reveal key={i} delay={i * 0.1}>
+                <div className="space-y-2">
+                  <div className="text-4xl font-bold">
+                    <Counter target={stat.value} suffix={stat.suffix} />
+                  </div>
+                  <p className="text-rose-100">{stat.label}</p>
                 </div>
-                <div className="relative aspect-square bg-amber-900/10 rounded-none p-12 overflow-hidden border border-amber-500/20 group shadow-2xl">
-                   <Image src="https://images.unsplash.com/photo-1541829070764-84a7d30dee62?q=80&w=1000&auto=format&fit=crop" alt="The Archive" fill className="object-cover opacity-20 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-[3s]" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                   <div className="absolute inset-x-0 bottom-12 flex justify-center font-mono">
-                      <div className="px-12 py-6 bg-amber-600 text-white text-[10px] font-black uppercase tracking-widest italic animate-bounce cursor-pointer hover:bg-amber-500 transition-all rounded-none">
-                         Establish_Handshake
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="py-24 px-4 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <Reveal>
+            <h2 className="text-5xl font-bold mb-16">Love Stories</h2>
+          </Reveal>
+
+          <Carousel className="w-full">
+            <CarouselContent>
+              {[
+                {
+                  couple: "Emma & Lucas",
+                  quote: "Our wedding exceeded every dream. Prism made it effortless.",
+                  venue: "Villa Tuscany",
+                },
+                {
+                  couple: "Sophie & Marc",
+                  quote: "Stress-free, gorgeous, and unforgettable. Best investment ever.",
+                  venue: "Château Provence",
+                },
+                {
+                  couple: "Marie & Jean",
+                  quote: "Every detail was perfect. They understood our vision completely.",
+                  venue: "Mountain Lodge",
+                },
+              ].map((testi, i) => (
+                <CarouselItem key={i} className="basis-full md:basis-1/2">
+                  <Reveal>
+                    <Card className="bg-gradient-to-br from-rose-50 to-white">
+                      <CardContent className="p-8 space-y-4">
+                        <p className="text-xl italic text-gray-700">"{testi.quote}"</p>
+                        <div>
+                          <p className="font-semibold text-rose-600">{testi.couple}</p>
+                          <p className="text-sm text-gray-500 flex items-center gap-2">
+                            <MapPin className="w-4 h-4" />
+                            {testi.venue}
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Reveal>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious />
+            <CarouselNext />
+          </Carousel>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="py-24 px-4 bg-rose-50">
+        <div className="max-w-4xl mx-auto">
+          <Reveal>
+            <h2 className="text-5xl font-bold mb-12">FAQ</h2>
+          </Reveal>
+
+          <Accordion type="single" collapsible className="space-y-4">
+            {[
+              { q: "What's the typical cost?", a: "Ranges €1,200-€5,000+ depending on services. Custom quotes provided." },
+              { q: "Can you work with my vendors?", a: "Absolutely. We coordinate seamlessly with any vendor you choose." },
+              { q: "Do you handle international weddings?", a: "Yes. We specialize in destination weddings and manage all logistics." },
+              { q: "What about elopements?", a: "Yes! We offer intimate elopement planning for 2-20 guests." },
+            ].map((item, i) => (
+              <AccordionItem key={i} value={`faq-${i}`} className="border border-rose-200 rounded-lg px-6">
+                <AccordionTrigger className="font-semibold">{item.q}</AccordionTrigger>
+                <AccordionContent className="text-gray-600">{item.a}</AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
+      </section>
+
+      {/* Wedding Dialog */}
+      <Dialog open={showWeddingDialog} onOpenChange={setShowWeddingDialog}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold">{selectedWedding?.venue}</DialogTitle>
+          </DialogHeader>
+          {selectedWedding && (
+            <div className="space-y-6">
+              <Carousel className="w-full">
+                <CarouselContent>
+                  {[selectedWedding.img, selectedWedding.img, selectedWedding.img, selectedWedding.img].map((img, i) => (
+                    <CarouselItem key={i}>
+                      <div className="relative h-80 rounded-lg overflow-hidden bg-gray-200">
+                        <Image
+                          src={img}
+                          alt={`Photo ${i + 1}`}
+                          fill
+                          className="object-cover"
+                        />
                       </div>
-                   </div>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselNext />
+                <CarouselPrevious />
+              </Carousel>
+
+              <div className="space-y-4">
+                <div className="flex gap-4">
+                  <Badge className="bg-rose-500">{selectedWedding.season}</Badge>
+                  <Badge variant="outline">{selectedWedding.style}</Badge>
                 </div>
-             </div>
-          </motion.div>
-        )}
+                <p className="text-gray-600 leading-relaxed">
+                  A stunning celebration featuring timeless elegance and personalized touches. This wedding showcases our expertise in coordinating every element from venue styling to guest experience.
+                </p>
+              </div>
 
-      </AnimatePresence>
+              <Accordion type="single" collapsible>
+                <AccordionItem value="story" className="border-t">
+                  <AccordionTrigger>How We Did It</AccordionTrigger>
+                  <AccordionContent>
+                    From initial vision to final moment, we managed every detail. Custom florals, bespoke menu design, and seamless coordination created an unforgettable celebration.
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
 
-      {/* Global Status HUD */}
-      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em] italic text-amber-600 leading-none font-mono">
-         <div className="flex gap-12 text-amber-600">
-            <span>Reveal_OS_Alpha</span>
-            <span>Uptime: 99.9%</span>
-         </div>
-         <div className="flex gap-4 items-end text-amber-600">
-            <div className="text-right leading-tight italic text-amber-600">
-               Archival_Control <br /> v4.0.136
+              <MagneticBtn
+                onClick={() => setShowInquiryDialog(true)}
+                className="w-full px-6 py-3 bg-rose-500 text-white rounded-full hover:bg-rose-600 transition-colors font-semibold"
+              >
+                Plan Your Wedding Like This
+              </MagneticBtn>
             </div>
-            <div className="flex gap-[4px] h-4">
-               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-full bg-amber-500 opacity-${i*20}`}></div>)}
-            </div>
-         </div>
-      </footer>
+          )}
+        </DialogContent>
+      </Dialog>
 
-      <style>{`
-        ::-webkit-scrollbar { width: 0px; }
-      `}</style>
+      {/* Inquiry Dialog */}
+      <Dialog open={showInquiryDialog} onOpenChange={setShowInquiryDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold">Let's Plan Together</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6">
+            <input
+              type="text"
+              placeholder="Your name"
+              className="w-full px-4 py-2 border border-rose-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+            />
+            <input
+              type="email"
+              placeholder="Email address"
+              className="w-full px-4 py-2 border border-rose-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+            />
+            <input
+              type="tel"
+              placeholder="Phone number"
+              className="w-full px-4 py-2 border border-rose-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+            />
+            <input
+              type="date"
+              className="w-full px-4 py-2 border border-rose-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+            />
+            <select className="w-full px-4 py-2 border border-rose-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500">
+              <option>Select service</option>
+              {SERVICES.map((service) => (
+                <option key={service.name} value={service.name}>
+                  {service.name}
+                </option>
+              ))}
+            </select>
+            <MagneticBtn className="w-full px-6 py-3 bg-rose-500 text-white rounded-full hover:bg-rose-600 transition-colors font-semibold">
+              Schedule Consultation
+            </MagneticBtn>
+            <p className="text-xs text-gray-500 text-center">We'll be in touch within 24 hours</p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
-  );
+  )
 }

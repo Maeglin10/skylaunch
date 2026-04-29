@@ -1,231 +1,361 @@
-"use client";
+"use client"
 
-import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
-import Image from "next/image";
-import { X, Menu, Search, Award, Zap, Activity, Globe, Shield, Command, Plus, ArrowUpRight, Maximize2, MoveRight, Layers, Box, Compass, Sparkles, MoveVertical, Eye } from "lucide-react";
-import "../premium.css";
+import { motion, useScroll, useTransform, useInView, AnimatePresence, useMotionValue, useSpring } from "framer-motion"
+import { useState, useRef, useEffect } from "react"
+import Image from "next/image"
+import Link from "next/link"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
+import { Progress } from "@/components/ui/progress"
 
-const LOOKS = [
-  { id: 1, title: "IVORY_UNIT", cat: "Minimal", value: "Verified", img: "https://images.unsplash.com/photo-1509631179647-0177331693ae?q=80&w=1000&auto=format&fit=crop" },
-  { id: 2, title: "OBSIDIAN_CORE", cat: "Structural", value: "Active", img: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=1000&auto=format&fit=crop" },
-  { id: 3, title: "VOID_SHELL", cat: "Conceptual", value: "Locked", img: "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?q=80&w=1000&auto=format&fit=crop" },
-];
+function Reveal({ children, delay=0 }: { children: React.ReactNode; delay?: number }) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: "-60px" })
+  return <motion.div ref={ref} initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, delay }}>{children}</motion.div>
+}
 
-export default function MaisonFashionSPA() {
-  const [view, setView] = useState<"maison" | "collection" | "atelier">("maison");
-  const [activeItem, setActiveItem] = useState(0);
+function Counter({ target, suffix="" }: { target: number; suffix?: string }) {
+  const [count, setCount] = useState(0)
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true })
+  useEffect(() => {
+    if (!inView) return
+    const step = Math.ceil(target / 60)
+    const t = setInterval(() => setCount(c => Math.min(c + step, target)), 16)
+    return () => clearInterval(t)
+  }, [inView, target])
+  return <span ref={ref}>{count.toLocaleString()}{suffix}</span>
+}
+
+function MagneticBtn({ children, className="" }: { children: React.ReactNode; className?: string }) {
+  const x = useMotionValue(0); const y = useMotionValue(0)
+  const sx = useSpring(x, { stiffness: 500, damping: 25 })
+  const sy = useSpring(y, { stiffness: 500, damping: 25 })
+  const ref = useRef<HTMLButtonElement>(null)
+  const handleMouse = (e: React.MouseEvent) => {
+    const r = ref.current!.getBoundingClientRect()
+    x.set((e.clientX - r.left - r.width/2) * 0.35)
+    y.set((e.clientY - r.top - r.height/2) * 0.35)
+  }
+  return <motion.button ref={ref} style={{ x: sx, y: sy }} onMouseMove={handleMouse} onMouseLeave={() => { x.set(0); y.set(0) }} className={className}>{children}</motion.button>
+}
+
+const COURSES = [
+  { id: 1, title: "Startup Fundamentals", level: "Beginner", rating: 4.9, duration: "4 weeks", category: "Business", img: "https://images.unsplash.com/photo-1552664730-d307ca884978?w=400" },
+  { id: 2, title: "React Mastery", level: "Advanced", rating: 4.8, duration: "8 weeks", category: "Tech", img: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=400" },
+  { id: 3, title: "UI/UX Principles", level: "Intermediate", rating: 4.9, duration: "6 weeks", category: "Design", img: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=400" },
+  { id: 4, title: "Digital Marketing", level: "Beginner", rating: 4.7, duration: "5 weeks", category: "Marketing", img: "https://images.unsplash.com/photo-1557821552-17105176677c?w=400" },
+  { id: 5, title: "Finance Basics", level: "Beginner", rating: 4.8, duration: "4 weeks", category: "Finance", img: "https://images.unsplash.com/photo-1526374965328-7f5ae4e8b04e?w=400" },
+  { id: 6, title: "Data Science Pro", level: "Advanced", rating: 4.9, duration: "10 weeks", category: "Tech", img: "https://images.unsplash.com/photo-1552664730-d307ca884978?w=400" },
+  { id: 7, title: "Brand Strategy", level: "Intermediate", rating: 4.8, duration: "6 weeks", category: "Marketing", img: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400" },
+  { id: 8, title: "Investment 101", level: "Beginner", rating: 4.9, duration: "5 weeks", category: "Finance", img: "https://images.unsplash.com/photo-1526374965328-7f5ae4e8b04e?w=400" }
+]
+
+const INSTRUCTORS = [
+  { name: "Dr. Sarah Johnson", expertise: "Tech & Entrepreneurship", students: "50K+", img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200" },
+  { name: "James Chen", expertise: "Frontend Development", students: "80K+", img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200" },
+  { name: "Maya Patel", expertise: "Design Systems", students: "45K+", img: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200" },
+  { name: "Alex Rivera", expertise: "Business Strategy", students: "60K+", img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200" }
+]
+
+const PATHS = [
+  { title: "Beginner", courses: 15, duration: "12 weeks", desc: "Start your learning journey", color: "from-[#f97316] to-orange-500" },
+  { title: "Intermediate", courses: 25, duration: "24 weeks", desc: "Build professional skills", color: "from-[#0f172a] to-blue-900" },
+  { title: "Advanced", courses: 35, duration: "36 weeks", desc: "Master your discipline", color: "from-[#fef9f0] to-yellow-100" }
+]
+
+export default function RiseAcademy() {
+  const [selectedCourse, setSelectedCourse] = useState<typeof COURSES[0] | null>(null)
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const containerRef = useRef(null)
+  const { scrollYProgress } = useScroll({ target: containerRef })
 
   return (
-    <div className="premium-theme bg-[#111] text-[#eab308] min-h-screen selection:bg-yellow-600 selection:text-black font-sans overflow-x-hidden">
-      
-      {/* Background HUD Layers */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[45vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase">
-           MAISON
-        </div>
-        <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.05] mix-blend-screen" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#111_100%)] opacity-80" />
-      </div>
+    <div ref={containerRef} className="min-h-screen bg-gradient-to-b from-[#0f172a] via-blue-950 to-[#1e293b] text-white overflow-hidden">
+      {/* Parallax Hero */}
+      <section className="relative h-screen overflow-hidden">
+        <motion.div initial={{ scale: 1.1 }} animate={{ scale: 1 }} transition={{ duration: 1.5 }} className="absolute inset-0">
+          <Image
+            src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1200"
+            alt="Learning"
+            fill
+            className="object-cover brightness-40"
+          />
+        </motion.div>
 
-      {/* Editorial HUD Nav */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-center bg-transparent backdrop-blur-3xl border-b border-yellow-500/10 font-mono">
-        <div className="flex gap-12 items-center">
-           <button onClick={() => setView("maison")} className="text-xl font-black italic tracking-tighter hover:text-white transition-colors flex items-center gap-4 text-yellow-500">
-              MAISON&trade;
-           </button>
-           <div className="hidden lg:flex gap-8 text-[10px] font-black uppercase tracking-widest opacity-20 italic text-white">
-              Status: Runway_Sync_Active
-              <span className="text-white">Ref: 0x123</span>
-           </div>
-        </div>
-        <div className="hidden md:flex gap-12 text-[10px] font-black uppercase tracking-[0.4em] opacity-30 text-white">
-           <button onClick={() => setView("maison")} className={`hover:opacity-100 transition-opacity ${view === 'maison' ? 'text-white opacity-100 underline decoration-white underline-offset-8 italic' : ''}`}>THE_MAISON</button>
-           <button onClick={() => setView("atelier")} className={`hover:opacity-100 transition-opacity ${view === 'atelier' ? 'text-white opacity-100 underline decoration-white underline-offset-8 italic' : ''}`}>THE_ATELIER</button>
-        </div>
-        <div className="flex items-center gap-8">
-           <Search className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer text-white" />
-           <Menu className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer text-white" />
-        </div>
-      </nav>
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0f172a]/50 to-[#0f172a]" />
 
-      <AnimatePresence mode="wait">
-        
-        {/* THE MAISON VIEW (LANDING) */}
-        {view === "maison" && (
-          <motion.div key="maison" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-48 pb-32 px-12 max-w-[1800px] mx-auto min-h-screen flex flex-col justify-center relative z-10">
-             <header className="mb-24 border-b border-yellow-500/20 pb-12 flex flex-col md:flex-row justify-between items-end gap-12">
-                <div>
-                   <span className="text-[10px] uppercase font-black tracking-[1em] opacity-40 mb-4 block underline decoration-yellow-500/10 underline-offset-8 italic font-mono text-yellow-400">Runway_Capture // Series_123</span>
-                   <h1 className="text-7xl md:text-[12vw] font-black italic uppercase tracking-tighter leading-[0.75] text-white">HIGH. <br/> <span className="bg-clip-text text-transparent bg-gradient-to-r from-yellow-500 to-white">CHROME.</span></h1>
-                </div>
-                <div className="text-right flex flex-col items-end text-white">
-                   <div className="text-3xl font-black mb-4 tracking-tighter uppercase opacity-10 italic font-mono">Silhouette_Sync</div>
-                   <div className="w-64 h-[2px] bg-white/5 rounded-none overflow-hidden">
-                      <motion.div animate={{ width: ['20%', '90%', '40%', '75%'] }} transition={{ duration: 4, repeat: Infinity }} className="h-full bg-yellow-500" />
-                   </div>
-                </div>
-             </header>
+        <div className="relative h-full flex flex-col items-center justify-center px-6 text-center z-10">
+          <Reveal>
+            <motion.h1 className="text-6xl md:text-8xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-[#f97316] via-orange-400 to-yellow-300">
+              Rise Academy
+            </motion.h1>
+            <p className="text-xl md:text-2xl text-orange-100 mb-12 max-w-3xl">Master cutting-edge skills. Learn from industry experts. Transform your career.</p>
+            <motion.div whileHover={{ x: 5 }} className="inline-flex items-center gap-3 px-8 py-4 bg-[#f97316] text-white rounded-lg font-semibold cursor-pointer hover:bg-[#f97316]/90">
+              Explore Courses →
+            </motion.div>
+          </Reveal>
+        </div>
+      </section>
 
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {LOOKS.map((p, i) => (
-                  <motion.div 
-                    key={p.id} initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                    className="group relative h-[60vh] rounded-none overflow-hidden border border-yellow-500/10 hover:border-yellow-500/40 transition-all cursor-pointer shadow-2xl bg-white/5"
-                    onClick={() => { setActiveItem(i); setView("collection"); }}
-                  >
-                     <Image src={p.img} alt={p.title} fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[2s] group-hover:scale-110" />
-                     <div className="absolute inset-0 bg-yellow-500/10 group-hover:bg-transparent transition-colors duration-1000" />
-                     <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                     
-                     <div className="absolute inset-10 flex flex-col justify-between">
-                        <div className="flex justify-between items-start">
-                           <div className="p-4 bg-white/10 border border-white/20 rounded-none opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Plus className="w-5 h-5 text-white" />
-                           </div>
-                           <div className="text-[10px] font-black uppercase tracking-widest opacity-20 italic text-yellow-400">LOOK_0x{i+123}</div>
+      {/* Course Tabs */}
+      <section className="py-24 px-6 md:px-16 max-w-7xl mx-auto">
+        <Reveal>
+          <h2 className="text-5xl font-bold mb-16 text-center">Course Catalog</h2>
+        </Reveal>
+
+        <Tabs defaultValue="Business" className="w-full">
+          <TabsList className="grid w-full grid-cols-5 gap-2 bg-blue-900/30 p-2 rounded-lg mb-12">
+            {["Business", "Tech", "Design", "Marketing", "Finance"].map((cat) => (
+              <TabsTrigger key={cat} value={cat} className="text-sm font-semibold text-orange-400 data-[state=active]:text-white">
+                {cat}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+
+          {["Business", "Tech", "Design", "Marketing", "Finance"].map((category) => (
+            <TabsContent key={category} value={category} className="mt-8">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid md:grid-cols-4 gap-6">
+                {COURSES.filter(c => c.category === category).map((course, i) => (
+                  <Reveal key={course.id} delay={i * 0.1}>
+                    <motion.div
+                      whileHover={{ y: -10 }}
+                      onClick={() => { setSelectedCourse(course); setDialogOpen(true) }}
+                      className="group cursor-pointer"
+                    >
+                      <Card className="border border-orange-500/20 hover:border-[#f97316]/50 overflow-hidden transition-all h-full bg-blue-900/20">
+                        <div className="relative h-40 overflow-hidden">
+                          <Image src={course.img} alt={course.title} fill className="object-cover group-hover:scale-110 transition-transform duration-300" />
                         </div>
-                        <div>
-                           <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-2 block italic text-yellow-300">{p.cat} // {p.value}</span>
-                           <h3 className="text-5xl font-black italic uppercase tracking-tighter leading-none text-white transition-all group-hover:tracking-widest">{p.title}</h3>
-                        </div>
-                     </div>
-                  </motion.div>
+                        <CardContent className="p-6">
+                          <div className="flex justify-between items-start mb-3">
+                            <Badge className="bg-[#f97316]">{course.level}</Badge>
+                            <span className="text-[#f97316] font-bold">{course.rating}★</span>
+                          </div>
+                          <h3 className="text-lg font-bold mb-2">{course.title}</h3>
+                          <p className="text-sm text-gray-300 mb-3">{course.duration}</p>
+                          <Progress value={Math.random() * 100} className="h-1" />
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  </Reveal>
                 ))}
-             </div>
-          </motion.div>
-        )}
+              </motion.div>
+            </TabsContent>
+          ))}
+        </Tabs>
 
-        {/* THE COLLECTION VIEW (DETAIL) */}
-        {view === "collection" && (
-          <motion.div key="collection" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen">
-             <button onClick={() => setView("maison")} className="fixed top-12 left-12 z-[60] bg-white text-black p-5 rounded-none hover:scale-110 transition-transform shadow-2xl">
-                <X className="w-6 h-6" />
-             </button>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogContent className="max-w-2xl bg-[#0f172a] border-[#f97316]/20">
+            <DialogHeader>
+              <DialogTitle className="text-white text-2xl">{selectedCourse?.title}</DialogTitle>
+            </DialogHeader>
+            {selectedCourse && (
+              <div className="space-y-6 text-gray-200">
+                <div className="relative h-64 rounded-lg overflow-hidden">
+                  <Image src={selectedCourse.img} alt={selectedCourse.title} fill className="object-cover" />
+                </div>
 
-             <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen pt-24 lg:pt-0">
-                <div className="lg:col-span-12 relative flex items-center justify-center p-8 md:p-32 overflow-hidden h-screen bg-[#111]">
-                   <div className="absolute inset-0 opacity-10">
-                      <Image src={LOOKS[activeItem].img} alt="Background" fill className="object-cover grayscale" />
-                   </div>
-                   <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[40vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase text-yellow-500 font-sans">
-                      COLLECTION
-                   </div>
-                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#111_100%)]" />
-                   
-                   <div className="max-w-[1500px] w-full grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10 font-sans text-white">
-                      <motion.div initial={{ scale: 1.1, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1 }} className="relative aspect-square w-full rounded-none overflow-hidden border border-yellow-500/20 group bg-neutral-900 shadow-2xl">
-                         <Image src={LOOKS[activeItem].img} alt="Spec" fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[3s] opacity-80" priority />
-                         <div className="absolute top-12 left-12 p-4 bg-black/60 backdrop-blur-3xl rounded-none border-2 border-white/10 z-20">
-                            <Layers className="w-6 h-6 text-yellow-400 animate-pulse" />
-                         </div>
-                      </motion.div>
+                <div className="grid md:grid-cols-4 gap-4">
+                  <div className="bg-blue-900/40 p-4 rounded-lg">
+                    <p className="text-xs text-orange-400 uppercase font-semibold">Level</p>
+                    <p className="text-lg font-bold mt-1">{selectedCourse.level}</p>
+                  </div>
+                  <div className="bg-blue-900/40 p-4 rounded-lg">
+                    <p className="text-xs text-orange-400 uppercase font-semibold">Duration</p>
+                    <p className="text-lg font-bold mt-1">{selectedCourse.duration}</p>
+                  </div>
+                  <div className="bg-blue-900/40 p-4 rounded-lg">
+                    <p className="text-xs text-orange-400 uppercase font-semibold">Rating</p>
+                    <p className="text-lg font-bold mt-1">{selectedCourse.rating}★</p>
+                  </div>
+                  <div className="bg-blue-900/40 p-4 rounded-lg">
+                    <p className="text-xs text-orange-400 uppercase font-semibold">Category</p>
+                    <p className="text-lg font-bold mt-1">{selectedCourse.category}</p>
+                  </div>
+                </div>
 
-                      <div className="flex flex-col justify-center space-y-12">
-                         <div className="space-y-6">
-                            <span className="text-[10px] uppercase tracking-[1em] font-black opacity-30 mb-8 block underline decoration-white decoration-4 underline-offset-8 italic text-yellow-400 font-mono">Runway_Sync // {LOOKS[activeItem].cat}</span>
-                            <h1 className="text-7xl md:text-[8vw] font-black italic uppercase tracking-tighter leading-none text-white">{LOOKS[activeItem].title}</h1>
-                            <div className="text-4xl font-black italic tracking-tighter opacity-10 italic text-yellow-500">State: {LOOKS[activeItem].value}</div>
-                         </div>
+                <div>
+                  <h4 className="text-lg font-bold mb-4 text-white">Curriculum</h4>
+                  <Accordion type="single" collapsible className="space-y-2">
+                    {["Module 1: Fundamentals", "Module 2: Intermediate", "Module 3: Advanced"].map((mod, i) => (
+                      <AccordionItem key={i} value={String(i)} className="border border-orange-500/20">
+                        <AccordionTrigger className="text-sm font-semibold text-orange-400">{mod}</AccordionTrigger>
+                        <AccordionContent className="text-gray-300">
+                          <ul className="space-y-2">
+                            <li>• Lesson overview and objectives</li>
+                            <li>• Practical examples and exercises</li>
+                            <li>• Real-world case studies</li>
+                          </ul>
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
+                </div>
 
-                         <p className="text-3xl font-light italic leading-relaxed uppercase tracking-tight opacity-40 text-white leading-relaxed">
-                            Structural allocation for look {LOOKS[activeItem].title}. System integrity at 100%. Thermal load nominal at 32C. Every coordinate synchronized.
-                         </p>
+                <div className="flex items-center gap-4 bg-blue-900/40 p-4 rounded-lg">
+                  <Avatar>
+                    <AvatarImage src={INSTRUCTORS[0].img} />
+                    <AvatarFallback>SJ</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-bold text-white">{INSTRUCTORS[0].name}</p>
+                    <p className="text-sm text-gray-400">{INSTRUCTORS[0].expertise}</p>
+                  </div>
+                </div>
 
-                         <div className="grid grid-cols-2 gap-12 py-12 border-y border-white/10 font-mono text-white/60">
-                            {[
-                              { icon: <Globe className="w-5 h-5" />, l: "Region", v: "Global_East" },
-                              { icon: <Zap className="w-5 h-5" />, l: "Logic", v: "Phase_Shift" },
-                              { icon: <Shield className="w-5 h-5" />, l: "Security", v: "High_Impact" },
-                              { icon: <Activity className="w-5 h-5" />, l: "Sync", v: "Active" },
-                            ].map((s, i) => (
-                              <div key={i} className="flex gap-6 items-center">
-                                 <div className="opacity-20 text-yellow-500">{s.icon}</div>
-                                 <div className="text-left">
-                                    <div className="text-[10px] font-black opacity-30 uppercase tracking-widest mb-1 italic text-white">{s.l}</div>
-                                    <div className="text-sm font-black uppercase italic tracking-tighter text-white">{s.v}</div>
-                                 </div>
-                              </div>
-                            ))}
-                         </div>
+                <MagneticBtn className="w-full py-3 bg-[#f97316] text-white rounded-lg font-bold hover:bg-[#f97316]/90">
+                  Enroll Now
+                </MagneticBtn>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+      </section>
 
-                         <div className="flex gap-6 pt-8 font-mono">
-                            <button onClick={() => setView("maison")} className="flex-grow py-8 bg-yellow-600 text-white font-black uppercase text-xs tracking-[1em] hover:bg-yellow-500 transition-all shadow-2xl">
-                               Return_to_Maison
-                            </button>
-                            <button className="px-12 py-8 border border-white/20 text-[10px] font-black uppercase tracking-[0.5em] hover:scale-105 transition-all text-white">
-                               PDF_Spec
-                            </button>
-                         </div>
+      {/* Instructors */}
+      <section className="py-24 px-6 md:px-16 max-w-7xl mx-auto">
+        <Reveal>
+          <h2 className="text-5xl font-bold mb-16 text-center">Expert Instructors</h2>
+        </Reveal>
+
+        <div className="grid md:grid-cols-4 gap-8">
+          {INSTRUCTORS.map((instructor, i) => (
+            <Reveal key={i} delay={i * 0.1}>
+              <Card className="border border-orange-500/20 bg-blue-900/20 overflow-hidden hover:border-[#f97316]/50 transition-colors">
+                <div className="relative h-48">
+                  <Image src={instructor.img} alt={instructor.name} fill className="object-cover" />
+                </div>
+                <CardContent className="p-6">
+                  <h3 className="font-bold text-lg mb-1">{instructor.name}</h3>
+                  <p className="text-sm text-[#f97316] font-semibold mb-3">{instructor.expertise}</p>
+                  <p className="text-sm text-gray-300">{instructor.students} students</p>
+                </CardContent>
+              </Card>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* Learning Paths */}
+      <section className="py-24 px-6 md:px-16 max-w-7xl mx-auto">
+        <Reveal>
+          <h2 className="text-5xl font-bold mb-16 text-center">Learning Paths</h2>
+        </Reveal>
+
+        <div className="grid md:grid-cols-3 gap-8">
+          {PATHS.map((path, i) => (
+            <Reveal key={i} delay={i * 0.1}>
+              <motion.div whileHover={{ y: -10 }} className="group">
+                <Card className={`border border-orange-500/20 bg-gradient-to-br ${path.color} text-white overflow-hidden`}>
+                  <CardContent className="p-8">
+                    <h3 className="text-3xl font-bold mb-4">{path.title}</h3>
+                    <div className="space-y-3 mb-8">
+                      <p className="text-sm opacity-90">{path.courses} courses</p>
+                      <p className="text-sm opacity-90">{path.duration}</p>
+                    </div>
+                    <p className="text-lg font-semibold mb-6">{path.desc}</p>
+                    <MagneticBtn className="w-full py-2 bg-white text-current rounded-lg font-bold hover:bg-gray-200">
+                      Start Learning
+                    </MagneticBtn>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* Stats */}
+      <section className="py-24 px-6 md:px-16 max-w-7xl mx-auto bg-blue-900/30 rounded-2xl border border-orange-500/20">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-12 text-center">
+          {[{ v: 50, l: "K+ Students" }, { v: 200, l: "Courses" }, { v: 5, s: "★", l: "Avg Rating" }, { v: 95, s: "%", l: "Completion" }].map((stat, i) => (
+            <Reveal key={i}>
+              <div>
+                <p className="text-5xl font-bold text-[#f97316]"><Counter target={stat.v} suffix={stat.s || ""} /></p>
+                <p className="text-gray-300 mt-2">{stat.l}</p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="py-24 px-6 md:px-16 max-w-7xl mx-auto">
+        <Reveal>
+          <h2 className="text-5xl font-bold mb-16 text-center">Student Success</h2>
+        </Reveal>
+
+        <Carousel className="w-full">
+          <CarouselContent>
+            {[1, 2, 3, 4].map((i) => (
+              <CarouselItem key={i} className="md:basis-1/2">
+                <Card className="border border-orange-500/20 bg-blue-900/20">
+                  <CardContent className="p-8">
+                    <div className="flex gap-2 mb-4">
+                      {[...Array(5)].map((_, j) => <span key={j} className="text-[#f97316]">★</span>)}
+                    </div>
+                    <Badge className="mb-4 bg-[#f97316]">Completed {i} Courses</Badge>
+                    <p className="text-gray-200 mb-6 italic">"Rise Academy transformed my career. The instructors are world-class and the community is incredibly supportive."</p>
+                    <div className="flex items-center gap-4">
+                      <Avatar>
+                        <AvatarImage src={`https://images.unsplash.com/photo-150${i}?w=100`} />
+                        <AvatarFallback>ST</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-bold text-white">Student Name</p>
+                        <p className="text-xs text-gray-400">Course Grad {i}</p>
                       </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious />
+          <CarouselNext />
+        </Carousel>
+      </section>
 
-        {/* THE ATELIER VIEW (INFO) */}
-        {view === "atelier" && (
-          <motion.div key="atelier" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen flex flex-col justify-center">
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center text-white">
-                <div className="space-y-16">
-                   <span className="text-[10px] uppercase font-black tracking-[1.5em] opacity-30 block underline decoration-yellow-400 decoration-2 underline-offset-8 italic font-mono text-yellow-400">The_Atelier_Protocol</span>
-                   <h2 className="text-7xl md:text-[10vw] font-black italic tracking-tighter leading-none text-white uppercase font-sans">The <br/> Truth.</h2>
-                   <p className="text-3xl md:text-4xl font-light italic opacity-60 leading-relaxed uppercase tracking-tight text-white/60 font-sans">
-                      We treat architecture as code. Every structure is a function of its environmental variables and tectonic intent. 100% precision. Zero noise.
-                   </p>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t border-white/10 font-mono text-yellow-400">
-                      {[
-                        { icon: <Sparkles className="w-6 h-6" />, t: "Adaptive Flow", v: "Dynamic Load Sync" },
-                        { icon: <Plus className="w-6 h-6" />, t: "Structural Sync", v: "Deep_Material_ID" },
-                      ].map((item, i) => (
-                        <div key={i} className="flex gap-8 group">
-                           <div className="w-16 h-16 rounded-none border border-yellow-500 flex items-center justify-center text-yellow-500 group-hover:bg-yellow-500 group-hover:text-black transition-all shadow-xl">
-                              {item.icon}
-                           </div>
-                           <div className="text-left">
-                              <h4 className="text-2xl font-black uppercase italic tracking-tighter text-white leading-none mb-2 font-sans">{item.t}</h4>
-                              <p className="text-[10px] opacity-30 uppercase tracking-[0.3em] font-black leading-relaxed text-yellow-400/40">{item.v}</p>
-                           </div>
-                        </div>
-                      ))}
-                   </div>
-                </div>
-                <div className="relative aspect-square bg-yellow-900/10 rounded-none p-12 overflow-hidden border border-yellow-500/20 group shadow-2xl">
-                   <Image src="https://images.unsplash.com/photo-1541829070764-84a7d30dee62?q=80&w=1000&auto=format&fit=crop" alt="The Archive" fill className="object-cover opacity-20 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-[3s]" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                   <div className="absolute inset-x-0 bottom-12 flex justify-center font-mono">
-                      <div className="px-12 py-6 bg-yellow-600 text-white text-[10px] font-black uppercase tracking-widest italic animate-bounce cursor-pointer hover:bg-yellow-500 transition-all">
-                         Establish_Handshake
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
+      {/* FAQ */}
+      <section className="py-24 px-6 md:px-16 max-w-3xl mx-auto">
+        <Reveal>
+          <h2 className="text-5xl font-bold mb-16 text-center">FAQ</h2>
+        </Reveal>
 
-      </AnimatePresence>
+        <Accordion type="single" collapsible className="space-y-4">
+          {[
+            { q: "How do I access the courses?", a: "Once enrolled, you get lifetime access to course materials, updates, and community resources." },
+            { q: "Can I get a certificate?", a: "Yes! Complete a course and earn a verified certificate to showcase on LinkedIn and your resume." },
+            { q: "What's your refund policy?", a: "30-day money-back guarantee. If you're not satisfied, full refund no questions asked." },
+            { q: "Are group discounts available?", a: "Yes, we offer special pricing for teams and organizations. Contact our sales team for details." }
+          ].map((item, i) => (
+            <AccordionItem key={i} value={String(i)} className="border border-orange-500/20 px-6 rounded-lg bg-blue-900/20">
+              <AccordionTrigger className="font-semibold text-orange-400">{item.q}</AccordionTrigger>
+              <AccordionContent className="text-gray-300">{item.a}</AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </section>
 
-      {/* Global Status HUD */}
-      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em] italic text-yellow-400 leading-none font-mono">
-         <div className="flex gap-12 text-yellow-400">
-            <span>Maison_OS_Alpha</span>
-            <span>Uptime: 99.9%</span>
-         </div>
-         <div className="flex gap-4 items-end text-yellow-400">
-            <div className="text-right leading-tight italic">
-               Archival_Control <br /> v4.0.123
-            </div>
-            <div className="flex gap-[4px] h-4">
-               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-full bg-yellow-500 opacity-${i*20}`}></div>)}
-            </div>
-         </div>
-      </footer>
-
-      <style>{`
-        ::-webkit-scrollbar { width: 0px; }
-      `}</style>
+      {/* CTA */}
+      <section className="py-24 px-6 md:px-16 max-w-7xl mx-auto">
+        <Reveal>
+          <div className="bg-gradient-to-r from-[#f97316] to-orange-500 rounded-2xl p-16 text-center text-white">
+            <h2 className="text-4xl font-bold mb-6">Start Learning Today</h2>
+            <p className="text-lg opacity-90 mb-8 max-w-2xl mx-auto">Join 50,000+ students already transforming their careers with Rise Academy.</p>
+            <MagneticBtn className="px-12 py-4 bg-white text-[#f97316] rounded-lg font-bold cursor-pointer hover:bg-gray-100">
+              Explore All Courses
+            </MagneticBtn>
+          </div>
+        </Reveal>
+      </section>
     </div>
-  );
+  )
 }

@@ -1,233 +1,461 @@
-"use client";
+"use client"
 
-import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
-import Image from "next/image";
-import { X, Menu, Search, Award, Zap, Activity, Globe, Shield, Command, Plus, ArrowUpRight, Maximize2, MoveRight, Layers, Box, Compass, Sparkles, MoveVertical, Target, Radio, CheckCircle2 } from "lucide-react";
-import "../premium.css";
+import { motion, useScroll, useTransform, useInView, AnimatePresence, useMotionValue, useSpring } from "framer-motion"
+import { useState, useRef, useEffect } from "react"
+import Image from "next/image"
+import Link from "next/link"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
+import { Progress } from "@/components/ui/progress"
 
-const PROJECTS = [
-  { id: 1, title: "TERRA_UNIT", cat: "Architecture", value: "Verified", img: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=1000&auto=format&fit=crop" },
-  { id: 2, title: "AQUA_NODE", cat: "Interior", value: "Active", img: "https://images.unsplash.com/photo-1518837695005-2083093ee35b?q=80&w=1000&auto=format&fit=crop" },
-  { id: 3, title: "VOID_SHELL", cat: "Installation", value: "Locked", img: "https://images.unsplash.com/photo-1475924156734-496f6cac6ec1?q=80&w=1000&auto=format&fit=crop" },
-];
+function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: "-60px" })
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 30 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.6, delay }}
+    >
+      {children}
+    </motion.div>
+  )
+}
 
-export default function ElementumPortfolioSPA() {
-  const [view, setView] = useState<"elementum" | "project" | "logic">("elementum");
-  const [activeItem, setActiveItem] = useState(0);
+function Counter({ target, suffix = "" }: { target: number; suffix?: string }) {
+  const [count, setCount] = useState(0)
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true })
+
+  useEffect(() => {
+    if (!inView) return
+    const step = Math.ceil(target / 60)
+    const t = setInterval(() => setCount((c) => Math.min(c + step, target)), 16)
+    return () => clearInterval(t)
+  }, [inView, target])
 
   return (
-    <div className="premium-theme bg-white text-[#1a1a1a] min-h-screen selection:bg-stone-600 selection:text-white font-sans overflow-x-hidden">
-      
-      {/* Background HUD Layers */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[45vw] font-black opacity-[0.02] select-none pointer-events-none italic tracking-tighter text-center uppercase">
-           ELEMENT
+    <span ref={ref}>
+      {count.toLocaleString()}
+      {suffix}
+    </span>
+  )
+}
+
+function MagneticBtn({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  const x = useMotionValue(0)
+  const y = useMotionValue(0)
+  const sx = useSpring(x, { stiffness: 500, damping: 25 })
+  const sy = useSpring(y, { stiffness: 500, damping: 25 })
+  const ref = useRef<HTMLButtonElement>(null)
+
+  const handleMouse = (e: React.MouseEvent) => {
+    const r = ref.current!.getBoundingClientRect()
+    x.set((e.clientX - r.left - r.width / 2) * 0.35)
+    y.set((e.clientY - r.top - r.height / 2) * 0.35)
+  }
+
+  return (
+    <motion.button
+      ref={ref}
+      style={{ x: sx, y: sy }}
+      onMouseMove={handleMouse}
+      onMouseLeave={() => {
+        x.set(0)
+        y.set(0)
+      }}
+      className={className}
+    >
+      {children}
+    </motion.button>
+  )
+}
+
+const TOPICS = ["Technology", "Business", "Culture", "Science", "Politics"]
+const ARTICLES = [
+  { id: 1, title: "The Future of AI Journalism", topic: "Technology", reading: "8 min", img: "https://images.unsplash.com/photo-1677442d019cecf8d3cb45e44f0d7bbb?q=80&w=500" },
+  { id: 2, title: "Global Markets Shift East", topic: "Business", reading: "12 min", img: "https://images.unsplash.com/photo-1642254060782-1fc53d30c63d?q=80&w=500" },
+  { id: 3, title: "Digital Culture Wars", topic: "Culture", reading: "15 min", img: "https://images.unsplash.com/photo-1678301183122-82d3979c7a23?q=80&w=500" },
+  { id: 4, title: "Climate Science Breakthrough", topic: "Science", reading: "10 min", img: "https://images.unsplash.com/photo-1581092162080-8cbc2521d7dd?q=80&w=500" },
+  { id: 5, title: "Elections 2024 Forecast", topic: "Politics", reading: "18 min", img: "https://images.unsplash.com/photo-1582038927897-db5d7cff4b5f?q=80&w=500" },
+  { id: 6, title: "Web3 Reality Check", topic: "Technology", reading: "11 min", img: "https://images.unsplash.com/photo-1605792657660-73886e3f55ca?q=80&w=500" },
+  { id: 7, title: "Startup Unicorns Crash", topic: "Business", reading: "13 min", img: "https://images.unsplash.com/photo-1633356122544-f134324ef6db?q=80&w=500" },
+  { id: 8, title: "TikTok Generation Leaders", topic: "Culture", reading: "9 min", img: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?q=80&w=500" },
+]
+
+const NEWSLETTERS = [
+  { id: 1, name: "Daily Brief", subs: "2.4M", desc: "Morning digest of essential news" },
+  { id: 2, name: "Weekly Deep-Dive", subs: "890K", desc: "In-depth investigative pieces" },
+  { id: 3, name: "Weekend Edition", subs: "1.2M", desc: "Long-form culture & analysis" },
+]
+
+const WRITERS = [
+  { id: 1, name: "Sarah Chen", beat: "Technology", img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=150" },
+  { id: 2, name: "Marcus Thompson", beat: "Politics", img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=150" },
+  { id: 3, name: "Elena Rodriguez", beat: "Culture", img: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=150" },
+  { id: 4, name: "James Liu", beat: "Science", img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=150" },
+]
+
+export default function AtlasMediaLanding() {
+  const [currentTopic, setCurrentTopic] = useState(0)
+  const [selectedTopic, setSelectedTopic] = useState("Tech")
+  const [showArticleDialog, setShowArticleDialog] = useState(false)
+  const [selectedArticle, setSelectedArticle] = useState<(typeof ARTICLES)[0] | null>(null)
+  const [showSubscribeDialog, setShowSubscribeDialog] = useState(false)
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTopic((prev) => (prev + 1) % TOPICS.length)
+    }, 3000)
+    return () => clearInterval(interval)
+  }, [])
+
+  return (
+    <div className="bg-white text-gray-900 min-h-screen">
+      {/* Hero */}
+      <section className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-white via-orange-50 to-white pt-20">
+        <div className="max-w-6xl mx-auto text-center space-y-8">
+          <Reveal>
+            <h1 className="text-7xl md:text-8xl font-bold tracking-tight">
+              The News <br /> That
+              <motion.span
+                key={currentTopic}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="text-orange-500 block"
+              >
+                {TOPICS[currentTopic]} Matters
+              </motion.span>
+            </h1>
+          </Reveal>
+
+          <Reveal delay={0.2}>
+            <p className="text-2xl text-gray-600 max-w-3xl mx-auto">
+              Curated journalism across technology, business, culture, science, and politics. Read deeper. Think faster.
+            </p>
+          </Reveal>
+
+          <Reveal delay={0.4}>
+            <MagneticBtn
+              onClick={() => setShowSubscribeDialog(true)}
+              className="px-12 py-4 bg-orange-500 text-white text-lg font-semibold rounded-full hover:bg-orange-600 transition-colors"
+            >
+              Subscribe Free
+            </MagneticBtn>
+          </Reveal>
         </div>
-        <div className="absolute inset-x-0 top-0 bottom-0 left-1/2 -translate-x-1/2 w-[1px] bg-black/5" />
-        <div className="absolute inset-0 bg-white/40 backdrop-blur-[2px]" />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.05] mix-blend-multiply" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_white_100%)] opacity-80" />
-      </div>
+      </section>
 
-      {/* Editorial HUD Nav */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-center bg-transparent backdrop-blur-3xl border-b border-black/5 font-mono">
-        <div className="flex gap-12 items-center">
-           <button onClick={() => setView("elementum")} className="text-xl font-bold tracking-tighter hover:scale-105 transition-transform font-sans uppercase text-[#1a1a1a]">
-              ELEMENTUM&trade;
-           </button>
-           <div className="hidden lg:flex gap-8 text-[10px] font-black uppercase tracking-widest opacity-20 italic">
-              Status: Studio_Sync_Active
-              <span className="text-stone-600">Ref: 0x132</span>
-           </div>
-        </div>
-        <div className="hidden md:flex gap-12 text-[10px] font-black uppercase tracking-[0.4em] opacity-30">
-           <button onClick={() => setView("elementum")} className={`hover:opacity-100 transition-opacity ${view === 'elementum' ? 'text-black opacity-100 underline decoration-black underline-offset-8 italic' : ''}`}>THE_STUDIO</button>
-           <button onClick={() => setView("logic")} className={`hover:opacity-100 transition-opacity ${view === 'logic' ? 'text-black opacity-100 underline decoration-black underline-offset-8 italic' : ''}`}>THE_LOGIC</button>
-        </div>
-        <div className="flex items-center gap-8 text-black">
-           <Search className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-           <Menu className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-        </div>
-      </nav>
+      {/* Publication Tabs */}
+      <section className="py-24 px-4 bg-gray-50">
+        <div className="max-w-6xl mx-auto">
+          <Reveal>
+            <h2 className="text-5xl font-bold mb-16">Featured Stories</h2>
+          </Reveal>
 
-      <AnimatePresence mode="wait">
-        
-        {/* THE ELEMENTUM VIEW (LANDING) */}
-        {view === "elementum" && (
-          <motion.div key="elementum" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-48 pb-32 px-12 max-w-[1800px] mx-auto min-h-screen flex flex-col justify-center relative z-10">
-             <header className="mb-24 border-b border-black/10 pb-12 flex flex-col md:flex-row justify-between items-end gap-12 text-[#1a1a1a]">
-                <div>
-                   <span className="text-[10px] uppercase font-black tracking-[1em] opacity-40 mb-4 block underline decoration-black/10 underline-offset-8 italic font-mono text-stone-600">Visual_Culture // Series_132</span>
-                   <h1 className="text-7xl md:text-[12vw] font-black uppercase tracking-tighter leading-[0.75]">PURE. <br/> <span className="opacity-40 text-stone-900">FORM.</span></h1>
-                </div>
-                <div className="text-right flex flex-col items-end">
-                   <div className="text-3xl font-black mb-4 tracking-tighter uppercase opacity-10 italic font-mono text-black">Studio_Sync</div>
-                   <div className="w-64 h-[2px] bg-black/5 rounded-none overflow-hidden">
-                      <motion.div animate={{ width: ['20%', '90%', '40%', '75%'] }} transition={{ duration: 4, repeat: Infinity }} className="h-full bg-stone-600" />
-                   </div>
-                </div>
-             </header>
+          <Tabs defaultValue="Tech" className="w-full">
+            <TabsList className="grid w-full grid-cols-5 mb-12 bg-white border border-gray-200">
+              {["Tech", "Business", "Culture", "Science", "Politics"].map((topic) => (
+                <TabsTrigger
+                  key={topic}
+                  value={topic}
+                  className="font-semibold data-[state=active]:bg-orange-500 data-[state=active]:text-white"
+                >
+                  {topic}
+                </TabsTrigger>
+              ))}
+            </TabsList>
 
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-32 font-mono text-[#1a1a1a]">
-                {PROJECTS.map((p, i) => (
-                  <motion.div 
-                    key={p.id} initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                    className="group relative h-[80vh] rounded-none overflow-hidden border border-black/5 hover:border-black/20 transition-all cursor-pointer shadow-2xl bg-white/5"
-                    onClick={() => { setActiveItem(i); setView("project"); }}
-                  >
-                     <Image src={p.img} alt={p.title} fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[2s] group-hover:scale-110" />
-                     <div className="absolute inset-0 bg-stone-400/10 group-hover:bg-transparent transition-colors duration-1000" />
-                     <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60" />
-                     
-                     <div className="absolute inset-10 flex flex-col justify-between">
-                        <div className="flex justify-between items-start text-white mix-blend-difference">
-                           <div className="p-4 bg-white/10 border border-white/20 rounded-none opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Box className="w-5 h-5" />
-                           </div>
-                           <div className="text-[10px] font-black uppercase tracking-widest opacity-20 italic">UNIT_0x{i+132}</div>
-                        </div>
-                        <div className="mix-blend-difference text-white">
-                           <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-2 block italic text-stone-300">{p.cat} // {p.value}</span>
-                           <h3 className="text-5xl font-black italic uppercase tracking-tighter leading-none transition-all group-hover:tracking-widest font-sans">{p.title}</h3>
-                        </div>
-                     </div>
-                  </motion.div>
-                ))}
-             </div>
-          </motion.div>
-        )}
-
-        {/* THE PROJECT VIEW (DETAIL) */}
-        {view === "project" && (
-          <motion.div key="project" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen font-sans">
-             <button onClick={() => setView("elementum")} className="fixed top-12 left-12 z-[60] bg-black text-white p-5 rounded-none hover:scale-110 transition-transform shadow-2xl">
-                <X className="w-6 h-6" />
-             </button>
-
-             <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen pt-24 lg:pt-0">
-                <div className="lg:col-span-12 relative flex items-center justify-center p-8 md:p-32 overflow-hidden h-screen bg-white">
-                   <div className="absolute inset-0 opacity-10">
-                      <Image src={PROJECTS[activeItem].img} alt="Background" fill className="object-cover grayscale" />
-                   </div>
-                   <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[40vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase text-black">
-                      PROJECT
-                   </div>
-                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_white_100%)]" />
-                   
-                   <div className="max-w-[1500px] w-full grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10 text-[#1a1a1a]">
-                      <motion.div initial={{ scale: 1.1, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1 }} className="relative aspect-square w-full rounded-none overflow-hidden border-8 border-white bg-white shadow-2xl group">
-                         <Image src={PROJECTS[activeItem].img} alt="Spec" fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[3s] opacity-80" priority />
-                         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60" />
-                         <div className="absolute top-12 left-12 p-4 bg-black/60 backdrop-blur-3xl rounded-none border-2 border-white/10 z-20">
-                            <Layers className="w-6 h-6 text-white animate-pulse" />
-                         </div>
-                      </motion.div>
-
-                      <div className="flex flex-col justify-center space-y-12 text-[#1a1a1a]">
-                         <div className="space-y-6">
-                            <span className="text-[10px] uppercase tracking-[1em] font-black opacity-30 mb-8 block underline decoration-black decoration-4 underline-offset-8 italic text-stone-600 font-mono">Visual_Sync // {PROJECTS[activeItem].cat}</span>
-                            <h1 className="text-7xl md:text-[8vw] font-black uppercase tracking-tighter leading-none">{PROJECTS[activeItem].title}</h1>
-                            <div className="text-4xl font-black italic tracking-tighter opacity-10 italic text-stone-600">State: {PROJECTS[activeItem].value}</div>
-                         </div>
-
-                         <p className="text-3xl font-light italic leading-relaxed uppercase tracking-tight opacity-40 leading-relaxed">
-                            Structural allocation for mission {PROJECTS[activeItem].title}. System integrity at 100%. Thermal load nominal at 32C. Every coordinate synchronized.
-                         </p>
-
-                         <div className="grid grid-cols-2 gap-12 py-12 border-y border-black/10 font-mono text-black/60">
-                            {[
-                              { icon: <Globe className="w-5 h-5" />, l: "Region", v: "Global_East" },
-                              { icon: <Zap className="w-5 h-5" />, l: "Logic", v: "Phase_Shift" },
-                              { icon: <Shield className="w-5 h-5" />, l: "Security", v: "High_Impact" },
-                              { icon: <Activity className="w-5 h-5" />, l: "Sync", v: "Active" },
-                            ].map((s, i) => (
-                              <div key={i} className="flex gap-6 items-center">
-                                 <div className="opacity-20 text-stone-600">{s.icon}</div>
-                                 <div className="text-left">
-                                    <div className="text-[10px] font-black opacity-30 uppercase tracking-widest mb-1 italic text-black">{s.l}</div>
-                                    <div className="text-sm font-black uppercase italic tracking-tighter text-black">{s.v}</div>
-                                 </div>
+            {["Tech", "Business", "Culture", "Science", "Politics"].map((topic) => (
+              <TabsContent key={topic} value={topic} className="mt-12">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="grid grid-cols-1 md:grid-cols-2 gap-8"
+                >
+                  {ARTICLES.filter((a) => a.topic === topic)
+                    .slice(0, 4)
+                    .map((article, i) => (
+                      <Reveal key={article.id} delay={i * 0.1}>
+                        <Card
+                          className="group cursor-pointer hover:shadow-xl transition-shadow"
+                          onClick={() => {
+                            setSelectedArticle(article)
+                            setShowArticleDialog(true)
+                          }}
+                        >
+                          <CardContent className="p-0">
+                            <div className="relative h-48 overflow-hidden rounded-t-lg bg-gray-200">
+                              <Image
+                                src={article.img}
+                                alt={article.title}
+                                fill
+                                className="object-cover group-hover:scale-105 transition-transform"
+                              />
+                            </div>
+                            <div className="p-6 space-y-4">
+                              <div className="flex gap-2">
+                                <Badge variant="secondary">{article.topic}</Badge>
+                                <Badge variant="outline">{article.reading}</Badge>
                               </div>
-                            ))}
-                         </div>
+                              <h3 className="text-xl font-bold group-hover:text-orange-500 transition-colors line-clamp-2">
+                                {article.title}
+                              </h3>
+                              <p className="text-sm text-gray-500">By Atlas Media Editorial</p>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </Reveal>
+                    ))}
+                </motion.div>
+              </TabsContent>
+            ))}
+          </Tabs>
+        </div>
+      </section>
 
-                         <div className="flex gap-6 pt-8 font-mono">
-                            <button onClick={() => setView("elementum")} className="flex-grow py-8 bg-black text-white font-black uppercase text-xs tracking-[1em] hover:bg-stone-800 transition-all shadow-2xl">
-                               Return_to_Domaine
-                            </button>
-                            <button className="px-12 py-8 border border-black/20 text-[10px] font-black uppercase tracking-[0.5em] hover:scale-105 transition-all text-black">
-                               PDF_Spec
-                            </button>
-                         </div>
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
+      {/* Newsletter Showcase */}
+      <section className="py-24 px-4 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <Reveal>
+            <h2 className="text-5xl font-bold mb-16">Our Newsletters</h2>
+          </Reveal>
 
-        {/* THE LOGIC VIEW (INFO) */}
-        {view === "logic" && (
-          <motion.div key="logic" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen flex flex-col justify-center text-[#1a1a1a]">
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center">
-                <div className="space-y-16">
-                   <span className="text-[10px] uppercase font-black tracking-[1.5em] opacity-30 block underline decoration-black decoration-2 underline-offset-8 italic font-mono text-stone-600">The_Logic_Protocol</span>
-                   <h2 className="text-7xl md:text-[10vw] font-black italic tracking-tighter leading-none uppercase font-sans">The <br/> Truth.</h2>
-                   <p className="text-3xl md:text-4xl font-light italic opacity-60 leading-relaxed uppercase tracking-tight font-sans">
-                      We treat architecture as code. Every structure is a function of its environmental variables and tectonic intent. 100% precision. Zero noise.
-                   </p>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t border-black/10 font-mono text-stone-600">
-                      {[
-                        { icon: <Sparkles className="w-6 h-6" />, t: "Adaptive Flow", v: "Dynamic Load Sync" },
-                        { icon: <Plus className="w-6 h-6" />, t: "Structural Sync", v: "Deep_Material_ID" },
-                      ].map((item, i) => (
-                        <div key={i} className="flex gap-8 group">
-                           <div className="w-16 h-16 rounded-none border border-black flex items-center justify-center text-black group-hover:bg-black group-hover:text-white transition-all shadow-xl">
-                              {item.icon}
-                           </div>
-                           <div className="text-left text-[#1a1a1a]">
-                              <h4 className="text-2xl font-black uppercase italic tracking-tighter text-black leading-none mb-2 font-sans">{item.t}</h4>
-                              <p className="text-[10px] opacity-30 uppercase tracking-[0.3em] font-black leading-relaxed text-stone-600/40">{item.v}</p>
-                           </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {NEWSLETTERS.map((nl, i) => (
+              <Reveal key={nl.id} delay={i * 0.1}>
+                <Card className="hover:shadow-lg transition-shadow bg-gradient-to-br from-orange-50 to-white">
+                  <CardContent className="p-8 space-y-6">
+                    <div>
+                      <h3 className="text-2xl font-bold mb-2">{nl.name}</h3>
+                      <Badge className="bg-orange-500">{nl.subs} subscribers</Badge>
+                    </div>
+                    <p className="text-gray-600">{nl.desc}</p>
+                    <button className="w-full px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-medium">
+                      Subscribe
+                    </button>
+                  </CardContent>
+                </Card>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Writer Spotlight */}
+      <section className="py-24 px-4 bg-gray-50">
+        <div className="max-w-6xl mx-auto">
+          <Reveal>
+            <h2 className="text-5xl font-bold mb-16">Meet Our Writers</h2>
+          </Reveal>
+
+          <Carousel className="w-full">
+            <CarouselContent>
+              {WRITERS.map((writer) => (
+                <CarouselItem key={writer.id} className="basis-1/2 md:basis-1/4">
+                  <Reveal>
+                    <Card className="text-center hover:shadow-lg transition-shadow">
+                      <CardContent className="p-6 space-y-4">
+                        <Avatar className="w-20 h-20 mx-auto border-2 border-orange-500">
+                          <AvatarImage src={writer.img} />
+                          <AvatarFallback>{writer.name[0]}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <h3 className="font-bold text-lg">{writer.name}</h3>
+                          <Badge variant="outline">{writer.beat}</Badge>
                         </div>
-                      ))}
-                   </div>
+                      </CardContent>
+                    </Card>
+                  </Reveal>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious />
+            <CarouselNext />
+          </Carousel>
+        </div>
+      </section>
+
+      {/* Stats */}
+      <section className="py-24 px-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-12 text-center">
+            {[
+              { value: 2000000, suffix: "", label: "Global Readers" },
+              { value: 50, suffix: "", label: "Active Newsletters" },
+              { value: 8, suffix: " years", label: "Publishing" },
+              { value: 4.8, suffix: "★", label: "Reader Rating" },
+            ].map((stat, i) => (
+              <Reveal key={i} delay={i * 0.1}>
+                <div className="space-y-2">
+                  <div className="text-4xl font-bold">
+                    <Counter target={stat.value} suffix={stat.suffix} />
+                  </div>
+                  <p className="text-orange-100">{stat.label}</p>
                 </div>
-                <div className="relative aspect-square bg-[#ebe7e0] rounded-none p-12 overflow-hidden border border-black/5 group shadow-2xl">
-                   <Image src="https://images.unsplash.com/photo-1541829070764-84a7d30dee62?q=80&w=1000&auto=format&fit=crop" alt="The Archive" fill className="object-cover opacity-20 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-[3s]" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-80" />
-                   <div className="absolute inset-x-0 bottom-12 flex justify-center font-mono">
-                      <div className="px-12 py-6 bg-black text-white text-[10px] font-black uppercase tracking-widest italic animate-bounce cursor-pointer hover:bg-stone-800 transition-all rounded-none">
-                         Establish_Handshake
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
 
-      </AnimatePresence>
+      {/* Testimonials */}
+      <section className="py-24 px-4 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <Reveal>
+            <h2 className="text-5xl font-bold mb-16">What Readers Say</h2>
+          </Reveal>
 
-      {/* Global Status HUD */}
-      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em] italic text-stone-600 leading-none font-mono">
-         <div className="flex gap-12 text-stone-600">
-            <span>Elementum_OS_Alpha</span>
-            <span>Uptime: 99.9%</span>
-         </div>
-         <div className="flex gap-4 items-end text-stone-600">
-            <div className="text-right leading-tight italic">
-               Archival_Control <br /> v4.0.132
+          <Carousel className="w-full">
+            <CarouselContent>
+              {[
+                { name: "Alexandra K.", quote: "Best journalism I've found. Sharp insights without the noise." },
+                { name: "Michael S.", quote: "Finally a newsletter I actually read every morning." },
+                { name: "Jessica P.", quote: "Deep-dive pieces that TV news can't touch." },
+              ].map((testi, i) => (
+                <CarouselItem key={i} className="basis-full md:basis-1/2">
+                  <Reveal>
+                    <Card className="bg-gradient-to-br from-gray-50 to-white">
+                      <CardContent className="p-8 space-y-4">
+                        <p className="text-xl italic text-gray-700">"{testi.quote}"</p>
+                        <div className="flex items-center gap-3">
+                          <Avatar>
+                            <AvatarFallback>{testi.name[0]}</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-semibold">{testi.name}</p>
+                            <p className="text-sm text-gray-500">Atlas Subscriber</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Reveal>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious />
+            <CarouselNext />
+          </Carousel>
+        </div>
+      </section>
+
+      {/* Sponsorship */}
+      <section className="py-24 px-4 bg-gray-50">
+        <div className="max-w-4xl mx-auto">
+          <Reveal>
+            <h2 className="text-5xl font-bold mb-12">Advertise with Atlas</h2>
+          </Reveal>
+
+          <Accordion type="single" collapsible className="space-y-4">
+            <AccordionItem value="formats" className="border border-gray-200 rounded-lg px-6">
+              <AccordionTrigger className="font-semibold">Ad Formats & Pricing</AccordionTrigger>
+              <AccordionContent className="space-y-2 text-gray-600">
+                <p>Sponsored Articles: $15,000 | Native Ad Spots: $8,000 | Banner Placements: $5,000</p>
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="audience" className="border border-gray-200 rounded-lg px-6">
+              <AccordionTrigger className="font-semibold">Audience Insights</AccordionTrigger>
+              <AccordionContent className="space-y-2 text-gray-600">
+                <p>2M+ engaged readers | 68% college-educated | 72% household income $100k+</p>
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="cases" className="border border-gray-200 rounded-lg px-6">
+              <AccordionTrigger className="font-semibold">Case Studies</AccordionTrigger>
+              <AccordionContent className="space-y-2 text-gray-600">
+                <p>TechCorp: 34% increase in brand awareness | FinanceX: 12K qualified leads</p>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="py-24 px-4 bg-white">
+        <div className="max-w-4xl mx-auto">
+          <Reveal>
+            <h2 className="text-5xl font-bold mb-12">FAQ</h2>
+          </Reveal>
+
+          <Accordion type="single" collapsible className="space-y-4">
+            {[
+              { q: "Do I need an account?", a: "No, Atlas is free without an account. Create one to personalize your feed." },
+              { q: "Can I gift a subscription?", a: "Yes, gift annual subscriptions to newsletter for $49." },
+              { q: "Is RSS available?", a: "Full RSS feeds for all publications at atlas.media/rss" },
+              { q: "How do I unsubscribe?", a: "Click 'Manage Preferences' in any newsletter or email support." },
+            ].map((item, i) => (
+              <AccordionItem key={i} value={`faq-${i}`} className="border border-gray-200 rounded-lg px-6">
+                <AccordionTrigger className="font-semibold">{item.q}</AccordionTrigger>
+                <AccordionContent className="text-gray-600">{item.a}</AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
+      </section>
+
+      {/* Article Dialog */}
+      <Dialog open={showArticleDialog} onOpenChange={setShowArticleDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold">{selectedArticle?.title}</DialogTitle>
+          </DialogHeader>
+          {selectedArticle && (
+            <div className="space-y-6">
+              <div className="relative h-64 rounded-lg overflow-hidden bg-gray-200">
+                <Image
+                  src={selectedArticle.img}
+                  alt={selectedArticle.title}
+                  fill
+                  className="object-cover"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Badge>{selectedArticle.topic}</Badge>
+                <Badge variant="outline">{selectedArticle.reading}</Badge>
+              </div>
+              <p className="text-gray-600 leading-relaxed">
+                This is a preview of the article. Read the full story by subscribing to Atlas Media. Our writers dive deep into the stories that matter most.
+              </p>
+              <MagneticBtn
+                onClick={() => setShowSubscribeDialog(true)}
+                className="w-full px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-semibold"
+              >
+                Subscribe to Read Full Article
+              </MagneticBtn>
             </div>
-            <div className="flex gap-[4px] h-4">
-               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-full bg-black opacity-${i*20}`}></div>)}
-            </div>
-         </div>
-      </footer>
+          )}
+        </DialogContent>
+      </Dialog>
 
-      <style>{`
-        ::-webkit-scrollbar { width: 0px; }
-      `}</style>
+      {/* Subscribe Dialog */}
+      <Dialog open={showSubscribeDialog} onOpenChange={setShowSubscribeDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-3xl font-bold">Join 2M Readers</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6">
+            <p className="text-gray-600">Get daily news that matters delivered to your inbox. Free forever.</p>
+            <input
+              type="email"
+              placeholder="you@example.com"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+            />
+            <MagneticBtn className="w-full px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-semibold">
+              Start Reading
+            </MagneticBtn>
+            <p className="text-xs text-gray-500 text-center">No spam. Unsubscribe anytime. Privacy policy.</p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
-  );
+  )
 }

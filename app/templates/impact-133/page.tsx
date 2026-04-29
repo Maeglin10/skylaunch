@@ -1,235 +1,512 @@
-"use client";
+"use client"
 
-import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
-import { useState, useRef } from "react";
-import Image from "next/image";
-import { X, Menu, Search, Award, Zap, Activity, Globe, Shield, Command, Plus, ArrowUpRight, Maximize2, MoveRight, Layers, Box, Compass, Sparkles, MoveVertical, Target, Radio, CheckCircle2 } from "lucide-react";
-import "../premium.css";
+import { motion, useScroll, useTransform, useInView, AnimatePresence, useMotionValue, useSpring } from "framer-motion"
+import { useState, useRef, useEffect } from "react"
+import Image from "next/image"
+import Link from "next/link"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
+import { Progress } from "@/components/ui/progress"
+import { MapPin, Bed, Bath } from "lucide-react"
 
-const CITIES = [
-  { id: 1, title: "METRO_CORE", cat: "Metropolis", value: "Verified", img: "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?q=80&w=1000&auto=format&fit=crop" },
-  { id: 2, title: "VOID_SCAPE", cat: "Urban", value: "Active", img: "https://images.unsplash.com/photo-1449156001437-37e64b1df704?q=80&w=1000&auto=format&fit=crop" },
-  { id: 3, title: "NEON_SHELL", cat: "Frequency", value: "Locked", img: "https://images.unsplash.com/photo-1514565131-fce0801e5785?q=80&w=1000&auto=format&fit=crop" },
-];
+function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: "-60px" })
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 30 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.6, delay }}
+    >
+      {children}
+    </motion.div>
+  )
+}
 
-export default function AtlasUrbanSPA() {
-  const [view, setView] = useState<"atlas" | "city" | "logic">("atlas");
-  const [activeItem, setActiveItem] = useState(0);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: containerRef });
-  
-  const yTranslate = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
+function Counter({ target, suffix = "" }: { target: number; suffix?: string }) {
+  const [count, setCount] = useState(0)
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true })
+
+  useEffect(() => {
+    if (!inView) return
+    const step = Math.ceil(target / 60)
+    const t = setInterval(() => setCount((c) => Math.min(c + step, target)), 16)
+    return () => clearInterval(t)
+  }, [inView, target])
 
   return (
-    <div ref={containerRef} className="premium-theme bg-[#0a0a0a] text-sky-400 min-h-screen selection:bg-sky-600 selection:text-white font-sans overflow-x-hidden">
-      
-      {/* Background HUD Layers */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[45vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase">
-           ATLAS
-        </div>
-        <div className="absolute inset-0 bg-[#0a0a0a]/40 backdrop-blur-[2px]" />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.05] mix-blend-screen" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#0a0a0a_100%)] opacity-80" />
-      </div>
+    <span ref={ref}>
+      {count.toLocaleString()}
+      {suffix}
+    </span>
+  )
+}
 
-      {/* Editorial HUD Nav */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-center bg-transparent backdrop-blur-3xl border-b border-sky-500/10 font-mono">
-        <div className="flex gap-12 items-center">
-           <button onClick={() => setView("atlas")} className="text-xl font-black italic tracking-tighter hover:text-white transition-colors flex items-center gap-4 text-sky-500">
-              ATLAS_OS&trade;
-           </button>
-           <div className="hidden lg:flex gap-8 text-[10px] font-black uppercase tracking-widest opacity-20 italic text-white">
-              Status: Urban_Sync_Active
-              <span className="text-white">Ref: 0x133</span>
-           </div>
-        </div>
-        <div className="hidden md:flex gap-12 text-[10px] font-black uppercase tracking-[0.4em] opacity-30 text-white">
-           <button onClick={() => setView("atlas")} className={`hover:opacity-100 transition-opacity ${view === 'atlas' ? 'text-white opacity-100 underline decoration-white underline-offset-8 italic' : ''}`}>THE_ATLAS</button>
-           <button onClick={() => setView("logic")} className={`hover:opacity-100 transition-opacity ${view === 'logic' ? 'text-white opacity-100 underline decoration-white underline-offset-8 italic' : ''}`}>THE_LOGIC</button>
-        </div>
-        <div className="flex items-center gap-8 text-white">
-           <Search className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-           <Menu className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-        </div>
-      </nav>
+function MagneticBtn({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  const x = useMotionValue(0)
+  const y = useMotionValue(0)
+  const sx = useSpring(x, { stiffness: 500, damping: 25 })
+  const sy = useSpring(y, { stiffness: 500, damping: 25 })
+  const ref = useRef<HTMLButtonElement>(null)
 
-      <AnimatePresence mode="wait">
-        
-        {/* THE ATLAS VIEW (LANDING) */}
-        {view === "atlas" && (
-          <motion.div key="atlas" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-48 pb-32 px-12 max-w-[1800px] mx-auto min-h-screen flex flex-col justify-center relative z-10">
-             <header className="mb-24 border-b border-sky-500/20 pb-12 flex flex-col md:flex-row justify-between items-end gap-12 text-white">
-                <div>
-                   <span className="text-[10px] uppercase font-black tracking-[1em] opacity-40 mb-4 block underline decoration-sky-500/10 underline-offset-8 italic font-mono text-sky-500">Urban_Capture // Series_133</span>
-                   <h1 className="text-7xl md:text-[12vw] font-black italic uppercase tracking-tighter leading-[0.75]">METRO. <br/> <span className="text-transparent" style={{ WebkitTextStroke: "2px rgba(56,189,248,0.6)" }}>POLIS.</span></h1>
-                </div>
-                <div className="text-right flex flex-col items-end">
-                   <div className="text-3xl font-black mb-4 tracking-tighter uppercase opacity-10 italic font-mono text-sky-600">Density_Sync</div>
-                   <div className="w-64 h-[2px] bg-white/5 rounded-none overflow-hidden">
-                      <motion.div animate={{ width: ['20%', '90%', '40%', '75%'] }} transition={{ duration: 4, repeat: Infinity }} className="h-full bg-sky-500" />
-                   </div>
-                </div>
-             </header>
+  const handleMouse = (e: React.MouseEvent) => {
+    const r = ref.current!.getBoundingClientRect()
+    x.set((e.clientX - r.left - r.width / 2) * 0.35)
+    y.set((e.clientY - r.top - r.height / 2) * 0.35)
+  }
 
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-white">
-                {CITIES.map((p, i) => (
-                  <motion.div 
-                    key={p.id} initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                    className="group relative h-[60vh] rounded-none overflow-hidden border border-sky-500/10 hover:border-sky-500/40 transition-all cursor-pointer shadow-2xl bg-white/5"
-                    onClick={() => { setActiveItem(i); setView("city"); }}
-                  >
-                     <Image src={p.img} alt={p.title} fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[2s] group-hover:scale-110" />
-                     <div className="absolute inset-0 bg-sky-500/10 group-hover:bg-transparent transition-colors duration-1000" />
-                     <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                     
-                     <div className="absolute inset-10 flex flex-col justify-between">
-                        <div className="flex justify-between items-start text-white">
-                           <div className="p-4 bg-white/10 border border-white/20 rounded-none opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Target className="w-5 h-5" />
-                           </div>
-                           <div className="text-[10px] font-black uppercase tracking-widest opacity-20 italic text-sky-400">UNIT_0x{i+133}</div>
+  return (
+    <motion.button
+      ref={ref}
+      style={{ x: sx, y: sy }}
+      onMouseMove={handleMouse}
+      onMouseLeave={() => {
+        x.set(0)
+        y.set(0)
+      }}
+      className={className}
+    >
+      {children}
+    </motion.button>
+  )
+}
+
+const PROPERTIES = [
+  { id: 1, title: "Penthouse Downtown", price: "€2.8M", beds: 4, baths: 3, m2: 320, img: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=500" },
+  { id: 2, title: "Waterfront Villa", price: "€4.2M", beds: 5, baths: 4, m2: 450, img: "https://images.unsplash.com/photo-1600573472550-8090b5e0745e?q=80&w=500" },
+  { id: 3, title: "Hills Modern Estate", price: "€3.1M", beds: 3, baths: 3, m2: 280, img: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=500" },
+  { id: 4, title: "Contemporary Loft", price: "€1.8M", beds: 2, baths: 2, m2: 200, img: "https://images.unsplash.com/photo-1600573472550-8090b5e0745e?q=80&w=500" },
+  { id: 5, title: "Luxury Apartment", price: "€2.2M", beds: 3, baths: 2, m2: 240, img: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=500" },
+  { id: 6, title: "Beachfront House", price: "€3.5M", beds: 4, baths: 3, m2: 380, img: "https://images.unsplash.com/photo-1600573472550-8090b5e0745e?q=80&w=500" },
+]
+
+const NEIGHBORHOODS = [
+  { name: "Downtown", amenities: "Shopping, Dining, Transit", count: 28 },
+  { name: "Waterfront", amenities: "Marina, Beach, Parks", count: 15 },
+  { name: "Hills", amenities: "Views, Privacy, Nature", count: 12 },
+]
+
+const AGENTS = [
+  { id: 1, name: "Isabella Monaco", spec: "Waterfront Expert", sold: "€850M", img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=150" },
+  { id: 2, name: "Marco Giuliano", spec: "Luxury Homes", sold: "€720M", img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=150" },
+  { id: 3, name: "Sophia Rossi", spec: "Commercial", sold: "€640M", img: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=150" },
+  { id: 4, name: "Andrea Bianchi", spec: "Investment", sold: "€510M", img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=150" },
+]
+
+export default function PinnacleRealtyLanding() {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const { scrollYProgress } = useScroll({ target: containerRef })
+  const parallax = useTransform(scrollYProgress, [0, 1], ["0%", "30%"])
+
+  const [selectedListing, setSelectedListing] = useState<(typeof PROPERTIES)[0] | null>(null)
+  const [showPropertyDialog, setShowPropertyDialog] = useState(false)
+  const [showViewingDialog, setShowViewingDialog] = useState(false)
+
+  return (
+    <div ref={containerRef} className="bg-white text-gray-900 min-h-screen">
+      {/* Parallax Hero */}
+      <section className="relative h-screen overflow-hidden flex items-center justify-center">
+        <motion.div
+          style={{ y: parallax }}
+          className="absolute inset-0 -z-10"
+        >
+          <Image
+            src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=1200"
+            alt="Luxury home"
+            fill
+            className="object-cover"
+          />
+          <div className="absolute inset-0 bg-black/40" />
+        </motion.div>
+
+        <div className="relative z-10 max-w-5xl mx-auto text-center text-white px-4 space-y-8">
+          <Reveal>
+            <h1 className="text-7xl md:text-8xl font-bold tracking-tight">
+              Live<br />Luxuriously
+            </h1>
+          </Reveal>
+
+          <Reveal delay={0.2}>
+            <p className="text-2xl font-light max-w-3xl mx-auto">
+              Curated properties in the world's most coveted locations. From waterfront villas to penthouse estates.
+            </p>
+          </Reveal>
+
+          <Reveal delay={0.4}>
+            <MagneticBtn
+              onClick={() => setShowViewingDialog(true)}
+              className="px-12 py-4 bg-amber-500 text-white text-lg font-semibold rounded-lg hover:bg-amber-600 transition-colors"
+            >
+              Schedule Viewing
+            </MagneticBtn>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* Property Tabs */}
+      <section className="py-24 px-4 bg-gradient-to-b from-gray-50 to-white">
+        <div className="max-w-6xl mx-auto">
+          <Reveal>
+            <h2 className="text-5xl font-bold mb-16">Featured Listings</h2>
+          </Reveal>
+
+          <Tabs defaultValue="for-sale" className="w-full">
+            <TabsList className="grid w-full grid-cols-4 mb-12 bg-white border border-gray-200">
+              {["For Sale", "For Rent", "New Development", "Commercial"].map((category) => (
+                <TabsTrigger
+                  key={category}
+                  value={category.toLowerCase()}
+                  className="font-semibold data-[state=active]:bg-amber-500 data-[state=active]:text-white"
+                >
+                  {category}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+
+            <TabsContent value="for-sale" className="mt-12">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+              >
+                {PROPERTIES.map((prop, i) => (
+                  <Reveal key={prop.id} delay={i * 0.1}>
+                    <Card
+                      className="group cursor-pointer hover:shadow-2xl transition-shadow overflow-hidden"
+                      onClick={() => {
+                        setSelectedListing(prop)
+                        setShowPropertyDialog(true)
+                      }}
+                    >
+                      <CardContent className="p-0">
+                        <div className="relative h-64 overflow-hidden bg-gray-200">
+                          <Image
+                            src={prop.img}
+                            alt={prop.title}
+                            fill
+                            className="object-cover group-hover:scale-110 transition-transform duration-500"
+                          />
                         </div>
-                        <div className="text-white">
-                           <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-2 block italic text-sky-300">{p.cat} // {p.value}</span>
-                           <h3 className="text-5xl font-black italic uppercase tracking-tighter leading-none transition-all group-hover:tracking-widest">{p.title}</h3>
+                        <div className="p-6 space-y-4">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p className="text-3xl font-bold text-amber-600">{prop.price}</p>
+                              <h3 className="text-lg font-bold mt-2 group-hover:text-amber-600 transition-colors">
+                                {prop.title}
+                              </h3>
+                            </div>
+                          </div>
+                          <div className="flex gap-6 text-sm text-gray-600">
+                            <div className="flex items-center gap-1">
+                              <Bed className="w-4 h-4" />
+                              {prop.beds} beds
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Bath className="w-4 h-4" />
+                              {prop.baths} baths
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <MapPin className="w-4 h-4" />
+                              {prop.m2} m²
+                            </div>
+                          </div>
                         </div>
-                     </div>
-                  </motion.div>
+                      </CardContent>
+                    </Card>
+                  </Reveal>
                 ))}
-             </div>
-          </motion.div>
-        )}
+              </motion.div>
+            </TabsContent>
 
-        {/* THE CITY VIEW (DETAIL) */}
-        {view === "city" && (
-          <motion.div key="city" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen">
-             <button onClick={() => setView("atlas")} className="fixed top-12 left-12 z-[60] bg-white text-black p-5 rounded-none hover:scale-110 transition-transform shadow-2xl">
-                <X className="w-6 h-6" />
-             </button>
+            {["for-rent", "new-development", "commercial"].map((tab) => (
+              <TabsContent key={tab} value={tab} className="mt-12">
+                <p className="text-center text-gray-500 py-12">Coming soon</p>
+              </TabsContent>
+            ))}
+          </Tabs>
+        </div>
+      </section>
 
-             <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen pt-24 lg:pt-0">
-                <div className="lg:col-span-12 relative flex items-center justify-center p-8 md:p-32 overflow-hidden h-screen bg-[#0a0a0a]">
-                   <div className="absolute inset-0 opacity-10">
-                      <Image src={CITIES[activeItem].img} alt="Background" fill className="object-cover grayscale" />
-                   </div>
-                   <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[40vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase text-sky-500 font-sans">
-                      CITY
-                   </div>
-                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#0a0a0a_100%)]" />
-                   
-                   <div className="max-w-[1500px] w-full grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10 font-sans text-white">
-                      <motion.div initial={{ scale: 1.1, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1 }} className="relative aspect-square w-full rounded-none overflow-hidden border border-sky-500/20 group bg-neutral-900 shadow-2xl">
-                         <Image src={CITIES[activeItem].img} alt="Spec" fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[3s] opacity-80" priority />
-                         <div className="absolute top-12 left-12 p-4 bg-black/60 backdrop-blur-3xl rounded-none border-2 border-white/10 z-20">
-                            <Layers className="w-6 h-6 text-sky-400 animate-pulse" />
-                         </div>
-                      </motion.div>
+      {/* Neighborhood Guide */}
+      <section className="py-24 px-4 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <Reveal>
+            <h2 className="text-5xl font-bold mb-16">Neighborhoods</h2>
+          </Reveal>
 
-                      <div className="flex flex-col justify-center space-y-12">
-                         <div className="space-y-6">
-                            <span className="text-[10px] uppercase tracking-[1em] font-black opacity-30 mb-8 block underline decoration-white decoration-4 underline-offset-8 italic text-sky-400 font-mono">Density_Sync // {CITIES[activeItem].cat}</span>
-                            <h1 className="text-7xl md:text-[8vw] font-black italic uppercase tracking-tighter leading-none text-white">{CITIES[activeItem].title}</h1>
-                            <div className="text-4xl font-black italic tracking-tighter opacity-10 italic text-sky-500">State: {CITIES[activeItem].value}</div>
-                         </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {NEIGHBORHOODS.map((neighborhood, i) => (
+              <Reveal key={neighborhood.name} delay={i * 0.1}>
+                <Card className="hover:shadow-lg transition-shadow bg-gradient-to-br from-amber-50 to-white">
+                  <CardContent className="p-8 space-y-6">
+                    <h3 className="text-2xl font-bold">{neighborhood.name}</h3>
+                    <p className="text-gray-600">{neighborhood.amenities}</p>
+                    <Badge className="bg-amber-500 w-fit">{neighborhood.count} Properties</Badge>
+                  </CardContent>
+                </Card>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
 
-                         <p className="text-3xl font-light italic leading-relaxed uppercase tracking-tight opacity-40 text-white leading-relaxed">
-                            Structural allocation for mission {CITIES[activeItem].title}. System integrity at 100%. Thermal load nominal at 32C. Every coordinate synchronized.
-                         </p>
+      {/* Agent Team */}
+      <section className="py-24 px-4 bg-gray-50">
+        <div className="max-w-6xl mx-auto">
+          <Reveal>
+            <h2 className="text-5xl font-bold mb-16">Our Agents</h2>
+          </Reveal>
 
-                         <div className="grid grid-cols-2 gap-12 py-12 border-y border-white/10 font-mono text-white/60">
-                            {[
-                              { icon: <Globe className="w-5 h-5" />, l: "Region", v: "Global_East" },
-                              { icon: <Zap className="w-5 h-5" />, l: "Logic", v: "Phase_Shift" },
-                              { icon: <Shield className="w-5 h-5" />, l: "Security", v: "High_Impact" },
-                              { icon: <Activity className="w-5 h-5" />, l: "Sync", v: "Active" },
-                            ].map((s, i) => (
-                              <div key={i} className="flex gap-6 items-center">
-                                 <div className="opacity-20 text-sky-400">{s.icon}</div>
-                                 <div className="text-left">
-                                    <div className="text-[10px] font-black opacity-30 uppercase tracking-widest mb-1 italic text-white">{s.l}</div>
-                                    <div className="text-sm font-black uppercase italic tracking-tighter text-white">{s.v}</div>
-                                 </div>
-                              </div>
-                            ))}
-                         </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {AGENTS.map((agent, i) => (
+              <Reveal key={agent.id} delay={i * 0.1}>
+                <Card className="text-center hover:shadow-lg transition-shadow">
+                  <CardContent className="p-6 space-y-4">
+                    <Avatar className="w-24 h-24 mx-auto border-2 border-amber-500">
+                      <AvatarImage src={agent.img} />
+                      <AvatarFallback>{agent.name[0]}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h3 className="font-bold text-lg">{agent.name}</h3>
+                      <Badge variant="outline">{agent.spec}</Badge>
+                    </div>
+                    <p className="text-sm text-gray-600">Sold: {agent.sold}</p>
+                  </CardContent>
+                </Card>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
 
-                         <div className="flex gap-6 pt-8 font-mono">
-                            <button onClick={() => setView("atlas")} className="flex-grow py-8 bg-sky-600 text-white font-black uppercase text-xs tracking-[1em] hover:bg-sky-500 transition-all shadow-2xl">
-                               Return_to_Atlas
-                            </button>
-                            <button className="px-12 py-8 border border-white/20 text-[10px] font-black uppercase tracking-[0.5em] hover:scale-105 transition-all text-white">
-                               PDF_Spec
-                            </button>
-                         </div>
-                      </div>
-                   </div>
+      {/* Stats */}
+      <section className="py-24 px-4 bg-gradient-to-r from-amber-600 to-amber-700 text-white">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-12 text-center">
+            {[
+              { value: 500, suffix: "", label: "Sales Closed" },
+              { value: 15, suffix: " years", label: "Experience" },
+              { value: 2000000000, suffix: "€", label: "Total Volume" },
+              { value: 98, suffix: "%", label: "Satisfaction" },
+            ].map((stat, i) => (
+              <Reveal key={i} delay={i * 0.1}>
+                <div className="space-y-2">
+                  <div className="text-4xl font-bold">
+                    <Counter target={stat.value} suffix={stat.suffix} />
+                  </div>
+                  <p className="text-amber-100">{stat.label}</p>
                 </div>
-             </div>
-          </motion.div>
-        )}
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
 
-        {/* THE LOGIC VIEW (INFO) */}
-        {view === "logic" && (
-          <motion.div key="logic" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen flex flex-col justify-center">
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center text-white">
-                <div className="space-y-16">
-                   <span className="text-[10px] uppercase font-black tracking-[1.5em] opacity-30 block underline decoration-sky-400 decoration-2 underline-offset-8 italic font-mono text-sky-400">The_Logic_Protocol</span>
-                   <h2 className="text-7xl md:text-[10vw] font-black italic tracking-tighter leading-none text-white uppercase font-sans">The <br/> Truth.</h2>
-                   <p className="text-3xl md:text-4xl font-light italic opacity-60 leading-relaxed uppercase tracking-tight text-white/60 font-sans">
-                      We treat architecture as code. Every structure is a function of its environmental variables and tectonic intent. 100% precision. Zero noise.
-                   </p>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t border-white/10 font-mono text-sky-400">
-                      {[
-                        { icon: <Sparkles className="w-6 h-6" />, t: "Adaptive Flow", v: "Dynamic Load Sync" },
-                        { icon: <Plus className="w-6 h-6" />, t: "Structural Sync", v: "Deep_Material_ID" },
-                      ].map((item, i) => (
-                        <div key={i} className="flex gap-8 group">
-                           <div className="w-16 h-16 rounded-none border border-sky-500 flex items-center justify-center text-sky-500 group-hover:bg-sky-500 group-hover:text-black transition-all shadow-xl">
-                              {item.icon}
-                           </div>
-                           <div className="text-left">
-                              <h4 className="text-2xl font-black uppercase italic tracking-tighter text-white leading-none mb-2 font-sans">{item.t}</h4>
-                              <p className="text-[10px] opacity-30 uppercase tracking-[0.3em] font-black leading-relaxed text-sky-400/40">{item.v}</p>
-                           </div>
+      {/* Market Trends */}
+      <section className="py-24 px-4 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <Reveal>
+            <h2 className="text-5xl font-bold mb-16">Market Insights</h2>
+          </Reveal>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+            {[
+              { label: "Waterfront Premium", value: 42, change: "+8% YoY" },
+              { label: "Downtown Growth", value: 35, change: "+5% YoY" },
+              { label: "Hills Appreciation", value: 28, change: "+12% YoY" },
+            ].map((trend, i) => (
+              <Reveal key={i} delay={i * 0.1}>
+                <Card className="bg-gray-50">
+                  <CardContent className="p-8 space-y-4">
+                    <h3 className="font-bold text-lg">{trend.label}</h3>
+                    <div className="space-y-2">
+                      <Progress value={trend.value} className="h-3 bg-gray-200" />
+                      <p className="text-sm text-amber-600 font-semibold">{trend.change}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="py-24 px-4 bg-gray-50">
+        <div className="max-w-6xl mx-auto">
+          <Reveal>
+            <h2 className="text-5xl font-bold mb-16">Client Stories</h2>
+          </Reveal>
+
+          <Carousel className="w-full">
+            <CarouselContent>
+              {[
+                {
+                  name: "Catherine & James",
+                  quote: "Found our dream home in 3 viewings. Pinnacle's expertise is unmatched.",
+                  location: "Waterfront Villa",
+                },
+                {
+                  name: "Dr. Michael Chen",
+                  quote: "Investment guidance that increased our portfolio by 28% in 2 years.",
+                  location: "Downtown Penthouse",
+                },
+                {
+                  name: "Sophie Laurent",
+                  quote: "Seamless process from search to closing. Professional and thorough.",
+                  location: "Hills Modern Estate",
+                },
+              ].map((testi, i) => (
+                <CarouselItem key={i} className="basis-full md:basis-1/2">
+                  <Reveal>
+                    <Card className="bg-white">
+                      <CardContent className="p-8 space-y-4">
+                        <p className="text-xl italic text-gray-700">"{testi.quote}"</p>
+                        <div>
+                          <p className="font-semibold">{testi.name}</p>
+                          <p className="text-sm text-amber-600">{testi.location}</p>
                         </div>
-                      ))}
-                   </div>
-                </div>
-                <div className="relative aspect-square bg-sky-900/10 rounded-none p-12 overflow-hidden border border-sky-500/20 group shadow-2xl">
-                   <Image src="https://images.unsplash.com/photo-1541829070764-84a7d30dee62?q=80&w=1000&auto=format&fit=crop" alt="The Archive" fill className="object-cover opacity-20 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-[3s]" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                   <div className="absolute inset-x-0 bottom-12 flex justify-center font-mono">
-                      <div className="px-12 py-6 bg-sky-600 text-white text-[10px] font-black uppercase tracking-widest italic animate-bounce cursor-pointer hover:bg-sky-500 transition-all rounded-none">
-                         Establish_Handshake
+                      </CardContent>
+                    </Card>
+                  </Reveal>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious />
+            <CarouselNext />
+          </Carousel>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="py-24 px-4 bg-white">
+        <div className="max-w-4xl mx-auto">
+          <Reveal>
+            <h2 className="text-5xl font-bold mb-12">FAQ</h2>
+          </Reveal>
+
+          <Accordion type="single" collapsible className="space-y-4">
+            {[
+              { q: "How long does buying take?", a: "Typical timeline is 6-12 weeks from offer to closing." },
+              { q: "Do you handle financing?", a: "We work with top mortgage partners. Pre-approval guidance available." },
+              { q: "What about foreign buyers?", a: "We assist international clients with all legal requirements and visas." },
+              { q: "Can I view properties virtually?", a: "Yes, 3D tours and video walkthroughs available for all listings." },
+            ].map((item, i) => (
+              <AccordionItem key={i} value={`faq-${i}`} className="border border-gray-200 rounded-lg px-6">
+                <AccordionTrigger className="font-semibold">{item.q}</AccordionTrigger>
+                <AccordionContent className="text-gray-600">{item.a}</AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
+      </section>
+
+      {/* Property Dialog */}
+      <Dialog open={showPropertyDialog} onOpenChange={setShowPropertyDialog}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold">{selectedListing?.title}</DialogTitle>
+          </DialogHeader>
+          {selectedListing && (
+            <div className="space-y-6">
+              <Carousel className="w-full">
+                <CarouselContent>
+                  {[selectedListing.img, selectedListing.img].map((img, i) => (
+                    <CarouselItem key={i}>
+                      <div className="relative h-80 rounded-lg overflow-hidden bg-gray-200">
+                        <Image src={img} alt={`View ${i + 1}`} fill className="object-cover" />
                       </div>
-                   </div>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselNext />
+                <CarouselPrevious />
+              </Carousel>
+
+              <div className="space-y-4">
+                <p className="text-3xl font-bold text-amber-600">{selectedListing.price}</p>
+                <div className="flex gap-8 text-sm">
+                  <div className="flex items-center gap-2">
+                    <Bed className="w-5 h-5" />
+                    <span>{selectedListing.beds} Bedrooms</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Bath className="w-5 h-5" />
+                    <span>{selectedListing.baths} Bathrooms</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-5 h-5" />
+                    <span>{selectedListing.m2} m²</span>
+                  </div>
                 </div>
-             </div>
-          </motion.div>
-        )}
+              </div>
 
-      </AnimatePresence>
+              <Accordion type="single" collapsible>
+                <AccordionItem value="features" className="border-t">
+                  <AccordionTrigger>Features & Amenities</AccordionTrigger>
+                  <AccordionContent>
+                    Premium appliances, heated pool, smart home, wine cellar, private elevator, terrace.
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="neighborhood" className="border-t">
+                  <AccordionTrigger>Neighborhood Info</AccordionTrigger>
+                  <AccordionContent>
+                    Walking distance to restaurants, galleries, and marina. 10 min to international school.
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
 
-      {/* Global Status HUD */}
-      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em] italic text-sky-600 leading-none font-mono">
-         <div className="flex gap-12 text-sky-600">
-            <span>Atlas_OS_Alpha</span>
-            <span>Uptime: 99.9%</span>
-         </div>
-         <div className="flex gap-4 items-end text-sky-600">
-            <div className="text-right leading-tight italic text-sky-600">
-               Archival_Control <br /> v4.0.133
+              <MagneticBtn
+                onClick={() => setShowViewingDialog(true)}
+                className="w-full px-6 py-3 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors font-semibold"
+              >
+                Schedule Private Viewing
+              </MagneticBtn>
             </div>
-            <div className="flex gap-[4px] h-4">
-               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-full bg-sky-500 opacity-${i*20}`}></div>)}
-            </div>
-         </div>
-      </footer>
+          )}
+        </DialogContent>
+      </Dialog>
 
-      <style>{`
-        ::-webkit-scrollbar { width: 0px; }
-      `}</style>
+      {/* Viewing Dialog */}
+      <Dialog open={showViewingDialog} onOpenChange={setShowViewingDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold">Schedule Viewing</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6">
+            <input
+              type="text"
+              placeholder="Full name"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+            />
+            <input
+              type="email"
+              placeholder="Email address"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+            />
+            <input
+              type="tel"
+              placeholder="Phone number"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+            />
+            <input
+              type="date"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+            />
+            <MagneticBtn className="w-full px-6 py-3 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors font-semibold">
+              Request Viewing
+            </MagneticBtn>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
-  );
+  )
 }

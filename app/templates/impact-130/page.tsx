@@ -1,231 +1,411 @@
-"use client";
+"use client"
+import { motion, useScroll, useTransform, useInView, AnimatePresence, useMotionValue, useSpring } from "framer-motion"
+import { useState, useRef, useEffect } from "react"
+import Image from "next/image"
+import Link from "next/link"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
+import { Progress } from "@/components/ui/progress"
 
-import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
-import Image from "next/image";
-import { X, Menu, Search, Award, Zap, Activity, Globe, Shield, Command, Plus, ArrowUpRight, Maximize2, MoveRight, Layers, Box, Compass, Sparkles, MoveVertical, Target, Radio, CheckCircle2 } from "lucide-react";
-import "../premium.css";
+function Reveal({ children, delay=0 }: { children: React.ReactNode; delay?: number }) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: "-60px" })
+  return <motion.div ref={ref} initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, delay }}>{children}</motion.div>
+}
+function Counter({ target, suffix="" }: { target: number; suffix?: string }) {
+  const [count, setCount] = useState(0)
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true })
+  useEffect(() => {
+    if (!inView) return
+    const step = Math.ceil(target / 60)
+    const t = setInterval(() => setCount(c => Math.min(c + step, target)), 16)
+    return () => clearInterval(t)
+  }, [inView, target])
+  return <span ref={ref}>{count.toLocaleString()}{suffix}</span>
+}
+function MagneticBtn({ children, className="" }: { children: React.ReactNode; className?: string }) {
+  const x = useMotionValue(0); const y = useMotionValue(0)
+  const sx = useSpring(x, { stiffness: 500, damping: 25 })
+  const sy = useSpring(y, { stiffness: 500, damping: 25 })
+  const ref = useRef<HTMLButtonElement>(null)
+  const handleMouse = (e: React.MouseEvent) => {
+    const r = ref.current!.getBoundingClientRect()
+    x.set((e.clientX - r.left - r.width/2) * 0.35)
+    y.set((e.clientY - r.top - r.height/2) * 0.35)
+  }
+  return <motion.button ref={ref} style={{ x: sx, y: sy }} onMouseMove={handleMouse} onMouseLeave={() => { x.set(0); y.set(0) }} className={className}>{children}</motion.button>
+}
 
-const SLIDES = [
-  { id: 1, title: "RESOLVE_CORE", cat: "Branding", value: "Verified", img: "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?q=80&w=1000&auto=format&fit=crop" },
-  { id: 2, title: "CONSTRUCT_UNIT", cat: "Platform", value: "Active", img: "https://images.unsplash.com/photo-1561070791-2526d30994b5?q=80&w=1000&auto=format&fit=crop" },
-  { id: 3, title: "VOID_SHELL", cat: "Logic", value: "Locked", img: "https://images.unsplash.com/photo-1549490349-8643362247b5?q=80&w=1000&auto=format&fit=crop" },
-];
+const SERVICES = [
+  { id: 1, name: "Media Relations", deliverables: ["Press releases", "Media outreach", "Crisis management", "Exclusive access"], retainer: "$8K-15K/mo" },
+  { id: 2, name: "Crisis Comms", deliverables: ["24/7 response", "Scenario planning", "Stakeholder management", "Recovery strategy"], retainer: "$12K-25K/mo" },
+  { id: 3, name: "Brand Positioning", deliverables: ["Strategy development", "Messaging framework", "Competitive analysis", "Brand audit"], retainer: "$10K-18K/mo" },
+  { id: 4, name: "Thought Leadership", deliverables: ["Content strategy", "Byline placement", "Speaking opportunities", "Executive visibility"], retainer: "$9K-16K/mo" },
+  { id: 5, name: "Social Strategy", deliverables: ["Platform strategy", "Content calendar", "Community management", "Influencer relations"], retainer: "$6K-12K/mo" },
+  { id: 6, name: "Influencer Activation", deliverables: ["Talent scouting", "Campaign management", "Content amplification", "Performance tracking"], retainer: "$7K-14K/mo" },
+]
 
-export default function SplitResolveSPA() {
-  const [view, setView] = useState<"resolve" | "construct" | "logic">("resolve");
-  const [activeItem, setActiveItem] = useState(0);
+const CASES = [
+  { id: 1, industry: "Tech", situation: "Acquisition announcement", result: "400K+ media mentions", img: "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=600" },
+  { id: 2, industry: "Finance", situation: "Leadership transition", result: "60+ tier-1 placements", img: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=600" },
+  { id: 3, industry: "Health", situation: "Product launch", result: "15M earned media value", img: "https://images.unsplash.com/photo-1554224311-beaf415c15e7?w=600" },
+  { id: 4, industry: "Consumer", situation: "Brand relaunch", result: "92% favorable sentiment", img: "https://images.unsplash.com/photo-1552664730-d307ca884978?w=600" },
+  { id: 5, industry: "B2B", situation: "Thought leadership", result: "35+ speaking engagements", img: "https://images.unsplash.com/photo-1552669406-6bde9eaf4303?w=600" },
+  { id: 6, industry: "Nonprofit", situation: "Campaign launch", result: "$5M funding secured", img: "https://images.unsplash.com/photo-1552664730-d307ca884978?w=600" },
+]
+
+const TEAM = [
+  { name: "Alexandra Park", role: "Media Relations Lead", beat: "Technology", avatar: "AP" },
+  { name: "Marcus Johnson", role: "Crisis Director", beat: "Corporate", avatar: "MJ" },
+  { name: "Elena Rodriguez", role: "Thought Leadership", beat: "Innovation", avatar: "ER" },
+  { name: "James Chen", role: "Social Strategist", beat: "Influencer", avatar: "JC" },
+]
+
+const MEDIA = ["New York Times", "Financial Times", "TechCrunch", "Forbes", "BBC", "Bloomberg", "WSJ", "The Guardian"]
+
+const TESTIMONIALS = [
+  { name: "Sarah Mitchell", role: "CMO, Fortune 500", quote: "Transformed our media presence in 90 days." },
+  { name: "David Yang", role: "CEO, Scale-up", quote: "Secured $50M Series B with their positioning." },
+  { name: "Jennifer Lee", role: "COO, Enterprise", quote: "Crisis management saved our reputation." },
+]
+
+export default function HeraldPRPage() {
+  const [selectedCase, setSelectedCase] = useState<typeof CASES[0] | null>(null)
+  const [clientOpen, setClientOpen] = useState(false)
+  const { scrollY } = useScroll()
+
+  const revealText = (text: string) => {
+    return text.split("").map((char, i) => (
+      <motion.span key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.02 }}>
+        {char}
+      </motion.span>
+    ))
+  }
 
   return (
-    <div className="premium-theme bg-[#0e0e0e] text-emerald-400 min-h-screen selection:bg-emerald-600 selection:text-white font-sans overflow-x-hidden">
-      
-      {/* Background HUD Layers */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[45vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase">
-           SPLIT
+    <div className="min-h-screen bg-white text-black">
+      {/* Editorial Hero with Text Reveal */}
+      <section className="relative h-[80vh] overflow-hidden flex items-center justify-center bg-gradient-to-br from-white via-[#f5f5f3] to-white px-8">
+        <div className="max-w-4xl text-center z-10">
+          <Reveal>
+            <h1 className="text-7xl md:text-9xl font-black leading-tight mb-8">
+              <div>{revealText("YOUR STORY,")}</div>
+              <motion.div className="text-[#2563eb] mt-2">{revealText("AMPLIFIED.")}</motion.div>
+            </h1>
+            <p className="text-2xl md:text-3xl font-light text-gray-600 mb-12">
+              Public relations, communications strategy, and media influence for brands that matter.
+            </p>
+          </Reveal>
+          <motion.button className="px-8 py-4 bg-[#2563eb] text-white font-bold uppercase tracking-wider hover:bg-blue-600 transition">
+            Schedule Consultation
+          </motion.button>
         </div>
-        <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.05] mix-blend-screen" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#0e0e0e_100%)] opacity-80" />
-      </div>
+      </section>
 
-      {/* Editorial HUD Nav */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-center bg-transparent backdrop-blur-3xl border-b border-emerald-500/10 font-mono">
-        <div className="flex gap-12 items-center">
-           <button onClick={() => setView("resolve")} className="text-xl font-black italic tracking-tighter hover:text-white transition-colors flex items-center gap-4 text-emerald-500">
-              SPLIT_OS&trade;
-           </button>
-           <div className="hidden lg:flex gap-8 text-[10px] font-black uppercase tracking-widest opacity-20 italic text-white">
-              Status: Kinetic_Sync_Active
-              <span className="text-white">Ref: 0x130</span>
-           </div>
+      {/* Services Grid */}
+      <section className="py-32 px-8 md:px-16 max-w-7xl mx-auto">
+        <Reveal>
+          <h2 className="text-6xl font-black mb-4">Services</h2>
+          <p className="text-2xl text-gray-600 mb-16">Retainer packages tailored to your needs</p>
+        </Reveal>
+        <Tabs defaultValue="media" className="w-full">
+          <TabsList className="grid w-full grid-cols-6 mb-12 bg-[#f5f5f3] p-2 rounded-none">
+            {SERVICES.map(svc => (
+              <TabsTrigger
+                key={svc.id}
+                value={svc.name.toLowerCase().replace(" ", "")}
+                className="data-[state=active]:bg-[#2563eb] data-[state=active]:text-white text-xs"
+              >
+                {svc.name.split(" ")[0]}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          {SERVICES.map(svc => (
+            <TabsContent key={svc.id} value={svc.name.toLowerCase().replace(" ", "")}>
+              <Reveal>
+                <Card className="bg-[#f5f5f3] border-black/10">
+                  <CardContent className="pt-8 space-y-6">
+                    <div>
+                      <h3 className="text-3xl font-black mb-4">{svc.name}</h3>
+                      <p className="text-2xl text-[#2563eb] font-bold mb-8">{svc.retainer}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold uppercase tracking-widest mb-4 text-gray-600">Key Deliverables</p>
+                      <ul className="space-y-2">
+                        {svc.deliverables.map(d => (
+                          <li key={d} className="flex items-center gap-3">
+                            <span className="w-2 h-2 bg-[#2563eb]" />
+                            {d}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Reveal>
+            </TabsContent>
+          ))}
+        </Tabs>
+      </section>
+
+      {/* Case Studies */}
+      <section className="py-32 px-8 md:px-16 bg-[#f5f5f3]">
+        <div className="max-w-7xl mx-auto">
+          <Reveal>
+            <h2 className="text-6xl font-black mb-16">Case Studies</h2>
+          </Reveal>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {CASES.map((cse, i) => (
+              <Reveal key={cse.id} delay={i * 0.1}>
+                <motion.div
+                  whileHover={{ y: -8 }}
+                  className="group cursor-pointer"
+                  onClick={() => setSelectedCase(cse)}
+                >
+                  <div className="relative h-64 mb-6 rounded-lg overflow-hidden border-2 border-black">
+                    <Image src={cse.img} alt={cse.industry} fill className="object-cover group-hover:scale-110 transition duration-500" />
+                  </div>
+                  <Badge className="bg-[#2563eb] text-white mb-3">{cse.industry}</Badge>
+                  <h3 className="text-xl font-black mb-2">{cse.situation}</h3>
+                  <p className="text-lg font-bold text-[#2563eb]">{cse.result}</p>
+                </motion.div>
+              </Reveal>
+            ))}
+          </div>
         </div>
-        <div className="hidden md:flex gap-12 text-[10px] font-black uppercase tracking-[0.4em] opacity-30 text-white">
-           <button onClick={() => setView("resolve")} className={`hover:opacity-100 transition-opacity ${view === 'resolve' ? 'text-white opacity-100 underline decoration-white underline-offset-8 italic' : ''}`}>THE_RESOLVE</button>
-           <button onClick={() => setView("logic")} className={`hover:opacity-100 transition-opacity ${view === 'logic' ? 'text-white opacity-100 underline decoration-white underline-offset-8 italic' : ''}`}>THE_LOGIC</button>
-        </div>
-        <div className="flex items-center gap-8 text-white">
-           <Search className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-           <Menu className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-        </div>
-      </nav>
+      </section>
 
-      <AnimatePresence mode="wait">
-        
-        {/* THE RESOLVE VIEW (LANDING) */}
-        {view === "resolve" && (
-          <motion.div key="resolve" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-48 pb-32 px-12 max-w-[1800px] mx-auto min-h-screen flex flex-col justify-center relative z-10">
-             <header className="mb-24 border-b border-emerald-500/20 pb-12 flex flex-col md:flex-row justify-between items-end gap-12 text-white">
-                <div>
-                   <span className="text-[10px] uppercase font-black tracking-[1em] opacity-40 mb-4 block underline decoration-emerald-500/10 underline-offset-8 italic font-mono text-emerald-500">Kinetic_Capture // Series_130</span>
-                   <h1 className="text-7xl md:text-[12vw] font-black italic uppercase tracking-tighter leading-[0.75]">PURE. <br/> <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-500 to-white">RESOLVE.</span></h1>
-                </div>
-                <div className="text-right flex flex-col items-end">
-                   <div className="text-3xl font-black mb-4 tracking-tighter uppercase opacity-10 italic font-mono text-emerald-600">Dynamic_Sync</div>
-                   <div className="w-64 h-[2px] bg-white/5 rounded-none overflow-hidden">
-                      <motion.div animate={{ width: ['20%', '90%', '40%', '75%'] }} transition={{ duration: 4, repeat: Infinity }} className="h-full bg-emerald-500" />
-                   </div>
-                </div>
-             </header>
-
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {SLIDES.map((p, i) => (
-                  <motion.div 
-                    key={p.id} initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                    className="group relative h-[60vh] rounded-none overflow-hidden border border-emerald-500/10 hover:border-emerald-500/40 transition-all cursor-pointer shadow-2xl bg-white/5"
-                    onClick={() => { setActiveItem(i); setView("construct"); }}
-                  >
-                     <Image src={p.img} alt={p.title} fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[2s] group-hover:scale-110" />
-                     <div className="absolute inset-0 bg-emerald-500/10 group-hover:bg-transparent transition-colors duration-1000" />
-                     <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                     
-                     <div className="absolute inset-10 flex flex-col justify-between">
-                        <div className="flex justify-between items-start text-white">
-                           <div className="p-4 bg-white/10 border border-white/20 rounded-none opacity-0 group-hover:opacity-100 transition-opacity">
-                              <CheckCircle2 className="w-5 h-5" />
-                           </div>
-                           <div className="text-[10px] font-black uppercase tracking-widest opacity-20 italic text-emerald-400">UNIT_0x{i+130}</div>
-                        </div>
-                        <div className="text-white">
-                           <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-2 block italic text-emerald-300">{p.cat} // {p.value}</span>
-                           <h3 className="text-5xl font-black italic uppercase tracking-tighter leading-none transition-all group-hover:tracking-widest">{p.title}</h3>
-                        </div>
-                     </div>
-                  </motion.div>
-                ))}
-             </div>
-          </motion.div>
-        )}
-
-        {/* THE CONSTRUCT VIEW (DETAIL) */}
-        {view === "construct" && (
-          <motion.div key="construct" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen">
-             <button onClick={() => setView("resolve")} className="fixed top-12 left-12 z-[60] bg-white text-black p-5 rounded-none hover:scale-110 transition-transform shadow-2xl">
-                <X className="w-6 h-6" />
-             </button>
-
-             <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen pt-24 lg:pt-0">
-                <div className="lg:col-span-12 relative flex items-center justify-center p-8 md:p-32 overflow-hidden h-screen bg-[#0e0e0e]">
-                   <div className="absolute inset-0 opacity-10">
-                      <Image src={SLIDES[activeItem].img} alt="Background" fill className="object-cover grayscale" />
-                   </div>
-                   <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[40vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase text-emerald-500 font-sans">
-                      CORE
-                   </div>
-                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#0e0e0e_100%)]" />
-                   
-                   <div className="max-w-[1500px] w-full grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10 font-sans text-white">
-                      <motion.div initial={{ scale: 1.1, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1 }} className="relative aspect-square w-full rounded-none overflow-hidden border border-emerald-500/20 group bg-neutral-900 shadow-2xl">
-                         <Image src={SLIDES[activeItem].img} alt="Spec" fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[3s] opacity-80" priority />
-                         <div className="absolute top-12 left-12 p-4 bg-black/60 backdrop-blur-3xl rounded-none border-2 border-white/10 z-20">
-                            <Layers className="w-6 h-6 text-emerald-400 animate-pulse" />
-                         </div>
-                      </motion.div>
-
-                      <div className="flex flex-col justify-center space-y-12">
-                         <div className="space-y-6">
-                            <span className="text-[10px] uppercase tracking-[1em] font-black opacity-30 mb-8 block underline decoration-white decoration-4 underline-offset-8 italic text-emerald-400 font-mono">Kinetic_Sync // {SLIDES[activeItem].cat}</span>
-                            <h1 className="text-7xl md:text-[8vw] font-black italic uppercase tracking-tighter leading-none text-white">{SLIDES[activeItem].title}</h1>
-                            <div className="text-4xl font-black italic tracking-tighter opacity-10 italic text-emerald-500">State: {SLIDES[activeItem].value}</div>
-                         </div>
-
-                         <p className="text-3xl font-light italic leading-relaxed uppercase tracking-tight opacity-40 text-white leading-relaxed">
-                            Structural allocation for mission {SLIDES[activeItem].title}. System integrity at 100%. Thermal load nominal at 32C. Every coordinate synchronized.
-                         </p>
-
-                         <div className="grid grid-cols-2 gap-12 py-12 border-y border-white/10 font-mono text-white/60">
-                            {[
-                              { icon: <Globe className="w-5 h-5" />, l: "Region", v: "Global_East" },
-                              { icon: <Zap className="w-5 h-5" />, l: "Logic", v: "Phase_Shift" },
-                              { icon: <Shield className="w-5 h-5" />, l: "Security", v: "High_Impact" },
-                              { icon: <Activity className="w-5 h-5" />, l: "Sync", v: "Active" },
-                            ].map((s, i) => (
-                              <div key={i} className="flex gap-6 items-center">
-                                 <div className="opacity-20 text-emerald-400">{s.icon}</div>
-                                 <div className="text-left">
-                                    <div className="text-[10px] font-black opacity-30 uppercase tracking-widest mb-1 italic text-white">{s.l}</div>
-                                    <div className="text-sm font-black uppercase italic tracking-tighter text-white">{s.v}</div>
-                                 </div>
-                              </div>
-                            ))}
-                         </div>
-
-                         <div className="flex gap-6 pt-8 font-mono">
-                            <button onClick={() => setView("resolve")} className="flex-grow py-8 bg-emerald-600 text-white font-black uppercase text-xs tracking-[1em] hover:bg-emerald-500 transition-all shadow-2xl">
-                               Return_to_Resolve
-                            </button>
-                            <button className="px-12 py-8 border border-white/20 text-[10px] font-black uppercase tracking-[0.5em] hover:scale-105 transition-all text-white">
-                               PDF_Spec
-                            </button>
-                         </div>
+      {/* Case Detail Dialog */}
+      <Dialog open={!!selectedCase} onOpenChange={() => setSelectedCase(null)}>
+        <DialogContent className="max-w-2xl bg-white border-2 border-black">
+          <DialogHeader>
+            <DialogTitle>{selectedCase?.situation}</DialogTitle>
+          </DialogHeader>
+          {selectedCase && (
+            <div className="space-y-6">
+              <div className="relative h-80 rounded-lg overflow-hidden border-2 border-black">
+                <Image src={selectedCase.img} alt={selectedCase.industry} fill className="object-cover" />
+              </div>
+              <Carousel className="w-full">
+                <CarouselContent>
+                  {[1, 2, 3].map(i => (
+                    <CarouselItem key={i} className="md:basis-1/2">
+                      <div className="relative h-40 bg-[#f5f5f3] rounded-lg border border-black">
+                        <Image
+                          src={`https://images.unsplash.com/photo-${1558000000000 + i * 1000}?w=500`}
+                          alt="Press"
+                          fill
+                          className="object-cover"
+                        />
                       </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious />
+                <CarouselNext />
+              </Carousel>
+              <div className="space-y-3 pt-4 border-t-2 border-black">
+                <p className="font-bold">Industry: {selectedCase.industry}</p>
+                <p className="text-gray-600">Result: {selectedCase.result}</p>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
-        {/* THE LOGIC VIEW (INFO) */}
-        {view === "logic" && (
-          <motion.div key="logic" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen flex flex-col justify-center">
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center text-white">
-                <div className="space-y-16">
-                   <span className="text-[10px] uppercase font-black tracking-[1.5em] opacity-30 block underline decoration-emerald-400 decoration-2 underline-offset-8 italic font-mono text-emerald-400">The_Logic_Protocol</span>
-                   <h2 className="text-7xl md:text-[10vw] font-black italic tracking-tighter leading-none text-white uppercase font-sans">The <br/> Truth.</h2>
-                   <p className="text-3xl md:text-4xl font-light italic opacity-60 leading-relaxed uppercase tracking-tight text-white/60 font-sans">
-                      We treat architecture as code. Every structure is a function of its environmental variables and tectonic intent. 100% precision. Zero noise.
-                   </p>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t border-white/10 font-mono text-emerald-400">
-                      {[
-                        { icon: <Sparkles className="w-6 h-6" />, t: "Adaptive Flow", v: "Dynamic Load Sync" },
-                        { icon: <Plus className="w-6 h-6" />, t: "Structural Sync", v: "Deep_Material_ID" },
-                      ].map((item, i) => (
-                        <div key={i} className="flex gap-8 group">
-                           <div className="w-16 h-16 rounded-none border border-emerald-500 flex items-center justify-center text-emerald-500 group-hover:bg-emerald-500 group-hover:text-black transition-all shadow-xl">
-                              {item.icon}
-                           </div>
-                           <div className="text-left">
-                              <h4 className="text-2xl font-black uppercase italic tracking-tighter text-white leading-none mb-2 font-sans">{item.t}</h4>
-                              <p className="text-[10px] opacity-30 uppercase tracking-[0.3em] font-black leading-relaxed text-emerald-400/40">{item.v}</p>
-                           </div>
+      {/* Media Coverage */}
+      <section className="py-16 px-8 md:px-16 bg-black text-white">
+        <div className="max-w-7xl mx-auto">
+          <Reveal>
+            <p className="text-center text-gray-400 mb-12 uppercase tracking-widest font-bold">Our Placements</p>
+          </Reveal>
+          <div className="flex flex-wrap justify-center gap-8">
+            {MEDIA.map((outlet, i) => (
+              <Reveal key={i}>
+                <p className="font-black text-lg hover:text-[#2563eb] transition cursor-pointer">
+                  {outlet}
+                </p>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Stats */}
+      <section className="py-32 px-8 md:px-16">
+        <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-12">
+          {[
+            { number: 200, label: "Brands Served", suffix: "" },
+            { number: 12, label: "Years Experience", suffix: "" },
+            { number: 5, label: "Placements Per Client", suffix: "K+" },
+            { number: 49, label: "Award Winning", suffix: "%" },
+          ].map((stat, i) => (
+            <Reveal key={i} delay={i * 0.1}>
+              <div className="text-center">
+                <div className="text-5xl font-black text-[#2563eb] mb-2">
+                  <Counter target={stat.number} suffix={stat.suffix} />
+                </div>
+                <p className="text-gray-600 font-bold">{stat.label}</p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* Team */}
+      <section className="py-32 px-8 md:px-16 bg-[#f5f5f3]">
+        <div className="max-w-7xl mx-auto">
+          <Reveal>
+            <h2 className="text-6xl font-black mb-16">The Team</h2>
+          </Reveal>
+          <div className="grid md:grid-cols-4 gap-8">
+            {TEAM.map((member, i) => (
+              <Reveal key={i} delay={i * 0.1}>
+                <Card className="bg-white border-2 border-black">
+                  <CardContent className="pt-8 space-y-4 text-center">
+                    <Avatar className="mx-auto w-16 h-16 border-2 border-[#2563eb]">
+                      <AvatarFallback className="bg-[#2563eb] text-white font-black">{member.avatar}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-black text-lg">{member.name}</p>
+                      <p className="text-sm font-bold text-[#2563eb]">{member.role}</p>
+                      <p className="text-xs text-gray-600 mt-2">Beat: {member.beat}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="py-32 px-8 md:px-16">
+        <div className="max-w-7xl mx-auto">
+          <Reveal>
+            <h2 className="text-6xl font-black mb-16">Client Stories</h2>
+          </Reveal>
+          <Carousel className="w-full">
+            <CarouselContent>
+              {TESTIMONIALS.map((test, i) => (
+                <CarouselItem key={i} className="md:basis-1/2">
+                  <Reveal delay={i * 0.1}>
+                    <Card className="bg-[#f5f5f3] border-2 border-black">
+                      <CardContent className="pt-8 space-y-6">
+                        <p className="text-xl italic font-light">"{test.quote}"</p>
+                        <div>
+                          <p className="font-black">{test.name}</p>
+                          <p className="text-sm font-bold text-[#2563eb]">{test.role}</p>
                         </div>
-                      ))}
-                   </div>
-                </div>
-                <div className="relative aspect-square bg-emerald-900/10 rounded-none p-12 overflow-hidden border border-emerald-500/20 group shadow-2xl">
-                   <Image src="https://images.unsplash.com/photo-1541829070764-84a7d30dee62?q=80&w=1000&auto=format&fit=crop" alt="The Archive" fill className="object-cover opacity-20 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-[3s]" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                   <div className="absolute inset-x-0 bottom-12 flex justify-center font-mono">
-                      <div className="px-12 py-6 bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest italic animate-bounce cursor-pointer hover:bg-emerald-500 transition-all rounded-none">
-                         Establish_Handshake
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
+                      </CardContent>
+                    </Card>
+                  </Reveal>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious />
+            <CarouselNext />
+          </Carousel>
+        </div>
+      </section>
 
-      </AnimatePresence>
+      {/* Retainer Process */}
+      <section className="py-32 px-8 md:px-16 bg-[#f5f5f3]">
+        <div className="max-w-4xl mx-auto">
+          <Reveal>
+            <h2 className="text-6xl font-black mb-12">Our Process</h2>
+          </Reveal>
+          <Accordion className="space-y-4">
+            {[
+              { stage: "Discovery", desc: "We learn your brand, market, and goals" },
+              { stage: "Strategy", desc: "We develop a comprehensive 12-month plan" },
+              { stage: "Execution", desc: "We build relationships and place stories" },
+              { stage: "Optimization", desc: "We refine based on performance data" },
+            ].map((step, i) => (
+              <AccordionItem key={i} value={`process-${i}`} className="border-2 border-black rounded-none px-6">
+                <AccordionTrigger className="text-2xl font-black hover:text-[#2563eb]">
+                  {step.stage}
+                </AccordionTrigger>
+                <AccordionContent className="text-lg font-light">
+                  {step.desc}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
+      </section>
 
-      {/* Global Status HUD */}
-      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em] italic text-emerald-600 leading-none font-mono">
-         <div className="flex gap-12 text-emerald-600">
-            <span>Split_OS_Alpha</span>
-            <span>Uptime: 99.9%</span>
-         </div>
-         <div className="flex gap-4 items-end text-emerald-600">
-            <div className="text-right leading-tight italic text-emerald-600">
-               Archival_Control <br /> v4.0.130
-            </div>
-            <div className="flex gap-[4px] h-4">
-               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-full bg-emerald-500 opacity-${i*20}`}></div>)}
-            </div>
-         </div>
-      </footer>
+      {/* FAQ */}
+      <section className="py-32 px-8 md:px-16 max-w-4xl mx-auto">
+        <Reveal>
+          <h2 className="text-6xl font-black mb-12">FAQ</h2>
+        </Reveal>
+        <Accordion className="space-y-4">
+          {["What's the minimum budget?", "Can we do project-based work?", "How do you measure ROI?", "Do you require exclusivity?"].map((q, i) => (
+            <AccordionItem key={i} value={`faq-${i}`} className="border-2 border-black rounded-none px-6">
+              <AccordionTrigger className="text-xl font-bold hover:text-[#2563eb]">
+                {q}
+              </AccordionTrigger>
+              <AccordionContent className="text-gray-600 font-light">
+                We're flexible. Let's discuss your specific needs, timeline, and budget constraints.
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </section>
 
-      <style>{`
-        ::-webkit-scrollbar { width: 0px; }
-      `}</style>
+      {/* New Client CTA */}
+      <section className="py-32 px-8 md:px-16 bg-black text-white">
+        <div className="max-w-4xl mx-auto text-center">
+          <Reveal>
+            <h2 className="text-6xl font-black mb-8">Ready to Build Your Story?</h2>
+            <p className="text-2xl font-light mb-12">
+              Let's discuss how we can elevate your brand presence and drive meaningful results.
+            </p>
+          </Reveal>
+          <MagneticBtn
+            onClick={() => setClientOpen(true)}
+            className="px-8 py-4 bg-white text-black font-bold uppercase tracking-wider hover:bg-[#2563eb] hover:text-white transition"
+          >
+            Schedule Strategy Call
+          </MagneticBtn>
+        </div>
+      </section>
+
+      {/* Client Dialog */}
+      <Dialog open={clientOpen} onOpenChange={setClientOpen}>
+        <DialogContent className="max-w-md bg-white border-2 border-black">
+          <DialogHeader>
+            <DialogTitle>New Client Inquiry</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <input
+              type="text"
+              placeholder="Company name"
+              className="w-full px-4 py-3 border-2 border-black rounded-none focus:outline-none focus:bg-[#f5f5f3]"
+            />
+            <input
+              type="email"
+              placeholder="your@email.com"
+              className="w-full px-4 py-3 border-2 border-black rounded-none focus:outline-none focus:bg-[#f5f5f3]"
+            />
+            <textarea
+              placeholder="Tell us about your business..."
+              className="w-full px-4 py-3 border-2 border-black rounded-none focus:outline-none focus:bg-[#f5f5f3] h-24"
+            />
+            <MagneticBtn className="w-full py-3 bg-[#2563eb] text-white font-bold rounded-none hover:bg-blue-600 transition">
+              Submit Inquiry
+            </MagneticBtn>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
-  );
+  )
 }

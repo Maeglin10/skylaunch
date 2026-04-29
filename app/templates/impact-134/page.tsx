@@ -1,231 +1,625 @@
-"use client";
+"use client"
 
-import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
-import Image from "next/image";
-import { X, Menu, Search, Award, Zap, Activity, Globe, Shield, Command, Plus, ArrowUpRight, Maximize2, MoveRight, Layers, Box, Compass, Sparkles, MoveVertical, Target, Radio, CheckCircle2, Droplet, Sparkle } from "lucide-react";
-import "../premium.css";
+import { motion, useScroll, useTransform, useInView, AnimatePresence, useMotionValue, useSpring } from "framer-motion"
+import { useState, useRef, useEffect } from "react"
+import Image from "next/image"
+import Link from "next/link"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
+import { Progress } from "@/components/ui/progress"
+import { Users, Clock, Mountain } from "lucide-react"
 
-const PRODUCTS = [
-  { id: 1, title: "MIDNIGHT_SERUM", cat: "Bestseller", value: "$68", img: "https://images.unsplash.com/photo-1570194065650-d99fb4b38b17?q=80&w=1000&auto=format&fit=crop" },
-  { id: 2, title: "GLOW_OIL_UNIT", cat: "New", value: "$52", img: "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?q=80&w=1000&auto=format&fit=crop" },
-  { id: 3, title: "VOID_BALM", cat: "Reserve", value: "$45", img: "https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?q=80&w=1000&auto=format&fit=crop" },
-];
+function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: "-60px" })
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 30 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.6, delay }}
+    >
+      {children}
+    </motion.div>
+  )
+}
 
-export default function LumiereBeautySPA() {
-  const [view, setView] = useState<"ritual" | "serum" | "logic">("ritual");
-  const [activeItem, setActiveItem] = useState(0);
+function Counter({ target, suffix = "" }: { target: number; suffix?: string }) {
+  const [count, setCount] = useState(0)
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true })
+
+  useEffect(() => {
+    if (!inView) return
+    const step = Math.ceil(target / 60)
+    const t = setInterval(() => setCount((c) => Math.min(c + step, target)), 16)
+    return () => clearInterval(t)
+  }, [inView, target])
 
   return (
-    <div className="premium-theme bg-[#fdf5ef] text-[#3d2e22] min-h-screen selection:bg-rose-300 selection:text-white font-sans overflow-x-hidden">
-      
-      {/* Background HUD Layers */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[45vw] font-black opacity-[0.02] select-none pointer-events-none italic tracking-tighter text-center uppercase">
-           LUMIÈRE
-        </div>
-        <div className="absolute inset-0 bg-[#fdf5ef]/40 backdrop-blur-[2px]" />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.05] mix-blend-multiply" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#fdf5ef_100%)] opacity-80" />
-      </div>
+    <span ref={ref}>
+      {count.toLocaleString()}
+      {suffix}
+    </span>
+  )
+}
 
-      {/* Editorial HUD Nav */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-center bg-transparent backdrop-blur-3xl border-b border-rose-200/30 font-mono">
-        <div className="flex gap-12 items-center">
-           <button onClick={() => setView("ritual")} className="text-xl font-bold tracking-tighter hover:text-rose-900 transition-colors flex items-center gap-4 text-[#3d2e22]">
-              LUMIÈRE&trade;
-           </button>
-           <div className="hidden lg:flex gap-8 text-[10px] font-black uppercase tracking-widest opacity-20 italic">
-              Status: Ritual_Sync_Active
-              <span className="text-rose-600">Ref: 0x134</span>
-           </div>
-        </div>
-        <div className="hidden md:flex gap-12 text-[10px] font-black uppercase tracking-[0.4em] opacity-30">
-           <button onClick={() => setView("ritual")} className={`hover:opacity-100 transition-opacity ${view === 'ritual' ? 'text-black opacity-100 underline decoration-black underline-offset-8 italic' : ''}`}>THE_RITUAL</button>
-           <button onClick={() => setView("logic")} className={`hover:opacity-100 transition-opacity ${view === 'logic' ? 'text-black opacity-100 underline decoration-black underline-offset-8 italic' : ''}`}>THE_LOGIC</button>
-        </div>
-        <div className="flex items-center gap-8 text-black">
-           <Search className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-           <Menu className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-        </div>
-      </nav>
+function MagneticBtn({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  const x = useMotionValue(0)
+  const y = useMotionValue(0)
+  const sx = useSpring(x, { stiffness: 500, damping: 25 })
+  const sy = useSpring(y, { stiffness: 500, damping: 25 })
+  const ref = useRef<HTMLButtonElement>(null)
 
-      <AnimatePresence mode="wait">
-        
-        {/* THE RITUAL VIEW (LANDING) */}
-        {view === "ritual" && (
-          <motion.div key="ritual" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-48 pb-32 px-12 max-w-[1800px] mx-auto min-h-screen flex flex-col justify-center relative z-10">
-             <header className="mb-24 border-b border-rose-200/30 pb-12 flex flex-col md:flex-row justify-between items-end gap-12 text-[#3d2e22]">
-                <div>
-                   <span className="text-[10px] uppercase font-black tracking-[1em] opacity-40 mb-4 block underline decoration-rose-200/30 underline-offset-8 italic font-mono text-rose-600">Visual_Culture // Series_134</span>
-                   <h1 className="text-7xl md:text-[12vw] font-black uppercase tracking-tighter leading-[0.75]">PURE. <br/> <span className="opacity-40 text-rose-900">RITUAL.</span></h1>
-                </div>
-                <div className="text-right flex flex-col items-end">
-                   <div className="text-3xl font-black mb-4 tracking-tighter uppercase opacity-10 italic font-mono">Formula_Sync</div>
-                   <div className="w-64 h-[2px] bg-black/5 rounded-none overflow-hidden">
-                      <motion.div animate={{ width: ['20%', '90%', '40%', '75%'] }} transition={{ duration: 4, repeat: Infinity }} className="h-full bg-rose-600" />
-                   </div>
-                </div>
-             </header>
+  const handleMouse = (e: React.MouseEvent) => {
+    const r = ref.current!.getBoundingClientRect()
+    x.set((e.clientX - r.left - r.width / 2) * 0.35)
+    y.set((e.clientY - r.top - r.height / 2) * 0.35)
+  }
 
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-16 font-mono text-[#3d2e22]">
-                {PRODUCTS.map((p, i) => (
-                  <motion.div 
-                    key={p.id} initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                    className="group relative h-[60vh] rounded-[4rem] overflow-hidden border border-rose-200/30 hover:border-rose-400 transition-all cursor-pointer shadow-2xl bg-white/5"
-                    onClick={() => { setActiveItem(i); setView("serum"); }}
-                  >
-                     <Image src={p.img} alt={p.title} fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[2s] group-hover:scale-110 p-12" />
-                     <div className="absolute inset-0 bg-rose-200/10 group-hover:bg-transparent transition-colors duration-1000" />
-                     <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60" />
-                     
-                     <div className="absolute inset-10 flex flex-col justify-between">
-                        <div className="flex justify-between items-start text-white mix-blend-difference">
-                           <div className="p-4 bg-white/10 border border-white/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Droplet className="w-5 h-5" />
-                           </div>
-                           <div className="text-[10px] font-black uppercase tracking-widest opacity-20 italic">FORMULA_0x{i+134}</div>
+  return (
+    <motion.button
+      ref={ref}
+      style={{ x: sx, y: sy }}
+      onMouseMove={handleMouse}
+      onMouseLeave={() => {
+        x.set(0)
+        y.set(0)
+      }}
+      className={className}
+    >
+      {children}
+    </motion.button>
+  )
+}
+
+const EXPERIENCES = [
+  {
+    id: 1,
+    title: "Everest Base Camp Trek",
+    type: "Hiking",
+    difficulty: "Hard",
+    duration: "14 days",
+    group: "8-12",
+    img: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=500",
+  },
+  {
+    id: 2,
+    title: "Hawaiian Wave Mastery",
+    type: "Surfing",
+    difficulty: "Intermediate",
+    duration: "7 days",
+    group: "4-8",
+    img: "https://images.unsplash.com/photo-1527004013197-933c4bb611b3?q=80&w=500",
+  },
+  {
+    id: 3,
+    title: "Chamonix Ski Expedition",
+    type: "Skiing",
+    difficulty: "Hard",
+    duration: "10 days",
+    group: "6-10",
+    img: "https://images.unsplash.com/photo-1551632786-91b9ed0b88b1?q=80&w=500",
+  },
+  {
+    id: 4,
+    title: "Great Barrier Reef Dive",
+    type: "Diving",
+    difficulty: "Beginner-Friendly",
+    duration: "5 days",
+    group: "4-6",
+    img: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=500",
+  },
+  {
+    id: 5,
+    title: "Serengeti Safari Adventure",
+    type: "Safari",
+    difficulty: "Easy",
+    duration: "8 days",
+    group: "10-16",
+    img: "https://images.unsplash.com/photo-1516426122078-c23e76319801?q=80&w=500",
+  },
+  {
+    id: 6,
+    title: "Japanese Temple Trek",
+    type: "Cultural",
+    difficulty: "Easy",
+    duration: "9 days",
+    group: "8-14",
+    img: "https://images.unsplash.com/photo-1552836906-6bf0631f0fbe?q=80&w=500",
+  },
+  {
+    id: 7,
+    title: "Costa Rica Zip Line",
+    type: "Adventure",
+    difficulty: "Intermediate",
+    duration: "6 days",
+    group: "6-12",
+    img: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=500",
+  },
+  {
+    id: 8,
+    title: "Iceland Ring Road",
+    type: "Hiking",
+    difficulty: "Moderate",
+    duration: "7 days",
+    group: "8-12",
+    img: "https://images.unsplash.com/photo-1464207687429-7505649dae38?q=80&w=500",
+  },
+]
+
+const DESTINATIONS = [
+  { name: "Asia", count: 24 },
+  { name: "South America", count: 18 },
+  { name: "Africa", count: 16 },
+  { name: "Europe", count: 21 },
+  { name: "North America", count: 14 },
+  { name: "Oceania", count: 12 },
+]
+
+const GUIDES = [
+  { id: 1, name: "Raj Patel", expertise: "Himalayan Expert", img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=150" },
+  { id: 2, name: "Sofia Moreno", expertise: "Jungle & Safari", img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=150" },
+  { id: 3, name: "James Anderson", expertise: "Water Sports", img: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=150" },
+  { id: 4, name: "Kenji Yamamoto", expertise: "Asia Specialist", img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=150" },
+]
+
+export default function DriftTravelLanding() {
+  const [selectedExperience, setSelectedExperience] = useState<(typeof EXPERIENCES)[0] | null>(null)
+  const [showExperienceDialog, setShowExperienceDialog] = useState(false)
+  const [showBookingDialog, setShowBookingDialog] = useState(false)
+
+  return (
+    <div className="bg-fef9f0 text-gray-900 min-h-screen overflow-hidden">
+      {/* Hero with parallax particles */}
+      <section className="relative h-screen overflow-hidden flex items-center justify-center">
+        <div className="absolute inset-0 -z-10">
+          <Image
+            src="https://images.unsplash.com/photo-1527004013197-933c4bb611b3?q=80&w=1200"
+            alt="Adventure"
+            fill
+            className="object-cover"
+          />
+          <div className="absolute inset-0 bg-black/40" />
+        </div>
+
+        {/* Floating particles */}
+        {[...Array(8)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-2 h-2 bg-orange-400 rounded-full opacity-70"
+            animate={{
+              x: [Math.random() * 300 - 150, Math.random() * 300 - 150],
+              y: [Math.random() * 300 - 150, Math.random() * 300 - 150],
+            }}
+            transition={{
+              duration: 8 + Math.random() * 4,
+              repeat: Infinity,
+              repeatType: "reverse",
+            }}
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+            }}
+          />
+        ))}
+
+        <div className="relative z-10 max-w-5xl mx-auto text-center text-white px-4 space-y-8">
+          <Reveal>
+            <h1 className="text-7xl md:text-8xl font-bold tracking-tight">
+              Live on<br />the Edge
+            </h1>
+          </Reveal>
+
+          <Reveal delay={0.2}>
+            <p className="text-2xl font-light max-w-3xl mx-auto">
+              Guided adventures to 80+ countries. Expert-led expeditions for every thrill level. No experience needed.
+            </p>
+          </Reveal>
+
+          <Reveal delay={0.4}>
+            <MagneticBtn
+              onClick={() => setShowBookingDialog(true)}
+              className="px-12 py-4 bg-orange-500 text-white text-lg font-semibold rounded-full hover:bg-orange-600 transition-colors"
+            >
+              Book Adventure
+            </MagneticBtn>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* Experience Tabs */}
+      <section className="py-24 px-4 bg-gradient-to-b from-fef9f0 to-white">
+        <div className="max-w-6xl mx-auto">
+          <Reveal>
+            <h2 className="text-5xl font-bold mb-16">Featured Experiences</h2>
+          </Reveal>
+
+          <Tabs defaultValue="all" className="w-full">
+            <TabsList className="grid w-full grid-cols-4 mb-12 bg-white border border-gray-200">
+              {["All", "Hiking", "Water Sports", "Cultural"].map((cat) => (
+                <TabsTrigger
+                  key={cat}
+                  value={cat.toLowerCase()}
+                  className="font-semibold data-[state=active]:bg-orange-500 data-[state=active]:text-white"
+                >
+                  {cat}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+
+            <TabsContent value="all" className="mt-12">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+              >
+                {EXPERIENCES.map((exp, i) => (
+                  <Reveal key={exp.id} delay={i * 0.08}>
+                    <Card
+                      className="group cursor-pointer hover:shadow-xl transition-shadow overflow-hidden"
+                      onClick={() => {
+                        setSelectedExperience(exp)
+                        setShowExperienceDialog(true)
+                      }}
+                    >
+                      <CardContent className="p-0">
+                        <div className="relative h-48 overflow-hidden bg-gray-200">
+                          <Image
+                            src={exp.img}
+                            alt={exp.title}
+                            fill
+                            className="object-cover group-hover:scale-110 transition-transform duration-500"
+                          />
                         </div>
-                        <div className="mix-blend-difference text-white">
-                           <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-2 block italic text-rose-300">{p.cat} // {p.value}</span>
-                           <h3 className="text-5xl font-black italic uppercase tracking-tighter leading-none transition-all group-hover:tracking-widest font-sans">{p.title}</h3>
+                        <div className="p-4 space-y-3">
+                          <div className="flex gap-2 flex-wrap">
+                            <Badge variant="secondary">{exp.difficulty}</Badge>
+                            <Badge variant="outline">{exp.duration}</Badge>
+                          </div>
+                          <h3 className="font-bold group-hover:text-orange-500 transition-colors line-clamp-2">
+                            {exp.title}
+                          </h3>
+                          <div className="flex gap-4 text-xs text-gray-600">
+                            <div className="flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              {exp.duration}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Users className="w-3 h-3" />
+                              {exp.group}
+                            </div>
+                          </div>
                         </div>
-                     </div>
-                  </motion.div>
+                      </CardContent>
+                    </Card>
+                  </Reveal>
                 ))}
-             </div>
-          </motion.div>
-        )}
+              </motion.div>
+            </TabsContent>
 
-        {/* THE SERUM VIEW (DETAIL) */}
-        {view === "serum" && (
-          <motion.div key="serum" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen font-sans">
-             <button onClick={() => setView("ritual")} className="fixed top-12 left-12 z-[60] bg-black text-white p-5 rounded-full hover:scale-110 transition-transform shadow-2xl">
-                <X className="w-6 h-6" />
-             </button>
+            {["hiking", "water-sports", "cultural"].map((tab) => (
+              <TabsContent key={tab} value={tab} className="mt-12">
+                <p className="text-center text-gray-500 py-12">Filtering by category...</p>
+              </TabsContent>
+            ))}
+          </Tabs>
+        </div>
+      </section>
 
-             <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen pt-24 lg:pt-0">
-                <div className="lg:col-span-12 relative flex items-center justify-center p-8 md:p-32 overflow-hidden h-screen bg-[#fdf5ef]">
-                   <div className="absolute inset-0 opacity-10">
-                      <Image src={PRODUCTS[activeItem].img} alt="Background" fill className="object-cover grayscale" />
-                   </div>
-                   <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[40vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase text-rose-500">
-                      RITUAL
-                   </div>
-                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#fdf5ef_100%)]" />
-                   
-                   <div className="max-w-[1500px] w-full grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10 text-[#3d2e22]">
-                      <motion.div initial={{ scale: 1.1, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1 }} className="relative aspect-square w-full rounded-[6rem] overflow-hidden border-8 border-white bg-white shadow-2xl group">
-                         <Image src={PRODUCTS[activeItem].img} alt="Spec" fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[3s] opacity-80 p-12" priority />
-                         <div className="absolute top-12 left-12 p-4 bg-black/60 backdrop-blur-3xl rounded-none border-2 border-white/10 z-20">
-                            <Layers className="w-6 h-6 text-white animate-pulse" />
-                         </div>
-                      </motion.div>
+      {/* Destination Filter */}
+      <section className="py-24 px-4 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <Reveal>
+            <h2 className="text-5xl font-bold mb-16">By Destination</h2>
+          </Reveal>
 
-                      <div className="flex flex-col justify-center space-y-12 text-[#3d2e22]">
-                         <div className="space-y-6">
-                            <span className="text-[10px] uppercase tracking-[1em] font-black opacity-30 mb-8 block underline decoration-black decoration-4 underline-offset-8 italic text-rose-600 font-mono">Formula_Sync // {PRODUCTS[activeItem].cat}</span>
-                            <h1 className="text-7xl md:text-[8vw] font-black uppercase tracking-tighter leading-none">{PRODUCTS[activeItem].title}</h1>
-                            <div className="text-4xl font-black italic tracking-tighter opacity-10 italic text-rose-600">Price: {PRODUCTS[activeItem].value}</div>
-                         </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+            {DESTINATIONS.map((dest, i) => (
+              <Reveal key={dest.name} delay={i * 0.05}>
+                <Card className="text-center hover:shadow-lg transition-shadow cursor-pointer hover:border-orange-500">
+                  <CardContent className="p-6 space-y-3">
+                    <h3 className="font-bold">{dest.name}</h3>
+                    <Badge className="bg-orange-500 w-full justify-center">{dest.count} trips</Badge>
+                  </CardContent>
+                </Card>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
 
-                         <p className="text-3xl font-light italic leading-relaxed uppercase tracking-tight opacity-40 leading-relaxed">
-                            Structural allocation for mission {PRODUCTS[activeItem].title}. System integrity at 100%. Thermal load nominal at 32C. Every coordinate synchronized.
-                         </p>
+      {/* Featured Trip Carousel */}
+      <section className="py-24 px-4 bg-gradient-to-b from-gray-50 to-white">
+        <div className="max-w-6xl mx-auto">
+          <Reveal>
+            <h2 className="text-5xl font-bold mb-16">Featured Trip</h2>
+          </Reveal>
 
-                         <div className="grid grid-cols-2 gap-12 py-12 border-y border-black/10 font-mono text-black/60">
-                            {[
-                              { icon: <Droplet className="w-5 h-5" />, l: "Logic", v: "Deep_Resonance" },
-                              { icon: <Zap className="w-5 h-5" />, l: "Sync", v: "Phase_Shift" },
-                              { icon: <Shield className="w-5 h-5" />, l: "Security", v: "High_Impact" },
-                              { icon: <Activity className="w-5 h-5" />, l: "Status", v: "Active" },
-                            ].map((s, i) => (
-                              <div key={i} className="flex gap-6 items-center">
-                                 <div className="opacity-20 text-rose-600">{s.icon}</div>
-                                 <div className="text-left">
-                                    <div className="text-[10px] font-black opacity-30 uppercase tracking-widest mb-1 italic text-black">{s.l}</div>
-                                    <div className="text-sm font-black uppercase italic tracking-tighter text-black">{s.v}</div>
-                                 </div>
-                              </div>
-                            ))}
-                         </div>
-
-                         <div className="flex gap-6 pt-8 font-mono">
-                            <button onClick={() => setView("ritual")} className="flex-grow py-8 bg-rose-600 text-white font-black uppercase text-xs tracking-[1em] hover:bg-rose-500 transition-all shadow-2xl rounded-full">
-                               Return_to_Ritual
-                            </button>
-                            <button className="px-12 py-8 border border-black/20 text-[10px] font-black uppercase tracking-[0.5em] hover:scale-105 transition-all text-black rounded-full">
-                               PDF_Spec
-                            </button>
-                         </div>
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
-        {/* THE LOGIC VIEW (INFO) */}
-        {view === "logic" && (
-          <motion.div key="logic" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen flex flex-col justify-center text-[#3d2e22]">
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center">
-                <div className="space-y-16">
-                   <span className="text-[10px] uppercase font-black tracking-[1.5em] opacity-30 block underline decoration-black decoration-2 underline-offset-8 italic font-mono text-rose-600">The_Logic_Protocol</span>
-                   <h2 className="text-7xl md:text-[10vw] font-black italic tracking-tighter leading-none uppercase">The <br/> Truth.</h2>
-                   <p className="text-3xl md:text-4xl font-light italic opacity-60 leading-relaxed uppercase tracking-tight">
-                      We treat architecture as code. Every structure is a function of its environmental variables and tectonic intent. 100% precision. Zero noise.
-                   </p>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t border-black/10 font-mono text-rose-600">
-                      {[
-                        { icon: <Sparkle className="w-6 h-6" />, t: "Adaptive Flow", v: "Dynamic Load Sync" },
-                        { icon: <Plus className="w-6 h-6" />, t: "Structural Sync", v: "Deep_Material_ID" },
-                      ].map((item, i) => (
-                        <div key={i} className="flex gap-8 group">
-                           <div className="w-16 h-16 rounded-full border border-black flex items-center justify-center text-black group-hover:bg-black group-hover:text-white transition-all shadow-xl">
-                              {item.icon}
-                           </div>
-                           <div className="text-left text-[#3d2e22]">
-                              <h4 className="text-2xl font-black uppercase italic tracking-tighter leading-none mb-2">{item.t}</h4>
-                              <p className="text-[10px] opacity-30 uppercase tracking-[0.3em] font-black leading-relaxed text-rose-600/40">{item.v}</p>
-                           </div>
+          <Carousel className="w-full">
+            <CarouselContent>
+              {EXPERIENCES.slice(0, 3).map((exp) => (
+                <CarouselItem key={exp.id}>
+                  <Reveal>
+                    <Card className="hover:shadow-lg transition-shadow">
+                      <CardContent className="p-0 grid grid-cols-1 md:grid-cols-2">
+                        <div className="relative h-96 md:h-auto overflow-hidden">
+                          <Image
+                            src={exp.img}
+                            alt={exp.title}
+                            fill
+                            className="object-cover"
+                          />
                         </div>
-                      ))}
-                   </div>
+                        <div className="p-8 space-y-6 flex flex-col justify-center">
+                          <div>
+                            <h3 className="text-3xl font-bold mb-2">{exp.title}</h3>
+                            <div className="flex gap-2">
+                              <Badge>{exp.type}</Badge>
+                              <Badge variant="outline">{exp.difficulty}</Badge>
+                            </div>
+                          </div>
+                          <p className="text-gray-600">Experience the adventure of a lifetime with expert guides. Includes all meals, lodging, and safety equipment.</p>
+                          <div className="flex gap-6 text-sm">
+                            <div>
+                              <p className="text-gray-500">Duration</p>
+                              <p className="font-bold">{exp.duration}</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-500">Group Size</p>
+                              <p className="font-bold">{exp.group} people</p>
+                            </div>
+                          </div>
+                          <MagneticBtn
+                            onClick={() => {
+                              setSelectedExperience(exp)
+                              setShowBookingDialog(true)
+                            }}
+                            className="w-full px-6 py-3 bg-orange-500 text-white rounded-full hover:bg-orange-600 transition-colors font-semibold"
+                          >
+                            Reserve Spot
+                          </MagneticBtn>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Reveal>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselNext />
+            <CarouselPrevious />
+          </Carousel>
+        </div>
+      </section>
+
+      {/* Stats */}
+      <section className="py-24 px-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-12 text-center">
+            {[
+              { value: 5000, suffix: "+", label: "Travelers" },
+              { value: 80, suffix: "", label: "Countries" },
+              { value: 10, suffix: " years", label: "Experience" },
+              { value: 4.9, suffix: "★", label: "Rating" },
+            ].map((stat, i) => (
+              <Reveal key={i} delay={i * 0.1}>
+                <div className="space-y-2">
+                  <div className="text-4xl font-bold">
+                    <Counter target={stat.value} suffix={stat.suffix} />
+                  </div>
+                  <p className="text-orange-100">{stat.label}</p>
                 </div>
-                <div className="relative aspect-square bg-[#ebe7e0] rounded-none p-12 overflow-hidden border border-black/5 group shadow-2xl">
-                   <Image src="https://images.unsplash.com/photo-1541829070764-84a7d30dee62?q=80&w=1000&auto=format&fit=crop" alt="The Archive" fill className="object-cover opacity-20 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-[3s]" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-80" />
-                   <div className="absolute inset-x-0 bottom-12 flex justify-center font-mono">
-                      <div className="px-12 py-6 bg-rose-600 text-white text-[10px] font-black uppercase tracking-widest italic animate-bounce cursor-pointer hover:bg-rose-500 transition-all rounded-full">
-                         Establish_Handshake
-                      </div>
-                   </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Guide Team */}
+      <section className="py-24 px-4 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <Reveal>
+            <h2 className="text-5xl font-bold mb-16">Expert Guides</h2>
+          </Reveal>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {GUIDES.map((guide, i) => (
+              <Reveal key={guide.id} delay={i * 0.1}>
+                <Card className="text-center hover:shadow-lg transition-shadow">
+                  <CardContent className="p-6 space-y-4">
+                    <Avatar className="w-24 h-24 mx-auto border-2 border-orange-500">
+                      <AvatarImage src={guide.img} />
+                      <AvatarFallback>{guide.name[0]}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h3 className="font-bold text-lg">{guide.name}</h3>
+                      <Badge variant="outline">{guide.expertise}</Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="py-24 px-4 bg-gray-50">
+        <div className="max-w-6xl mx-auto">
+          <Reveal>
+            <h2 className="text-5xl font-bold mb-16">Traveler Stories</h2>
+          </Reveal>
+
+          <Carousel className="w-full">
+            <CarouselContent>
+              {[
+                { name: "Alex Chen", quote: "Best decision ever. Changed my life forever.", trip: "Everest Trek" },
+                { name: "Maria Santos", quote: "Safe, professional, and incredibly fun.", trip: "Great Barrier Reef" },
+                { name: "David Kumar", quote: "Worth every penny. Memories for life.", trip: "Serengeti Safari" },
+              ].map((testi, i) => (
+                <CarouselItem key={i} className="basis-full md:basis-1/2">
+                  <Reveal>
+                    <Card className="bg-white">
+                      <CardContent className="p-8 space-y-4">
+                        <p className="text-xl italic text-gray-700">"{testi.quote}"</p>
+                        <div>
+                          <p className="font-semibold">{testi.name}</p>
+                          <p className="text-sm text-orange-600">{testi.trip}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Reveal>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious />
+            <CarouselNext />
+          </Carousel>
+        </div>
+      </section>
+
+      {/* Safety Accordion */}
+      <section className="py-24 px-4 bg-white">
+        <div className="max-w-4xl mx-auto">
+          <Reveal>
+            <h2 className="text-5xl font-bold mb-12">Safety & Preparation</h2>
+          </Reveal>
+
+          <Accordion type="single" collapsible className="space-y-4">
+            {[
+              { q: "What insurance is included?", a: "Travel & emergency medical coverage up to $250K included." },
+              { q: "Fitness requirements?", a: "Varies by trip. Beginners welcome with proper preparation." },
+              { q: "Training provided?", a: "Yes. Pre-trip training calls and onsite orientation included." },
+              { q: "Certifications required?", a: "For diving/skiing: optional. We offer certified instruction." },
+            ].map((item, i) => (
+              <AccordionItem key={i} value={`safety-${i}`} className="border border-gray-200 rounded-lg px-6">
+                <AccordionTrigger className="font-semibold">{item.q}</AccordionTrigger>
+                <AccordionContent className="text-gray-600">{item.a}</AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="py-24 px-4 bg-gray-50">
+        <div className="max-w-4xl mx-auto">
+          <Reveal>
+            <h2 className="text-5xl font-bold mb-12">FAQ</h2>
+          </Reveal>
+
+          <Accordion type="single" collapsible className="space-y-4">
+            {[
+              { q: "Can I travel solo?", a: "Absolutely. Join our community of solo adventurers." },
+              { q: "What's the cancellation policy?", a: "Full refund up to 60 days before. 50% refund after." },
+              { q: "How fit do I need to be?", a: "Most trips accommodate various fitness levels." },
+              { q: "When are group deposits due?", a: "50% at booking, 50% 90 days before departure." },
+            ].map((item, i) => (
+              <AccordionItem key={i} value={`faq-${i}`} className="border border-gray-200 rounded-lg px-6">
+                <AccordionTrigger className="font-semibold">{item.q}</AccordionTrigger>
+                <AccordionContent className="text-gray-600">{item.a}</AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
+      </section>
+
+      {/* Experience Dialog */}
+      <Dialog open={showExperienceDialog} onOpenChange={setShowExperienceDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold">{selectedExperience?.title}</DialogTitle>
+          </DialogHeader>
+          {selectedExperience && (
+            <div className="space-y-6">
+              <div className="relative h-64 rounded-lg overflow-hidden bg-gray-200">
+                <Image
+                  src={selectedExperience.img}
+                  alt={selectedExperience.title}
+                  fill
+                  className="object-cover"
+                />
+              </div>
+              <div className="flex gap-2 flex-wrap">
+                <Badge>{selectedExperience.type}</Badge>
+                <Badge variant="outline">{selectedExperience.difficulty}</Badge>
+              </div>
+              <div className="grid grid-cols-3 gap-4 text-sm">
+                <div>
+                  <p className="text-gray-500">Duration</p>
+                  <p className="font-bold">{selectedExperience.duration}</p>
                 </div>
-             </div>
-          </motion.div>
-        )}
-
-      </AnimatePresence>
-
-      {/* Global Status HUD */}
-      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em] italic text-rose-600 leading-none font-mono">
-         <div className="flex gap-12 text-rose-600">
-            <span>Lumiere_OS_Alpha</span>
-            <span>Uptime: 99.9%</span>
-         </div>
-         <div className="flex gap-4 items-end text-rose-600">
-            <div className="text-right leading-tight italic">
-               Archival_Control <br /> v4.0.134
+                <div>
+                  <p className="text-gray-500">Group Size</p>
+                  <p className="font-bold">{selectedExperience.group}</p>
+                </div>
+                <div>
+                  <p className="text-gray-500">Difficulty</p>
+                  <p className="font-bold">{selectedExperience.difficulty}</p>
+                </div>
+              </div>
+              <p className="text-gray-600">
+                This adventure includes expert guidance, all meals, lodging, and safety equipment. Transportation and visa assistance available.
+              </p>
+              <Accordion type="single" collapsible>
+                <AccordionItem value="itinerary">
+                  <AccordionTrigger>Full Itinerary</AccordionTrigger>
+                  <AccordionContent>Day-by-day breakdown of your adventure with detailed descriptions.</AccordionContent>
+                </AccordionItem>
+              </Accordion>
+              <MagneticBtn
+                onClick={() => setShowBookingDialog(true)}
+                className="w-full px-6 py-3 bg-orange-500 text-white rounded-full hover:bg-orange-600 transition-colors font-semibold"
+              >
+                Book Now
+              </MagneticBtn>
             </div>
-            <div className="flex gap-[4px] h-4">
-               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-full bg-black opacity-${i*20}`}></div>)}
-            </div>
-         </div>
-      </footer>
+          )}
+        </DialogContent>
+      </Dialog>
 
-      <style>{`
-        ::-webkit-scrollbar { width: 0px; }
-      `}</style>
+      {/* Booking Dialog */}
+      <Dialog open={showBookingDialog} onOpenChange={setShowBookingDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold">Reserve Your Adventure</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6">
+            <input
+              type="text"
+              placeholder="Full name"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+            />
+            <input
+              type="email"
+              placeholder="Email"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+            />
+            <input
+              type="tel"
+              placeholder="Phone"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+            />
+            <select className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500">
+              <option>Select experience</option>
+              {EXPERIENCES.map((exp) => (
+                <option key={exp.id} value={exp.title}>
+                  {exp.title}
+                </option>
+              ))}
+            </select>
+            <MagneticBtn className="w-full px-6 py-3 bg-orange-500 text-white rounded-full hover:bg-orange-600 transition-colors font-semibold">
+              Request Booking
+            </MagneticBtn>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
-  );
+  )
 }

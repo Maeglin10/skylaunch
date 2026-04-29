@@ -1,282 +1,380 @@
-"use client";
+"use client"
+import { motion, useScroll, useTransform, useInView, AnimatePresence, useMotionValue, useSpring } from "framer-motion"
+import { useState, useRef, useEffect } from "react"
+import Image from "next/image"
+import Link from "next/link"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
+import { Progress } from "@/components/ui/progress"
 
-import { motion, AnimatePresence } from "framer-motion";
-import { useState, useRef, useEffect } from "react";
-import Image from "next/image";
-import { X, Menu, Search, Award, Zap, Activity, Globe, Shield, Command, Plus, ArrowUpRight, Maximize2, MoveRight, Layers, Box, Compass, Sparkles, MoveVertical, Target, Radio, Waves } from "lucide-react";
-import "../premium.css";
-
-const WAVES = [
-  { id: 1, title: "CORE_PARTICLE", cat: "Resonance", value: "Verified", img: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=1000&auto=format&fit=crop" },
-  { id: 2, title: "VOID_FREQUENCY", cat: "Frequency", value: "Active", img: "https://images.unsplash.com/photo-1485470733090-0aae1788d668?q=80&w=1000&auto=format&fit=crop" },
-  { id: 3, title: "INDI_SHELL", cat: "Singularity", value: "Locked", img: "https://images.unsplash.com/photo-1549490349-8643362247b5?q=80&w=1000&auto=format&fit=crop" },
-];
-
-function WaveCanvas() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [mouse, setMouse] = useState({ x: 0, y: 0 });
-
+function Reveal({ children, delay=0 }: { children: React.ReactNode; delay?: number }) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: "-60px" })
+  return <motion.div ref={ref} initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, delay }}>{children}</motion.div>
+}
+function Counter({ target, suffix="" }: { target: number; suffix?: string }) {
+  const [count, setCount] = useState(0)
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true })
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    let frame = 0;
-    const animate = () => {
-      ctx.fillStyle = "rgba(8,8,18,0.15)";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      const cols = 80;
-      const rows = 40;
-      for (let i = 0; i < cols; i++) {
-        for (let j = 0; j < rows; j++) {
-          const x = (i / cols) * canvas.width;
-          const y = (j / rows) * canvas.height;
-          const dx = x - mouse.x;
-          const dy = y - mouse.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          const wave = Math.sin(i * 0.3 + frame * 0.02) * 20 + Math.cos(j * 0.3 + frame * 0.015) * 20;
-          const mouseEffect = Math.max(0, 1 - dist / 200) * 30;
-          const finalY = y + wave + mouseEffect;
-          const size = 1 + Math.sin(i * 0.5 + frame * 0.03) * 0.5;
-          const alpha = 0.3 + Math.sin(i * 0.2 + j * 0.3 + frame * 0.01) * 0.2;
-          ctx.fillStyle = `rgba(99,102,241,${alpha})`;
-          ctx.beginPath();
-          ctx.arc(x, finalY, size, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
-      frame++;
-      requestAnimationFrame(animate);
-    };
-    const id = requestAnimationFrame(animate);
-    const handleMouseMove = (e: MouseEvent) => setMouse({ x: e.clientX, y: e.clientY });
-    window.addEventListener("mousemove", handleMouseMove);
-    const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
-    window.addEventListener("resize", resize);
-    return () => { cancelAnimationFrame(id); window.removeEventListener("resize", resize); window.removeEventListener("mousemove", handleMouseMove); };
-  }, [mouse]);
-
-  return <canvas ref={canvasRef} className="absolute inset-0 z-0 opacity-40 pointer-events-none" />;
+    if (!inView) return
+    const step = Math.ceil(target / 60)
+    const t = setInterval(() => setCount(c => Math.min(c + step, target)), 16)
+    return () => clearInterval(t)
+  }, [inView, target])
+  return <span ref={ref}>{count.toLocaleString()}{suffix}</span>
+}
+function MagneticBtn({ children, className="" }: { children: React.ReactNode; className?: string }) {
+  const x = useMotionValue(0); const y = useMotionValue(0)
+  const sx = useSpring(x, { stiffness: 500, damping: 25 })
+  const sy = useSpring(y, { stiffness: 500, damping: 25 })
+  const ref = useRef<HTMLButtonElement>(null)
+  const handleMouse = (e: React.MouseEvent) => {
+    const r = ref.current!.getBoundingClientRect()
+    x.set((e.clientX - r.left - r.width/2) * 0.35)
+    y.set((e.clientY - r.top - r.height/2) * 0.35)
+  }
+  return <motion.button ref={ref} style={{ x: sx, y: sy }} onMouseMove={handleMouse} onMouseLeave={() => { x.set(0); y.set(0) }} className={className}>{children}</motion.button>
 }
 
-export default function WaveInteractiveSPA() {
-  const [view, setView] = useState<"wave" | "pulse" | "logic">("wave");
-  const [activeItem, setActiveItem] = useState(0);
+const WATCHES = [
+  { id: 1, name: "Chronosphere Sport", collection: "Sport", complication: "Chronograph", movement: "Automatic ETA 2824", price: "$4,200", img: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500" },
+  { id: 2, name: "Heritage Dress", collection: "Dress", complication: "Date Window", movement: "Quartz Swiss", price: "$2,800", img: "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=500" },
+  { id: 3, name: "Deep Explorer", collection: "Diver", complication: "Rotating Bezel", movement: "Automatic Seiko", price: "$3,600", img: "https://images.unsplash.com/photo-1518611505868-48510c2a2fe4?w=500" },
+  { id: 4, name: "Aviation Pro", collection: "Pilot", complication: "GMT", movement: "Automatic Rolex", price: "$5,400", img: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500" },
+  { id: 5, name: "Prestige Titanium", collection: "Limited", complication: "Perpetual", movement: "Automatic Titanium", price: "$8,900", img: "https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?w=500" },
+  { id: 6, name: "Classic Gold", collection: "Limited", complication: "Moon Phase", movement: "Manual Wind", price: "$7,200", img: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=500" },
+  { id: 7, name: "Modern Steel", collection: "Dress", complication: "Seconds", movement: "Automatic Seiko", price: "$3,100", img: "https://images.unsplash.com/photo-1517836357463-d25ddfcbf042?w=500" },
+  { id: 8, name: "Desert Expedition", collection: "Diver", complication: "Depth Gauge", movement: "Automatic Helium", price: "$4,900", img: "https://images.unsplash.com/photo-1586941487556-a9bbd424c8af?w=500" },
+]
+
+const MOVEMENTS = [
+  { type: "Power Reserve", percent: 45 },
+  { type: "Water Resistance", percent: 92 },
+  { type: "Accuracy", percent: 99 },
+]
+
+const TESTIMONIALS = [
+  { name: "Richard Branson", role: "Collector", quote: "These watches transcend time itself." },
+  { name: "Sofia Loren", role: "Aficionado", quote: "Perfection in every tick and tock." },
+  { name: "David Beckham", role: "Investor", quote: "Legacy pieces for future generations." },
+]
+
+export default function EpochWatchesPage() {
+  const [selectedWatch, setSelectedWatch] = useState<typeof WATCHES[0] | null>(null)
+  const [strapOpen, setStrapOpen] = useState(false)
+  const { scrollY } = useScroll()
+  const parallaxY = useTransform(scrollY, [0, 500], [0, 120])
 
   return (
-    <div className="premium-theme bg-[#080812] text-indigo-400 min-h-screen selection:bg-indigo-600 selection:text-white font-sans overflow-x-hidden">
-      
-      <WaveCanvas />
-
-      {/* Background HUD Layers */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[45vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase">
-           WAVE
+    <div className="min-h-screen bg-[#080808] text-[#fdf8f0]">
+      {/* Luxury Hero */}
+      <section className="relative h-[100vh] overflow-hidden">
+        <motion.div style={{ y: parallaxY }} className="absolute inset-0">
+          <Image
+            src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=1600"
+            alt="Luxury Watch"
+            fill
+            className="object-cover"
+          />
+        </motion.div>
+        <div className="absolute inset-0 bg-gradient-to-r from-[#080808] via-transparent to-[#080808]" />
+        <div className="relative h-full flex items-center px-8 md:px-16 z-10">
+          <Reveal>
+            <div className="max-w-2xl">
+              <p className="text-[#b76e79] mb-4 uppercase tracking-widest text-sm">Est. 1987</p>
+              <h1 className="text-6xl md:text-8xl font-light text-[#fdf8f0] mb-6">EPOCH</h1>
+              <p className="text-xl text-[#fdf8f0]/60 mb-8">
+                Independent watchmaker. 35-year legacy. Handcrafted precision.
+              </p>
+              <motion.button className="px-8 py-4 border-2 border-[#b76e79] text-[#b76e79] font-light uppercase tracking-wider hover:bg-[#b76e79] hover:text-[#080808] transition">
+                View Collection
+              </motion.button>
+            </div>
+          </Reveal>
         </div>
-        <div className="absolute inset-0 bg-[#080812]/40 backdrop-blur-[2px]" />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.05] mix-blend-screen" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#080812_100%)] opacity-80" />
-      </div>
+      </section>
 
-      {/* Editorial HUD Nav */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-center bg-black/40 backdrop-blur-3xl border-b border-indigo-500/10 font-mono">
-        <div className="flex gap-12 items-center">
-           <button onClick={() => setView("wave")} className="text-xl font-black italic tracking-tighter hover:text-white transition-colors flex items-center gap-4 text-indigo-500">
-              WAVE_FX&trade;
-           </button>
-           <div className="hidden lg:flex gap-8 text-[10px] font-black uppercase tracking-widest opacity-20 italic text-white">
-              Status: Resonance_Sync_Active
-              <span className="text-white">Ref: 0x129</span>
-           </div>
-        </div>
-        <div className="hidden md:flex gap-12 text-[10px] font-black uppercase tracking-[0.4em] opacity-30 text-white">
-           <button onClick={() => setView("wave")} className={`hover:opacity-100 transition-opacity ${view === 'wave' ? 'text-white opacity-100 underline decoration-white underline-offset-8 italic' : ''}`}>THE_WAVE</button>
-           <button onClick={() => setView("logic")} className={`hover:opacity-100 transition-opacity ${view === 'logic' ? 'text-white opacity-100 underline decoration-white underline-offset-8 italic' : ''}`}>THE_LOGIC</button>
-        </div>
-        <div className="flex items-center gap-8 text-white">
-           <Search className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-           <Menu className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-        </div>
-      </nav>
-
-      <AnimatePresence mode="wait">
-        
-        {/* THE WAVE VIEW (LANDING) */}
-        {view === "wave" && (
-          <motion.div key="wave" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-48 pb-32 px-12 max-w-[1800px] mx-auto min-h-screen flex flex-col justify-center relative z-10">
-             <header className="mb-24 border-b border-indigo-500/20 pb-12 flex flex-col md:flex-row justify-between items-end gap-12 text-white">
-                <div>
-                   <span className="text-[10px] uppercase font-black tracking-[1em] opacity-40 mb-4 block underline decoration-indigo-500/10 underline-offset-8 italic font-mono text-indigo-500">Resonance_Capture // Series_129</span>
-                   <h1 className="text-7xl md:text-[12vw] font-black italic uppercase tracking-tighter leading-[0.75]">FLUID. <br/> <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-white">PULSE.</span></h1>
-                </div>
-                <div className="text-right flex flex-col items-end">
-                   <div className="text-3xl font-black mb-4 tracking-tighter uppercase opacity-10 italic font-mono text-indigo-600">Frequency_Sync</div>
-                   <div className="w-64 h-[2px] bg-white/5 rounded-none overflow-hidden">
-                      <motion.div animate={{ width: ['20%', '90%', '40%', '75%'] }} transition={{ duration: 4, repeat: Infinity }} className="h-full bg-indigo-500" />
-                   </div>
-                </div>
-             </header>
-
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {WAVES.map((p, i) => (
-                  <motion.div 
-                    key={p.id} initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                    className="group relative h-[60vh] rounded-none overflow-hidden border border-indigo-500/10 hover:border-indigo-500/40 transition-all cursor-pointer shadow-2xl bg-white/5"
-                    onClick={() => { setActiveItem(i); setView("pulse"); }}
-                  >
-                     <Image src={p.img} alt={p.title} fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[2s] group-hover:scale-110" />
-                     <div className="absolute inset-0 bg-indigo-500/10 group-hover:bg-transparent transition-colors duration-1000" />
-                     <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                     
-                     <div className="absolute inset-10 flex flex-col justify-between">
-                        <div className="flex justify-between items-start text-white">
-                           <div className="p-4 bg-white/10 border border-white/20 rounded-none opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Target className="w-5 h-5" />
-                           </div>
-                           <div className="text-[10px] font-black uppercase tracking-widest opacity-20 italic text-indigo-400">UNIT_0x{i+129}</div>
-                        </div>
-                        <div className="text-white">
-                           <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-2 block italic text-indigo-300">{p.cat} // {p.value}</span>
-                           <h3 className="text-5xl font-black italic uppercase tracking-tighter leading-none transition-all group-hover:tracking-widest">{p.title}</h3>
-                        </div>
-                     </div>
-                  </motion.div>
+      {/* Watch Collections */}
+      <section className="py-24 px-8 md:px-16 max-w-7xl mx-auto">
+        <Reveal>
+          <h2 className="text-5xl font-light mb-16 text-[#fdf8f0]">Collections</h2>
+        </Reveal>
+        <Tabs defaultValue="all" className="w-full">
+          <TabsList className="grid w-full grid-cols-6 mb-12 bg-[#2a2420] p-2 rounded-none">
+            {["All", "Sport", "Dress", "Diver", "Pilot", "Limited"].map(cat => (
+              <TabsTrigger
+                key={cat}
+                value={cat.toLowerCase()}
+                className="data-[state=active]:bg-[#b76e79] data-[state=active]:text-white text-xs md:text-sm"
+              >
+                {cat}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          {["all", "sport", "dress", "diver", "pilot", "limited"].map(cat => (
+            <TabsContent key={cat} value={cat}>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+                {WATCHES.filter(w => cat === "all" || w.collection.toLowerCase() === cat).map((watch, i) => (
+                  <Reveal key={watch.id} delay={i * 0.1}>
+                    <motion.div
+                      whileHover={{ y: -12 }}
+                      className="group cursor-pointer"
+                      onClick={() => setSelectedWatch(watch)}
+                    >
+                      <div className="relative h-72 mb-4 rounded-none overflow-hidden bg-[#2a2420] border border-[#b76e79]/20 group-hover:border-[#b76e79]">
+                        <Image src={watch.img} alt={watch.name} fill className="object-cover group-hover:scale-110 transition duration-500" />
+                      </div>
+                      <Badge className="bg-[#b76e79] text-white mb-2">{watch.complication}</Badge>
+                      <h3 className="text-lg font-light text-[#fdf8f0] mb-2">{watch.name}</h3>
+                      <p className="text-sm text-[#b76e79]/70 mb-3">{watch.movement}</p>
+                      <p className="font-semibold text-[#b76e79]">{watch.price}</p>
+                    </motion.div>
+                  </Reveal>
                 ))}
-             </div>
-          </motion.div>
-        )}
+              </div>
+            </TabsContent>
+          ))}
+        </Tabs>
+      </section>
 
-        {/* THE PULSE VIEW (DETAIL) */}
-        {view === "pulse" && (
-          <motion.div key="pulse" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen">
-             <button onClick={() => setView("wave")} className="fixed top-12 left-12 z-[60] bg-white text-black p-5 rounded-none hover:scale-110 transition-transform shadow-2xl">
-                <X className="w-6 h-6" />
-             </button>
-
-             <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen pt-24 lg:pt-0">
-                <div className="lg:col-span-12 relative flex items-center justify-center p-8 md:p-32 overflow-hidden h-screen bg-[#080812]">
-                   <div className="absolute inset-0 opacity-10">
-                      <Image src={WAVES[activeItem].img} alt="Background" fill className="object-cover grayscale" />
-                   </div>
-                   <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[40vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase text-indigo-500 font-sans">
-                      CORE
-                   </div>
-                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#080812_100%)]" />
-                   
-                   <div className="max-w-[1500px] w-full grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10 font-sans text-white">
-                      <motion.div initial={{ scale: 1.1, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1 }} className="relative aspect-square w-full rounded-none overflow-hidden border border-indigo-500/20 group bg-neutral-900 shadow-2xl">
-                         <Image src={WAVES[activeItem].img} alt="Spec" fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[3s] opacity-80" priority />
-                         <div className="absolute top-12 left-12 p-4 bg-black/60 backdrop-blur-3xl rounded-none border-2 border-white/10 z-20">
-                            <Layers className="w-6 h-6 text-indigo-400 animate-pulse" />
-                         </div>
-                      </motion.div>
-
-                      <div className="flex flex-col justify-center space-y-12">
-                         <div className="space-y-6">
-                            <span className="text-[10px] uppercase tracking-[1em] font-black opacity-30 mb-8 block underline decoration-white decoration-4 underline-offset-8 italic text-indigo-400 font-mono">Resonance_Sync // {WAVES[activeItem].cat}</span>
-                            <h1 className="text-7xl md:text-[8vw] font-black italic uppercase tracking-tighter leading-none text-white">{WAVES[activeItem].title}</h1>
-                            <div className="text-4xl font-black italic tracking-tighter opacity-10 italic text-indigo-500">State: {WAVES[activeItem].value}</div>
-                         </div>
-
-                         <p className="text-3xl font-light italic leading-relaxed uppercase tracking-tight opacity-40 text-white leading-relaxed">
-                            Structural allocation for mission {WAVES[activeItem].title}. System integrity at 100%. Thermal load nominal at 32C. Every coordinate synchronized.
-                         </p>
-
-                         <div className="grid grid-cols-2 gap-12 py-12 border-y border-white/10 font-mono text-white/60">
-                            {[
-                              { icon: <Globe className="w-5 h-5" />, l: "Region", v: "Global_East" },
-                              { icon: <Zap className="w-5 h-5" />, l: "Logic", v: "Phase_Shift" },
-                              { icon: <Shield className="w-5 h-5" />, l: "Security", v: "High_Impact" },
-                              { icon: <Activity className="w-5 h-5" />, l: "Sync", v: "Active" },
-                            ].map((s, i) => (
-                              <div key={i} className="flex gap-6 items-center">
-                                 <div className="opacity-20 text-indigo-400">{s.icon}</div>
-                                 <div className="text-left">
-                                    <div className="text-[10px] font-black opacity-30 uppercase tracking-widest mb-1 italic text-white">{s.l}</div>
-                                    <div className="text-sm font-black uppercase italic tracking-tighter text-white">{s.v}</div>
-                                 </div>
-                              </div>
-                            ))}
-                         </div>
-
-                         <div className="flex gap-6 pt-8 font-mono">
-                            <button onClick={() => setView("wave")} className="flex-grow py-8 bg-indigo-600 text-white font-black uppercase text-xs tracking-[1em] hover:bg-indigo-500 transition-all shadow-2xl">
-                               Return_to_Wave
-                            </button>
-                            <button className="px-12 py-8 border border-white/20 text-[10px] font-black uppercase tracking-[0.5em] hover:scale-105 transition-all text-white">
-                               PDF_Spec
-                            </button>
-                         </div>
-                      </div>
-                   </div>
+      {/* Watch Detail Dialog */}
+      <Dialog open={!!selectedWatch} onOpenChange={() => setSelectedWatch(null)}>
+        <DialogContent className="max-w-2xl bg-[#2a2420] border border-[#b76e79]/30">
+          <DialogHeader>
+            <DialogTitle className="text-[#b76e79]">{selectedWatch?.name}</DialogTitle>
+          </DialogHeader>
+          {selectedWatch && (
+            <div className="space-y-6">
+              <div className="relative h-80 rounded-none overflow-hidden bg-[#080808]">
+                <Image src={selectedWatch.img} alt={selectedWatch.name} fill className="object-cover" />
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm text-[#b76e79]/60 mb-2">Movement</p>
+                  <p className="font-light text-[#fdf8f0]">{selectedWatch.movement}</p>
                 </div>
-             </div>
-          </motion.div>
-        )}
+                <div>
+                  <p className="text-sm text-[#b76e79]/60 mb-2">Specifications</p>
+                  <ul className="space-y-2 text-[#fdf8f0]/70 font-light">
+                    <li>Case: 42mm Stainless Steel</li>
+                    <li>Crystal: Sapphire with Anti-Reflective</li>
+                    <li>Water Resistance: 300m</li>
+                    <li>Power Reserve: 48 hours</li>
+                  </ul>
+                </div>
+                <div className="pt-4 border-t border-[#b76e79]/20">
+                  <p className="text-[#b76e79]">Limited production. All pieces individually numbered.</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
-        {/* THE LOGIC VIEW (INFO) */}
-        {view === "logic" && (
-          <motion.div key="logic" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen flex flex-col justify-center">
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center text-white">
-                <div className="space-y-16">
-                   <span className="text-[10px] uppercase font-black tracking-[1.5em] opacity-30 block underline decoration-indigo-400 decoration-2 underline-offset-8 italic font-mono text-indigo-400">The_Logic_Protocol</span>
-                   <h2 className="text-7xl md:text-[10vw] font-black italic tracking-tighter leading-none text-white uppercase font-sans">The <br/> Truth.</h2>
-                   <p className="text-3xl md:text-4xl font-light italic opacity-60 leading-relaxed uppercase tracking-tight text-white/60 font-sans">
-                      We treat architecture as code. Every structure is a function of its environmental variables and tectonic intent. 100% precision. Zero noise.
-                   </p>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t border-white/10 font-mono text-indigo-400">
-                      {[
-                        { icon: <Sparkles className="w-6 h-6" />, t: "Adaptive Flow", v: "Dynamic Load Sync" },
-                        { icon: <Plus className="w-6 h-6" />, t: "Structural Sync", v: "Deep_Material_ID" },
-                      ].map((item, i) => (
-                        <div key={i} className="flex gap-8 group">
-                           <div className="w-16 h-16 rounded-none border border-indigo-500 flex items-center justify-center text-indigo-500 group-hover:bg-indigo-500 group-hover:text-black transition-all shadow-xl">
-                              {item.icon}
-                           </div>
-                           <div className="text-left">
-                              <h4 className="text-2xl font-black uppercase italic tracking-tighter text-white leading-none mb-2 font-sans">{item.t}</h4>
-                              <p className="text-[10px] opacity-30 uppercase tracking-[0.3em] font-black leading-relaxed text-indigo-400/40">{item.v}</p>
-                           </div>
+      {/* Manufacture Tour */}
+      <section className="py-24 px-8 md:px-16 max-w-7xl mx-auto">
+        <Reveal>
+          <h2 className="text-5xl font-light mb-16 text-[#fdf8f0]">The Craft</h2>
+        </Reveal>
+        <Carousel className="w-full">
+          <CarouselContent>
+            {["Design", "Assembly", "Testing", "Finishing"].map((step, i) => (
+              <CarouselItem key={i} className="md:basis-1/2">
+                <Reveal>
+                  <div className="relative h-96 rounded-none overflow-hidden bg-[#2a2420] border border-[#b76e79]/20">
+                    <Image
+                      src={`https://images.unsplash.com/photo-${1523170000000 + i * 50000}?w=600`}
+                      alt={step}
+                      fill
+                      className="object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent" />
+                    <div className="absolute bottom-0 left-0 right-0 p-8">
+                      <h3 className="text-2xl font-light text-[#fdf8f0] mb-2">Step {i + 1}</h3>
+                      <p className="text-[#b76e79]">{step}</p>
+                    </div>
+                  </div>
+                </Reveal>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="text-[#b76e79]" />
+          <CarouselNext className="text-[#b76e79]" />
+        </Carousel>
+      </section>
+
+      {/* Movement Showcase */}
+      <section className="py-24 px-8 md:px-16 max-w-7xl mx-auto">
+        <Reveal>
+          <h2 className="text-5xl font-light mb-16 text-[#fdf8f0]">Movement Specifications</h2>
+        </Reveal>
+        <div className="grid md:grid-cols-3 gap-8">
+          {MOVEMENTS.map((mov, i) => (
+            <Reveal key={i} delay={i * 0.1}>
+              <Card className="bg-[#2a2420] border-[#b76e79]/20">
+                <CardContent className="pt-8 space-y-4">
+                  <h3 className="text-lg font-light text-[#fdf8f0]">{mov.type}</h3>
+                  <Progress value={mov.percent} className="bg-[#b76e79]/20" />
+                  <p className="text-[#b76e79] font-light">{mov.percent}%</p>
+                </CardContent>
+              </Card>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* Bespoke Strap Configurator */}
+      <section className="py-24 px-8 md:px-16 bg-[#2a2420]/50">
+        <div className="max-w-4xl mx-auto">
+          <Reveal>
+            <h2 className="text-5xl font-light mb-12 text-[#fdf8f0]">Bespoke Strap</h2>
+            <p className="text-[#fdf8f0]/60 mb-12">Customize your watch strap with your choice of materials and finishes.</p>
+          </Reveal>
+          <MagneticBtn
+            onClick={() => setStrapOpen(true)}
+            className="px-8 py-4 border-2 border-[#b76e79] text-[#b76e79] font-light uppercase tracking-wider hover:bg-[#b76e79] hover:text-[#080808] transition"
+          >
+            Design Your Strap
+          </MagneticBtn>
+        </div>
+      </section>
+
+      {/* Stats */}
+      <section className="py-24 px-8 md:px-16">
+        <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-12">
+          {[
+            { number: 1987, label: "Founded", suffix: "" },
+            { number: 12, label: "Pieces Per Year", suffix: "K" },
+            { number: 45, label: "Countries", suffix: "" },
+            { number: 35, label: "Year Warranty", suffix: "" },
+          ].map((stat, i) => (
+            <Reveal key={i} delay={i * 0.1}>
+              <div className="text-center">
+                <div className="text-4xl md:text-5xl font-light text-[#b76e79] mb-2">
+                  <Counter target={stat.number} suffix={stat.suffix} />
+                </div>
+                <p className="text-[#fdf8f0]/60 font-light">{stat.label}</p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="py-24 px-8 md:px-16 bg-[#2a2420]/50">
+        <div className="max-w-7xl mx-auto">
+          <Reveal>
+            <h2 className="text-5xl font-light mb-16 text-[#fdf8f0]">Collector Stories</h2>
+          </Reveal>
+          <Carousel className="w-full">
+            <CarouselContent>
+              {TESTIMONIALS.map((test, i) => (
+                <CarouselItem key={i} className="md:basis-1/2">
+                  <Reveal delay={i * 0.1}>
+                    <Card className="bg-[#080808] border-[#b76e79]/20">
+                      <CardContent className="pt-8 space-y-6">
+                        <p className="text-lg italic text-[#fdf8f0]/60">"{test.quote}"</p>
+                        <div>
+                          <p className="font-light text-[#b76e79]">{test.name}</p>
+                          <p className="text-sm text-[#fdf8f0]/40 font-light">{test.role}</p>
                         </div>
-                      ))}
-                   </div>
-                </div>
-                <div className="relative aspect-square bg-indigo-900/10 rounded-none p-12 overflow-hidden border border-indigo-500/20 group shadow-2xl">
-                   <Image src="https://images.unsplash.com/photo-1541829070764-84a7d30dee62?q=80&w=1000&auto=format&fit=crop" alt="The Archive" fill className="object-cover opacity-20 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-[3s]" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                   <div className="absolute inset-x-0 bottom-12 flex justify-center font-mono">
-                      <div className="px-12 py-6 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest italic animate-bounce cursor-pointer hover:bg-indigo-500 transition-all rounded-none">
-                         Establish_Handshake
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
+                      </CardContent>
+                    </Card>
+                  </Reveal>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="text-[#b76e79]" />
+            <CarouselNext className="text-[#b76e79]" />
+          </Carousel>
+        </div>
+      </section>
 
-      </AnimatePresence>
+      {/* Heritage */}
+      <section className="py-24 px-8 md:px-16 max-w-7xl mx-auto">
+        <Reveal>
+          <h2 className="text-5xl font-light mb-12 text-[#fdf8f0]">Our Heritage</h2>
+        </Reveal>
+        <Accordion className="space-y-4">
+          {["The Founding (1987)", "The Pioneer Years", "Recognition & Awards", "Today's Legacy"].map((item, i) => (
+            <AccordionItem key={i} value={`history-${i}`} className="border border-[#b76e79]/20 rounded-none px-6">
+              <AccordionTrigger className="text-lg font-light text-[#fdf8f0] hover:text-[#b76e79]">
+                {item}
+              </AccordionTrigger>
+              <AccordionContent className="text-[#fdf8f0]/60 font-light">
+                A remarkable journey of precision, innovation, and unwavering commitment to horological excellence.
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </section>
 
-      {/* Global Status HUD */}
-      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em] italic text-indigo-600 leading-none font-mono">
-         <div className="flex gap-12 text-indigo-600">
-            <span>Wave_OS_Alpha</span>
-            <span>Uptime: 99.9%</span>
-         </div>
-         <div className="flex gap-4 items-end text-indigo-600">
-            <div className="text-right leading-tight italic text-indigo-600">
-               Archival_Control <br /> v4.0.129
+      {/* FAQ */}
+      <section className="py-24 px-8 md:px-16 max-w-4xl mx-auto">
+        <Reveal>
+          <h2 className="text-5xl font-light mb-12 text-[#fdf8f0]">Frequently Asked</h2>
+        </Reveal>
+        <Accordion className="space-y-4">
+          {["How often should I service my watch?", "What's your warranty?", "Can I customize my watch?", "How do I authenticate my EPOCH?"].map((q, i) => (
+            <AccordionItem key={i} value={`faq-${i}`} className="border border-[#b76e79]/20 rounded-none px-6">
+              <AccordionTrigger className="text-lg font-light text-[#fdf8f0] hover:text-[#b76e79]">
+                {q}
+              </AccordionTrigger>
+              <AccordionContent className="text-[#fdf8f0]/60 font-light">
+                Every EPOCH comes with detailed documentation and lifetime support from our master craftspeople.
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </section>
+
+      {/* Strap Configurator Dialog */}
+      <Dialog open={strapOpen} onOpenChange={setStrapOpen}>
+        <DialogContent className="max-w-md bg-[#2a2420] border border-[#b76e79]/30">
+          <DialogHeader>
+            <DialogTitle className="text-[#b76e79]">Bespoke Strap Configuration</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm text-[#b76e79]/60 mb-2">Material</p>
+              <select className="w-full px-4 py-2 bg-[#080808] border border-[#b76e79]/20 rounded-none text-[#fdf8f0] focus:outline-none focus:border-[#b76e79]">
+                <option>Leather (Natural)</option>
+                <option>Leather (Crocodile)</option>
+                <option>Rubber</option>
+                <option>Metal</option>
+              </select>
             </div>
-            <div className="flex gap-[4px] h-4">
-               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-full bg-indigo-500 opacity-${i*20}`}></div>)}
+            <div>
+              <p className="text-sm text-[#b76e79]/60 mb-2">Color</p>
+              <div className="flex gap-2">
+                {["Black", "Brown", "Tan", "Blue", "Burgundy"].map(c => (
+                  <button key={c} className="px-3 py-2 border border-[#b76e79]/20 rounded-none text-xs font-light text-[#fdf8f0] hover:border-[#b76e79] transition">
+                    {c}
+                  </button>
+                ))}
+              </div>
             </div>
-         </div>
-      </footer>
-
-      <style>{`
-        ::-webkit-scrollbar { width: 0px; }
-      `}</style>
+            <div>
+              <p className="text-sm text-[#b76e79]/60 mb-2">Buckle Type</p>
+              <select className="w-full px-4 py-2 bg-[#080808] border border-[#b76e79]/20 rounded-none text-[#fdf8f0] focus:outline-none focus:border-[#b76e79]">
+                <option>Stainless Steel</option>
+                <option>Rose Gold</option>
+                <option>Titanium</option>
+              </select>
+            </div>
+            <MagneticBtn className="w-full py-3 border-2 border-[#b76e79] text-[#b76e79] font-light rounded-none hover:bg-[#b76e79] hover:text-[#080808] transition">
+              Request Quote
+            </MagneticBtn>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
-  );
+  )
 }

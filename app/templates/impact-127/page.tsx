@@ -1,231 +1,373 @@
-"use client";
+"use client"
+import { motion, useScroll, useTransform, useInView, AnimatePresence, useMotionValue, useSpring } from "framer-motion"
+import { useState, useRef, useEffect } from "react"
+import Image from "next/image"
+import Link from "next/link"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
+import { Progress } from "@/components/ui/progress"
 
-import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
-import Image from "next/image";
-import { X, Menu, Search, Award, Zap, Activity, Globe, Shield, Command, Plus, ArrowUpRight, Maximize2, MoveRight, Layers, Box, Compass, Sparkles, MoveVertical, Target, Radio } from "lucide-react";
-import "../premium.css";
+function Reveal({ children, delay=0 }: { children: React.ReactNode; delay?: number }) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: "-60px" })
+  return <motion.div ref={ref} initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, delay }}>{children}</motion.div>
+}
+function Counter({ target, suffix="" }: { target: number; suffix?: string }) {
+  const [count, setCount] = useState(0)
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true })
+  useEffect(() => {
+    if (!inView) return
+    const step = Math.ceil(target / 60)
+    const t = setInterval(() => setCount(c => Math.min(c + step, target)), 16)
+    return () => clearInterval(t)
+  }, [inView, target])
+  return <span ref={ref}>{count.toLocaleString()}{suffix}</span>
+}
+function MagneticBtn({ children, className="" }: { children: React.ReactNode; className?: string }) {
+  const x = useMotionValue(0); const y = useMotionValue(0)
+  const sx = useSpring(x, { stiffness: 500, damping: 25 })
+  const sy = useSpring(y, { stiffness: 500, damping: 25 })
+  const ref = useRef<HTMLButtonElement>(null)
+  const handleMouse = (e: React.MouseEvent) => {
+    const r = ref.current!.getBoundingClientRect()
+    x.set((e.clientX - r.left - r.width/2) * 0.35)
+    y.set((e.clientY - r.top - r.height/2) * 0.35)
+  }
+  return <motion.button ref={ref} style={{ x: sx, y: sy }} onMouseMove={handleMouse} onMouseLeave={() => { x.set(0); y.set(0) }} className={className}>{children}</motion.button>
+}
 
-const EVENTS = [
-  { id: 1, title: "CORE_PULSE", cat: "Mainstage", value: "Verified", img: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1000&auto=format&fit=crop" },
-  { id: 2, title: "VOID_FREQUENCY", cat: "Underground", value: "Active", img: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=1000&auto=format&fit=crop" },
-  { id: 3, title: "NEON_SHELL", cat: "Experimental", value: "Locked", img: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?q=80&w=1000&auto=format&fit=crop" },
-];
+const PRODUCTS = [
+  { id: 1, name: "Cedarwood Chair", category: "Furniture", material: "Solid Oak", score: 95, img: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=500" },
+  { id: 2, name: "Linen Throw", category: "Textiles", material: "100% Linen", score: 92, img: "https://images.unsplash.com/photo-1578500494198-246f612d03b3?w=500" },
+  { id: 3, name: "Pendant Light", category: "Lighting", material: "Brass & Glass", score: 98, img: "https://images.unsplash.com/photo-1565193566173-7ace0ee75587?w=500" },
+  { id: 4, name: "Ceramic Bowl Set", category: "Decor", material: "Handmade Clay", score: 96, img: "https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=500" },
+  { id: 5, name: "Wool Rug", category: "Textiles", material: "Organic Wool", score: 94, img: "https://images.unsplash.com/photo-1550355291-bbee04a92027?w=500" },
+  { id: 6, name: "Kitchen Knives", category: "Kitchen", material: "Stainless Steel", score: 97, img: "https://images.unsplash.com/photo-1593618998160-e34014e67546?w=500" },
+  { id: 7, name: "Plant Pot", category: "Decor", material: "Terracotta", score: 90, img: "https://images.unsplash.com/photo-1578914328862-85c6ff4e4b64?w=500" },
+  { id: 8, name: "Floor Lamp", category: "Lighting", material: "Oak & Linen", score: 99, img: "https://images.unsplash.com/photo-1565182999555-f51a37a3eb7d?w=500" },
+]
 
-export default function PulseElectricSPA() {
-  const [view, setView] = useState<"pulse" | "lineup" | "night">("pulse");
-  const [activeItem, setActiveItem] = useState(0);
+const ROOMS = [
+  { id: 1, name: "Minimalist Living", tags: ["Scandinavian", "Neutral"], img: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600" },
+  { id: 2, name: "Warm Kitchen", tags: ["Rustic", "Functional"], img: "https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=600" },
+  { id: 3, name: "Cozy Bedroom", tags: ["Comfort", "Sustainable"], img: "https://images.unsplash.com/photo-1587474260584-136574528b8f?w=600" },
+  { id: 4, name: "Garden Retreat", tags: ["Outdoor", "Natural"], img: "https://images.unsplash.com/photo-1585806998841-0dd09ac53bc6?w=600" },
+]
+
+const TESTIMONIALS = [
+  { name: "Sarah Chen", role: "Interior Designer", quote: "HABITAT transformed my design workflow. Quality is impeccable.", avatar: "SC" },
+  { name: "James Wilson", role: "Architect", quote: "Each piece tells a story. Sustainability without compromise.", avatar: "JW" },
+  { name: "Marina Rodriguez", role: "Homeowner", quote: "Finally furniture that lasts. Beautiful and responsible.", avatar: "MR" },
+]
+
+export default function HabitatPage() {
+  const [wishlist, setWishlist] = useState<number[]>([])
+  const [selectedProduct, setSelectedProduct] = useState<typeof PRODUCTS[0] | null>(null)
+  const [consultationOpen, setConsultationOpen] = useState(false)
+  const { scrollY } = useScroll()
+  const parallaxY = useTransform(scrollY, [0, 500], [0, 150])
 
   return (
-    <div className="premium-theme bg-[#0a0a0a] text-pink-400 min-h-screen selection:bg-pink-600 selection:text-white font-sans overflow-x-hidden">
-      
-      {/* Background HUD Layers */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[45vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase">
-           PULSE
+    <div className="min-h-screen bg-[#faf6f0] text-[#1a1209]">
+      {/* Hero with Parallax */}
+      <section className="relative h-[100vh] overflow-hidden">
+        <motion.div style={{ y: parallaxY }} className="absolute inset-0">
+          <Image
+            src="https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=1600"
+            alt="Hero"
+            fill
+            className="object-cover"
+          />
+        </motion.div>
+        <div className="absolute inset-0 bg-gradient-to-t from-[#faf6f0] via-transparent to-transparent" />
+        <div className="relative h-full flex items-end pb-16 px-8 md:px-16 z-10">
+          <Reveal>
+            <div className="max-w-2xl">
+              <h1 className="text-6xl md:text-8xl font-bold text-[#1a1209] mb-6 leading-tight">
+                Habitat
+              </h1>
+              <p className="text-xl text-[#6b8f71] mb-8">
+                Sustainable living for the modern home. Every piece crafted with intention.
+              </p>
+              <motion.button className="px-8 py-4 bg-[#c2714f] text-white font-semibold rounded-lg hover:bg-[#b05f3f] transition">
+                Explore Collection
+              </motion.button>
+            </div>
+          </Reveal>
         </div>
-        <div className="absolute inset-0 bg-[#0a0a0a]/40 backdrop-blur-[2px]" />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.05] mix-blend-screen" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#0a0a0a_100%)] opacity-80" />
-      </div>
+      </section>
 
-      {/* Editorial HUD Nav */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-center bg-transparent backdrop-blur-3xl border-b border-pink-500/10 font-mono">
-        <div className="flex gap-12 items-center">
-           <button onClick={() => setView("pulse")} className="text-xl font-black italic tracking-tighter hover:text-white transition-colors flex items-center gap-4 text-pink-500">
-              PULSE_OS&trade;
-           </button>
-           <div className="hidden lg:flex gap-8 text-[10px] font-black uppercase tracking-widest opacity-20 italic text-white">
-              Status: Kinetic_Sync_Active
-              <span className="text-white">Ref: 0x127</span>
-           </div>
-        </div>
-        <div className="hidden md:flex gap-12 text-[10px] font-black uppercase tracking-[0.4em] opacity-30 text-white">
-           <button onClick={() => setView("pulse")} className={`hover:opacity-100 transition-opacity ${view === 'pulse' ? 'text-white opacity-100 underline decoration-white underline-offset-8 italic' : ''}`}>THE_PULSE</button>
-           <button onClick={() => setView("night")} className={`hover:opacity-100 transition-opacity ${view === 'night' ? 'text-white opacity-100 underline decoration-white underline-offset-8 italic' : ''}`}>THE_NIGHT</button>
-        </div>
-        <div className="flex items-center gap-8 text-white">
-           <Search className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-           <Menu className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-        </div>
-      </nav>
-
-      <AnimatePresence mode="wait">
-        
-        {/* THE PULSE VIEW (LANDING) */}
-        {view === "pulse" && (
-          <motion.div key="pulse" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-48 pb-32 px-12 max-w-[1800px] mx-auto min-h-screen flex flex-col justify-center relative z-10">
-             <header className="mb-24 border-b border-pink-500/20 pb-12 flex flex-col md:flex-row justify-between items-end gap-12 text-white">
-                <div>
-                   <span className="text-[10px] uppercase font-black tracking-[1em] opacity-40 mb-4 block underline decoration-pink-500/10 underline-offset-8 italic font-mono text-pink-500">Kinetic_Capture // Series_127</span>
-                   <h1 className="text-7xl md:text-[12vw] font-black italic uppercase tracking-tighter leading-[0.75]">ELECTRIC. <br/> <span className="text-transparent" style={{ WebkitTextStroke: "2px rgba(236,72,153,0.6)" }}>NIGHTS.</span></h1>
-                </div>
-                <div className="text-right flex flex-col items-end">
-                   <div className="text-3xl font-black mb-4 tracking-tighter uppercase opacity-10 italic font-mono text-pink-600">Frequency_Sync</div>
-                   <div className="w-64 h-[2px] bg-white/5 rounded-none overflow-hidden">
-                      <motion.div animate={{ width: ['20%', '90%', '40%', '75%'] }} transition={{ duration: 4, repeat: Infinity }} className="h-full bg-pink-500" />
-                   </div>
-                </div>
-             </header>
-
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {EVENTS.map((p, i) => (
-                  <motion.div 
-                    key={p.id} initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                    className="group relative h-[60vh] rounded-none overflow-hidden border border-pink-500/10 hover:border-pink-500/40 transition-all cursor-pointer shadow-2xl bg-white/5"
-                    onClick={() => { setActiveItem(i); setView("lineup"); }}
-                  >
-                     <Image src={p.img} alt={p.title} fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[2s] group-hover:scale-110" />
-                     <div className="absolute inset-0 bg-pink-500/10 group-hover:bg-transparent transition-colors duration-1000" />
-                     <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                     
-                     <div className="absolute inset-10 flex flex-col justify-between">
-                        <div className="flex justify-between items-start text-white">
-                           <div className="p-4 bg-white/10 border border-white/20 rounded-none opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Target className="w-5 h-5" />
-                           </div>
-                           <div className="text-[10px] font-black uppercase tracking-widest opacity-20 italic text-pink-400">NODE_0x{i+127}</div>
+      {/* Product Tabs */}
+      <section className="py-24 px-8 md:px-16 max-w-7xl mx-auto">
+        <Reveal>
+          <h2 className="text-5xl font-bold mb-16 text-[#1a1209]">Shop by Category</h2>
+        </Reveal>
+        <Tabs defaultValue="all" className="w-full">
+          <TabsList className="grid w-full grid-cols-5 mb-12 bg-[#f0ebe4] p-2 rounded-lg">
+            {["All", "Furniture", "Textiles", "Lighting", "Kitchen"].map(cat => (
+              <TabsTrigger key={cat} value={cat.toLowerCase()} className="data-[state=active]:bg-[#c2714f] data-[state=active]:text-white">
+                {cat}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          {["all", "furniture", "textiles", "lighting", "kitchen"].map(cat => (
+            <TabsContent key={cat} value={cat}>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+                {PRODUCTS.filter(p => cat === "all" || p.category.toLowerCase() === cat).map((prod, i) => (
+                  <Reveal key={prod.id} delay={i * 0.1}>
+                    <motion.div
+                      whileHover={{ y: -8 }}
+                      className="group cursor-pointer"
+                      onClick={() => setSelectedProduct(prod)}
+                    >
+                      <div className="relative h-64 mb-4 rounded-xl overflow-hidden bg-[#f0ebe4]">
+                        <Image src={prod.img} alt={prod.name} fill className="object-cover group-hover:scale-105 transition duration-300" />
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setWishlist(w => w.includes(prod.id) ? w.filter(x => x !== prod.id) : [...w, prod.id]) }}
+                          className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center hover:scale-110 transition"
+                        >
+                          <span className="text-xl">{wishlist.includes(prod.id) ? "♥" : "♡"}</span>
+                        </button>
+                      </div>
+                      <div className="space-y-2">
+                        <Badge className="bg-[#6b8f71] text-white">{prod.category}</Badge>
+                        <h3 className="font-semibold text-lg text-[#1a1209]">{prod.name}</h3>
+                        <p className="text-sm text-[#6b8f71]">{prod.material}</p>
+                        <div className="flex items-center gap-2 pt-2">
+                          <Progress value={prod.score} className="flex-1" />
+                          <span className="text-sm font-semibold text-[#c2714f]">{prod.score}%</span>
                         </div>
-                        <div className="text-white">
-                           <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-2 block italic text-pink-300">{p.cat} // {p.value}</span>
-                           <h3 className="text-5xl font-black italic uppercase tracking-tighter leading-none transition-all group-hover:tracking-widest">{p.title}</h3>
-                        </div>
-                     </div>
-                  </motion.div>
+                      </div>
+                    </motion.div>
+                  </Reveal>
                 ))}
-             </div>
-          </motion.div>
-        )}
+              </div>
+            </TabsContent>
+          ))}
+        </Tabs>
+      </section>
 
-        {/* THE LINEUP VIEW (DETAIL) */}
-        {view === "lineup" && (
-          <motion.div key="lineup" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen">
-             <button onClick={() => setView("pulse")} className="fixed top-12 left-12 z-[60] bg-white text-black p-5 rounded-none hover:scale-110 transition-transform shadow-2xl">
-                <X className="w-6 h-6" />
-             </button>
-
-             <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen pt-24 lg:pt-0">
-                <div className="lg:col-span-12 relative flex items-center justify-center p-8 md:p-32 overflow-hidden h-screen bg-[#0a0a0a]">
-                   <div className="absolute inset-0 opacity-10">
-                      <Image src={EVENTS[activeItem].img} alt="Background" fill className="object-cover grayscale" />
-                   </div>
-                   <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[40vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase text-pink-500 font-sans">
-                      CORE
-                   </div>
-                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#0a0a0a_100%)]" />
-                   
-                   <div className="max-w-[1500px] w-full grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10 font-sans text-white">
-                      <motion.div initial={{ scale: 1.1, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1 }} className="relative aspect-square w-full rounded-none overflow-hidden border border-pink-500/20 group bg-neutral-900 shadow-2xl">
-                         <Image src={EVENTS[activeItem].img} alt="Spec" fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[3s] opacity-80" priority />
-                         <div className="absolute top-12 left-12 p-4 bg-black/60 backdrop-blur-3xl rounded-none border-2 border-white/10 z-20">
-                            <Layers className="w-6 h-6 text-pink-400 animate-pulse" />
-                         </div>
-                      </motion.div>
-
-                      <div className="flex flex-col justify-center space-y-12">
-                         <div className="space-y-6">
-                            <span className="text-[10px] uppercase tracking-[1em] font-black opacity-30 mb-8 block underline decoration-white decoration-4 underline-offset-8 italic text-pink-400 font-mono">Kinetic_Sync // {EVENTS[activeItem].cat}</span>
-                            <h1 className="text-7xl md:text-[8vw] font-black italic uppercase tracking-tighter leading-none text-white">{EVENTS[activeItem].title}</h1>
-                            <div className="text-4xl font-black italic tracking-tighter opacity-10 italic text-pink-500">State: {EVENTS[activeItem].value}</div>
-                         </div>
-
-                         <p className="text-3xl font-light italic leading-relaxed uppercase tracking-tight opacity-40 text-white leading-relaxed">
-                            Structural allocation for mission {EVENTS[activeItem].title}. System integrity at 100%. Thermal load nominal at 32C. Every coordinate synchronized.
-                         </p>
-
-                         <div className="grid grid-cols-2 gap-12 py-12 border-y border-white/10 font-mono text-white/60">
-                            {[
-                              { icon: <Globe className="w-5 h-5" />, l: "Region", v: "Global_East" },
-                              { icon: <Zap className="w-5 h-5" />, l: "Logic", v: "Phase_Shift" },
-                              { icon: <Shield className="w-5 h-5" />, l: "Security", v: "High_Impact" },
-                              { icon: <Activity className="w-5 h-5" />, l: "Sync", v: "Active" },
-                            ].map((s, i) => (
-                              <div key={i} className="flex gap-6 items-center">
-                                 <div className="opacity-20 text-pink-400">{s.icon}</div>
-                                 <div className="text-left">
-                                    <div className="text-[10px] font-black opacity-30 uppercase tracking-widest mb-1 italic text-white">{s.l}</div>
-                                    <div className="text-sm font-black uppercase italic tracking-tighter text-white">{s.v}</div>
-                                 </div>
-                              </div>
-                            ))}
-                         </div>
-
-                         <div className="flex gap-6 pt-8 font-mono">
-                            <button onClick={() => setView("pulse")} className="flex-grow py-8 bg-pink-600 text-white font-black uppercase text-xs tracking-[1em] hover:bg-pink-500 transition-all shadow-2xl">
-                               Return_to_Pulse
-                            </button>
-                            <button className="px-12 py-8 border border-white/20 text-[10px] font-black uppercase tracking-[0.5em] hover:scale-105 transition-all text-white">
-                               PDF_Spec
-                            </button>
-                         </div>
-                      </div>
-                   </div>
+      {/* Product Detail Dialog */}
+      <Dialog open={!!selectedProduct} onOpenChange={() => setSelectedProduct(null)}>
+        <DialogContent className="max-w-2xl bg-[#faf6f0]">
+          <DialogHeader>
+            <DialogTitle className="text-[#1a1209]">{selectedProduct?.name}</DialogTitle>
+          </DialogHeader>
+          {selectedProduct && (
+            <div className="space-y-6">
+              <div className="relative h-80 rounded-lg overflow-hidden">
+                <Image src={selectedProduct.img} alt={selectedProduct.name} fill className="object-cover" />
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm text-[#6b8f71] mb-2">Material & Craftsmanship</p>
+                  <p className="font-semibold text-[#1a1209]">{selectedProduct.material}</p>
                 </div>
-             </div>
-          </motion.div>
-        )}
+                <div>
+                  <p className="text-sm text-[#6b8f71] mb-2">Sustainability Score</p>
+                  <div className="flex items-center gap-2">
+                    <Progress value={selectedProduct.score} className="flex-1" />
+                    <span className="font-semibold text-[#c2714f]">{selectedProduct.score}%</span>
+                  </div>
+                </div>
+                <div className="pt-4 border-t border-[#c2714f]/20">
+                  <p className="text-[#6b8f71]">FSC certified. Carbon-neutral shipping. 5-year warranty.</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
-        {/* THE NIGHT VIEW (INFO) */}
-        {view === "night" && (
-          <motion.div key="night" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen flex flex-col justify-center">
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center text-white">
-                <div className="space-y-16">
-                   <span className="text-[10px] uppercase font-black tracking-[1.5em] opacity-30 block underline decoration-pink-400 decoration-2 underline-offset-8 italic font-mono text-pink-400">The_Night_Protocol</span>
-                   <h2 className="text-7xl md:text-[10vw] font-black italic tracking-tighter leading-none text-white uppercase font-sans">The <br/> Truth.</h2>
-                   <p className="text-3xl md:text-4xl font-light italic opacity-60 leading-relaxed uppercase tracking-tight text-white/60 font-sans">
-                      We treat architecture as code. Every structure is a function of its environmental variables and tectonic intent. 100% precision. Zero noise.
-                   </p>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t border-white/10 font-mono text-pink-400">
-                      {[
-                        { icon: <Sparkles className="w-6 h-6" />, t: "Adaptive Flow", v: "Dynamic Load Sync" },
-                        { icon: <Plus className="w-6 h-6" />, t: "Structural Sync", v: "Deep_Material_ID" },
-                      ].map((item, i) => (
-                        <div key={i} className="flex gap-8 group">
-                           <div className="w-16 h-16 rounded-none border border-pink-500 flex items-center justify-center text-pink-500 group-hover:bg-pink-500 group-hover:text-black transition-all shadow-xl">
-                              {item.icon}
-                           </div>
-                           <div className="text-left">
-                              <h4 className="text-2xl font-black uppercase italic tracking-tighter text-white leading-none mb-2 font-sans">{item.t}</h4>
-                              <p className="text-[10px] opacity-30 uppercase tracking-[0.3em] font-black leading-relaxed text-pink-400/40">{item.v}</p>
-                           </div>
+      {/* Room Inspiration */}
+      <section className="py-24 px-8 md:px-16 max-w-7xl mx-auto">
+        <Reveal>
+          <h2 className="text-5xl font-bold mb-16 text-[#1a1209]">Room Inspiration</h2>
+        </Reveal>
+        <Carousel className="w-full">
+          <CarouselContent>
+            {ROOMS.map((room, i) => (
+              <CarouselItem key={room.id} className="md:basis-1/2">
+                <Reveal delay={i * 0.1}>
+                  <div className="relative h-96 rounded-2xl overflow-hidden group cursor-pointer">
+                    <Image src={room.img} alt={room.name} fill className="object-cover group-hover:scale-110 transition duration-500" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
+                    <div className="absolute bottom-0 left-0 right-0 p-8 z-10">
+                      <h3 className="text-2xl font-bold text-white mb-3">{room.name}</h3>
+                      <div className="flex gap-2 flex-wrap">
+                        {room.tags.map(tag => (
+                          <Badge key={tag} className="bg-[#c2714f]/90 text-white cursor-pointer hover:bg-[#c2714f]">
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </Reveal>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="absolute left-0 top-1/2" />
+          <CarouselNext className="absolute right-0 top-1/2" />
+        </Carousel>
+      </section>
+
+      {/* Sustainability */}
+      <section className="py-24 px-8 md:px-16 max-w-7xl mx-auto">
+        <Reveal>
+          <h2 className="text-5xl font-bold mb-12 text-[#1a1209]">Our Commitment</h2>
+        </Reveal>
+        <Accordion defaultValue="item-0" className="space-y-4">
+          {["Sourcing", "Manufacturing", "Packaging", "Shipping", "Returns"].map((item, i) => (
+            <AccordionItem key={i} value={`item-${i}`} className="border border-[#c2714f]/20 rounded-lg px-6">
+              <AccordionTrigger className="text-lg font-semibold text-[#1a1209] hover:text-[#c2714f]">
+                {item}
+              </AccordionTrigger>
+              <AccordionContent className="text-[#6b8f71]">
+                We partner with suppliers who share our values. Every material is traceable, sustainably harvested, and ethically sourced. Our facility runs on 100% renewable energy, and we offset all shipping emissions.
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </section>
+
+      {/* Stats */}
+      <section className="py-24 px-8 md:px-16 bg-[#6b8f71]/10">
+        <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-12">
+          {[
+            { number: 200, label: "Customers", suffix: "K+" },
+            { number: 500, label: "Products", suffix: "" },
+            { number: 100, label: "Carbon Neutral", suffix: "%" },
+            { number: 49, label: "Rating", suffix: "★" },
+          ].map((stat, i) => (
+            <Reveal key={i} delay={i * 0.1}>
+              <div className="text-center">
+                <div className="text-4xl md:text-5xl font-bold text-[#c2714f] mb-2">
+                  <Counter target={stat.number} suffix={stat.suffix} />
+                </div>
+                <p className="text-[#6b8f71] font-semibold">{stat.label}</p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* Design Consultation */}
+      <section className="py-24 px-8 md:px-16 max-w-7xl mx-auto">
+        <Reveal>
+          <h2 className="text-5xl font-bold mb-12 text-[#1a1209]">Design Consultation</h2>
+          <p className="text-xl text-[#6b8f71] mb-12">Our process in 3 steps:</p>
+        </Reveal>
+        <div className="grid md:grid-cols-3 gap-8 mb-12">
+          {[
+            { step: "1", title: "Discovery", desc: "We learn about your lifestyle and space" },
+            { step: "2", title: "Curation", desc: "We select pieces that fit your needs" },
+            { step: "3", title: "Styling", desc: "We bring it together harmoniously" },
+          ].map((item, i) => (
+            <Reveal key={i} delay={i * 0.1}>
+              <Card className="border-[#c2714f]/20 bg-white">
+                <CardContent className="pt-8 space-y-4">
+                  <div className="text-5xl font-bold text-[#c2714f]">{item.step}</div>
+                  <h3 className="text-xl font-semibold text-[#1a1209]">{item.title}</h3>
+                  <p className="text-[#6b8f71]">{item.desc}</p>
+                </CardContent>
+              </Card>
+            </Reveal>
+          ))}
+        </div>
+        <MagneticBtn
+          onClick={() => setConsultationOpen(true)}
+          className="px-8 py-4 bg-[#c2714f] text-white font-semibold rounded-lg hover:bg-[#b05f3f] transition w-full md:w-auto"
+        >
+          Book a Consultation
+        </MagneticBtn>
+      </section>
+
+      {/* Testimonials */}
+      <section className="py-24 px-8 md:px-16 bg-[#f0ebe4]">
+        <div className="max-w-7xl mx-auto">
+          <Reveal>
+            <h2 className="text-5xl font-bold mb-16 text-[#1a1209]">Loved by Designers</h2>
+          </Reveal>
+          <Carousel className="w-full">
+            <CarouselContent>
+              {TESTIMONIALS.map((test, i) => (
+                <CarouselItem key={i} className="md:basis-1/2 lg:basis-1/3">
+                  <Reveal delay={i * 0.1}>
+                    <Card className="border-[#c2714f]/20 bg-white">
+                      <CardContent className="pt-8 space-y-6">
+                        <p className="text-lg italic text-[#6b8f71]">"{test.quote}"</p>
+                        <div className="flex items-center gap-4">
+                          <Avatar>
+                            <AvatarFallback className="bg-[#c2714f] text-white">{test.avatar}</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-semibold text-[#1a1209]">{test.name}</p>
+                            <p className="text-sm text-[#6b8f71]">{test.role}</p>
+                          </div>
                         </div>
-                      ))}
-                   </div>
-                </div>
-                <div className="relative aspect-square bg-pink-900/10 rounded-none p-12 overflow-hidden border border-pink-500/20 group shadow-2xl">
-                   <Image src="https://images.unsplash.com/photo-1541829070764-84a7d30dee62?q=80&w=1000&auto=format&fit=crop" alt="The Archive" fill className="object-cover opacity-20 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-[3s]" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                   <div className="absolute inset-x-0 bottom-12 flex justify-center font-mono">
-                      <div className="px-12 py-6 bg-pink-600 text-white text-[10px] font-black uppercase tracking-widest italic animate-bounce cursor-pointer hover:bg-pink-500 transition-all">
-                         Establish_Handshake
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
+                      </CardContent>
+                    </Card>
+                  </Reveal>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious />
+            <CarouselNext />
+          </Carousel>
+        </div>
+      </section>
 
-      </AnimatePresence>
+      {/* FAQ */}
+      <section className="py-24 px-8 md:px-16 max-w-4xl mx-auto">
+        <Reveal>
+          <h2 className="text-5xl font-bold mb-12 text-[#1a1209]">Frequently Asked</h2>
+        </Reveal>
+        <Accordion className="space-y-4">
+          {["How long does delivery take?", "Can I assemble it myself?", "What's your return policy?", "Do you offer custom orders?"].map((q, i) => (
+            <AccordionItem key={i} value={`faq-${i}`} className="border border-[#c2714f]/20 rounded-lg px-6">
+              <AccordionTrigger className="text-lg font-semibold text-[#1a1209] hover:text-[#c2714f]">
+                {q}
+              </AccordionTrigger>
+              <AccordionContent className="text-[#6b8f71]">
+                We provide detailed care instructions with every purchase. Our team is always happy to help via email or phone.
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </section>
 
-      {/* Global Status HUD */}
-      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em] italic text-pink-400 leading-none font-mono">
-         <div className="flex gap-12 text-pink-400">
-            <span>Pulse_OS_Alpha</span>
-            <span>Uptime: 99.9%</span>
-         </div>
-         <div className="flex gap-4 items-end text-pink-400">
-            <div className="text-right leading-tight italic text-pink-400">
-               Archival_Control <br /> v4.0.127
-            </div>
-            <div className="flex gap-[4px] h-4">
-               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-full bg-pink-500 opacity-${i*20}`}></div>)}
-            </div>
-         </div>
-      </footer>
-
-      <style>{`
-        ::-webkit-scrollbar { width: 0px; }
-      `}</style>
+      {/* Consultation Dialog */}
+      <Dialog open={consultationOpen} onOpenChange={setConsultationOpen}>
+        <DialogContent className="max-w-md bg-[#faf6f0]">
+          <DialogHeader>
+            <DialogTitle className="text-[#1a1209]">Interior Consultation</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-[#6b8f71]">Let's create your perfect space. Fill in a few details and we'll be in touch within 24 hours.</p>
+            <input
+              type="email"
+              placeholder="your@email.com"
+              className="w-full px-4 py-2 border border-[#c2714f]/20 rounded-lg focus:outline-none focus:border-[#c2714f]"
+            />
+            <input
+              type="text"
+              placeholder="Your name"
+              className="w-full px-4 py-2 border border-[#c2714f]/20 rounded-lg focus:outline-none focus:border-[#c2714f]"
+            />
+            <MagneticBtn className="w-full py-3 bg-[#c2714f] text-white font-semibold rounded-lg hover:bg-[#b05f3f] transition">
+              Request Consultation
+            </MagneticBtn>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
-  );
+  )
 }
