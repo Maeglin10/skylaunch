@@ -1,241 +1,333 @@
-"use client";
+"use client"
+import { motion, useScroll, useTransform, useInView, AnimatePresence, useMotionValue, useSpring } from "framer-motion"
+import { useState, useRef, useEffect } from "react"
+import Image from "next/image"
+import Link from "next/link"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
+import { Progress } from "@/components/ui/progress"
 
-import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
-import Image from "next/image";
-import { X, Menu, Search, Award, Zap, Activity, Globe, Shield, Command, Plus, ArrowUpRight, Maximize2, MoveRight, Layers, Box, Compass, Sparkles, MoveVertical, Target } from "lucide-react";
-import "../premium.css";
+function Reveal({ children, delay=0 }: { children: React.ReactNode; delay?: number }) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: "-60px" })
+  return <motion.div ref={ref} initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, delay }}>{children}</motion.div>
+}
 
-const PROJECTS = [
-  { id: 1, title: "HAUS_ELEVATION", cat: "Residential", value: "Verified", img: "https://images.unsplash.com/photo-1486325212027-8081e485255e?q=80&w=1000&auto=format&fit=crop" },
-  { id: 2, title: "CORE_BLUEPRINT", cat: "Commercial", value: "Active", img: "https://images.unsplash.com/photo-1503387762-592e3a1f467e?q=80&w=1000&auto=format&fit=crop" },
-  { id: 3, title: "VOID_SHELL", cat: "Brutalist", value: "Locked", img: "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1000&auto=format&fit=crop" },
-];
+function Counter({ target, suffix="" }: { target: number; suffix?: string }) {
+  const [count, setCount] = useState(0)
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true })
+  useEffect(() => {
+    if (!inView) return
+    const step = Math.ceil(target / 60)
+    const t = setInterval(() => setCount(c => Math.min(c + step, target)), 16)
+    return () => clearInterval(t)
+  }, [inView, target])
+  return <span ref={ref}>{count.toLocaleString()}{suffix}</span>
+}
 
-export default function FormwerkModernSPA() {
-  const [view, setView] = useState<"blueprint" | "project" | "studio">("blueprint");
-  const [activeItem, setActiveItem] = useState(0);
+function MagneticBtn({ children, className="" }: { children: React.ReactNode; className?: string }) {
+  const x = useMotionValue(0); const y = useMotionValue(0)
+  const sx = useSpring(x, { stiffness: 500, damping: 25 })
+  const sy = useSpring(y, { stiffness: 500, damping: 25 })
+  const ref = useRef<HTMLButtonElement>(null)
+  const handleMouse = (e: React.MouseEvent) => {
+    const r = ref.current!.getBoundingClientRect()
+    x.set((e.clientX - r.left - r.width/2) * 0.35)
+    y.set((e.clientY - r.top - r.height/2) * 0.35)
+  }
+  return <motion.button ref={ref} style={{ x: sx, y: sy }} onMouseMove={handleMouse} onMouseLeave={() => { x.set(0); y.set(0) }} className={className}>{children}</motion.button>
+}
+
+const PORTFOLIO = {
+  SaaS: [
+    { name: "TechFlow", raise: "€45M", desc: "AI workflow automation", tags: ["Series B", "YC"] },
+    { name: "CloudCore", raise: "€28M", desc: "Infrastructure scaling", tags: ["Series A", "Growth"] },
+  ],
+  Fintech: [
+    { name: "PayScale", raise: "€62M", desc: "Open banking platform", tags: ["Series C", "Regulated"] },
+    { name: "VestX", raise: "€35M", desc: "Algorithmic investing", tags: ["Series B", "Crypto"] },
+  ],
+  HealthTech: [
+    { name: "HealthHub", raise: "€41M", desc: "Telemedicine network", tags: ["Series B", "Global"] },
+    { name: "GenomeLabs", raise: "€52M", desc: "Gene sequencing AI", tags: ["Series C", "DeepTech"] },
+  ],
+  DeepTech: [
+    { name: "NeuralCore", raise: "€78M", desc: "Quantum computing", tags: ["Series B", "R&D"] },
+    { name: "SpaceTech", raise: "€55M", desc: "Satellite comms", tags: ["Series A", "Space"] },
+  ],
+  Consumer: [
+    { name: "StyleAI", raise: "€33M", desc: "Fashion recommendation", tags: ["Series A", "DTC"] },
+    { name: "FoodFlow", raise: "€29M", desc: "Supply chain logistics", tags: ["Series A", "Ops"] },
+  ],
+}
+
+const TEAM = [
+  { name: "Maria Rossi", role: "Founder/GP", bg: "Operator", img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=400" },
+  { name: "Hans Mueller", role: "Co-GP", bg: "Founder", img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=400" },
+  { name: "Dr. Chen Wei", role: "Investment Lead", bg: "Academic", img: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=400" },
+  { name: "Amara Okafor", role: "Operations", bg: "Operator", img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=400" },
+  { name: "Viktor Lebedev", role: "Tech Lead", bg: "Founder", img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=400" },
+  { name: "Sophie Laurent", role: "Operations", bg: "Operator", img: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=400" },
+]
+
+const THESIS = [
+  { title: "Market Timing", desc: "Invest in founders solving problems at inflection points." },
+  { title: "Deep Networks", desc: "Our team's domain expertise creates unfair advantages." },
+  { title: "Value Add", desc: "Beyond capital: intros, strategy, and hands-on support." },
+  { title: "Global Scope", desc: "European founders scaling to global markets." },
+]
+
+const TESTIMONIALS = [
+  { lp: "Swiss Family Office", quote: "Nexus consistently identifies opportunities before the market.", return: "3.8x" },
+  { lp: "Nordic Pension Fund", quote: "Exceptional deal flow and portfolio support.", return: "3.2x" },
+  { lp: "European Tech Hub", quote: "Best returns in our venture allocation.", return: "4.1x" },
+]
+
+export default function NexusVenturesPage() {
+  const [activeTab, setActiveTab] = useState("SaaS")
+  const [selectedCompany, setSelectedCompany] = useState<any>(null)
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const { scrollYProgress } = useScroll()
+  const parallaxY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"])
 
   return (
-    <div className="premium-theme bg-[#0a1628] text-[#8cb4e0] min-h-screen selection:bg-sky-500 selection:text-black font-mono overflow-x-hidden">
-      
-      {/* Background HUD Layers */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[45vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase">
-           FORMWERK
-        </div>
-        <div className="absolute inset-0 bg-[#0a1628]/40 backdrop-blur-[2px]" />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.05] mix-blend-screen" />
-        <div 
-          className="absolute inset-0 opacity-[0.05]"
-          style={{ backgroundImage: 'linear-gradient(#8cb4e0 1px, transparent 1px), linear-gradient(90deg, #8cb4e0 1px, transparent 1px)', backgroundSize: '40px 40px' }}
+    <div style={{ background: "#050d1f", color: "#fff" }}>
+      {/* Hero Parallax */}
+      <motion.section style={{ y: parallaxY }} className="relative h-screen flex items-center justify-center overflow-hidden">
+        <Image
+          src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?q=80&w=1400"
+          alt="boardroom"
+          fill
+          className="object-cover brightness-50"
         />
-        
-        {/* SVG Blueprint Elements */}
-        <svg className="absolute inset-0 w-full h-full opacity-10" viewBox="0 0 1000 1000">
-           <circle cx="500" cy="500" r="300" stroke="#8cb4e0" strokeWidth="0.5" fill="none" />
-           <line x1="500" y1="0" x2="500" y2="1000" stroke="#8cb4e0" strokeWidth="0.5" />
-           <line x1="0" y1="500" x2="1000" y2="500" stroke="#8cb4e0" strokeWidth="0.5" />
-        </svg>
-      </div>
-
-      {/* Editorial HUD Nav */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-center bg-black/40 backdrop-blur-3xl border-b border-sky-500/10 font-mono">
-        <div className="flex gap-12 items-center">
-           <button onClick={() => setView("blueprint")} className="text-xl font-black italic tracking-tighter hover:text-white transition-colors flex items-center gap-4 text-sky-300">
-              FORMWERK&trade;
-           </button>
-           <div className="hidden lg:flex gap-8 text-[10px] font-black uppercase tracking-widest opacity-20 italic">
-              Status: Blueprint_Sync_Active
-              <span className="text-white">Ref: 0x118</span>
-           </div>
+        <div className="relative z-10 text-center px-6">
+          <Reveal>
+            <h1 className="text-7xl md:text-8xl font-black mb-6" style={{ color: "#d4a017" }}>NEXUS VENTURES</h1>
+          </Reveal>
+          <Reveal delay={0.2}>
+            <p className="text-2xl text-gray-300 mb-8">European Deep Tech & Early-Stage Innovation</p>
+          </Reveal>
+          <Reveal delay={0.4}>
+            <MagneticBtn className="px-12 py-4 text-lg font-bold" style={{ background: "#d4a017", color: "#050d1f", border: "none", cursor: "pointer" }} onClick={() => setDialogOpen(true)}>
+              SUBMIT PITCH DECK
+            </MagneticBtn>
+          </Reveal>
         </div>
-        <div className="hidden md:flex gap-12 text-[10px] font-black uppercase tracking-[0.4em] opacity-30">
-           <button onClick={() => setView("blueprint")} className={`hover:opacity-100 transition-opacity ${view === 'blueprint' ? 'text-white opacity-100 underline decoration-white underline-offset-8 italic' : ''}`}>THE_BLUEPRINT</button>
-           <button onClick={() => setView("studio")} className={`hover:opacity-100 transition-opacity ${view === 'studio' ? 'text-white opacity-100 underline decoration-white underline-offset-8 italic' : ''}`}>THE_STUDIO</button>
-        </div>
-        <div className="flex items-center gap-8">
-           <Search className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-           <Menu className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer" />
-        </div>
-      </nav>
+      </motion.section>
 
-      <AnimatePresence mode="wait">
-        
-        {/* THE BLUEPRINT VIEW (LANDING) */}
-        {view === "blueprint" && (
-          <motion.div key="blueprint" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-48 pb-32 px-12 max-w-[1800px] mx-auto min-h-screen flex flex-col justify-center relative z-10">
-             <header className="mb-24 border-b border-sky-500/20 pb-12 flex flex-col md:flex-row justify-between items-end gap-12">
-                <div>
-                   <span className="text-[10px] uppercase font-black tracking-[1em] opacity-40 mb-4 block underline decoration-sky-500/10 underline-offset-8 italic font-mono text-sky-400">Architectural_Capture // Series_118</span>
-                   <h1 className="text-7xl md:text-[12vw] font-black italic uppercase tracking-tighter leading-[0.75] text-white">TECH. <br/> <span className="text-sky-900">BRUTAL.</span></h1>
-                </div>
-                <div className="text-right flex flex-col items-end">
-                   <div className="text-3xl font-black mb-4 tracking-tighter uppercase opacity-10 italic font-mono text-white">Spatial_Flow</div>
-                   <div className="w-64 h-[2px] bg-sky-500/20 rounded-none overflow-hidden">
-                      <motion.div animate={{ width: ['20%', '90%', '40%', '75%'] }} transition={{ duration: 4, repeat: Infinity }} className="h-full bg-sky-400" />
-                   </div>
-                </div>
-             </header>
-
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 font-mono">
-                {PROJECTS.map((p, i) => (
-                  <motion.div 
-                    key={p.id} initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                    className="group relative h-[60vh] rounded-none overflow-hidden border border-sky-500/10 hover:border-sky-500/40 transition-all cursor-pointer shadow-2xl bg-white/5"
-                    onClick={() => { setActiveItem(i); setView("project"); }}
-                  >
-                     <Image src={p.img} alt={p.title} fill className="object-cover grayscale opacity-20 group-hover:grayscale-0 transition-all duration-[2s] group-hover:scale-110" />
-                     <div className="absolute inset-0 bg-sky-500/10 group-hover:bg-transparent transition-colors duration-1000" />
-                     <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                     
-                     <div className="absolute inset-10 flex flex-col justify-between">
-                        <div className="flex justify-between items-start">
-                           <div className="p-4 bg-white/10 border border-white/20 rounded-none opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Plus className="w-5 h-5 text-sky-400" />
-                           </div>
-                           <div className="text-[10px] font-black uppercase tracking-widest opacity-20 italic text-sky-400">PROJECT_0x{i+118}</div>
+      {/* Portfolio Tabs */}
+      <section className="py-24 px-6 max-w-7xl mx-auto">
+        <Reveal>
+          <h2 className="text-5xl font-black mb-12 text-center" style={{ color: "#d4a017" }}>PORTFOLIO</h2>
+        </Reveal>
+        <Tabs defaultValue="SaaS" className="w-full">
+          <TabsList className="flex justify-center gap-2 mb-12 bg-transparent flex-wrap">
+            {Object.keys(PORTFOLIO).map((cat) => (
+              <TabsTrigger key={cat} value={cat} className="px-6 py-2 font-bold text-lg border" style={{ borderColor: "#d4a017", color: "#d4a017" }}>
+                {cat}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          {Object.entries(PORTFOLIO).map(([cat, companies]) => (
+            <TabsContent key={cat} value={cat}>
+              <div className="grid md:grid-cols-2 gap-8">
+                {companies.map((c) => (
+                  <Reveal key={c.name}>
+                    <Card className="bg-neutral-900/50 border" style={{ borderColor: "#d4a017" }} onClick={() => setSelectedCompany(c)} className="cursor-pointer hover:bg-neutral-900/80 transition-all">
+                      <CardContent className="p-8">
+                        <div className="flex justify-between items-start mb-4">
+                          <h3 className="text-2xl font-black">{c.name}</h3>
+                          <Badge className="px-4 py-1" style={{ background: "#d4a017", color: "#050d1f" }}>{c.raise}</Badge>
                         </div>
-                        <div>
-                           <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-2 block italic text-sky-300">{p.cat} // {p.value}</span>
-                           <h3 className="text-5xl font-black italic uppercase tracking-tighter leading-none text-white transition-all group-hover:tracking-widest">{p.title}</h3>
+                        <p className="text-gray-300 mb-6">{c.desc}</p>
+                        <div className="flex gap-2 flex-wrap">
+                          {c.tags.map((tag) => (
+                            <Badge key={tag} className="px-3 py-1 border" style={{ borderColor: "#d4a017", color: "#d4a017", background: "transparent" }}>
+                              {tag}
+                            </Badge>
+                          ))}
                         </div>
-                     </div>
-                  </motion.div>
+                      </CardContent>
+                    </Card>
+                  </Reveal>
                 ))}
-             </div>
-          </motion.div>
-        )}
+              </div>
+            </TabsContent>
+          ))}
+        </Tabs>
+      </section>
 
-        {/* THE PROJECT VIEW (DETAIL) */}
-        {view === "project" && (
-          <motion.div key="project" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen">
-             <button onClick={() => setView("blueprint")} className="fixed top-12 left-12 z-[60] bg-white text-black p-5 rounded-none hover:scale-110 transition-transform shadow-2xl">
-                <X className="w-6 h-6" />
-             </button>
+      {/* Investment Thesis */}
+      <section className="py-24 px-6 max-w-7xl mx-auto">
+        <Reveal>
+          <h2 className="text-5xl font-black mb-12 text-center" style={{ color: "#d4a017" }}>INVESTMENT THESIS</h2>
+        </Reveal>
+        <div className="grid md:grid-cols-2 gap-8">
+          {THESIS.map((t, i) => (
+            <Reveal key={t.title} delay={i * 0.1}>
+              <Card className="bg-neutral-900/50 border-b-4" style={{ borderBottomColor: "#d4a017" }}>
+                <CardContent className="p-8">
+                  <h3 className="text-2xl font-black mb-4" style={{ color: "#d4a017" }}>{t.title}</h3>
+                  <p className="text-gray-300 text-lg">{t.desc}</p>
+                </CardContent>
+              </Card>
+            </Reveal>
+          ))}
+        </div>
+      </section>
 
-             <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen pt-24 lg:pt-0">
-                <div className="lg:col-span-12 relative flex items-center justify-center p-8 md:p-32 overflow-hidden h-screen bg-[#0a1628]">
-                   <div className="absolute inset-0 opacity-10">
-                      <Image src={PROJECTS[activeItem].img} alt="Background" fill className="object-cover grayscale" />
-                   </div>
-                   <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[40vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase text-sky-500">
-                      CORE
-                   </div>
-                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#0a1628_100%)]" />
-                   
-                   <div className="max-w-[1500px] w-full grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10 font-mono">
-                      <motion.div initial={{ scale: 1.1, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1 }} className="relative aspect-square w-full rounded-none overflow-hidden border border-sky-500/20 group bg-neutral-900 shadow-2xl">
-                         <Image src={PROJECTS[activeItem].img} alt="Spec" fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[3s] opacity-80" priority />
-                         <div className="absolute top-12 left-12 p-4 bg-black/60 backdrop-blur-3xl rounded-none border-2 border-white/10">
-                            <Layers className="w-6 h-6 text-sky-400 animate-pulse" />
-                         </div>
-                      </motion.div>
+      {/* Fund Stats */}
+      <section className="py-24 px-6 max-w-7xl mx-auto">
+        <div className="grid md:grid-cols-4 gap-8 text-center">
+          {[
+            { num: 500, label: "AUM (€M)", suffix: "" },
+            { num: 80, label: "Investments", suffix: "" },
+            { num: 12, label: "Exits", suffix: "" },
+            { num: 3.2, label: "Avg Return", suffix: "x" },
+          ].map((stat, i) => (
+            <Reveal key={i} delay={i * 0.1}>
+              <div>
+                <div className="text-5xl font-black mb-2" style={{ color: "#d4a017" }}>
+                  <Counter target={Math.floor(stat.num)} suffix={stat.suffix} />
+                </div>
+                <p className="text-gray-400">{stat.label}</p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
 
-                      <div className="flex flex-col justify-center space-y-12">
-                         <div className="space-y-6">
-                            <span className="text-[10px] uppercase tracking-[1em] font-black opacity-30 mb-8 block underline decoration-white decoration-4 underline-offset-8 italic text-sky-400 font-mono">Blueprint_Sync // {PROJECTS[activeItem].cat}</span>
-                            <h1 className="text-7xl md:text-[8vw] font-black italic uppercase tracking-tighter leading-none text-white">{PROJECTS[activeItem].title}</h1>
-                            <div className="text-4xl font-black italic tracking-tighter opacity-10 italic text-sky-500">State: {PROJECTS[activeItem].value}</div>
-                         </div>
+      {/* Team */}
+      <section className="py-24 px-6 max-w-7xl mx-auto">
+        <Reveal>
+          <h2 className="text-5xl font-black mb-12 text-center" style={{ color: "#d4a017" }}>TEAM</h2>
+        </Reveal>
+        <div className="grid md:grid-cols-3 gap-8">
+          {TEAM.map((member, i) => (
+            <Reveal key={member.name} delay={i * 0.1}>
+              <Card className="bg-neutral-900/50 border border-neutral-800 hover:border-yellow-700/50 transition-colors overflow-hidden">
+                <div className="relative h-48">
+                  <Image src={member.img} alt={member.name} fill className="object-cover" />
+                </div>
+                <CardContent className="p-6">
+                  <h3 className="text-xl font-black mb-2">{member.name}</h3>
+                  <p className="text-gray-400 mb-4">{member.role}</p>
+                  <Badge className="px-3 py-1 border" style={{ borderColor: "#d4a017", color: "#d4a017", background: "transparent" }}>
+                    {member.bg}
+                  </Badge>
+                </CardContent>
+              </Card>
+            </Reveal>
+          ))}
+        </div>
+      </section>
 
-                         <p className="text-3xl font-light italic leading-relaxed uppercase tracking-tight opacity-40 text-white leading-relaxed">
-                            Structural allocation for project {PROJECTS[activeItem].title}. System integrity at 100%. Thermal load nominal at 32C. Every coordinate synchronized.
-                         </p>
-
-                         <div className="grid grid-cols-2 gap-12 py-12 border-y border-white/10 text-white/60">
-                            {[
-                              { icon: <Globe className="w-5 h-5" />, l: "Region", v: "Global_East" },
-                              { icon: <Zap className="w-5 h-5" />, l: "Logic", v: "Phase_Shift" },
-                              { icon: <Shield className="w-5 h-5" />, l: "Security", v: "High_Impact" },
-                              { icon: <Activity className="w-5 h-5" />, l: "Sync", v: "Active" },
-                            ].map((s, i) => (
-                              <div key={i} className="flex gap-6 items-center">
-                                 <div className="opacity-20 text-sky-400">{s.icon}</div>
-                                 <div className="text-left">
-                                    <div className="text-[10px] font-black opacity-30 uppercase tracking-widest mb-1 italic text-white">{s.l}</div>
-                                    <div className="text-sm font-black uppercase italic tracking-tighter text-white">{s.v}</div>
-                                 </div>
-                              </div>
-                            ))}
-                         </div>
-
-                         <div className="flex gap-6 pt-8">
-                            <button onClick={() => setView("blueprint")} className="flex-grow py-8 bg-sky-600 text-white font-black uppercase text-xs tracking-[1em] hover:bg-sky-500 transition-all shadow-2xl">
-                               Return_to_Blueprint
-                            </button>
-                            <button className="px-12 py-8 border border-white/20 text-[10px] font-black uppercase tracking-[0.5em] hover:scale-105 transition-all text-white">
-                               PDF_Spec
-                            </button>
-                         </div>
+      {/* LP Testimonials Carousel */}
+      <section className="py-24 px-6 max-w-7xl mx-auto">
+        <Reveal>
+          <h2 className="text-5xl font-black mb-12 text-center" style={{ color: "#d4a017" }}>LP TESTIMONIALS</h2>
+        </Reveal>
+        <Carousel className="w-full">
+          <CarouselContent>
+            {TESTIMONIALS.map((t, i) => (
+              <CarouselItem key={i} className="md:basis-1/2">
+                <Reveal>
+                  <Card className="bg-neutral-900/50 border" style={{ borderColor: "#d4a017" }}>
+                    <CardContent className="p-8">
+                      <div className="flex justify-between items-start mb-4">
+                        <h4 className="text-lg font-black">{t.lp}</h4>
+                        <Badge className="px-4 py-1" style={{ background: "#d4a017", color: "#050d1f" }}>{t.return}</Badge>
                       </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
+                      <p className="text-gray-300 text-lg italic">"{t.quote}"</p>
+                    </CardContent>
+                  </Card>
+                </Reveal>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious />
+          <CarouselNext />
+        </Carousel>
+      </section>
 
-        {/* THE STUDIO VIEW (INFO) */}
-        {view === "studio" && (
-          <motion.div key="studio" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen flex flex-col justify-center">
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center text-white">
-                <div className="space-y-16">
-                   <span className="text-[10px] uppercase font-black tracking-[1.5em] opacity-30 block underline decoration-sky-400 decoration-2 underline-offset-8 italic text-sky-400">The_Formwerk_Protocol</span>
-                   <h2 className="text-7xl md:text-[10vw] font-black italic tracking-tighter leading-none text-white uppercase">The <br/> Truth.</h2>
-                   <p className="text-3xl md:text-4xl font-light italic opacity-60 leading-relaxed uppercase tracking-tight text-white/60">
-                      We treat architecture as code. Every structure is a function of its environmental variables and tectonic intent. 100% precision. Zero noise.
-                   </p>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t border-white/10 text-sky-400">
-                      {[
-                        { icon: <Sparkles className="w-6 h-6" />, t: "Adaptive Flow", v: "Dynamic Load Sync" },
-                        { icon: <Plus className="w-6 h-6" />, t: "Structural Sync", v: "Deep_Material_ID" },
-                      ].map((item, i) => (
-                        <div key={i} className="flex gap-8 group">
-                           <div className="w-16 h-16 rounded-none border border-sky-500 flex items-center justify-center text-sky-500 group-hover:bg-sky-500 group-hover:text-black transition-all shadow-xl">
-                              {item.icon}
-                           </div>
-                           <div className="text-left">
-                              <h4 className="text-2xl font-black uppercase italic tracking-tighter text-white leading-none mb-2">{item.t}</h4>
-                              <p className="text-[10px] opacity-30 uppercase tracking-[0.3em] font-black leading-relaxed text-sky-400/40">{item.v}</p>
-                           </div>
-                        </div>
-                      ))}
-                   </div>
-                </div>
-                <div className="relative aspect-square bg-[#0a0a1a] rounded-none p-12 overflow-hidden border border-sky-500/20 group shadow-2xl">
-                   <Image src="https://images.unsplash.com/photo-1541829070764-84a7d30dee62?q=80&w=1000&auto=format&fit=crop" alt="The Archive" fill className="object-cover opacity-20 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-[3s]" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                   <div className="absolute inset-x-0 bottom-12 flex justify-center">
-                      <div className="px-12 py-6 bg-sky-600 text-white text-[10px] font-black uppercase tracking-widest italic animate-bounce cursor-pointer hover:bg-sky-500 transition-all">
-                         Establish_Handshake
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
+      {/* Process Accordion */}
+      <section className="py-24 px-6 max-w-4xl mx-auto">
+        <Reveal>
+          <h2 className="text-5xl font-black mb-12 text-center" style={{ color: "#d4a017" }}>INVESTMENT PROCESS</h2>
+        </Reveal>
+        <Accordion type="single" collapsible>
+          {[
+            { stage: "Stage 1: Application", desc: "Submit pitch deck + founder background." },
+            { stage: "Stage 2: Initial Review", desc: "Our investment committee evaluates market fit." },
+            { stage: "Stage 3: Deep Dive", desc: "Technical due diligence + team assessment." },
+            { stage: "Stage 4: Term Sheet", desc: "Standard terms for qualified startups." },
+            { stage: "Stage 5: Closing", desc: "Legal docs, funding, and board seat assigned." },
+          ].map((item, i) => (
+            <AccordionItem key={i} value={`item-${i}`} className="border-b" style={{ borderColor: "#d4a017" }}>
+              <AccordionTrigger className="hover:text-yellow-700">{item.stage}</AccordionTrigger>
+              <AccordionContent className="text-gray-400">{item.desc}</AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </section>
 
-      </AnimatePresence>
+      {/* FAQ */}
+      <section className="py-24 px-6 max-w-4xl mx-auto">
+        <Reveal>
+          <h2 className="text-5xl font-black mb-12 text-center" style={{ color: "#d4a017" }}>FAQS</h2>
+        </Reveal>
+        <Accordion type="single" collapsible>
+          {[
+            { q: "What's your typical check size?", a: "€500K to €5M for pre-seed through Series A." },
+            { q: "Geographic focus?", a: "Europe-first, with global ambitions." },
+            { q: "Follow-on investments?", a: "Yes, we lead Series B rounds for portfolio companies." },
+            { q: "Board participation?", a: "Always, to add value beyond capital." },
+            { q: "What about international founders?", a: "We support founders building from EU hubs." },
+          ].map((item, i) => (
+            <AccordionItem key={i} value={`item-${i}`} className="border-b" style={{ borderColor: "#d4a017" }}>
+              <AccordionTrigger className="hover:text-yellow-700">{item.q}</AccordionTrigger>
+              <AccordionContent className="text-gray-400">{item.a}</AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </section>
 
-      {/* Global Status HUD */}
-      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em] italic text-sky-400 leading-none">
-         <div className="flex gap-12 text-sky-400">
-            <span>Formwerk_OS_Alpha</span>
-            <span>Uptime: 99.9%</span>
-         </div>
-         <div className="flex gap-4 items-end text-sky-400">
-            <div className="text-right leading-tight italic">
-               Archival_Control <br /> v4.0.118
-            </div>
-            <div className="flex gap-[4px] h-4">
-               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-full bg-sky-500 opacity-${i*20}`}></div>)}
-            </div>
-         </div>
-      </footer>
+      {/* CTA */}
+      <section className="py-24 px-6 text-center">
+        <Reveal>
+          <h2 className="text-5xl font-black mb-6">Ready to Scale Your Vision?</h2>
+        </Reveal>
+        <Reveal delay={0.2}>
+          <MagneticBtn className="px-16 py-5 text-xl font-bold" style={{ background: "#d4a017", color: "#050d1f", border: "none", cursor: "pointer" }} onClick={() => setDialogOpen(true)}>
+            APPLY NOW
+          </MagneticBtn>
+        </Reveal>
+      </section>
 
-      <style>{`
-        ::-webkit-scrollbar { width: 0px; }
-      `}</style>
+      {/* Pitch Deck Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="bg-neutral-900 border" style={{ borderColor: "#d4a017" }}>
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black" style={{ color: "#d4a017" }}>SUBMIT PITCH DECK</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <input type="text" placeholder="Founder Name" className="w-full px-4 py-2 rounded bg-neutral-800 border text-white placeholder:text-gray-500" style={{ borderColor: "#d4a017" }} />
+            <input type="text" placeholder="Company" className="w-full px-4 py-2 rounded bg-neutral-800 border text-white placeholder:text-gray-500" style={{ borderColor: "#d4a017" }} />
+            <input type="email" placeholder="Email" className="w-full px-4 py-2 rounded bg-neutral-800 border text-white placeholder:text-gray-500" style={{ borderColor: "#d4a017" }} />
+            <textarea placeholder="Brief description" rows={4} className="w-full px-4 py-2 rounded bg-neutral-800 border text-white placeholder:text-gray-500" style={{ borderColor: "#d4a017" }} />
+            <button className="w-full py-3 font-black rounded text-black" style={{ background: "#d4a017" }}>
+              SUBMIT
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
-  );
+  )
 }

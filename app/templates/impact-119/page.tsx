@@ -1,231 +1,331 @@
-"use client";
+"use client"
+import { motion, useScroll, useTransform, useInView, AnimatePresence, useMotionValue, useSpring } from "framer-motion"
+import { useState, useRef, useEffect } from "react"
+import Image from "next/image"
+import Link from "next/link"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
+import { Progress } from "@/components/ui/progress"
 
-import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
-import Image from "next/image";
-import { X, Menu, Search, Award, Zap, Activity, Globe, Shield, Command, Plus, ArrowUpRight, Maximize2, MoveRight, Layers, Box, Compass, Sparkles, MoveVertical, Target } from "lucide-react";
-import "../premium.css";
+function Reveal({ children, delay=0 }: { children: React.ReactNode; delay?: number }) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: "-60px" })
+  return <motion.div ref={ref} initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, delay }}>{children}</motion.div>
+}
 
-const PROGRAMS = [
-  { id: 1, title: "FORCE_UNIT", cat: "Strength", value: "Verified", img: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=1000&auto=format&fit=crop" },
-  { id: 2, title: "CORE_ENDURE", cat: "Stamina", value: "Active", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1000&auto=format&fit=crop" },
-  { id: 3, title: "ASCEND_VOID", cat: "Elite", value: "Locked", img: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=1000&auto=format&fit=crop" },
-];
+function Counter({ target, suffix="" }: { target: number; suffix?: string }) {
+  const [count, setCount] = useState(0)
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true })
+  useEffect(() => {
+    if (!inView) return
+    const step = Math.ceil(target / 60)
+    const t = setInterval(() => setCount(c => Math.min(c + step, target)), 16)
+    return () => clearInterval(t)
+  }, [inView, target])
+  return <span ref={ref}>{count.toLocaleString()}{suffix}</span>
+}
 
-export default function IronXFitnessSPA() {
-  const [view, setView] = useState<"iron" | "program" | "logic">("iron");
-  const [activeItem, setActiveItem] = useState(0);
+function MagneticBtn({ children, className="" }: { children: React.ReactNode; className?: string }) {
+  const x = useMotionValue(0); const y = useMotionValue(0)
+  const sx = useSpring(x, { stiffness: 500, damping: 25 })
+  const sy = useSpring(y, { stiffness: 500, damping: 25 })
+  const ref = useRef<HTMLButtonElement>(null)
+  const handleMouse = (e: React.MouseEvent) => {
+    const r = ref.current!.getBoundingClientRect()
+    x.set((e.clientX - r.left - r.width/2) * 0.35)
+    y.set((e.clientY - r.top - r.height/2) * 0.35)
+  }
+  return <motion.button ref={ref} style={{ x: sx, y: sy }} onMouseMove={handleMouse} onMouseLeave={() => { x.set(0); y.set(0) }} className={className}>{children}</motion.button>
+}
+
+const EVENT_TYPES = {
+  Weddings: {
+    gallery: ["https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=600", "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?q=80&w=600", "https://images.unsplash.com/photo-1546032996-6dfacbacbf91?q=80&w=600"],
+    price: "From €8,000"
+  },
+  Corporate: {
+    gallery: ["https://images.unsplash.com/photo-1519671482749-fd09be7ccebf?q=80&w=600", "https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=600", "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?q=80&w=600"],
+    price: "From €5,000"
+  },
+  Galas: {
+    gallery: ["https://images.unsplash.com/photo-1519915212116-7cfef71f8b3d?q=80&w=600", "https://images.unsplash.com/photo-1511632765486-a01980e01a18?q=80&w=600", "https://images.unsplash.com/photo-1519671482749-fd09be7ccebf?q=80&w=600"],
+    price: "From €12,000"
+  },
+  Birthdays: {
+    gallery: ["https://images.unsplash.com/photo-1530268729831-4be0ea6ce141?q=80&w=600", "https://images.unsplash.com/photo-1519904981063-b0cf448d479e?q=80&w=600", "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?q=80&w=600"],
+    price: "From €3,000"
+  },
+  "Brand Launches": {
+    gallery: ["https://images.unsplash.com/photo-1519915212116-7cfef71f8b3d?q=80&w=600", "https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=600", "https://images.unsplash.com/photo-1519671482749-fd09be7ccebf?q=80&w=600"],
+    price: "From €10,000"
+  }
+}
+
+const SERVICES = [
+  { name: "Venue Sourcing", desc: "Curated locations matching your vision" },
+  { name: "Florals", desc: "Bespoke arrangements & installations" },
+  { name: "Catering", desc: "Michelin-inspired menus" },
+  { name: "AV & Lighting", desc: "Professional sound & immersive design" },
+  { name: "Décor", desc: "Custom themed environments" },
+  { name: "Entertainment", desc: "Live bands, DJs, performers" },
+  { name: "Photography", desc: "Full event coverage + albums" },
+  { name: "Coordination", desc: "Day-of management & logistics" },
+]
+
+const TESTIMONIALS = [
+  { client: "Jane & Mark", event: "Wedding", feedback: "Bloom exceeded every expectation. Magical night.", rating: 5 },
+  { client: "Luxury Brand Co", event: "Product Launch", feedback: "Perfect execution. Our guests are still talking about it.", rating: 5 },
+  { client: "Sarah's 50th", event: "Birthday Gala", feedback: "Best party ever. Worth every penny.", rating: 5 },
+]
+
+const PACKAGES = [
+  { name: "Full Service", desc: "Complete planning from concept to execution", features: ["Venue sourcing", "All décor", "Catering", "Entertainment", "Photography", "Day-of coordination"] },
+  { name: "Day-Of", desc: "On-site management only", features: ["Timeline coordination", "Vendor management", "Guest flow", "Troubleshooting", "Timeline adherence"] },
+  { name: "Partial", desc: "Pick your services", features: ["Venue + catering", "Décor only", "Entertainment + AV", "Photography package", "Florals design"] },
+]
+
+export default function BloomEventsPage() {
+  const [activeTab, setActiveTab] = useState("Weddings")
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const { scrollYProgress } = useScroll()
+  const parallaxY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"])
 
   return (
-    <div className="premium-theme bg-[#0a0a0a] text-[#ef4444] min-h-screen selection:bg-red-600 selection:text-white font-sans overflow-x-hidden">
-      
-      {/* Background HUD Layers */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[45vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase">
-           IRON_X
+    <div style={{ background: "#fff", color: "#1e293b" }}>
+      {/* Hero Parallax */}
+      <motion.section style={{ y: parallaxY }} className="relative h-screen flex items-center justify-center overflow-hidden">
+        <Image
+          src="https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=1400"
+          alt="luxury event"
+          fill
+          className="object-cover brightness-75"
+        />
+        <div className="relative z-10 text-center px-6">
+          <Reveal>
+            <h1 className="text-7xl md:text-8xl font-black mb-6 text-white drop-shadow-lg">BLOOM EVENTS</h1>
+          </Reveal>
+          <Reveal delay={0.2}>
+            <p className="text-2xl text-white mb-8 drop-shadow-md">Luxury Event Planning for Unforgettable Moments</p>
+          </Reveal>
+          <Reveal delay={0.4}>
+            <MagneticBtn className="px-12 py-4 text-lg font-bold text-black" style={{ background: "#d4af37", border: "none", cursor: "pointer" }} onClick={() => setDialogOpen(true)}>
+              PLAN YOUR EVENT
+            </MagneticBtn>
+          </Reveal>
         </div>
-        <div className="absolute inset-0 bg-[#0a0a0a]/40 backdrop-blur-[2px]" />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.05] mix-blend-screen" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#0a0a0a_100%)] opacity-80" />
-      </div>
+      </motion.section>
 
-      {/* Editorial HUD Nav */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-8 md:p-12 flex justify-between items-center bg-black/40 backdrop-blur-3xl border-b border-red-500/10 font-mono">
-        <div className="flex gap-12 items-center">
-           <button onClick={() => setView("iron")} className="text-xl font-black italic tracking-tighter hover:text-white transition-colors flex items-center gap-4 text-red-500">
-              IRON_X&trade;
-           </button>
-           <div className="hidden lg:flex gap-8 text-[10px] font-black uppercase tracking-widest opacity-20 italic text-white">
-              Status: Kinetic_Sync_Active
-              <span className="text-white">Ref: 0x119</span>
-           </div>
-        </div>
-        <div className="hidden md:flex gap-12 text-[10px] font-black uppercase tracking-[0.4em] opacity-30 text-white">
-           <button onClick={() => setView("iron")} className={`hover:opacity-100 transition-opacity ${view === 'iron' ? 'text-white opacity-100 underline decoration-white underline-offset-8 italic' : ''}`}>THE_IRON</button>
-           <button onClick={() => setView("logic")} className={`hover:opacity-100 transition-opacity ${view === 'logic' ? 'text-white opacity-100 underline decoration-white underline-offset-8 italic' : ''}`}>THE_LOGIC</button>
-        </div>
-        <div className="flex items-center gap-8">
-           <Search className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer text-white" />
-           <Menu className="w-5 h-5 opacity-40 hover:opacity-100 cursor-pointer text-white" />
-        </div>
-      </nav>
-
-      <AnimatePresence mode="wait">
-        
-        {/* THE IRON VIEW (LANDING) */}
-        {view === "iron" && (
-          <motion.div key="iron" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-48 pb-32 px-12 max-w-[1800px] mx-auto min-h-screen flex flex-col justify-center relative z-10">
-             <header className="mb-24 border-b border-red-500/20 pb-12 flex flex-col md:flex-row justify-between items-end gap-12">
-                <div>
-                   <span className="text-[10px] uppercase font-black tracking-[1em] opacity-40 mb-4 block underline decoration-red-500/10 underline-offset-8 italic font-mono text-red-400">Kinetic_Capture // Series_119</span>
-                   <h1 className="text-7xl md:text-[12vw] font-black italic uppercase tracking-tighter leading-[0.75] text-white">NO. <br/> <span className="bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-white">LIMITS.</span></h1>
-                </div>
-                <div className="text-right flex flex-col items-end text-white">
-                   <div className="text-3xl font-black mb-4 tracking-tighter uppercase opacity-10 italic font-mono">Performance_Sync</div>
-                   <div className="w-64 h-[2px] bg-white/5 rounded-none overflow-hidden">
-                      <motion.div animate={{ width: ['20%', '90%', '40%', '75%'] }} transition={{ duration: 4, repeat: Infinity }} className="h-full bg-red-500" />
-                   </div>
-                </div>
-             </header>
-
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {PROGRAMS.map((p, i) => (
-                  <motion.div 
-                    key={p.id} initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                    className="group relative h-[60vh] rounded-none overflow-hidden border border-red-500/10 hover:border-red-500/40 transition-all cursor-pointer shadow-2xl bg-white/5"
-                    onClick={() => { setActiveItem(i); setView("program"); }}
-                  >
-                     <Image src={p.img} alt={p.title} fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[2s] group-hover:scale-110" />
-                     <div className="absolute inset-0 bg-red-500/10 group-hover:bg-transparent transition-colors duration-1000" />
-                     <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                     
-                     <div className="absolute inset-10 flex flex-col justify-between">
-                        <div className="flex justify-between items-start">
-                           <div className="p-4 bg-white/10 border border-white/20 rounded-none opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Plus className="w-5 h-5 text-white" />
-                           </div>
-                           <div className="text-[10px] font-black uppercase tracking-widest opacity-20 italic text-red-400">PROGRAM_0x{i+119}</div>
-                        </div>
-                        <div>
-                           <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-2 block italic text-red-300">{p.cat} // {p.value}</span>
-                           <h3 className="text-5xl font-black italic uppercase tracking-tighter leading-none text-white transition-all group-hover:tracking-widest">{p.title}</h3>
-                        </div>
-                     </div>
-                  </motion.div>
-                ))}
-             </div>
-          </motion.div>
-        )}
-
-        {/* THE PROGRAM VIEW (DETAIL) */}
-        {view === "program" && (
-          <motion.div key="program" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 min-h-screen">
-             <button onClick={() => setView("iron")} className="fixed top-12 left-12 z-[60] bg-white text-black p-5 rounded-none hover:scale-110 transition-transform shadow-2xl">
-                <X className="w-6 h-6" />
-             </button>
-
-             <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen pt-24 lg:pt-0">
-                <div className="lg:col-span-12 relative flex items-center justify-center p-8 md:p-32 overflow-hidden h-screen bg-[#0a0a0a]">
-                   <div className="absolute inset-0 opacity-10">
-                      <Image src={PROGRAMS[activeItem].img} alt="Background" fill className="object-cover grayscale" />
-                   </div>
-                   <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-[40vw] font-black opacity-[0.03] select-none pointer-events-none italic tracking-tighter text-center uppercase text-red-500 font-sans">
-                      CORE
-                   </div>
-                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#0a0a0a_100%)]" />
-                   
-                   <div className="max-w-[1500px] w-full grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10 font-sans text-white">
-                      <motion.div initial={{ scale: 1.1, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1 }} className="relative aspect-square w-full rounded-none overflow-hidden border border-red-500/20 group bg-neutral-900 shadow-2xl">
-                         <Image src={PROGRAMS[activeItem].img} alt="Spec" fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-[3s] opacity-80" priority />
-                         <div className="absolute top-12 left-12 p-4 bg-black/60 backdrop-blur-3xl rounded-none border-2 border-white/10 z-20">
-                            <Layers className="w-6 h-6 text-red-400 animate-pulse" />
-                         </div>
-                      </motion.div>
-
-                      <div className="flex flex-col justify-center space-y-12">
-                         <div className="space-y-6">
-                            <span className="text-[10px] uppercase tracking-[1em] font-black opacity-30 mb-8 block underline decoration-white decoration-4 underline-offset-8 italic text-red-400 font-mono">Iron_Sync // {PROGRAMS[activeItem].cat}</span>
-                            <h1 className="text-7xl md:text-[8vw] font-black italic uppercase tracking-tighter leading-none text-white">{PROGRAMS[activeItem].title}</h1>
-                            <div className="text-4xl font-black italic tracking-tighter opacity-10 italic text-red-600">State: {PROGRAMS[activeItem].value}</div>
-                         </div>
-
-                         <p className="text-3xl font-light italic leading-relaxed uppercase tracking-tight opacity-40 text-white leading-relaxed">
-                            Structural allocation for mission {PROGRAMS[activeItem].title}. System integrity at 100%. Thermal load nominal at 32C. Every coordinate synchronized.
-                         </p>
-
-                         <div className="grid grid-cols-2 gap-12 py-12 border-y border-white/10 font-mono text-white/60">
-                            {[
-                              { icon: <Globe className="w-5 h-5" />, l: "Region", v: "Global_East" },
-                              { icon: <Zap className="w-5 h-5" />, l: "Logic", v: "Phase_Shift" },
-                              { icon: <Shield className="w-5 h-5" />, l: "Security", v: "High_Impact" },
-                              { icon: <Activity className="w-5 h-5" />, l: "Sync", v: "Active" },
-                            ].map((s, i) => (
-                              <div key={i} className="flex gap-6 items-center">
-                                 <div className="opacity-20 text-red-400">{s.icon}</div>
-                                 <div className="text-left">
-                                    <div className="text-[10px] font-black opacity-30 uppercase tracking-widest mb-1 italic text-white">{s.l}</div>
-                                    <div className="text-sm font-black uppercase italic tracking-tighter text-white">{s.v}</div>
-                                 </div>
+      {/* Event Type Tabs */}
+      <section className="py-24 px-6 max-w-7xl mx-auto">
+        <Reveal>
+          <h2 className="text-5xl font-black mb-12 text-center">EVENT TYPES</h2>
+        </Reveal>
+        <Tabs defaultValue="Weddings" className="w-full">
+          <TabsList className="flex justify-center gap-2 mb-12 bg-transparent flex-wrap">
+            {Object.keys(EVENT_TYPES).map((type) => (
+              <TabsTrigger key={type} value={type} className="px-6 py-2 font-bold text-lg border border-slate-300 data-[state=active]:bg-amber-100 data-[state=active]:text-black data-[state=active]:border-amber-400">
+                {type}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          {Object.entries(EVENT_TYPES).map(([type, data]) => (
+            <TabsContent key={type} value={type}>
+              <Reveal>
+                <Card className="bg-white border-2 border-slate-200">
+                  <CardContent className="p-8">
+                    <div className="grid md:grid-cols-2 gap-12">
+                      <div>
+                        <h3 className="text-4xl font-black mb-6">{type}</h3>
+                        <p className="text-lg text-slate-600 mb-8">Create memorable moments with our expert coordination and design.</p>
+                        <Badge className="px-4 py-2 text-lg font-bold" style={{ background: "#d4af37", color: "#1e293b" }}>
+                          {data.price}
+                        </Badge>
+                      </div>
+                      <Carousel className="w-full">
+                        <CarouselContent>
+                          {data.gallery.map((img, i) => (
+                            <CarouselItem key={i}>
+                              <div className="relative h-96 rounded-lg overflow-hidden">
+                                <Image src={img} alt={`${type} ${i}`} fill className="object-cover" />
                               </div>
-                            ))}
-                         </div>
+                            </CarouselItem>
+                          ))}
+                        </CarouselContent>
+                        <CarouselPrevious />
+                        <CarouselNext />
+                      </Carousel>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Reveal>
+            </TabsContent>
+          ))}
+        </Tabs>
+      </section>
 
-                         <div className="flex gap-6 pt-8 font-mono">
-                            <button onClick={() => setView("iron")} className="flex-grow py-8 bg-red-600 text-white font-black uppercase text-xs tracking-[1em] hover:bg-red-500 transition-all shadow-2xl">
-                               Return_to_Iron
-                            </button>
-                            <button className="px-12 py-8 border border-white/20 text-[10px] font-black uppercase tracking-[0.5em] hover:scale-105 transition-all text-white">
-                               PDF_Spec
-                            </button>
-                         </div>
+      {/* Services Grid */}
+      <section className="py-24 px-6 max-w-7xl mx-auto">
+        <Reveal>
+          <h2 className="text-5xl font-black mb-12 text-center">OUR SERVICES</h2>
+        </Reveal>
+        <div className="grid md:grid-cols-2 gap-8">
+          {SERVICES.map((s, i) => (
+            <Reveal key={s.name} delay={i * 0.1}>
+              <Card className="bg-amber-50 border-2 border-amber-200 hover:border-amber-400 transition-colors">
+                <CardContent className="p-8">
+                  <h3 className="text-2xl font-black mb-3" style={{ color: "#d4af37" }}>{s.name}</h3>
+                  <p className="text-slate-600">{s.desc}</p>
+                </CardContent>
+              </Card>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* Stats */}
+      <section className="py-24 px-6 max-w-7xl mx-auto">
+        <div className="grid md:grid-cols-4 gap-8 text-center">
+          {[
+            { num: 500, label: "Events Planned" },
+            { num: 12, label: "Years of Excellence", suffix: "" },
+            { num: 4.9, label: "Rating", suffix: "★" },
+            { num: 98, label: "Exceeded Expectations", suffix: "%" },
+          ].map((stat, i) => (
+            <Reveal key={i} delay={i * 0.1}>
+              <div>
+                <div className="text-5xl font-black mb-2" style={{ color: "#d4af37" }}>
+                  <Counter target={Math.floor(stat.num)} suffix={stat.suffix || ""} />
+                </div>
+                <p className="text-slate-600">{stat.label}</p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* Testimonials Carousel */}
+      <section className="py-24 px-6 max-w-7xl mx-auto bg-slate-100 rounded-lg">
+        <Reveal>
+          <h2 className="text-5xl font-black mb-12 text-center">CLIENT TESTIMONIALS</h2>
+        </Reveal>
+        <Carousel className="w-full">
+          <CarouselContent>
+            {TESTIMONIALS.map((t, i) => (
+              <CarouselItem key={i} className="md:basis-1/2">
+                <Reveal>
+                  <Card className="bg-white border-2 border-amber-200">
+                    <CardContent className="p-8">
+                      <div className="flex items-center gap-2 mb-4">
+                        {[...Array(t.rating)].map((_, j) => (
+                          <span key={j} className="text-2xl">★</span>
+                        ))}
                       </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
+                      <p className="text-lg text-slate-700 mb-4 italic">"{t.feedback}"</p>
+                      <p className="font-black">{t.client}</p>
+                      <p className="text-sm text-slate-500">{t.event}</p>
+                    </CardContent>
+                  </Card>
+                </Reveal>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious />
+          <CarouselNext />
+        </Carousel>
+      </section>
 
-        {/* THE LOGIC VIEW (INFO) */}
-        {view === "logic" && (
-          <motion.div key="logic" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative z-10 pt-48 pb-32 px-12 max-w-7xl mx-auto min-h-screen flex flex-col justify-center">
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center text-white">
-                <div className="space-y-16">
-                   <span className="text-[10px] uppercase font-black tracking-[1.5em] opacity-30 block underline decoration-red-400 decoration-2 underline-offset-8 italic font-mono text-red-400">The_IronX_Protocol</span>
-                   <h2 className="text-7xl md:text-[10vw] font-black italic tracking-tighter leading-none text-white uppercase font-sans">The <br/> Truth.</h2>
-                   <p className="text-3xl md:text-4xl font-light italic opacity-60 leading-relaxed uppercase tracking-tight text-white/60 font-sans">
-                      We treat architecture as code. Every structure is a function of its environmental variables and tectonic intent. 100% precision. Zero noise.
-                   </p>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t border-white/10 font-mono text-red-400">
-                      {[
-                        { icon: <Sparkles className="w-6 h-6" />, t: "Adaptive Flow", v: "Dynamic Load Sync" },
-                        { icon: <Plus className="w-6 h-6" />, t: "Structural Sync", v: "Deep_Material_ID" },
-                      ].map((item, i) => (
-                        <div key={i} className="flex gap-8 group">
-                           <div className="w-16 h-16 rounded-none border border-red-500 flex items-center justify-center text-red-500 group-hover:bg-red-500 group-hover:text-black transition-all shadow-xl">
-                              {item.icon}
-                           </div>
-                           <div className="text-left">
-                              <h4 className="text-2xl font-black uppercase italic tracking-tighter text-white leading-none mb-2 font-sans">{item.t}</h4>
-                              <p className="text-[10px] opacity-30 uppercase tracking-[0.3em] font-black leading-relaxed text-red-400/40">{item.v}</p>
-                           </div>
-                        </div>
-                      ))}
-                   </div>
-                </div>
-                <div className="relative aspect-square bg-red-900/10 rounded-none p-12 overflow-hidden border border-red-500/20 group shadow-2xl">
-                   <Image src="https://images.unsplash.com/photo-1541829070764-84a7d30dee62?q=80&w=1000&auto=format&fit=crop" alt="The Archive" fill className="object-cover opacity-20 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-[3s]" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                   <div className="absolute inset-x-0 bottom-12 flex justify-center font-mono">
-                      <div className="px-12 py-6 bg-red-600 text-white text-[10px] font-black uppercase tracking-widest italic animate-bounce cursor-pointer hover:bg-red-500 transition-all">
-                         Establish_Handshake
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
+      {/* Packages */}
+      <section className="py-24 px-6 max-w-7xl mx-auto">
+        <Reveal>
+          <h2 className="text-5xl font-black mb-12 text-center">PACKAGES</h2>
+        </Reveal>
+        <div className="grid md:grid-cols-3 gap-8">
+          {PACKAGES.map((p, i) => (
+            <Reveal key={p.name} delay={i * 0.1}>
+              <Card className={`border-2 transition-transform hover:scale-105 ${i === 0 ? "border-amber-400 bg-amber-50" : "border-amber-200 bg-white"}`}>
+                <CardContent className="p-8">
+                  <h3 className="text-2xl font-black mb-2" style={{ color: "#d4af37" }}>{p.name}</h3>
+                  <p className="text-slate-600 mb-6">{p.desc}</p>
+                  <ul className="space-y-3">
+                    {p.features.map((f) => (
+                      <li key={f} className="flex items-center gap-3">
+                        <div className="w-2 h-2 rounded-full" style={{ background: "#d4af37" }} />
+                        <span className="text-slate-700">{f}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            </Reveal>
+          ))}
+        </div>
+      </section>
 
-      </AnimatePresence>
+      {/* FAQ */}
+      <section className="py-24 px-6 max-w-4xl mx-auto">
+        <Reveal>
+          <h2 className="text-5xl font-black mb-12 text-center">FAQS</h2>
+        </Reveal>
+        <Accordion type="single" collapsible>
+          {[
+            { q: "What's the typical deposit?", a: "50% upfront to secure dates and begin planning." },
+            { q: "How much lead time do you need?", a: "Ideally 3-6 months for weddings, 4 weeks for corporate events." },
+            { q: "Do you recommend vendors?", a: "Yes, we have trusted partnerships with the best in the industry." },
+            { q: "Can you handle international events?", a: "Absolutely, we've coordinated events across Europe." },
+            { q: "Are there hidden fees?", a: "No, we provide transparent, detailed quotes upfront." },
+          ].map((item, i) => (
+            <AccordionItem key={i} value={`item-${i}`} className="border-b-2 border-amber-200">
+              <AccordionTrigger className="hover:text-amber-600">{item.q}</AccordionTrigger>
+              <AccordionContent className="text-slate-600">{item.a}</AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </section>
 
-      {/* Global Status HUD */}
-      <footer className="fixed bottom-0 left-0 w-full p-8 md:p-12 z-50 flex justify-between items-end mix-blend-difference pointer-events-none opacity-20 text-[8px] uppercase font-black tracking-[0.5em] italic text-red-400 leading-none font-mono">
-         <div className="flex gap-12 text-red-400">
-            <span>IronX_OS_Alpha</span>
-            <span>Uptime: 99.9%</span>
-         </div>
-         <div className="flex gap-4 items-end text-red-400">
-            <div className="text-right leading-tight italic">
-               Archival_Control <br /> v4.0.119
-            </div>
-            <div className="flex gap-[4px] h-4">
-               {[1, 2, 3, 4, 5].map(i => <div key={i} className={`w-[2px] h-full bg-red-500 opacity-${i*20}`}></div>)}
-            </div>
-         </div>
-      </footer>
+      {/* CTA */}
+      <section className="py-24 px-6 text-center">
+        <Reveal>
+          <h2 className="text-5xl font-black mb-6">Let's Create Magic</h2>
+        </Reveal>
+        <Reveal delay={0.2}>
+          <MagneticBtn className="px-16 py-5 text-xl font-bold text-black" style={{ background: "#d4af37", border: "none", cursor: "pointer" }} onClick={() => setDialogOpen(true)}>
+            SCHEDULE CONSULTATION
+          </MagneticBtn>
+        </Reveal>
+      </section>
 
-      <style>{`
-        ::-webkit-scrollbar { width: 0px; }
-      `}</style>
+      {/* Inquiry Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="bg-white border-2 border-amber-300">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black" style={{ color: "#d4af37" }}>EVENT INQUIRY</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <input type="text" placeholder="Full Name" className="w-full px-4 py-2 rounded border-2 border-amber-200 text-black placeholder:text-gray-500" />
+            <input type="email" placeholder="Email" className="w-full px-4 py-2 rounded border-2 border-amber-200 text-black placeholder:text-gray-500" />
+            <input type="tel" placeholder="Phone" className="w-full px-4 py-2 rounded border-2 border-amber-200 text-black placeholder:text-gray-500" />
+            <select className="w-full px-4 py-2 rounded border-2 border-amber-200 text-black bg-white">
+              <option>Event Type...</option>
+              <option>Wedding</option>
+              <option>Corporate</option>
+              <option>Gala</option>
+              <option>Birthday</option>
+              <option>Brand Launch</option>
+            </select>
+            <textarea placeholder="Tell us about your vision" rows={4} className="w-full px-4 py-2 rounded border-2 border-amber-200 text-black placeholder:text-gray-500" />
+            <button className="w-full py-3 font-black rounded text-black" style={{ background: "#d4af37" }}>
+              REQUEST CONSULTATION
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
-  );
+  )
 }
