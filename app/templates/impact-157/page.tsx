@@ -1,234 +1,575 @@
 "use client";
 
-import { motion, useScroll, useTransform, useSpring, useMotionValue } from "framer-motion";
-import { useRef, useEffect, useState } from "react";
+import { motion, useScroll, useTransform, useInView, AnimatePresence, useMotionValue, useSpring } from "framer-motion";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Origami, Zap, Shield, Activity, Menu, Search, ArrowRight, Layers } from "lucide-react";
-import "../premium.css";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { Star, TrendingUp, Users, MessageSquare, Zap, Award, ArrowRight, Globe, Heart, Share2, Eye } from "lucide-react";
 
-const PIECES = [
-  { id: 1, title: "CELESTIAL_BAND", cat: "18K Gold", value: "Verified", img: "https://images.unsplash.com/photo-1598560943141-8f566498ec00?auto=format&fit=crop&q=80&w=1500" },
-  { id: 2, title: "VOID_PENDANT", cat: "Diamond", value: "Active", img: "https://images.unsplash.com/photo-1515562141207-7a88fb0ce33e?auto=format&fit=crop&q=80&w=1500" },
-  { id: 3, title: "NEON_CUFF", cat: "Platinum", value: "Locked", img: "https://images.unsplash.com/photo-1535639818669-c059d2f038e6?auto=format&fit=crop&q=80&w=1500" },
-];
-
-function TextScramble({ text }: { text: string }) {
-  const [display, setDisplay] = useState(text);
-  const chars = "!<>-_\\/[]{}—=+*^?#________";
-  
-  useEffect(() => {
-    let iteration = 0;
-    const interval = setInterval(() => {
-      setDisplay(prev => 
-        text.split("").map((char, index) => {
-          if (index < iteration) return text[index];
-          return chars[Math.floor(Math.random() * chars.length)];
-        }).join("")
-      );
-      if (iteration >= text.length) clearInterval(interval);
-      iteration += 1/3;
-    }, 30);
-    return () => clearInterval(interval);
-  }, [text]);
-
-  return <span>{display}</span>;
+function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-60px" });
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 24 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.55, delay, ease: [0.25, 0.46, 0.45, 0.94] }}
+    >
+      {children}
+    </motion.div>
+  );
 }
 
-export default function AurumJewelrySPA() {
+function Counter({ target, suffix = "", prefix = "" }: { target: number; suffix?: string; prefix?: string }) {
+  const [count, setCount] = useState(0);
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true });
+  useEffect(() => {
+    if (!inView) return;
+    const step = target / 90;
+    const t = setInterval(() =>
+      setCount((c) => {
+        const n = c + step;
+        if (n >= target) {
+          clearInterval(t);
+          return target;
+        }
+        return n;
+      }),
+      16
+    );
+    return () => clearInterval(t);
+  }, [inView, target]);
+  return (
+    <span ref={ref}>
+      {prefix}
+      {Math.floor(count).toLocaleString()}
+      {suffix}
+    </span>
+  );
+}
+
+function MagneticBtn({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const sx = useSpring(x, { stiffness: 400, damping: 20 });
+  const sy = useSpring(y, { stiffness: 400, damping: 20 });
+  const ref = useRef<HTMLButtonElement>(null);
+  const handleMouse = (e: React.MouseEvent) => {
+    const r = ref.current!.getBoundingClientRect();
+    x.set((e.clientX - r.left - r.width / 2) * 0.3);
+    y.set((e.clientY - r.top - r.height / 2) * 0.3);
+  };
+  return (
+    <motion.button
+      ref={ref}
+      style={{ x: sx, y: sy }}
+      onMouseMove={handleMouse}
+      onMouseLeave={() => {
+        x.set(0);
+        y.set(0);
+      }}
+      className={`cursor-pointer ${className}`}
+    >
+      {children}
+    </motion.button>
+  );
+}
+
+const metricCards = [
+  { icon: Eye, label: "Subscribers", value: "2.4M", color: "#f97316" },
+  { icon: TrendingUp, label: "Monthly Views", value: "18.5M", color: "#ec4899" },
+  { icon: Heart, label: "Engagement Rate", value: "8.2%", color: "#f97316" },
+  { icon: Globe, label: "Global Reach", value: "145 Countries", color: "#ec4899" },
+  { icon: Award, label: "ROI Generated", value: "4.2x", color: "#f97316" },
+  { icon: Users, label: "Collaborations", value: "320+", color: "#ec4899" },
+];
+
+const platformData = [
+  {
+    name: "Instagram",
+    engagement: "7.8%",
+    campaigns: ["Feed Posts", "Reels", "Stories", "IGTV"],
+    caseStudy: { client: "Fashion Brand XL", results: "340% engagement lift", image: "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&q=80&w=1500" }
+  },
+  {
+    name: "TikTok",
+    engagement: "9.4%",
+    campaigns: ["Trending Challenges", "Duets", "Stitches", "Live Streams"],
+    caseStudy: { client: "Beauty Startup", results: "520% brand awareness growth", image: "https://images.unsplash.com/photo-1611087437281-687acc636f8c?auto=format&fit=crop&q=80&w=1500" }
+  },
+  {
+    name: "YouTube",
+    engagement: "6.2%",
+    campaigns: ["Long Form", "Shorts", "Sponsorships", "Collaborations"],
+    caseStudy: { client: "Tech Company", results: "850K subscriber growth", image: "https://images.unsplash.com/photo-1618519266859-3794278e47e3?auto=format&fit=crop&q=80&w=1500" }
+  },
+  {
+    name: "LinkedIn",
+    engagement: "5.9%",
+    campaigns: ["Thought Leadership", "B2B Partnerships", "Industry Insights"],
+    caseStudy: { client: "SaaS Leader", results: "12M impressions/month", image: "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&q=80&w=1500" }
+  },
+  {
+    name: "Podcast",
+    engagement: "12.1%",
+    campaigns: ["Sponsored Episodes", "Guest Appearances", "Ad Reads"],
+    caseStudy: { client: "Premium Brand", results: "75K new listeners", image: "https://images.unsplash.com/photo-1624997997946-a1bc658deed3?auto=format&fit=crop&q=80&w=1500" }
+  },
+  {
+    name: "Newsletter",
+    engagement: "14.3%",
+    campaigns: ["Sponsored Content", "Product Launches", "Exclusive Offers"],
+    caseStudy: { client: "Digital Creator", results: "32% conversion rate", image: "https://images.unsplash.com/photo-1614008375890-cb53b6c5f8f5?auto=format&fit=crop&q=80&w=1500" }
+  },
+];
+
+const creators = [
+  { name: "Sophia Chen", niche: "Fashion & Lifestyle", followers: "2.3M", engagement: "8.4%", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=500" },
+  { name: "Marcus Johnson", niche: "Tech & Innovation", followers: "1.8M", engagement: "7.2%", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=500" },
+  { name: "Elena Rodriguez", niche: "Wellness & Beauty", followers: "3.1M", engagement: "9.1%", image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=500" },
+  { name: "David Park", niche: "Gaming & Esports", followers: "2.7M", engagement: "10.3%", image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=500" },
+  { name: "Isabella Santos", niche: "Food & Travel", followers: "1.5M", engagement: "11.2%", image: "https://images.unsplash.com/photo-1517492712202-14dd9538aa97?auto=format&fit=crop&q=80&w=500" },
+  { name: "James Liu", niche: "Fitness & Lifestyle", followers: "2.9M", engagement: "8.7%", image: "https://images.unsplash.com/photo-1506026613408-eca07ce68773?auto=format&fit=crop&q=80&w=500" },
+];
+
+const campaigns = [
+  { name: "Summer Collection Launch", brand: "Fashion Brand XL", roas: "3.8x", image: "https://images.unsplash.com/photo-1572635196237-14b3f281503f?auto=format&fit=crop&q=80&w=800" },
+  { name: "Product Release Event", brand: "Tech Innovators", roas: "4.2x", image: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&q=80&w=800" },
+  { name: "Holiday Campaign", brand: "Luxury Goods Inc", roas: "5.1x", image: "https://images.unsplash.com/photo-1489749798305-4fea3ba63d60?auto=format&fit=crop&q=80&w=800" },
+  { name: "Wellness Initiative", brand: "Health & Wellness Co", roas: "3.5x", image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&q=80&w=800" },
+];
+
+const faqData = [
+  { q: "Are creators exclusive to one brand?", a: "No. Our creators maintain their independence while working on your campaigns. Exclusive partnerships are available upon negotiation." },
+  { q: "What are typical creator rates?", a: "Rates vary by platform, follower count, and engagement metrics. Entry-level starts at $2K-$5K per post, scaling to $50K+ for top-tier creators." },
+  { q: "How are contracts structured?", a: "We offer flexible models: flat fees, revenue-share, or hybrid arrangements. All terms are negotiated and customized to campaign objectives." },
+  { q: "Is FTC compliance handled?", a: "Yes. All campaigns include FTC-compliant disclosures (#ad, #sponsored). We audit all content before publication." },
+];
+
+export default function LuminartCreativePlatform() {
+  const [selectedCreator, setSelectedCreator] = useState<(typeof creators)[0] | null>(null);
+  const [selectedCampaign, setSelectedCampaign] = useState<(typeof campaigns)[0] | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: containerRef });
-  
-  const yHero = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
-  const heroScale = useTransform(scrollYProgress, [0, 0.5], [1, 1.15]);
-  
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-  const springX = useSpring(mouseX, { stiffness: 40, damping: 20 });
-  const springY = useSpring(mouseY, { stiffness: 40, damping: 20 });
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      mouseX.set(e.clientX - window.innerWidth / 2);
-      mouseY.set(e.clientY - window.innerHeight / 2);
-    };
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, [mouseX, mouseY]);
+  const heroY = useTransform(scrollYProgress, [0, 0.3], [0, 100]);
 
   return (
-    <div ref={containerRef} className="premium-theme bg-[#0D0A09] text-amber-500 min-h-screen font-serif selection:bg-amber-800 selection:text-white overflow-hidden relative uppercase text-center">
-      
-      {/* GOLD GLOW & NOISE */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#0D0A09_100%)] opacity-80" />
-        <motion.div 
-           style={{ x: springX, y: springY }}
-           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] bg-amber-600 opacity-[0.03] blur-[150px] rounded-full mix-blend-screen" 
-        />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.15] mix-blend-soft-light" />
-      </div>
+    <div
+      ref={containerRef}
+      style={{ overflowX: "hidden", scrollBehavior: "smooth" }}
+      className="min-h-screen bg-[#080810] text-white selection:bg-orange-600"
+    >
+      {/* Hero Section */}
+      <section className="relative h-screen flex items-center justify-center px-6 md:px-12 overflow-hidden pt-20">
+        <motion.div style={{ y: heroY }} className="absolute inset-0 z-0">
+          <div className="absolute inset-0 bg-gradient-to-br from-orange-600/20 via-pink-600/10 to-transparent" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(249,115,22,0.15),transparent_50%)]" />
+        </motion.div>
 
-      {/* HEADER */}
-      <header className="fixed top-0 left-0 w-full px-6 md:px-12 py-10 flex justify-between items-center z-50 bg-[#0D0A09]/50 backdrop-blur-3xl border-b border-amber-500/10">
-        <Link href="/" className="font-light text-2xl tracking-[0.4em] text-white flex items-center gap-4 italic uppercase text-center md:text-left">
-           AURUM<span className="text-amber-500 font-black">_OS</span>
-        </Link>
-        
-        <nav className="hidden lg:flex gap-16 font-black text-[10px] uppercase tracking-[0.6em] text-white/30 text-center">
-            <Link href="#" className="hover:text-amber-500 transition-colors group">
-               Atelier<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-amber-500 italic">.</span>
-            </Link>
-            <Link href="#" className="hover:text-amber-500 transition-colors group">
-               Boutique<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-amber-500 italic">.</span>
-            </Link>
-            <Link href="#" className="hover:text-amber-500 transition-colors group">
-               Heritage<span className="inline-block w-0 group-hover:w-3 transition-all overflow-hidden text-amber-500 italic">.</span>
-            </Link>
-        </nav>
-        
-        <div className="flex items-center gap-10">
-           <button className="bg-amber-600 text-white px-12 py-4 font-black text-[10px] uppercase tracking-[0.4em] hover:bg-white hover:text-black transition-all shadow-xl">
-              Reserve_Piece
-           </button>
-           <Menu className="w-6 h-6 text-amber-500 cursor-pointer" />
-        </div>
-      </header>
-
-      {/* HERO SECTION */}
-      <section className="relative h-screen flex flex-col justify-center items-center px-6 text-center z-10 pt-20 overflow-hidden text-center">
-         <motion.div style={{ scale: heroScale, y: yHero }} className="absolute inset-0 z-0">
-            <Image src="https://images.unsplash.com/photo-1515562141207-7a88fb0ce33e?auto=format&fit=crop&q=80&w=2500" alt="Jewelry" fill className="object-cover opacity-30 grayscale contrast-125 text-center" priority />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0D0A09] via-transparent to-[#0D0A09]/60" />
-         </motion.div>
-         
-         <div className="relative z-10 max-w-7xl w-full text-center">
-            <motion.div 
-               initial={{ opacity: 0, scale: 0.95 }}
-               animate={{ opacity: 1, scale: 1 }}
-               transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
+        <Reveal delay={0}>
+          <div className="relative z-10 max-w-5xl text-center">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8 }}
+              className="mb-8"
             >
-               <div className="inline-flex items-center gap-4 font-black text-[10px] uppercase tracking-[1em] text-amber-500/50 mb-16 border-l-2 border-amber-600 pl-10 italic font-mono text-center">
-                  Luxury_Sync // 0157_Alpha
-               </div>
-               
-               <h1 className="text-7xl md:text-[12vw] font-light italic uppercase leading-[0.8] tracking-tighter mb-20 text-white drop-shadow-2xl text-center">
-                  <TextScramble text="ETERNAL." /><br/>
-                  <span className="text-transparent" style={{ WebkitTextStroke: "1px rgba(245,158,11,0.6)" }}>REFINED.</span>
-               </h1>
-               
-               <p className="text-xl md:text-3xl font-light italic text-white/30 max-w-3xl mx-auto mb-24 leading-relaxed uppercase tracking-widest text-center">
-                  Structural elegance meets tectonic intent. Architecting the future of high jewelry with precision and gold.
-               </p>
-               
-               <div className="flex flex-col md:flex-row gap-16 justify-center items-center font-mono text-center">
-                  <div className="flex items-center gap-8 group cursor-pointer text-center">
-                     <div className="w-20 h-px bg-amber-600/30 group-hover:w-32 transition-all" />
-                     <span className="text-[10px] font-black uppercase tracking-[0.8em] text-amber-500">Explore_Atelier</span>
-                  </div>
-                  <div className="hidden md:block w-px h-16 bg-white/5" />
-                  <div className="font-black text-[9px] uppercase tracking-[0.6em] text-white/10 italic text-center">
-                     Geneva // New York // Tokyo
-                  </div>
-               </div>
+              <Badge className="bg-orange-600/20 text-orange-400 border-orange-600/30 px-4 py-2 font-mono text-xs">
+                INFLUENCER MARKETING PLATFORM
+              </Badge>
             </motion.div>
-         </div>
 
-         {/* Vault HUD */}
-         <div className="absolute right-12 bottom-12 flex flex-col items-end gap-4 font-black text-[8px] uppercase tracking-[0.8em] text-amber-500/20 hidden md:flex italic font-mono text-center">
-            <span>VAULT_SYNC: ACTIVE</span>
-            <div className="flex gap-1 h-12 items-end">
-               {[1, 2, 3, 4, 5].map(i => <motion.div key={i} animate={{ height: ['30%', '100%', '50%'] }} transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }} className="w-[1px] bg-amber-500" />)}
+            <h1 className="text-6xl md:text-7xl font-black mb-6 bg-gradient-to-r from-orange-400 via-pink-400 to-orange-400 bg-clip-text text-transparent">
+              LUMINARY
+            </h1>
+            <p className="text-xl md:text-2xl text-gray-300 mb-12 max-w-2xl mx-auto leading-relaxed">
+              Connect with authentic creators, amplify your brand, measure every impression with AI-powered insights
+            </p>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-12">
+              {metricCards.map((metric, i) => (
+                <Reveal key={i} delay={i * 0.05}>
+                  <motion.div
+                    whileHover={{ scale: 1.05, y: -5 }}
+                    transition={{ duration: 0.2 }}
+                    className="p-4 bg-white/5 border border-orange-600/20 rounded-lg backdrop-blur cursor-pointer hover:border-orange-600/50 transition-all duration-200"
+                  >
+                    <metric.icon className="w-6 h-6 mx-auto mb-2" style={{ color: metric.color }} />
+                    <div className="text-2xl font-black mb-1">{metric.value}</div>
+                    <div className="text-xs text-gray-400">{metric.label}</div>
+                  </motion.div>
+                </Reveal>
+              ))}
             </div>
-         </div>
-         
-         <div className="absolute left-12 bottom-12 hidden md:block text-center">
-            <div className="flex flex-col gap-2 text-[8px] font-black uppercase tracking-[0.4em] text-white/10 italic font-mono text-center">
-               <span>PURITY: 24K</span>
-               <span>SECURITY: L4</span>
-               <span>STATUS: SECURED</span>
-            </div>
-         </div>
+
+            <MagneticBtn className="px-8 py-4 bg-gradient-to-r from-orange-600 to-pink-600 rounded-lg font-black text-white transition-all duration-200 hover:shadow-lg hover:shadow-orange-600/50">
+              Start Your Campaign
+            </MagneticBtn>
+          </div>
+        </Reveal>
       </section>
 
-      {/* PIECES GRID */}
-      <section className="py-48 px-6 md:px-12 max-w-[1800px] mx-auto relative z-10 bg-[#0D0A09]">
-         <div className="flex flex-col md:flex-row justify-between items-end mb-40 border-b border-amber-500/10 pb-20 gap-16 text-center md:text-left">
-            <div>
-               <span className="text-[10px] font-black uppercase tracking-[2em] text-amber-600 mb-8 block italic font-mono text-center md:text-left">Jewelry_Manifest</span>
-               <h2 className="text-6xl md:text-9xl font-light italic uppercase tracking-tighter text-white leading-none text-center md:text-left">The <span className="text-amber-500">Aurum_</span></h2>
-            </div>
-            <div className="flex gap-16 text-[10px] font-black uppercase tracking-[0.6em] text-white/20 italic font-mono text-center md:text-left">
-               <span>Purity: [24K]</span>
-               <span>Records: [03]</span>
-            </div>
-         </div>
+      {/* Platform Tabs */}
+      <section className="py-20 px-6 md:px-12 max-w-7xl mx-auto">
+        <Reveal>
+          <div className="mb-16">
+            <h2 className="text-4xl md:text-5xl font-black mb-4">Platform Ecosystem</h2>
+            <p className="text-gray-400 max-w-xl">
+              Reach audiences across every major social platform with platform-optimized strategies
+            </p>
+          </div>
+        </Reveal>
 
-         <div className="grid grid-cols-1 md:grid-cols-3 gap-16 text-center">
-            {PIECES.map((p, i) => (
-                <motion.div 
-                   key={i} 
-                   initial={{ opacity: 0, y: 80 }}
-                   whileInView={{ opacity: 1, y: 0 }}
-                   viewport={{ once: true, margin: "-100px" }}
-                   transition={{ duration: 1.2, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
-                   className="group relative h-[85vh] bg-neutral-900 border border-white/5 overflow-hidden cursor-pointer hover:border-amber-500/40 transition-all text-center shadow-2xl"
-                >
-                    <Image src={p.img} alt={p.title} fill className="object-cover opacity-40 grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-1000 text-center" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0D0A09] via-transparent to-transparent opacity-95 text-center" />
-                    <div className="absolute inset-0 bg-amber-600/5 group-hover:bg-transparent transition-colors duration-700 text-center" />
-                    
-                    <div className="absolute inset-16 flex flex-col justify-between z-10 font-mono text-white text-center">
-                        <div className="flex justify-between items-start text-center">
-                           <div className="p-5 bg-white/5 border border-white/10 rounded-none group-hover:bg-amber-600 group-hover:text-black transition-all text-center shadow-xl">
-                              <Origami className="w-6 h-6 text-center" />
-                           </div>
-                           <div className="text-[10px] font-black uppercase tracking-[0.8em] text-amber-500/30 italic font-mono text-center">Ref_0x{i+157}</div>
-                        </div>
-                        
-                        <div className="text-center">
-                           <span className="text-[10px] uppercase tracking-[0.8em] text-amber-500 mb-8 block italic font-black font-mono text-center">{p.cat} // {p.value}</span>
-                           <h3 className="text-5xl md:text-6xl font-light italic uppercase tracking-tighter mb-16 text-white group-hover:text-amber-500 transition-colors leading-[0.8] text-center">{p.title}</h3>
-                           <div className="flex items-center gap-8 text-[10px] font-black uppercase tracking-[0.6em] opacity-0 group-hover:opacity-100 transition-all translate-y-10 group-hover:translate-y-0 text-white text-center justify-center font-mono">
-                              View_Specs <ArrowRight className="w-6 h-6 text-center" />
-                           </div>
-                        </div>
-                    </div>
-                </motion.div>
+        <Tabs defaultValue="Instagram" className="w-full">
+          <TabsList className="grid grid-cols-3 md:grid-cols-6 gap-2 bg-transparent p-0 h-auto">
+            {platformData.map((platform) => (
+              <TabsTrigger
+                key={platform.name}
+                value={platform.name}
+                className="px-4 py-3 bg-white/5 border border-orange-600/20 rounded-lg hover:bg-white/10 hover:border-orange-600/50 transition-all duration-200 cursor-pointer data-[state=active]:bg-orange-600 data-[state=active]:text-white data-[state=active]:border-orange-600"
+              >
+                <span className="text-sm font-bold">{platform.name}</span>
+              </TabsTrigger>
             ))}
-         </div>
+          </TabsList>
+
+          {platformData.map((platform) => (
+            <TabsContent key={platform.name} value={platform.name} className="mt-8">
+              <Reveal>
+                <div className="grid md:grid-cols-3 gap-8">
+                  <div className="space-y-6">
+                    <div>
+                      <Badge className="bg-orange-600/20 text-orange-400 mb-3">Avg Engagement</Badge>
+                      <div className="text-4xl font-black mb-2">{platform.engagement}</div>
+                      <p className="text-gray-400">Higher than industry standard</p>
+                    </div>
+
+                    <div>
+                      <h4 className="font-black mb-3 text-sm">Campaign Types</h4>
+                      <ul className="space-y-2">
+                        {platform.campaigns.map((campaign, i) => (
+                          <li key={i} className="flex items-center gap-2 text-sm text-gray-400">
+                            <Zap className="w-4 h-4 text-orange-400" />
+                            {campaign}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <h4 className="font-black mb-4">Recent Case Study</h4>
+                    <div className="bg-white/5 border border-orange-600/20 rounded-lg overflow-hidden cursor-pointer hover:border-orange-600/50 transition-all duration-200">
+                      <div className="relative h-64">
+                        <Image
+                          src={platform.caseStudy.image}
+                          alt={platform.caseStudy.client}
+                          fill
+                          className="object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                      </div>
+                      <div className="p-6">
+                        <h5 className="font-black mb-2">{platform.caseStudy.client}</h5>
+                        <Badge className="bg-green-600/20 text-green-400">{platform.caseStudy.results}</Badge>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Reveal>
+            </TabsContent>
+          ))}
+        </Tabs>
       </section>
 
-      {/* FOOTER */}
-      <footer className="py-48 px-6 md:px-12 border-t border-white/5 relative z-10 bg-[#0D0A09]">
-         <div className="max-w-[1800px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-40 text-center md:text-left">
-            <div className="text-center md:text-left">
-               <div className="text-amber-500 mb-16 flex items-center gap-6 font-black text-2xl italic uppercase tracking-widest font-mono justify-center md:justify-start">
-                  <Activity className="w-10 h-10 text-center md:text-left" /> Atelier_Logs
-               </div>
-               <p className="text-4xl md:text-6xl font-light italic leading-[0.9] text-white/20 uppercase tracking-tighter mb-20 text-center md:text-left">
-                  WE TREAT JEWELRY AS ARCHITECTURE. EVERY PIECE A FUNCTION.
-               </p>
-               <div className="flex gap-20 font-black text-[10px] uppercase tracking-[0.8em] text-amber-500/40 italic font-mono justify-center md:justify-start">
-                  <span>Geneva</span>
-                  <span>Paris</span>
-                  <span>London</span>
-               </div>
+      {/* Creator Marketplace */}
+      <section className="py-20 px-6 md:px-12 max-w-7xl mx-auto">
+        <Reveal>
+          <div className="mb-16">
+            <h2 className="text-4xl md:text-5xl font-black mb-4">Creator Marketplace</h2>
+            <p className="text-gray-400 max-w-xl">
+              Browse and book from our network of 5,000+ verified creators
+            </p>
+          </div>
+        </Reveal>
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {creators.map((creator, i) => (
+            <Reveal key={i} delay={i * 0.05}>
+              <motion.div
+                whileHover={{ scale: 1.02, y: -10 }}
+                transition={{ duration: 0.2 }}
+                onClick={() => setSelectedCreator(creator)}
+                className="bg-white/5 border border-orange-600/20 rounded-lg overflow-hidden cursor-pointer hover:border-orange-600/50 transition-all duration-200"
+              >
+                <div className="relative h-48">
+                  <Image
+                    src={creator.image}
+                    alt={creator.name}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <div className="p-4">
+                  <h4 className="font-black mb-1">{creator.name}</h4>
+                  <Badge className="bg-orange-600/20 text-orange-400 mb-3 text-xs">{creator.niche}</Badge>
+                  <div className="space-y-1 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Followers</span>
+                      <span className="font-bold">{creator.followers}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Engagement</span>
+                      <span className="font-bold text-green-400">{creator.engagement}</span>
+                    </div>
+                  </div>
+                  <button className="w-full mt-4 py-2 bg-orange-600 text-white rounded font-bold text-xs hover:bg-orange-700 transition-colors duration-200">
+                    View Profile
+                  </button>
+                </div>
+              </motion.div>
+            </Reveal>
+          ))}
+        </div>
+
+        <Dialog open={!!selectedCreator} onOpenChange={() => setSelectedCreator(null)}>
+          <DialogContent className="bg-[#080810] border-orange-600/20">
+            <DialogHeader>
+              <DialogTitle className="text-white">{selectedCreator?.name}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 text-gray-200">
+              <p className="text-sm">{selectedCreator?.niche}</p>
+              <p className="text-4xl font-black text-orange-400">{selectedCreator?.followers}</p>
+              <p className="text-sm">Followers • {selectedCreator?.engagement} Engagement Rate</p>
+              <button className="w-full py-3 bg-orange-600 text-white font-black rounded hover:bg-orange-700 transition-colors duration-200">
+                Start Collaboration
+              </button>
             </div>
-            <div className="flex flex-col justify-between items-end text-right font-mono text-center md:text-right text-amber-500">
-               <div className="w-full text-center md:text-right">
-                  <h4 className="text-[12vw] font-light italic uppercase tracking-tighter text-white opacity-[0.02] leading-none mb-20 text-center md:text-right">AURUM</h4>
-                  <nav className="flex flex-col gap-10 font-black text-[10px] uppercase tracking-[0.8em] text-white/10 font-mono text-center md:text-right">
-                     <Link href="#" className="hover:text-amber-500 transition-colors group">Instagram</Link>
-                     <Link href="#" className="hover:text-amber-500 transition-colors group">Atelier</Link>
-                     <Link href="#" className="hover:text-amber-500 transition-colors group">Concierge</Link>
-                  </nav>
-               </div>
-               <div className="font-black text-[9px] uppercase tracking-[1.5em] text-white/5 mt-32 italic text-center md:text-right">
-                  &copy; 2026 // AURUM_JEWELRY&trade;
-               </div>
+          </DialogContent>
+        </Dialog>
+      </section>
+
+      {/* Campaign Carousel */}
+      <section className="py-20 px-6 md:px-12 max-w-7xl mx-auto">
+        <Reveal>
+          <div className="mb-16">
+            <h2 className="text-4xl md:text-5xl font-black mb-4">Recent Campaigns</h2>
+            <p className="text-gray-400 max-w-xl">
+              Proven results across industries with measurable ROI
+            </p>
+          </div>
+        </Reveal>
+
+        <Carousel className="w-full">
+          <CarouselContent>
+            {campaigns.map((campaign, i) => (
+              <CarouselItem key={i} className="md:basis-1/2">
+                <Reveal delay={i * 0.1}>
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    onClick={() => setSelectedCampaign(campaign)}
+                    className="bg-white/5 border border-orange-600/20 rounded-lg overflow-hidden cursor-pointer hover:border-orange-600/50 transition-all duration-200"
+                  >
+                    <div className="relative h-64">
+                      <Image
+                        src={campaign.image}
+                        alt={campaign.name}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                    <div className="p-6">
+                      <h4 className="font-black mb-2">{campaign.name}</h4>
+                      <p className="text-sm text-gray-400 mb-4">{campaign.brand}</p>
+                      <Badge className="bg-green-600/20 text-green-400 font-black">
+                        {campaign.roas} ROI
+                      </Badge>
+                    </div>
+                  </motion.div>
+                </Reveal>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="cursor-pointer border-orange-600/20 hover:border-orange-600/50" />
+          <CarouselNext className="cursor-pointer border-orange-600/20 hover:border-orange-600/50" />
+        </Carousel>
+
+        <Dialog open={!!selectedCampaign} onOpenChange={() => setSelectedCampaign(null)}>
+          <DialogContent className="bg-[#080810] border-orange-600/20">
+            <DialogHeader>
+              <DialogTitle className="text-white">{selectedCampaign?.name}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 text-gray-200">
+              <p className="text-sm">{selectedCampaign?.brand}</p>
+              <p className="text-4xl font-black text-orange-400">{selectedCampaign?.roas}</p>
+              <p className="text-sm">Return on Ad Spend</p>
+              <button className="w-full py-3 bg-orange-600 text-white font-black rounded hover:bg-orange-700 transition-colors duration-200">
+                View Full Report
+              </button>
             </div>
-         </div>
+          </DialogContent>
+        </Dialog>
+      </section>
+
+      {/* Vetting Accordion */}
+      <section className="py-20 px-6 md:px-12 max-w-7xl mx-auto">
+        <Reveal>
+          <div className="mb-16">
+            <h2 className="text-4xl md:text-5xl font-black mb-4">Creator Vetting Process</h2>
+            <p className="text-gray-400 max-w-xl">
+              All creators undergo comprehensive analysis to ensure authenticity and brand safety
+            </p>
+          </div>
+        </Reveal>
+
+        <Accordion type="single" collapsible className="space-y-4 max-w-2xl">
+          <AccordionItem value="authenticity" className="bg-white/5 border border-orange-600/20 px-6 rounded cursor-pointer hover:border-orange-600/50 transition-all duration-200">
+            <AccordionTrigger className="hover:text-orange-400 transition-colors duration-200 font-black">
+              Authenticity Score Analysis
+            </AccordionTrigger>
+            <AccordionContent className="text-gray-300">
+              We analyze growth patterns, engagement quality, and audience composition using proprietary AI. All followers are verified as real, active accounts with meaningful engagement history.
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="audience" className="bg-white/5 border border-orange-600/20 px-6 rounded cursor-pointer hover:border-orange-600/50 transition-all duration-200">
+            <AccordionTrigger className="hover:text-orange-400 transition-colors duration-200 font-black">
+              Audience Demographic Deep-Dive
+            </AccordionTrigger>
+            <AccordionContent className="text-gray-300">
+              We review age distribution, geographic location, interests, and engagement patterns. Ensures perfect alignment with your target market and campaign objectives.
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="safety" className="bg-white/5 border border-orange-600/20 px-6 rounded cursor-pointer hover:border-orange-600/50 transition-all duration-200">
+            <AccordionTrigger className="hover:text-orange-400 transition-colors duration-200 font-black">
+              Brand Safety Compliance
+            </AccordionTrigger>
+            <AccordionContent className="text-gray-300">
+              Content moderation scan for brand violations, controversial topics, and audience sentiment. Safety score ensures creators align with your brand values.
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="contract" className="bg-white/5 border border-orange-600/20 px-6 rounded cursor-pointer hover:border-orange-600/50 transition-all duration-200">
+            <AccordionTrigger className="hover:text-orange-400 transition-colors duration-200 font-black">
+              Contract & Performance Terms
+            </AccordionTrigger>
+            <AccordionContent className="text-gray-300">
+              Flexible agreements including exclusivity clauses, performance bonuses, and usage rights. Full legal review included in every partnership.
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </section>
+
+      {/* Stats Section */}
+      <section className="py-20 px-6 md:px-12 max-w-7xl mx-auto bg-gradient-to-r from-orange-600/10 to-pink-600/10 rounded-2xl">
+        <div className="grid md:grid-cols-4 gap-12">
+          {[
+            { label: "Active Creators", value: 5000 },
+            { label: "Brand Partners", value: 500 },
+            { label: "Years Experience", value: 8 },
+            { label: "Avg Campaign ROI", value: 4.2, suffix: "x" }
+          ].map((stat, i) => (
+            <Reveal key={i} delay={i * 0.1}>
+              <div className="text-center">
+                <div className="text-4xl md:text-5xl font-black text-orange-400 mb-2">
+                  <Counter target={stat.value} suffix={stat.suffix || ""} />
+                </div>
+                <p className="text-gray-400 font-black text-sm">{stat.label}</p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-20 px-6 md:px-12 max-w-7xl mx-auto">
+        <Reveal>
+          <div className="mb-16">
+            <h2 className="text-4xl md:text-5xl font-black mb-4">Frequently Asked Questions</h2>
+          </div>
+        </Reveal>
+
+        <Accordion type="single" collapsible className="space-y-4 max-w-3xl">
+          {faqData.map((item, i) => (
+            <AccordionItem key={i} value={`faq-${i}`} className="bg-white/5 border border-orange-600/20 px-6 rounded cursor-pointer hover:border-orange-600/50 transition-all duration-200">
+              <AccordionTrigger className="hover:text-orange-400 transition-colors duration-200 font-bold text-left">
+                {item.q}
+              </AccordionTrigger>
+              <AccordionContent className="text-gray-300">
+                {item.a}
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 px-6 md:px-12 max-w-7xl mx-auto text-center">
+        <Reveal>
+          <h2 className="text-4xl md:text-5xl font-black mb-6">Ready to Launch Your Campaign?</h2>
+          <p className="text-gray-400 mb-8 max-w-xl mx-auto">
+            Get matched with the perfect creators for your brand in minutes
+          </p>
+          <MagneticBtn className="px-8 py-4 bg-gradient-to-r from-orange-600 to-pink-600 rounded-lg font-black text-white transition-all duration-200 hover:shadow-lg hover:shadow-orange-600/50">
+            Schedule Demo Today
+          </MagneticBtn>
+        </Reveal>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-orange-600/10 py-12 px-6 md:px-12 mt-20">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid md:grid-cols-4 gap-8 mb-12">
+            <div>
+              <h4 className="font-black mb-4">Platform</h4>
+              <ul className="space-y-2 text-sm text-gray-400">
+                <li><Link href="#" className="hover:text-orange-400 transition-colors duration-200 cursor-pointer">Creators</Link></li>
+                <li><Link href="#" className="hover:text-orange-400 transition-colors duration-200 cursor-pointer">Brands</Link></li>
+                <li><Link href="#" className="hover:text-orange-400 transition-colors duration-200 cursor-pointer">Pricing</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-black mb-4">Company</h4>
+              <ul className="space-y-2 text-sm text-gray-400">
+                <li><Link href="#" className="hover:text-orange-400 transition-colors duration-200 cursor-pointer">About</Link></li>
+                <li><Link href="#" className="hover:text-orange-400 transition-colors duration-200 cursor-pointer">Blog</Link></li>
+                <li><Link href="#" className="hover:text-orange-400 transition-colors duration-200 cursor-pointer">Careers</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-black mb-4">Resources</h4>
+              <ul className="space-y-2 text-sm text-gray-400">
+                <li><Link href="#" className="hover:text-orange-400 transition-colors duration-200 cursor-pointer">Documentation</Link></li>
+                <li><Link href="#" className="hover:text-orange-400 transition-colors duration-200 cursor-pointer">API</Link></li>
+                <li><Link href="#" className="hover:text-orange-400 transition-colors duration-200 cursor-pointer">Support</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-black mb-4">Follow</h4>
+              <ul className="space-y-2 text-sm text-gray-400">
+                <li><Link href="#" className="hover:text-orange-400 transition-colors duration-200 cursor-pointer flex items-center gap-2"><Share2 className="w-4 h-4" /> Twitter</Link></li>
+                <li><Link href="#" className="hover:text-orange-400 transition-colors duration-200 cursor-pointer flex items-center gap-2"><Share2 className="w-4 h-4" /> Instagram</Link></li>
+                <li><Link href="#" className="hover:text-orange-400 transition-colors duration-200 cursor-pointer flex items-center gap-2"><Share2 className="w-4 h-4" /> LinkedIn</Link></li>
+              </ul>
+            </div>
+          </div>
+          <div className="border-t border-orange-600/10 pt-8 flex justify-between items-center text-sm text-gray-400">
+            <p>&copy; 2026 LUMINARY. All rights reserved.</p>
+            <div className="flex gap-6">
+              <Link href="#" className="hover:text-orange-400 transition-colors duration-200 cursor-pointer">Privacy</Link>
+              <Link href="#" className="hover:text-orange-400 transition-colors duration-200 cursor-pointer">Terms</Link>
+            </div>
+          </div>
+        </div>
       </footer>
     </div>
   );
