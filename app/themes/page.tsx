@@ -7,8 +7,11 @@ import { ArrowRight, Sparkles, Search, Star } from "lucide-react";
 import { TEMPLATES_REGISTRY } from "@/lib/templates/registry";
 
 // ─── Quality filter ───────────────────────────────────────────────────────────
-// Templates below ~400 lines (incomplete) are hidden from the gallery
+// Only templates genuinely at "$10k level" are shown.
+// Threshold: 550+ lines (original batch) OR part of the recent rewrite (157-176).
+// Hidden templates are elevated in batches and re-enabled when ready.
 const HIDDEN_IMPACT = new Set([
+  // ── Stubs / incomplete (< 400 lines) ────────────────────────────────────
   "impact-06","impact-07","impact-08","impact-09",
   "impact-10","impact-11","impact-12","impact-13","impact-14","impact-15","impact-16","impact-17","impact-18","impact-19",
   "impact-20","impact-21","impact-22","impact-23","impact-24","impact-25","impact-26","impact-27","impact-28","impact-29",
@@ -25,12 +28,20 @@ const HIDDEN_IMPACT = new Set([
   "impact-152","impact-153","impact-154","impact-155","impact-156",
   "impact-177","impact-178","impact-179","impact-180","impact-181","impact-182","impact-183","impact-184","impact-185","impact-186",
   "impact-187","impact-188","impact-189","impact-190","impact-191","impact-192","impact-193","impact-194","impact-195","impact-196",
+  // ── Below quality bar (400–549 lines, pending elevation) ────────────────
+  "impact-02","impact-04","impact-05",
+  "impact-55","impact-56","impact-57","impact-58","impact-59",
+  "impact-62","impact-63","impact-70","impact-72","impact-75",
+  "impact-84","impact-86","impact-87","impact-88","impact-89","impact-90","impact-91","impact-94","impact-95","impact-96",
+  "impact-112","impact-113","impact-114","impact-115",
+  "impact-126","impact-130","impact-131","impact-132","impact-133","impact-135","impact-136",
+  "impact-140","impact-141","impact-145","impact-147","impact-148","impact-149","impact-150","impact-151",
 ]);
 
-// ─── Featured (hand-picked) ───────────────────────────────────────────────────
+// ─── Featured (hand-picked best) ─────────────────────────────────────────────
 const FEATURED = new Set([
-  "impact-01","impact-02","impact-03","impact-04","impact-05",
-  "impact-157","impact-158","impact-159","impact-161","impact-163",
+  "impact-01","impact-03",
+  "impact-157","impact-158","impact-159","impact-161","impact-163","impact-166","impact-167","impact-176",
   "luxury","aurora","3d-tech","minimal-pro","saas",
 ]);
 
