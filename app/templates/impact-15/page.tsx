@@ -124,7 +124,7 @@ export default function GhostShellSPA() {
       {/* Hero */}
       <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
         <motion.div style={{ y: heroY }} className="absolute inset-0">
-          <Image src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?q=80&w=2000&auto=format&fit=crop" alt="Ghost Shell" fill className="object-cover opacity-8" unoptimized />
+          <Image src="https://images.unsplash.com/photo-546819?w=800&q=80" alt="Ghost Shell" fill className="object-cover opacity-8" unoptimized />
           <div className="absolute inset-0 bg-gradient-to-b from-[#04020a]/50 via-transparent to-[#04020a]" />
         </motion.div>
         <div className="absolute inset-0 opacity-3" style={{ backgroundImage: "linear-gradient(rgba(124,58,237,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(124,58,237,0.1) 1px, transparent 1px)", backgroundSize: "80px 80px" }} />

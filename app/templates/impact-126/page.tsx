@@ -92,7 +92,7 @@ export default function DuskRecords() {
       <section className="relative h-screen overflow-hidden flex items-center justify-center">
         <motion.div initial={{ scale: 1.1, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 2 }} className="absolute inset-0">
           <Image
-            src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1200"
+            src="https://images.unsplash.com/photo-1536523?w=800&q=80"
             alt="Music"
             fill
             className="object-cover brightness-20"

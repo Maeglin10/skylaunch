@@ -233,7 +233,7 @@ function Hero() {
     <section ref={ref} className="relative h-screen flex items-center justify-center overflow-hidden bg-[#05030f]">
       <motion.div style={{ y }} className="absolute inset-0 scale-110">
         <Image
-          src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=2400"
+          src="https://images.unsplash.com/photo-196645?w=800&q=80"
           alt="Hero NFT"
           fill
           unoptimized
@@ -462,7 +462,7 @@ function Feature() {
     <section ref={ref} className="relative overflow-hidden bg-[#080511] py-36">
       <motion.div style={{ y }} className="absolute inset-0 scale-110">
         <Image
-          src="https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?auto=format&fit=crop&q=80&w=2400"
+          src="https://images.unsplash.com/photo-1109543?w=800&q=80"
           alt="Feature"
           fill
           unoptimized

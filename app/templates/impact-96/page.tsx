@@ -228,7 +228,7 @@ export default function NomadLens() {
       {/* HERO */}
       <section style={{ position: 'relative', height: '100vh', overflow: 'hidden', marginTop: '60px', background: 'linear-gradient(135deg, #0d1117, #1a1f26)' }}>
         <motion.div style={{ y: parallaxY }}>
-          <Image src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=1200" alt="Landscape" fill unoptimized style={{ objectFit: 'cover', opacity: 0.2 }} />
+          <Image src="https://images.unsplash.com/photo-1536482?w=800&q=80" alt="Landscape" fill unoptimized style={{ objectFit: 'cover', opacity: 0.2 }} />
         </motion.div>
         <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', zIndex: 10 }}>
           <Reveal delay={0.1}>

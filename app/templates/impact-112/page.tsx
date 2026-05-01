@@ -76,7 +76,7 @@ export default function VerdaArchitecture() {
   return (
     <div className="min-h-screen bg-[#f8f6f2] text-[#3d3d3d]">
       <motion.section style={{ y: heroY }} className="relative h-screen flex items-center justify-center overflow-hidden">
-        <Image src="https://images.unsplash.com/photo-1518005020951-eccb494ad742?w=1600" alt="Sustainable Architecture" fill className="object-cover" />
+        <Image src="https://images.unsplash.com/photo-196645?w=800&q=80" alt="Sustainable Architecture" fill className="object-cover" />
         <div className="absolute inset-0 bg-black/40" />
         <div className="relative z-10 text-center text-white max-w-4xl mx-auto px-6">
           <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="text-6xl md:text-8xl font-light mb-6">

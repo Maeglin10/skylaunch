@@ -119,7 +119,7 @@ export default function CreativeDirectorSPA() {
       {/* Hero */}
       <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
         <motion.div style={{ y: heroY, scale: heroScale }} className="absolute inset-0">
-          <Image src="https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=2000&auto=format&fit=crop" alt="Creative Director" fill className="object-cover opacity-25" unoptimized />
+          <Image src="https://images.unsplash.com/photo-733852?w=800&q=80" alt="Creative Director" fill className="object-cover opacity-25" unoptimized />
           <div className="absolute inset-0 bg-gradient-to-b from-[#0c0c0c]/40 via-transparent to-[#0c0c0c]" />
         </motion.div>
 

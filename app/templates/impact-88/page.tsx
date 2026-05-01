@@ -167,7 +167,7 @@ export default function PawsomePage() {
         style={{ y: backgroundY }}
       >
         <Image
-          src="https://images.unsplash.com/photo-1633722715463-d30628519d47?q=80&w=1200&auto=format&fit=crop"
+          src="https://images.unsplash.com/photo-1109543?w=800&q=80"
           alt="bg"
           fill
           className="object-cover grayscale"

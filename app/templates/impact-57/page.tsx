@@ -157,7 +157,7 @@ export default function KineticMotionSPA() {
       <section ref={heroRef} className="relative h-screen overflow-hidden flex items-end pb-24 px-8 md:px-16">
         <motion.div style={{ y: heroY, opacity: heroOpacity }} className="absolute inset-0">
           <img
-            src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2000&auto=format&fit=crop"
+            src="https://images.unsplash.com/photo-196645?w=800&q=80"
             alt="Athlete performance"
             className="w-full h-full object-cover object-top"
           />

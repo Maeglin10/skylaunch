@@ -167,7 +167,7 @@ export default function StudioHivePage() {
         style={{ y: backgroundY }}
       >
         <Image
-          src="https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=1200&auto=format&fit=crop"
+          src="https://images.unsplash.com/photo-1536482?w=800&q=80"
           alt="bg"
           fill
           className="object-cover"

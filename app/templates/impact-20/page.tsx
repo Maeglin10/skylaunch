@@ -112,7 +112,7 @@ export default function LuxuryHorologySPA() {
       {/* HERO */}
       <section className="relative h-screen flex items-end overflow-hidden">
         <motion.div style={{ y: heroY, scale: heroScale }} className="absolute inset-0">
-          <Image src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=2000&auto=format&fit=crop" alt="Luxury Watch" fill className="object-cover opacity-60" unoptimized />
+          <Image src="https://images.unsplash.com/photo-1536482?w=800&q=80" alt="Luxury Watch" fill className="object-cover opacity-60" unoptimized />
         </motion.div>
         <div className="absolute inset-0 bg-gradient-to-t from-[#1a1410] via-[#1a1410]/30 to-transparent" />
         <motion.div style={{ opacity: heroOpacity }} className="relative z-10 px-8 md:px-16 pb-24 w-full">

@@ -128,7 +128,7 @@ export default function VerveCoffee() {
       {/* HERO */}
       <motion.section style={{ opacity: heroOpacity }} className="relative min-h-screen flex items-center justify-center pt-32 px-6 overflow-hidden">
         <div className="absolute inset-0 z-0">
-          <Image src="https://images.unsplash.com/photo-1447933601403-0c6688de566e?auto=format&fit=crop&q=80&w=2000" alt="Coffee" fill className="object-cover opacity-20" priority />
+          <Image src="https://images.unsplash.com/photo-209977?w=800&q=80" alt="Coffee" fill className="object-cover opacity-20" priority />
           <div className="absolute inset-0 bg-gradient-to-br from-[#1a0a00] via-[#1a0a00]/80 to-[#1a0a00]" />
         </div>
 

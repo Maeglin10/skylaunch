@@ -203,7 +203,7 @@ export default function SolarisEnergy() {
       {/* HERO WITH ROTATING SUN */}
       <section style={{ position: 'relative', height: '100vh', overflow: 'hidden', marginTop: '60px', background: 'linear-gradient(135deg, #060a0f, #0a0f1a)' }}>
         <motion.div style={{ y: parallaxY }}>
-          <Image src="https://images.unsplash.com/photo-1508841307935-29c51e541908?q=80&w=1200" alt="Solar Farm" fill unoptimized style={{ objectFit: 'cover', opacity: 0.15 }} />
+          <Image src="https://images.unsplash.com/photo-1109543?w=800&q=80" alt="Solar Farm" fill unoptimized style={{ objectFit: 'cover', opacity: 0.15 }} />
         </motion.div>
         {/* Rotating Sun */}
         <motion.div style={{ position: 'absolute', top: '5%', right: '10%', zIndex: 5, rotateZ }} className="w-32 h-32 md:w-48 md:h-48">

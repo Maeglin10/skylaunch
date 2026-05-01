@@ -124,7 +124,7 @@ export default function MagneticHUD() {
         {/* Grid */}
         <div className="absolute inset-0" style={{ backgroundImage: "linear-gradient(rgba(139,92,246,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.04) 1px, transparent 1px)", backgroundSize: "80px 80px" }} />
         <motion.div style={{ y: heroY }} className="absolute inset-0">
-          <Image src="https://images.unsplash.com/photo-1485827404703-89b55fcc595e?q=80&w=2000&auto=format&fit=crop" alt="AI" fill className="object-cover opacity-10" unoptimized />
+          <Image src="https://images.unsplash.com/photo-574071?w=800&q=80" alt="AI" fill className="object-cover opacity-10" unoptimized />
         </motion.div>
         <motion.div style={{ opacity: heroOpacity }} className="relative z-10 px-8 md:px-16 pt-28 max-w-5xl">
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }} className="inline-flex items-center gap-2 bg-purple-500/10 border border-purple-500/20 text-purple-300 text-[9px] uppercase tracking-widest px-4 py-2 mb-8">

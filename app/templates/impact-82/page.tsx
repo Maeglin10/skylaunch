@@ -167,7 +167,7 @@ export default function MeridianArtFair() {
       {/* HERO */}
       <motion.section style={{ minHeight: "100vh", position: "relative", overflow: "hidden", paddingTop: "72px" }}>
         <motion.div style={{ position: "absolute", inset: 0, y: heroY }}>
-          <Image src="https://images.unsplash.com/photo-1541367777708-7905fe3296c0?q=80&w=1600&auto=format&fit=crop" alt="Meridian Art Fair" fill style={{ objectFit: "cover" }} priority />
+          <Image src="https://images.unsplash.com/photo-1629236?w=800&q=80" alt="Meridian Art Fair" fill style={{ objectFit: "cover" }} priority />
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(120deg, rgba(255,255,255,0.94) 0%, rgba(255,255,255,0.72) 55%, rgba(255,255,255,0.2) 100%)" }} />
         </motion.div>
         <div style={{ position: "relative", minHeight: "calc(100vh - 72px)", display: "flex", flexDirection: "column", justifyContent: "center", padding: "4rem 2rem", maxWidth: "1100px", margin: "0 auto" }}>
@@ -539,7 +539,7 @@ export default function MeridianArtFair() {
           </Reveal>
           <Reveal direction="right">
             <div style={{ position: "relative", aspectRatio: "4/3", borderRadius: "1.5rem", overflow: "hidden" }}>
-              <Image src="https://images.unsplash.com/photo-1499856871958-5b9627545d1a?q=80&w=900&auto=format&fit=crop" alt="Grand Palais Paris" fill style={{ objectFit: "cover" }} />
+              <Image src="https://images.unsplash.com/photo-574071?w=800&q=80" alt="Grand Palais Paris" fill style={{ objectFit: "cover" }} />
             </div>
           </Reveal>
         </div>

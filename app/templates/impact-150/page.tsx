@@ -130,7 +130,7 @@ export default function IronAndGlass() {
       {/* HERO */}
       <motion.section style={{ opacity: heroOpacity }} className="relative min-h-screen flex items-center justify-center pt-32 px-6 overflow-hidden">
         <div className="absolute inset-0 z-0">
-          <Image src="https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&q=80&w=2000" alt="Industrial Design" fill className="object-cover opacity-25" priority />
+          <Image src="https://images.unsplash.com/photo-1629236?w=800&q=80" alt="Industrial Design" fill className="object-cover opacity-25" priority />
           <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a1a] via-[#1a1a1a]/80 to-[#1a1a1a]" />
         </div>
 

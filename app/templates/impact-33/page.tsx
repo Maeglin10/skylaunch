@@ -81,7 +81,7 @@ export default function ParticleWaveFX() {
       {/* HERO */}
       <section className="relative h-screen flex items-center overflow-hidden">
         <motion.div style={{ y: heroY, scale: heroScale }} className="absolute inset-0">
-          <Image src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?q=80&w=2000&auto=format&fit=crop" alt="Music" fill className="object-cover opacity-25" unoptimized />
+          <Image src="https://images.unsplash.com/photo-1629236?w=800&q=80" alt="Music" fill className="object-cover opacity-25" unoptimized />
         </motion.div>
         <div className="absolute inset-0" style={{ background: `radial-gradient(ellipse at 50% 40%, ${release.color}15 0%, transparent 60%)` }} />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#08060e]/40 to-[#08060e]" />

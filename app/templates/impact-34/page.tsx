@@ -100,7 +100,7 @@ export default function BrutalistEstateSPA() {
       {/* HERO */}
       <section className="relative h-screen flex items-end overflow-hidden">
         <motion.div style={{ y: heroY, scale: heroScale }} className="absolute inset-0">
-          <Image src="https://images.unsplash.com/photo-1613490493576-7fde63acd811?q=80&w=2000&auto=format&fit=crop" alt="Luxury Property" fill className="object-cover opacity-70" unoptimized />
+          <Image src="https://images.unsplash.com/photo-1109543?w=800&q=80" alt="Luxury Property" fill className="object-cover opacity-70" unoptimized />
         </motion.div>
         <div className="absolute inset-0 bg-gradient-to-t from-[#1a1610]/90 via-[#1a1610]/20 to-transparent" />
         <motion.div style={{ opacity: heroOpacity }} className="relative z-10 px-8 md:px-16 pb-20 w-full">

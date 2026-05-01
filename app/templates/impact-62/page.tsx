@@ -264,7 +264,7 @@ export default function LiquidLetterTransition() {
       <section ref={heroRef} className="relative h-screen flex items-end overflow-hidden">
         <motion.div style={{ y: heroY }} className="absolute inset-0">
           <Image
-            src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?q=80&w=2000&auto=format&fit=crop"
+            src="https://images.unsplash.com/photo-196645?w=800&q=80"
             alt="Fine dining"
             fill
             unoptimized
@@ -385,7 +385,7 @@ export default function LiquidLetterTransition() {
         <Reveal>
           <div className="relative aspect-[3/4] rounded-2xl overflow-hidden shadow-2xl">
             <Image
-              src="https://images.unsplash.com/photo-1577219491135-ce391730fb2c?q=80&w=1400&auto=format&fit=crop"
+              src="https://images.unsplash.com/photo-733852?w=800&q=80"
               alt="Chef Anatol"
               fill
               unoptimized
@@ -493,7 +493,7 @@ export default function LiquidLetterTransition() {
       <section id="contact" className="relative overflow-hidden py-32 px-8 md:px-16 text-center">
         <div className="absolute inset-0 opacity-15">
           <Image
-            src="https://images.unsplash.com/photo-1424847651672-bf20a4b0982b?q=80&w=2000&auto=format&fit=crop"
+            src="https://images.unsplash.com/photo-733852?w=800&q=80"
             alt="Restaurant ambiance"
             fill
             unoptimized

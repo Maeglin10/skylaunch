@@ -134,7 +134,7 @@ export default function MouseTrapParticles() {
         {/* Grid lines */}
         <div className="absolute inset-0" style={{ backgroundImage: "linear-gradient(rgba(14,165,233,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(14,165,233,0.05) 1px, transparent 1px)", backgroundSize: "80px 80px" }} />
         <motion.div style={{ y: heroY }} className="absolute inset-0">
-          <Image src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2000&auto=format&fit=crop" alt="Grid" fill className="object-cover opacity-8" unoptimized />
+          <Image src="https://images.unsplash.com/photo-1109543?w=800&q=80" alt="Grid" fill className="object-cover opacity-8" unoptimized />
         </motion.div>
         <motion.div style={{ opacity: heroOpacity }} className="relative z-10 px-8 md:px-16 pt-28 max-w-5xl">
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }} className="inline-flex items-center gap-2 bg-sky-500/10 border border-sky-500/20 text-sky-300 text-[9px] uppercase tracking-widest px-4 py-2 mb-8 font-mono">

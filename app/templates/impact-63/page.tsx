@@ -272,7 +272,7 @@ export default function IndexListSPA() {
       <section ref={heroRef} className="relative min-h-screen flex items-center overflow-hidden px-6 md:px-14 pt-16">
         <motion.div style={{ y: heroY }} className="absolute inset-0 opacity-[0.04]">
           <Image
-            src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=2000&auto=format&fit=crop"
+            src="https://images.unsplash.com/photo-1536482?w=800&q=80"
             alt="Trading interface"
             fill
             unoptimized
@@ -378,7 +378,7 @@ export default function IndexListSPA() {
         <Reveal delay={0.1}>
           <div className="relative rounded-2xl overflow-hidden border border-[#00ff9d]/12 shadow-[0_0_80px_rgba(0,255,157,0.05)] aspect-[4/3]">
             <Image
-              src="https://images.unsplash.com/photo-1642104704074-907c0698cbd9?q=80&w=1400&auto=format&fit=crop"
+              src="https://images.unsplash.com/photo-1536482?w=800&q=80"
               alt="Trading platform"
               fill
               unoptimized

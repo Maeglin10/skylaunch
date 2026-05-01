@@ -127,7 +127,7 @@ export default function HoloTacticalSPA() {
       <section ref={heroRef} className="relative h-screen flex items-center justify-center overflow-hidden"
         onMouseMove={e => { cx.set(e.clientX - window.innerWidth / 2); cy.set(e.clientY - window.innerHeight / 2); }}>
         <motion.div style={{ y: heroY }} className="absolute inset-0">
-          <Image src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1400&q=80" alt="tactical" fill unoptimized className="object-cover opacity-20" />
+          <Image src="https://images.unsplash.com/photo-209977?w=800&q=80" alt="tactical" fill unoptimized className="object-cover opacity-20" />
           <div className="absolute inset-0 bg-[#04080e]/70" />
         </motion.div>
         {/* Grid */}

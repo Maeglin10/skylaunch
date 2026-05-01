@@ -155,7 +155,7 @@ export default function OasisSpa() {
       {/* Hero with Petal Particles */}
       <motion.section className="relative h-screen flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
-          <Image src="https://images.unsplash.com/photo-1544161515-4ab6ce6db874?q=80&w=1200&auto=format&fit=crop" alt="Spa" fill className="object-cover" />
+          <Image src="https://images.unsplash.com/photo-1109543?w=800&q=80" alt="Spa" fill className="object-cover" />
           <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
         </div>
 

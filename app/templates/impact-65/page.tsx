@@ -258,7 +258,7 @@ function Hero() {
       {/* Parallax BG */}
       <motion.div style={{ y }} className="absolute inset-0 scale-110">
         <Image
-          src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=80&w=2400"
+          src="https://images.unsplash.com/photo-1536482?w=800&q=80"
           alt="Hero headphones"
           fill
           unoptimized
@@ -494,7 +494,7 @@ function Technology() {
     <section ref={ref} className="relative overflow-hidden bg-[#0d0d0d] py-32">
       <motion.div style={{ y }} className="absolute inset-0 scale-110">
         <Image
-          src="https://images.unsplash.com/photo-1612444530582-fc66183b16f7?auto=format&fit=crop&q=80&w=2400"
+          src="https://images.unsplash.com/photo-1536482?w=800&q=80"
           alt="Technology"
           fill
           unoptimized

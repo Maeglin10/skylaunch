@@ -153,7 +153,7 @@ export default function VerticalSplitRevealSlider() {
       <section ref={heroRef} className="relative h-screen overflow-hidden flex items-end pb-24 px-8 md:px-16">
         <motion.div style={{ y: heroY, opacity: heroOpacity }} className="absolute inset-0">
           <img
-            src="https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?q=80&w=2000&auto=format&fit=crop"
+            src="https://images.unsplash.com/photo-1536482?w=800&q=80"
             alt="Vineyard at dusk"
             className="w-full h-full object-cover object-center"
           />
@@ -309,7 +309,7 @@ export default function VerticalSplitRevealSlider() {
         <Reveal delay={0.1} className="order-1 md:order-2">
           <div className="relative">
             <img
-              src="https://images.unsplash.com/photo-1516594798947-e65505dbb29d?q=80&w=1400&auto=format&fit=crop"
+              src="https://images.unsplash.com/photo-1536523?w=800&q=80"
               alt="Wine barrel cellar"
               className="w-full aspect-[4/5] object-cover"
             />

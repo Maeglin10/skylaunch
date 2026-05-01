@@ -165,7 +165,7 @@ export default function LuxuryEcommerceSPA() {
          ============================================================= */}
       <section className="relative h-screen w-full flex items-center justify-center overflow-hidden bg-[#1a1714]">
         <motion.div style={{ scale: heroScale }} className="absolute inset-0 z-0">
-          <Image src="https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?q=80&w=2000&auto=format&fit=crop" fill className="object-cover opacity-40" alt="Luxury" priority />
+          <Image src="https://images.unsplash.com/photo-209977?w=800&q=80" fill className="object-cover opacity-40" alt="Luxury" priority />
         </motion.div>
 
         {/* Gold Particle Simulation */}

@@ -150,7 +150,7 @@ export default function MousetrapElasticCursor() {
       <section ref={heroRef} className="relative h-screen overflow-hidden flex items-end pb-24 px-8 md:px-16">
         <motion.div style={{ y: heroY, opacity: heroOpacity }} className="absolute inset-0">
           <img
-            src="https://images.unsplash.com/photo-1526045612212-70caf35c14df?q=80&w=2000&auto=format&fit=crop"
+            src="https://images.unsplash.com/photo-1629236?w=800&q=80"
             alt="Hero watch"
             className="w-full h-full object-cover object-center"
           />
@@ -304,7 +304,7 @@ export default function MousetrapElasticCursor() {
         <Reveal>
           <div className="relative">
             <img
-              src="https://images.unsplash.com/photo-1451335655316-cfd32fbd657f?q=80&w=1400&auto=format&fit=crop"
+              src="https://images.unsplash.com/photo-574071?w=800&q=80"
               alt="Geneva atelier"
               className="w-full aspect-[4/5] object-cover border border-[#c9a84c]/10"
               style={{ filter: "sepia(25%) brightness(0.8)" }}

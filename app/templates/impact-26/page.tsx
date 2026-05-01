@@ -175,7 +175,7 @@ export default function GlassFragranceSPA() {
         </Reveal>
         <Reveal delay={0.2} className="md:w-1/2 relative h-80 md:h-auto">
           <div className="relative w-full" style={{ height: "60vh" }}>
-            <Image src="https://images.unsplash.com/photo-1523293182086-7651a899d37f?q=80&w=1000&auto=format&fit=crop" alt="Atelier" fill className="object-cover opacity-40" unoptimized />
+            <Image src="https://images.unsplash.com/photo-1536523?w=800&q=80" alt="Atelier" fill className="object-cover opacity-40" unoptimized />
           </div>
         </Reveal>
       </section>

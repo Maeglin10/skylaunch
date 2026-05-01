@@ -116,7 +116,7 @@ export default function ExecutiveStrategySPA() {
       {/* HERO */}
       <section className="relative min-h-screen flex items-center overflow-hidden">
         <motion.div style={{ y: heroY }} className="absolute inset-0">
-          <Image src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2000&auto=format&fit=crop" alt="Strategy" fill className="object-cover opacity-15" unoptimized />
+          <Image src="https://images.unsplash.com/photo-574071?w=800&q=80" alt="Strategy" fill className="object-cover opacity-15" unoptimized />
         </motion.div>
         <div className="absolute inset-0" style={{ backgroundImage: "radial-gradient(circle at 20% 50%, rgba(59,130,246,0.08) 0%, transparent 60%), radial-gradient(circle at 80% 20%, rgba(139,92,246,0.06) 0%, transparent 50%)" }} />
         <div className="absolute inset-0 bg-gradient-to-r from-[#06080f] via-[#06080f]/70 to-transparent" />

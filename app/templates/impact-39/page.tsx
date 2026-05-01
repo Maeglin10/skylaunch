@@ -99,7 +99,7 @@ export default function StructuralBlueprintSPA() {
       {/* HERO */}
       <section className="relative h-screen flex items-end overflow-hidden">
         <motion.div style={{ y: heroY, scale: heroScale }} className="absolute inset-0">
-          <Image src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2000&auto=format&fit=crop" alt="Blueprint" fill className="object-cover opacity-55" unoptimized />
+          <Image src="https://images.unsplash.com/photo-574071?w=800&q=80" alt="Blueprint" fill className="object-cover opacity-55" unoptimized />
         </motion.div>
         <div className="absolute inset-0 bg-gradient-to-t from-[#111]/90 via-[#111]/15 to-transparent" />
         <motion.div style={{ opacity: heroOpacity }} className="relative z-10 px-8 md:px-16 pb-20">

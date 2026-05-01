@@ -209,7 +209,7 @@ export default function OnePageDotNav() {
       <section ref={heroRef} className="relative min-h-screen flex items-center overflow-hidden bg-[#f0f6ff]">
         <motion.div style={{ y: heroY }} className="absolute inset-0">
           <Image
-            src="https://images.unsplash.com/photo-1614935151651-0bea6508db6b?q=80&w=2000&auto=format&fit=crop"
+            src="https://images.unsplash.com/photo-196645?w=800&q=80"
             alt="Biotech lab"
             fill
             unoptimized
@@ -250,7 +250,7 @@ export default function OnePageDotNav() {
         <div className="absolute right-0 bottom-0 w-1/2 h-full hidden lg:block">
           <div className="relative h-full overflow-hidden">
             <Image
-              src="https://images.unsplash.com/photo-1628595351029-c2bf17511435?q=80&w=1400&auto=format&fit=crop"
+              src="https://images.unsplash.com/photo-196645?w=800&q=80"
               alt="Scientist"
               fill
               unoptimized
@@ -440,7 +440,7 @@ export default function OnePageDotNav() {
           <Reveal delay={0.2}>
             <div className="relative rounded-3xl overflow-hidden aspect-square shadow-2xl shadow-[#0066cc]/10">
               <Image
-                src="https://images.unsplash.com/photo-1582719508461-905c673771fd?q=80&w=1400&auto=format&fit=crop"
+                src="https://images.unsplash.com/photo-1109543?w=800&q=80"
                 alt="Lab platform"
                 fill
                 unoptimized

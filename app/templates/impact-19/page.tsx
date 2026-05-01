@@ -110,7 +110,7 @@ export default function CreativeCollectiveSPA() {
       {/* HERO */}
       <section className="relative h-screen flex items-center overflow-hidden">
         <motion.div style={{ y: heroY, scale: heroScale }} className="absolute inset-0">
-          <Image src="https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2000&auto=format&fit=crop" alt="Creative Collective" fill className="object-cover opacity-40" unoptimized />
+          <Image src="https://images.unsplash.com/photo-196645?w=800&q=80" alt="Creative Collective" fill className="object-cover opacity-40" unoptimized />
         </motion.div>
         <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0a] via-[#0a0a0a]/70 to-transparent" />
         <motion.div style={{ opacity: heroOpacity }} className="relative z-10 px-8 md:px-16 pt-20">

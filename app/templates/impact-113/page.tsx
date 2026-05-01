@@ -76,7 +76,7 @@ export default function AuraBeauty() {
   return (
     <div className="min-h-screen bg-[#fafaf8]" style={{ color: "#1a0f0a" }}>
       <motion.section style={{ y: heroY }} className="relative h-screen flex items-center justify-center overflow-hidden">
-        <Image src="https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=1600" alt="Luxury Skincare" fill className="object-cover" />
+        <Image src="https://images.unsplash.com/photo-1629236?w=800&q=80" alt="Luxury Skincare" fill className="object-cover" />
         <div className="absolute inset-0 bg-black/30" />
         <div className="relative z-10 text-center text-white max-w-4xl mx-auto px-6">
           <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="text-6xl md:text-8xl font-light mb-6">

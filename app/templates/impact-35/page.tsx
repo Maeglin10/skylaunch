@@ -106,7 +106,7 @@ export default function FlowStreamSPA() {
       {/* HERO */}
       <section className="relative min-h-screen flex items-center overflow-hidden">
         <motion.div style={{ y: heroY }} className="absolute inset-0">
-          <Image src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2000&auto=format&fit=crop" alt="Automation" fill className="object-cover opacity-8" unoptimized />
+          <Image src="https://images.unsplash.com/photo-1536523?w=800&q=80" alt="Automation" fill className="object-cover opacity-8" unoptimized />
         </motion.div>
         <div className="absolute inset-0" style={{ backgroundImage: "linear-gradient(rgba(16,185,129,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,0.04) 1px, transparent 1px)", backgroundSize: "80px 80px" }} />
         <div className="absolute top-1/3 right-1/3 w-[500px] h-[500px]" style={{ background: "radial-gradient(circle, rgba(16,185,129,0.08) 0%, transparent 70%)", filter: "blur(80px)" }} />

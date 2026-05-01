@@ -228,7 +228,7 @@ function Hero() {
     <section ref={ref} className="relative h-screen flex items-end justify-start overflow-hidden bg-[#f5f0e8]">
       <motion.div style={{ y }} className="absolute inset-0 scale-110">
         <Image
-          src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80&w=2400"
+          src="https://images.unsplash.com/photo-1536482?w=800&q=80"
           alt="Architecture hero"
           fill
           unoptimized
@@ -433,7 +433,7 @@ function Feature() {
     <section ref={ref} className="relative overflow-hidden bg-stone-900 py-36">
       <motion.div style={{ y }} className="absolute inset-0 scale-110">
         <Image
-          src="https://images.unsplash.com/photo-1600210492493-0946911123ea?auto=format&fit=crop&q=80&w=2400"
+          src="https://images.unsplash.com/photo-1536482?w=800&q=80"
           alt="Interior"
           fill
           unoptimized

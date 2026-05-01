@@ -129,7 +129,7 @@ export default function GlassHUD_SPA() {
       {/* Hero */}
       <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
         <motion.div style={{ y: heroY }} className="absolute inset-0">
-          <Image src="https://images.unsplash.com/photo-1534972195531-d756b9bfa9f2?q=80&w=2000&auto=format&fit=crop" alt="HUD background" fill className="object-cover opacity-10" unoptimized />
+          <Image src="https://images.unsplash.com/photo-546819?w=800&q=80" alt="HUD background" fill className="object-cover opacity-10" unoptimized />
           <div className="absolute inset-0 bg-gradient-to-b from-[#020714]/60 via-[#020714]/20 to-[#020714]" />
         </motion.div>
         <div className="absolute inset-0 opacity-5" style={{ backgroundImage: "linear-gradient(#3b82f6 1px, transparent 1px), linear-gradient(90deg, #3b82f6 1px, transparent 1px)", backgroundSize: "60px 60px" }} />

@@ -121,7 +121,7 @@ export default function EliteOpticsSPA() {
       {/* Hero */}
       <section ref={heroRef} className="relative h-screen flex items-end overflow-hidden">
         <motion.div style={{ y: heroY, opacity: heroOpacity }} className="absolute inset-0">
-          <Image src="https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=1400&q=80" alt="camera hero" fill unoptimized className="object-cover" />
+          <Image src="https://images.unsplash.com/photo-1629236?w=800&q=80" alt="camera hero" fill unoptimized className="object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#f4f2ee] via-transparent to-transparent" />
         </motion.div>
         <div className="relative z-10 px-8 md:px-16 pb-16">

@@ -153,7 +153,7 @@ export default function MeridianConsulting() {
       {/* Hero with Word Animation */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden pt-20">
         <div className="absolute inset-0 z-0">
-          <Image src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1200&auto=format&fit=crop" alt="Consulting" fill className="object-cover" />
+          <Image src="https://images.unsplash.com/photo-1109543?w=800&q=80" alt="Consulting" fill className="object-cover" />
           <div className="absolute inset-0 bg-black/50" />
         </div>
         <div className="relative z-10 text-center max-w-5xl px-6">

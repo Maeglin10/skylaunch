@@ -129,7 +129,7 @@ export default function ThreadlineSustainable() {
       {/* HERO */}
       <motion.section style={{ height: "100vh", position: "relative", overflow: "hidden", marginTop: "60px" }}>
         <motion.div style={{ position: "absolute", inset: 0, y: heroY }}>
-          <Image src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?q=80&w=1600&auto=format&fit=crop" alt="Sustainable Fashion" fill style={{ objectFit: "cover" }} priority />
+          <Image src="https://images.unsplash.com/photo-1536523?w=800&q=80" alt="Sustainable Fashion" fill style={{ objectFit: "cover" }} priority />
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(245,240,230,0.88) 0%, rgba(245,240,230,0.65) 100%)" }} />
         </motion.div>
         <div style={{ position: "relative", height: "100%", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", textAlign: "center", padding: "2rem" }}>

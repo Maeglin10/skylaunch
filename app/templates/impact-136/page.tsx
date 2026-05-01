@@ -149,7 +149,7 @@ export default function PrismWeddingsLanding() {
           className="absolute inset-0 -z-10"
         >
           <Image
-            src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?q=80&w=1200"
+            src="https://images.unsplash.com/photo-1109543?w=800&q=80"
             alt="Wedding ceremony"
             fill
             className="object-cover"

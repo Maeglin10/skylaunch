@@ -114,7 +114,7 @@ export default function KaisekiAtelierSPA() {
                    </div>
                 </div>
                 <div className="relative aspect-square bg-white rounded-[4rem] p-12 overflow-hidden border border-black/5 shadow-2xi group">
-                   <Image src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=1000&auto=format&fit=crop" alt="The Void" fill className="object-cover grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-[3s]" />
+                   <Image src="https://images.unsplash.com/photo-196645?w=800&q=80" alt="The Void" fill className="object-cover grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-[3s]" />
                    <div className="absolute inset-x-0 bottom-12 flex justify-center">
                       <div className="px-12 py-6 bg-black text-white text-[10px] font-black uppercase tracking-widest italic animate-bounce">
                          View_Full_Gallery

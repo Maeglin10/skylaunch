@@ -85,7 +85,7 @@ export default function CeramicsAtelierSPA() {
       {/* HERO */}
       <section className="relative h-screen flex items-end overflow-hidden bg-[#e8e0d5]">
         <motion.div style={{ y: heroY, scale: heroScale }} className="absolute inset-0">
-          <Image src="https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?q=80&w=2000&auto=format&fit=crop" alt="Ceramics" fill className="object-cover opacity-60" unoptimized />
+          <Image src="https://images.unsplash.com/photo-196645?w=800&q=80" alt="Ceramics" fill className="object-cover opacity-60" unoptimized />
         </motion.div>
         <div className="absolute inset-0 bg-gradient-to-t from-[#1e1a14]/80 via-transparent to-transparent" />
         <motion.div style={{ opacity: heroOpacity }} className="relative z-10 px-8 md:px-16 pb-20 w-full">

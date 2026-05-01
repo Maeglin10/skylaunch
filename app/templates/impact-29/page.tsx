@@ -125,7 +125,7 @@ export default function GlitchCyberPortfolioSPA() {
       {/* HERO */}
       <section className="relative min-h-screen flex items-center overflow-hidden">
         <motion.div style={{ y: heroY }} className="absolute inset-0">
-          <Image src="https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2000&auto=format&fit=crop" alt="Cyber" fill className="object-cover opacity-8" unoptimized />
+          <Image src="https://images.unsplash.com/photo-574071?w=800&q=80" alt="Cyber" fill className="object-cover opacity-8" unoptimized />
         </motion.div>
         {/* Grid background */}
         <div className="absolute inset-0" style={{ backgroundImage: "linear-gradient(rgba(0,255,136,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,136,0.04) 1px, transparent 1px)", backgroundSize: "60px 60px" }} />

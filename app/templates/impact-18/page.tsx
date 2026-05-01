@@ -112,7 +112,7 @@ export default function GridSystemSPA() {
       {/* HERO */}
       <section className="relative min-h-screen flex items-center overflow-hidden">
         <motion.div style={{ y: heroY }} className="absolute inset-0">
-          <Image src="https://images.unsplash.com/photo-1558494949-ef010cbdcc51?q=80&w=2000&auto=format&fit=crop" alt="Grid System" fill className="object-cover opacity-20" unoptimized />
+          <Image src="https://images.unsplash.com/photo-733852?w=800&q=80" alt="Grid System" fill className="object-cover opacity-20" unoptimized />
         </motion.div>
         {/* Grid overlay */}
         <div className="absolute inset-0" style={{ backgroundImage: "linear-gradient(rgba(59,130,246,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.06) 1px, transparent 1px)", backgroundSize: "60px 60px" }} />

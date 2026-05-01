@@ -158,7 +158,7 @@ export default function HardwareInterfaceSPA() {
       <section ref={heroRef} className="relative h-screen overflow-hidden flex items-end pb-24 px-8 md:px-16">
         <motion.div style={{ y: heroY, opacity: heroOpacity }} className="absolute inset-0">
           <img
-            src="https://images.unsplash.com/photo-1470770841072-f978cf4d019e?q=80&w=2000&auto=format&fit=crop"
+            src="https://images.unsplash.com/photo-546819?w=800&q=80"
             alt="Mountain lake at sunrise"
             className="w-full h-full object-cover object-center"
           />

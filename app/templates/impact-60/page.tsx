@@ -211,7 +211,7 @@ export default function PhotographyArchiveSPA() {
       <section ref={heroRef} id="hero" className="relative h-screen flex items-end overflow-hidden">
         <motion.div style={{ y: heroY }} className="absolute inset-0">
           <Image
-            src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=2000&auto=format&fit=crop"
+            src="https://images.unsplash.com/photo-1109543?w=800&q=80"
             alt="Luxury estate"
             fill
             unoptimized
@@ -401,7 +401,7 @@ export default function PhotographyArchiveSPA() {
         <Reveal>
           <div className="relative rounded-2xl overflow-hidden aspect-[4/5]">
             <Image
-              src="https://images.unsplash.com/photo-1570129477492-45c003edd2be?q=80&w=1400&auto=format&fit=crop"
+              src="https://images.unsplash.com/photo-733852?w=800&q=80"
               alt="Architecture studio"
               fill
               unoptimized
@@ -506,7 +506,7 @@ export default function PhotographyArchiveSPA() {
       <section id="contact" className="relative overflow-hidden px-8 md:px-16 py-32 bg-[#1a1614] text-white text-center">
         <div className="absolute inset-0 opacity-10">
           <Image
-            src="https://images.unsplash.com/photo-1449824913935-59a10b8d2000?q=80&w=2000&auto=format&fit=crop"
+            src="https://images.unsplash.com/photo-733852?w=800&q=80"
             alt="Estate"
             fill
             unoptimized

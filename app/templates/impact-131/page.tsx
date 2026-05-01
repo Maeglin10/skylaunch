@@ -79,7 +79,7 @@ export default function LuminosPage() {
       <section className="relative h-[100vh] overflow-hidden">
         <motion.div style={{ y: parallaxY }} className="absolute inset-0">
           <Image
-            src="https://images.unsplash.com/photo-1565814329452-e1efa11c5b89?w=1600"
+            src="https://images.unsplash.com/photo-209977?w=800&q=80"
             alt="Dramatic Lighting"
             fill
             className="object-cover"

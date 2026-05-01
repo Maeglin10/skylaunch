@@ -112,7 +112,7 @@ export default function ImmersiveNarrativeSPA() {
       {/* Hero — full-screen cinematic */}
       <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
         <motion.div style={{ y: heroY }} className="absolute inset-0">
-          <Image src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2400&auto=format&fit=crop" alt="Narrative" fill className="object-cover opacity-30" unoptimized />
+          <Image src="https://images.unsplash.com/photo-1109543?w=800&q=80" alt="Narrative" fill className="object-cover opacity-30" unoptimized />
           <div className="absolute inset-0 bg-gradient-radial from-transparent to-[#080808]" style={{ background: "radial-gradient(ellipse at center, transparent 0%, #080808 70%)" }} />
         </motion.div>
 
@@ -249,7 +249,7 @@ export default function ImmersiveNarrativeSPA() {
       {/* CTA */}
       <section className="py-32 px-6 overflow-hidden relative">
         <div className="absolute inset-0">
-          <Image src="https://images.unsplash.com/photo-1617791160505-6f00504f3519?q=80&w=2000&auto=format&fit=crop" alt="CTA" fill className="object-cover opacity-10" unoptimized />
+          <Image src="https://images.unsplash.com/photo-733852?w=800&q=80" alt="CTA" fill className="object-cover opacity-10" unoptimized />
           <div className="absolute inset-0 bg-gradient-to-t from-[#080808] via-[#080808]/80 to-[#080808]" />
         </div>
         <Reveal className="relative z-10 max-w-4xl mx-auto text-center">

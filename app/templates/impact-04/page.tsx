@@ -147,7 +147,7 @@ export default function RestaurantVitrineSPA() {
          ============================================================= */}
       <section className="relative h-screen w-full flex items-center justify-center overflow-hidden">
         <motion.div style={{ scale: heroScale }} className="absolute inset-0 z-0">
-          <Image src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?q=80&w=2000&auto=format&fit=crop" fill className="object-cover" alt="Restaurant ambiance" priority />
+          <Image src="https://images.unsplash.com/photo-1536482?w=800&q=80" fill className="object-cover" alt="Restaurant ambiance" priority />
         </motion.div>
         <motion.div style={{ opacity: overlayOpacity }} className="absolute inset-0 z-[1] bg-[#0c0a08]" />
 

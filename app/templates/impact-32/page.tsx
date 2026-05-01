@@ -110,7 +110,7 @@ export default function FoodLiquidMenu() {
       {/* HERO */}
       <section className="relative h-screen flex items-end overflow-hidden">
         <motion.div style={{ y: heroY, scale: heroScale }} className="absolute inset-0">
-          <Image src="https://images.unsplash.com/photo-1565299585323-38d6b0865b47?q=80&w=2000&auto=format&fit=crop" alt="Restaurant" fill className="object-cover opacity-70" unoptimized />
+          <Image src="https://images.unsplash.com/photo-209977?w=800&q=80" alt="Restaurant" fill className="object-cover opacity-70" unoptimized />
         </motion.div>
         <div className="absolute inset-0 bg-gradient-to-t from-[#1c1410]/95 via-[#1c1410]/20 to-transparent" />
         <motion.div style={{ opacity: heroOpacity }} className="relative z-10 px-8 md:px-16 pb-20 w-full">

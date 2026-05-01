@@ -100,7 +100,7 @@ export default function MatrixDirectorySPA() {
       {/* HERO */}
       <section className="relative pt-24 pb-12 overflow-hidden bg-[#0d1120] text-white">
         <motion.div style={{ y: heroY }} className="absolute inset-0">
-          <Image src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2000&auto=format&fit=crop" alt="Finance" fill className="object-cover opacity-10" unoptimized />
+          <Image src="https://images.unsplash.com/photo-733852?w=800&q=80" alt="Finance" fill className="object-cover opacity-10" unoptimized />
         </motion.div>
         <div className="absolute inset-0" style={{ backgroundImage: "linear-gradient(rgba(59,130,246,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.05) 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
         <motion.div style={{ opacity: heroOpacity }} className="relative z-10 px-8 md:px-16 pt-12 pb-16">

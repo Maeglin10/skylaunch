@@ -124,7 +124,7 @@ export default function EditorialArchiveSPA() {
       {/* Hero */}
       <div className="relative overflow-hidden pt-24">
         <motion.div style={{ y: heroY }} className="absolute right-0 top-0 w-1/2 h-full opacity-10">
-          <Image src="https://images.unsplash.com/photo-1457369804613-52c61a468e7d?q=80&w=1200&auto=format&fit=crop" alt="Archive" fill className="object-cover" unoptimized />
+          <Image src="https://images.unsplash.com/photo-1109543?w=800&q=80" alt="Archive" fill className="object-cover" unoptimized />
         </motion.div>
         <div className="relative z-10 max-w-5xl mx-auto px-6 md:px-12 py-28">
           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="text-xs uppercase tracking-[0.3em] text-[#9ca3af] mb-6">

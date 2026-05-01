@@ -116,7 +116,7 @@ export default function EditorialSPA() {
       {/* Hero */}
       <div className="relative overflow-hidden pt-24">
         <motion.div style={{ y: heroY }} className="absolute inset-0 top-0">
-          <Image src="https://images.unsplash.com/photo-1504711434969-e33886168f5c?q=80&w=2000&auto=format&fit=crop" alt="Editorial" fill className="object-cover opacity-8" unoptimized />
+          <Image src="https://images.unsplash.com/photo-1536523?w=800&q=80" alt="Editorial" fill className="object-cover opacity-8" unoptimized />
         </motion.div>
         <div className="relative z-10 max-w-5xl mx-auto px-6 md:px-12 py-24 md:py-36">
           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="text-sm text-[#6b7280] uppercase tracking-widest mb-6">

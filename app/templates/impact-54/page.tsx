@@ -114,7 +114,7 @@ export default function ParticleFireflies() {
       {/* Hero */}
       <section ref={heroRef} className="relative h-screen flex items-end overflow-hidden">
         <motion.div style={{ y: heroY, opacity: heroOpacity }} className="absolute inset-0">
-          <Image src="https://images.unsplash.com/photo-1448375240586-882707db888b?w=1400&q=80" alt="forest" fill unoptimized className="object-cover" />
+          <Image src="https://images.unsplash.com/photo-209977?w=800&q=80" alt="forest" fill unoptimized className="object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0b1209] via-[#0b1209]/40 to-transparent" />
         </motion.div>
         <div className="relative z-10 px-8 md:px-16 pb-16">

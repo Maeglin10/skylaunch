@@ -135,7 +135,7 @@ export default function TypoAgencySPA() {
       {/* Hero */}
       <div className="relative min-h-screen flex items-end pb-24 overflow-hidden pt-20">
         <motion.div style={{ y: heroY }} className="absolute inset-0">
-          <Image src="https://images.unsplash.com/photo-1547891654-e66ed7ebb968?q=80&w=2000&auto=format&fit=crop" alt="Typography" fill className="object-cover opacity-6" unoptimized />
+          <Image src="https://images.unsplash.com/photo-196645?w=800&q=80" alt="Typography" fill className="object-cover opacity-6" unoptimized />
         </motion.div>
         <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 w-full">
           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="text-xs uppercase tracking-[0.3em] text-gray-400 mb-8">

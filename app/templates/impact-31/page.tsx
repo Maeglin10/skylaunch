@@ -85,7 +85,7 @@ export default function PerspectiveCoreSPA() {
       {/* HERO */}
       <section className="relative h-screen flex items-center overflow-hidden">
         <motion.div style={{ y: heroY, scale: heroScale }} className="absolute inset-0">
-          <Image src="https://images.unsplash.com/photo-1614728263952-84ea256f9679?q=80&w=2000&auto=format&fit=crop" alt="Immersive" fill className="object-cover opacity-35" unoptimized />
+          <Image src="https://images.unsplash.com/photo-1536482?w=800&q=80" alt="Immersive" fill className="object-cover opacity-35" unoptimized />
         </motion.div>
         <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at 30% 50%, rgba(224,64,251,0.15) 0%, transparent 60%), radial-gradient(ellipse at 80% 30%, rgba(64,196,255,0.1) 0%, transparent 50%)" }} />
         <div className="absolute inset-0 bg-gradient-to-r from-[#06030a]/90 via-[#06030a]/50 to-transparent" />

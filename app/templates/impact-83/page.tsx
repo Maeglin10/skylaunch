@@ -115,7 +115,7 @@ export default function VoltaMotors() {
       {/* HERO */}
       <motion.section style={{ height: "100vh", position: "relative", overflow: "hidden", marginTop: "60px" }}>
         <motion.div style={{ position: "absolute", inset: 0, y: heroY }}>
-          <Image src="https://images.unsplash.com/photo-1593941707882-a5bba14938c7?q=80&w=1600&auto=format&fit=crop" alt="Electric Car" fill style={{ objectFit: "cover" }} priority />
+          <Image src="https://images.unsplash.com/photo-209977?w=800&q=80" alt="Electric Car" fill style={{ objectFit: "cover" }} priority />
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(5,12,10,0.85) 0%, rgba(0,217,126,0.08) 100%)" }} />
         </motion.div>
         <div style={{ position: "relative", height: "100%", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", textAlign: "center", padding: "2rem" }}>

@@ -119,7 +119,7 @@ export default function LuxuryHospitalitySPA() {
       {/* Hero */}
       <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
         <motion.div style={{ y: heroY }} className="absolute inset-0">
-          <Image src="https://images.unsplash.com/photo-1582719508461-905c673771fd?q=80&w=2400&auto=format&fit=crop" alt="Grand Palais Hotel" fill className="object-cover opacity-40" unoptimized />
+          <Image src="https://images.unsplash.com/photo-209977?w=800&q=80" alt="Grand Palais Hotel" fill className="object-cover opacity-40" unoptimized />
           <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a12]/60 via-transparent to-[#0a0a12]" />
         </motion.div>
 
@@ -277,7 +277,7 @@ export default function LuxuryHospitalitySPA() {
       {/* CTA */}
       <section className="py-32 px-6 relative overflow-hidden">
         <div className="absolute inset-0">
-          <Image src="https://images.unsplash.com/photo-1582719508461-905c673771fd?q=80&w=2000&auto=format&fit=crop" alt="Reserve" fill className="object-cover opacity-15" unoptimized />
+          <Image src="https://images.unsplash.com/photo-1536523?w=800&q=80" alt="Reserve" fill className="object-cover opacity-15" unoptimized />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a12] to-[#0a0a12]/80" />
         </div>
         <Reveal className="relative z-10 max-w-3xl mx-auto text-center">

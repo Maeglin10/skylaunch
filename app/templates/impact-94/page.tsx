@@ -140,7 +140,7 @@ export default function InkSoul() {
       {/* Hero Section with Parallax */}
       <section style={{ position: "relative", height: "100vh", overflow: "hidden", marginTop: "60px" }}>
         <motion.div style={{ y: parallaxY }}>
-          <Image src="https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=1200&auto=format&fit=crop" alt="Tattoo Studio" fill unoptimized priority style={{ objectFit: "cover" }} />
+          <Image src="https://images.unsplash.com/photo-546819?w=800&q=80" alt="Tattoo Studio" fill unoptimized priority style={{ objectFit: "cover" }} />
         </motion.div>
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #0a0a0a, transparent)" }} />
         <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", textAlign: "center", zIndex: 10 }}>
@@ -163,7 +163,7 @@ export default function InkSoul() {
             <Reveal key={idx} delay={idx * 0.05}>
               <motion.div whileHover={{ y: -5 }} onClick={() => setSelectedArtwork(idx + 1)} style={{ cursor: "pointer", position: "relative" }}>
                 <div style={{ position: "relative", aspectRatio: "1", borderRadius: "0.75rem", overflow: "hidden", marginBottom: "0.75rem", border: "2px solid #b91c1c" }}>
-                  <Image src="https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=500&auto=format&fit=crop" alt={`Tattoo ${idx + 1}`} fill unoptimized style={{ objectFit: "cover" }} />
+                  <Image src="https://images.unsplash.com/photo-546819?w=800&q=80" alt={`Tattoo ${idx + 1}`} fill unoptimized style={{ objectFit: "cover" }} />
                   <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #0a0a0a, transparent)", opacity: 0, transition: "opacity 0.3s", display: "flex", alignItems: "flex-end", padding: "1rem" }} onMouseEnter={(e) => { (e.target as any).style.opacity = "1" }} onMouseLeave={(e) => { (e.target as any).style.opacity = "0" }}>
                     <span style={{ color: "#b91c1c", fontWeight: "bold", fontSize: "0.875rem" }}>View Details</span>
                   </div>
@@ -309,7 +309,7 @@ export default function InkSoul() {
             {flashes.map((flash, idx) => (
               <Reveal key={flash.id} delay={idx * 0.05}>
                 <motion.div whileHover={{ y: -5 }} style={{ position: "relative", borderRadius: "0.75rem", overflow: "hidden", aspectRatio: "1", border: "2px solid #b91c1c" }}>
-                  <Image src="https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=500&auto=format&fit=crop" alt={flash.design} fill unoptimized style={{ objectFit: "cover" }} />
+                  <Image src="https://images.unsplash.com/photo-546819?w=800&q=80" alt={flash.design} fill unoptimized style={{ objectFit: "cover" }} />
                   <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #0a0a0a, transparent)", display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "1.5rem", color: "#f5f0e8" }}>
                     <div>
                       <span style={{ display: "inline-block", padding: "0.25rem 0.75rem", backgroundColor: "#b91c1c", color: "#0a0a0a", borderRadius: "20px", fontSize: "0.75rem", fontWeight: "bold", marginBottom: "0.75rem" }}>{flash.style}</span>

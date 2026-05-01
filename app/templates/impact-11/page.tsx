@@ -138,7 +138,7 @@ export default function TerminalConsoleSPA() {
       {/* Hero */}
       <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
         <motion.div style={{ y: heroY }} className="absolute inset-0">
-          <Image src="https://images.unsplash.com/photo-1515879218367-8466d910aaa4?q=80&w=2000&auto=format&fit=crop" alt="Terminal" fill className="object-cover opacity-5" unoptimized />
+          <Image src="https://images.unsplash.com/photo-546819?w=800&q=80" alt="Terminal" fill className="object-cover opacity-5" unoptimized />
         </motion.div>
 
         <div className="relative z-10 max-w-5xl mx-auto px-6 pt-24 text-center">

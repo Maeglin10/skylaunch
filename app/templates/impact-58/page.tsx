@@ -177,7 +177,7 @@ export default function MaskedVideoTypography() {
       <section ref={heroRef} className="relative h-screen overflow-hidden flex items-center px-8 md:px-16">
         <motion.div style={{ y: heroY, opacity: heroOpacity }} className="absolute inset-0">
           <img
-            src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2000&auto=format&fit=crop"
+            src="https://images.unsplash.com/photo-196645?w=800&q=80"
             alt="Creative work"
             className="w-full h-full object-cover object-center"
           />

@@ -181,7 +181,7 @@ export default function DriftTravelLanding() {
       <section className="relative h-screen overflow-hidden flex items-center justify-center">
         <div className="absolute inset-0 -z-10">
           <Image
-            src="https://images.unsplash.com/photo-1527004013197-933c4bb611b3?q=80&w=1200"
+            src="https://images.unsplash.com/photo-1536482?w=800&q=80"
             alt="Adventure"
             fill
             className="object-cover"

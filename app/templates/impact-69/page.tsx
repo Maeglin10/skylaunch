@@ -237,7 +237,7 @@ function Hero() {
     <section ref={ref} className="relative h-screen flex items-center overflow-hidden bg-[#faf7f3]">
       <motion.div style={{ y }} className="absolute inset-0 scale-110">
         <Image
-          src="https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&q=80&w=2400"
+          src="https://images.unsplash.com/photo-1109543?w=800&q=80"
           alt="Skincare hero"
           fill
           unoptimized
@@ -458,7 +458,7 @@ function RitualSteps() {
     <section ref={ref} className="relative overflow-hidden bg-stone-800 py-32">
       <motion.div style={{ y }} className="absolute inset-0 scale-110">
         <Image
-          src="https://images.unsplash.com/photo-1570194065650-d99fb4bedf22?auto=format&fit=crop&q=80&w=2400"
+          src="https://images.unsplash.com/photo-733852?w=800&q=80"
           alt="Ritual background"
           fill
           unoptimized

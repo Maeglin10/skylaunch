@@ -48,7 +48,7 @@ function ParallaxHero() {
     <div className="relative h-screen w-full overflow-hidden">
       <motion.div style={{ y: backgroundY }} className="absolute inset-0">
         <Image
-          src="https://images.unsplash.com/photo-1608270861620-7c3fdf5ae063?auto=format&fit=crop&q=80&w=1200"
+          src="https://images.unsplash.com/photo-733852?w=800&q=80"
           alt="Golden Ridge Brewing"
           fill
           className="object-cover"

@@ -148,7 +148,7 @@ export default function QuantumAI_SPA() {
       {/* Hero */}
       <div ref={heroRef} className="relative min-h-screen flex items-center justify-center overflow-hidden">
         <motion.div style={{ y: heroY }} className="absolute inset-0">
-          <Image src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2000&auto=format&fit=crop" alt="Hero" fill className="object-cover opacity-20" unoptimized />
+          <Image src="https://images.unsplash.com/photo-733852?w=800&q=80" alt="Hero" fill className="object-cover opacity-20" unoptimized />
           <div className="absolute inset-0 bg-gradient-to-b from-[#020617]/40 via-transparent to-[#020617]" />
         </motion.div>
 

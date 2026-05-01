@@ -125,7 +125,7 @@ export default function CreativePortfolioSPA() {
       <section className="relative h-screen w-full flex items-center justify-center overflow-hidden">
         <motion.div style={{ y: heroY }} className="absolute inset-0 z-0">
           <Image
-            src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2000&auto=format&fit=crop"
+            src="https://images.unsplash.com/photo-196645?w=800&q=80"
             fill
             className="object-cover"
             alt="Hero background"

@@ -291,7 +291,7 @@ export default function TechDataStream() {
       <section ref={heroRef} className="relative h-screen flex items-end overflow-hidden">
         <motion.div style={{ y: heroY }} className="absolute inset-0">
           <Image
-            src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=2000&auto=format&fit=crop"
+            src="https://images.unsplash.com/photo-1629236?w=800&q=80"
             alt="Fashion editorial"
             fill
             unoptimized
@@ -437,7 +437,7 @@ export default function TechDataStream() {
           <div className="relative">
             <div className="relative aspect-[3/4] overflow-hidden">
               <Image
-                src="https://images.unsplash.com/photo-1558769132-cb1aea458c5e?q=80&w=1400&auto=format&fit=crop"
+                src="https://images.unsplash.com/photo-1629236?w=800&q=80"
                 alt="Atelier at work"
                 fill
                 unoptimized
@@ -535,7 +535,7 @@ export default function TechDataStream() {
       <section className="relative overflow-hidden py-32 px-8 md:px-16 text-center">
         <div className="absolute inset-0">
           <Image
-            src="https://images.unsplash.com/photo-1558769132-cb1aea458c5e?q=80&w=2000&auto=format&fit=crop"
+            src="https://images.unsplash.com/photo-1629236?w=800&q=80"
             alt="Collection"
             fill
             unoptimized
