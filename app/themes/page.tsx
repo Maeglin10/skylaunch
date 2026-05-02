@@ -29,12 +29,12 @@ const HIDDEN_IMPACT = new Set([
   "impact-177","impact-178","impact-179","impact-180","impact-181","impact-182","impact-183","impact-184","impact-185","impact-186",
   "impact-187","impact-188","impact-189","impact-190","impact-191","impact-192","impact-193","impact-194","impact-195","impact-196",
   // ── Below quality bar (400–549 lines, pending elevation) ────────────────
-  "impact-02","impact-04","impact-05",
+  "impact-04","impact-05",
   "impact-55","impact-56","impact-57","impact-58","impact-59",
   "impact-62","impact-63","impact-70","impact-72","impact-75",
-  "impact-84","impact-86","impact-87","impact-88","impact-89","impact-90","impact-91","impact-94","impact-95","impact-96",
+  "impact-84","impact-86","impact-87","impact-88","impact-89","impact-90","impact-91","impact-95","impact-96",
   "impact-112","impact-113","impact-114","impact-115",
-  "impact-126","impact-130","impact-131","impact-132","impact-133","impact-135","impact-136",
+  "impact-126","impact-130","impact-131","impact-133","impact-135","impact-136",
   "impact-140","impact-141","impact-145","impact-147","impact-148","impact-149","impact-150","impact-151",
 ]);
 
@@ -96,25 +96,49 @@ interface ThemeItem {
   featured: boolean;
 }
 
-// ─── Thumbnail card with IntersectionObserver ─────────────────────────────────
+// ─── Thumbnail card ────────────────────────────────────────────────────────────
+// Priority: static WebP screenshot (public/thumbnails/[id].webp) → live iframe fallback
+// Generate screenshots with: npm run screenshots
 function ThumbCard({ item, index }: { item: ThemeItem; index: number }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [entered, setEntered] = useState(false);
-  const [loaded, setLoaded] = useState(false);
   const accent = CAT_COLOR[item.category] ?? "#7c3aed";
 
+  // Static thumbnail state
+  const [thumbFailed, setThumbFailed] = useState(false);
+  const [thumbLoaded, setThumbLoaded] = useState(false);
+
+  // Iframe fallback (IntersectionObserver — loads when in viewport)
+  const [entered, setEntered] = useState(false);
+  const [iframeLoaded, setIframeLoaded] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const [showIframe, setShowIframe] = useState(false);
+
+  // Only load iframe if static thumb failed (or on hover for live preview)
   useEffect(() => {
+    if (!thumbFailed) return;
     const el = ref.current;
     if (!el) return;
     const obs = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) { setEntered(true); obs.disconnect(); }
-      },
-      { rootMargin: "500px" }
+      ([e]) => { if (e.isIntersecting) { setEntered(true); obs.disconnect(); } },
+      { rootMargin: "400px" }
     );
     obs.observe(el);
     return () => obs.disconnect();
-  }, []);
+  }, [thumbFailed]);
+
+  // Show live iframe on hover (even when static thumb is present)
+  useEffect(() => {
+    let t: NodeJS.Timeout;
+    if (hovered) {
+      if (!entered) setEntered(true);
+      t = setTimeout(() => setShowIframe(true), 180);
+    } else {
+      setShowIframe(false);
+    }
+    return () => clearTimeout(t);
+  }, [hovered, entered]);
+
+  const thumbSrc = `/thumbnails/${item.id}.webp`;
 
   return (
     <motion.div
@@ -123,6 +147,8 @@ function ThumbCard({ item, index }: { item: ThemeItem; index: number }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: Math.min((index % 8) * 0.04, 0.24) }}
       className="group"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
       <Link href={item.href} className="block h-full cursor-pointer">
         <div
@@ -135,33 +161,51 @@ function ThumbCard({ item, index }: { item: ThemeItem; index: number }) {
             style={{ background: `radial-gradient(ellipse at 50% 0%, ${accent}22 0%, transparent 65%)` }}
           />
 
-          {/* Preview thumbnail — always loaded when in viewport */}
+          {/* ── Preview area ── */}
           <div className="w-full aspect-video relative overflow-hidden bg-[#050506] border-b border-white/5 shrink-0">
-            {entered ? (
-              <>
+
+            {/* Static WebP thumbnail (fast, always visible) */}
+            {!thumbFailed && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={thumbSrc}
+                alt={item.label}
+                className={`absolute inset-0 w-full h-full object-cover object-top transition-opacity duration-500 ${thumbLoaded ? "opacity-100" : "opacity-0"}`}
+                onLoad={() => setThumbLoaded(true)}
+                onError={() => setThumbFailed(true)}
+              />
+            )}
+
+            {/* Live iframe — overlaid on hover, or as fallback when no thumbnail */}
+            {entered && (thumbFailed || showIframe) && (
+              <div
+                className={`absolute inset-0 transition-opacity duration-300 ${showIframe ? "opacity-100" : thumbFailed ? "opacity-100" : "opacity-0"}`}
+              >
                 <iframe
                   src={item.href}
-                  className={`absolute inset-0 w-[400%] h-[400%] origin-top-left scale-25 pointer-events-none transition-opacity duration-700 ${loaded ? "opacity-95" : "opacity-0"}`}
+                  className={`absolute inset-0 w-[400%] h-[400%] origin-top-left scale-25 pointer-events-none transition-opacity duration-500 ${iframeLoaded ? "opacity-95" : "opacity-0"}`}
                   sandbox="allow-scripts allow-same-origin"
                   loading="lazy"
-                  onLoad={() => setLoaded(true)}
+                  onLoad={() => setIframeLoaded(true)}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0d]/70 via-transparent to-transparent pointer-events-none" />
-                {!loaded && (
-                  <div
-                    className="absolute inset-0 flex items-center justify-center"
-                    style={{ background: `radial-gradient(ellipse at center, ${accent}14 0%, transparent 70%)` }}
-                  >
-                    <div className="w-4 h-4 border-2 border-white/10 border-t-white/50 rounded-full animate-spin" />
-                  </div>
-                )}
-              </>
-            ) : (
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0d]/60 via-transparent to-transparent pointer-events-none" />
+              </div>
+            )}
+
+            {/* Placeholder while loading */}
+            {!thumbLoaded && !iframeLoaded && (
               <div
                 className="absolute inset-0 flex items-center justify-center"
-                style={{ background: `radial-gradient(ellipse at center, ${accent}10 0%, transparent 70%)` }}
+                style={{ background: `radial-gradient(ellipse at center, ${accent}12 0%, transparent 70%)` }}
               >
-                <div className="w-4 h-4 border border-white/8 rounded-full animate-pulse" />
+                <div className="w-4 h-4 border-2 border-white/10 border-t-white/40 rounded-full animate-spin" />
+              </div>
+            )}
+
+            {/* "Live" badge on hover */}
+            {showIframe && (
+              <div className="absolute top-2 right-2 z-20 px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider bg-black/60 backdrop-blur-sm text-white/60">
+                Live
               </div>
             )}
           </div>
