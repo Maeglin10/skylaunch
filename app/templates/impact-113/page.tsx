@@ -1,425 +1,546 @@
-"use client"
-import { motion, useScroll, useTransform, useInView, AnimatePresence, useMotionValue, useSpring } from "framer-motion"
-import { useState, useRef, useEffect } from "react"
-import Image from "next/image"
-import Link from "next/link"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
-import { Progress } from "@/components/ui/progress"
+"use client";
 
-function Reveal({ children, delay=0 }: { children: React.ReactNode; delay?: number }) {
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true, margin: "-60px" })
-  return <motion.div ref={ref} initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, delay }}>{children}</motion.div>
+import React, { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence, useScroll, useTransform, useInView } from "framer-motion";
+import Image from "next/image";
+import Link from "next/link";
+import { ChevronRight, ArrowRight, Shield, Zap, Activity, Globe, Lock, BarChart, Settings, Users, Server, CheckCircle2, Menu, X, Play, Twitter, Linkedin, Github } from "lucide-react";
+
+import "../premium.css";
+
+/* ==========================================================================
+   DATA STRUCTURES
+   ========================================================================== */
+
+const FEATURES = [
+  { icon: <Zap className="w-5 h-5" />, title: "Real-time Processing", desc: "Process millions of events per second with sub-millisecond latency. Our distributed edge network ensures your data is exactly where it needs to be." },
+  { icon: <Shield className="w-5 h-5" />, title: "Enterprise Security", desc: "Bank-grade encryption at rest and in transit. SOC2 Type II, HIPAA, and GDPR compliant out of the box." },
+  { icon: <Globe className="w-5 h-5" />, title: "Global Edge Network", desc: "Deploy your application logic to 250+ edge locations worldwide. Route users to the nearest node automatically." },
+  { icon: <Activity className="w-5 h-5" />, title: "Deep Observability", desc: "Granular metrics, distributed tracing, and structured logging integrated seamlessly without performance overhead." },
+  { icon: <BarChart className="w-5 h-5" />, title: "Predictive Analytics", desc: "Leverage embedded machine learning models to forecast capacity needs and identify anomalies before they impact users." },
+  { icon: <Lock className="w-5 h-5" />, title: "Zero-Trust Architecture", desc: "Identity-aware access controls for every microservice. Assume breach mentality built into the core infrastructure." }
+];
+
+const PRICING = [
+  { name: "Developer", price: "$0", desc: "Perfect for side projects and evaluating Nexus.", features: ["Up to 10,000 monthly events", "3 Edge locations", "Community support", "1GB Data retention", "Standard analytics"], cta: "Start Free", popular: false },
+  { name: "Pro", price: "$49", desc: "For production applications with growing traffic.", features: ["Up to 5M monthly events", "50+ Edge locations", "Priority email support", "100GB Data retention", "Advanced analytics & alerting", "Custom domains"], cta: "Start 14-Day Trial", popular: true },
+  { name: "Enterprise", price: "Custom", desc: "For mission-critical deployments requiring SLA.", features: ["Unlimited monthly events", "Global edge network (250+ locations)", "24/7 Phone & Slack support", "Unlimited data retention", "Dedicated Technical Account Manager", "Custom compliance reporting"], cta: "Contact Sales", popular: false }
+];
+
+const TESTIMONIALS = [
+  { name: "David Chen", role: "CTO, FinTech Global", text: "Nexus completely transformed our infrastructure. We reduced latency by 80% while simultaneously cutting our AWS bill in half. It's the rare tool that actually delivers on its marketing promises." },
+  { name: "Sarah Jenkins", role: "VP Engineering, HealthSync", text: "The security posture out-of-the-box is incredible. Getting our SOC2 certification was a breeze because Nexus handled all the complex compliance requirements natively." },
+  { name: "Marcus Thorne", role: "Lead Architect, DataStream", text: "We process over 2 billion events daily. Before Nexus, we needed a team of 5 DevOps engineers just to keep the lights on. Now, it just runs automatically." }
+];
+
+const INTEGRATIONS = ["AWS", "GCP", "Azure", "Snowflake", "Datadog", "Slack", "PagerDuty", "Terraform", "Kubernetes", "GitHub"];
+
+const FAQS = [
+  { question: "How does Nexus compare to traditional cloud providers?", answer: "Unlike AWS or GCP where you piece together primitives, Nexus provides an opinionated, highly-optimized platform specifically designed for event-driven architectures. We abstract the infrastructure complexity while giving you better performance and lower latency." },
+  { question: "Can I deploy Nexus on-premise or in my VPC?", answer: "Yes, our Enterprise tier offers Nexus Dedicated, which allows you to deploy the entire control plane and data plane within your own AWS, GCP, or Azure VPC for maximum security and compliance." },
+  { question: "What programming languages are supported?", answer: "Our edge functions support Node.js, Python, Go, and Rust natively via WebAssembly. You can also deploy custom Docker containers for legacy application support." },
+  { question: "How does billing work if I exceed my tier's limits?", answer: "We never throttle or drop events. If you exceed your tier limits, you are simply billed for the overage at a flat rate of $0.001 per 10,000 events. You can set hard caps in your dashboard if desired." },
+];
+
+/* ==========================================================================
+   UTILITY COMPONENTS
+   ========================================================================== */
+
+function Reveal({ children, className = "", delay = 0, y = 30 }: { children: React.ReactNode; className?: string; delay?: number; y?: number }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-50px" });
+  return (
+    <motion.div ref={ref} initial={{ opacity: 0, y }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.8, delay, ease: [0.25, 0.1, 0.25, 1] }} className={className}>
+      {children}
+    </motion.div>
+  );
 }
 
-function Counter({ target, suffix="" }: { target: number; suffix?: string }) {
-  const [count, setCount] = useState(0)
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true })
+/* ==========================================================================
+   MAIN PAGE COMPONENT
+   ========================================================================== */
+
+export default function NexusSaaSPage() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [annualBilling, setAnnualBilling] = useState(true);
+  const [activeFaq, setActiveFaq] = useState<number | null>(null);
+
   useEffect(() => {
-    if (!inView) return
-    const step = Math.ceil(target / 60)
-    const t = setInterval(() => setCount(c => Math.min(c + step, target)), 16)
-    return () => clearInterval(t)
-  }, [inView, target])
-  return <span ref={ref}>{count.toLocaleString()}{suffix}</span>
-}
-
-function MagneticBtn({ children, className="" }: { children: React.ReactNode; className?: string }) {
-  const x = useMotionValue(0); const y = useMotionValue(0)
-  const sx = useSpring(x, { stiffness: 500, damping: 25 })
-  const sy = useSpring(y, { stiffness: 500, damping: 25 })
-  const ref = useRef<HTMLButtonElement>(null)
-  const handleMouse = (e: React.MouseEvent) => {
-    const r = ref.current!.getBoundingClientRect()
-    x.set((e.clientX - r.left - r.width/2) * 0.35)
-    y.set((e.clientY - r.top - r.height/2) * 0.35)
-  }
-  return <motion.button ref={ref} style={{ x: sx, y: sy }} onMouseMove={handleMouse} onMouseLeave={() => { x.set(0); y.set(0) }} className={className}>{children}</motion.button>
-}
-
-const PRODUCTS = [
-  { id: 1, title: "Luminous Serum", cat: "Serums", types: "All", price: "$125", img: "https://images.unsplash.com/photo-1556228578-8c89e6adf883" },
-  { id: 2, title: "Velvet Moisturizer", cat: "Moisturisers", types: "Dry/Combination", price: "$95", img: "https://images.unsplash.com/photo-1556228578-8c89e6adf883" },
-  { id: 3, title: "Radiance Mask", cat: "Masks", types: "Oily/Sensitive", price: "$65", img: "https://images.unsplash.com/photo-1556228578-8c89e6adf883" },
-  { id: 4, title: "Silk Body Oil", cat: "Body", types: "All", price: "$85", img: "https://images.unsplash.com/photo-1556228578-8c89e6adf883" },
-  { id: 5, title: "Luxury Set", cat: "Sets", types: "All", price: "$240", img: "https://images.unsplash.com/photo-1556228578-8c89e6adf883" },
-  { id: 6, title: "Essence Toner", cat: "Serums", types: "All", price: "$55", img: "https://images.unsplash.com/photo-1556228578-8c89e6adf883" },
-  { id: 7, title: "Night Recovery", cat: "Moisturisers", types: "All", price: "$110", img: "https://images.unsplash.com/photo-1556228578-8c89e6adf883" },
-  { id: 8, title: "Glow Starter", cat: "Sets", types: "All", price: "$160", img: "https://images.unsplash.com/photo-1556228578-8c89e6adf883" },
-]
-
-const INGREDIENTS = [
-  { name: "Hyaluronic Acid", source: "Sustainable Fermentation", efficacy: 95 },
-  { name: "Retinol Complex", source: "Plant-Derived", efficacy: 88 },
-  { name: "Niacinamide", source: "Clean Beauty", efficacy: 92 },
-  { name: "Peptide Blend", source: "Lab-Synthesized", efficacy: 85 },
-  { name: "Vitamin C", source: "Botanical Extract", efficacy: 90 },
-  { name: "Squalane", source: "Olive-Derived", efficacy: 87 },
-]
-
-export default function AuraBeauty() {
-  const [activeProduct, setActiveProduct] = useState(0)
-  const [productDialog, setProductDialog] = useState(false)
-  const [wishlist, setWishlist] = useState<number[]>([])
-  const [quizOpen, setQuizOpen] = useState(false)
-  const { scrollY } = useScroll()
-  const heroY = useTransform(scrollY, [0, 500], [0, 150])
+    const handleScroll = () => setScrolled(window.scrollY > 50);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
-    <div className="min-h-screen bg-[#fafaf8]" style={{ color: "#1a0f0a" }}>
-      <motion.section style={{ y: heroY }} className="relative h-screen flex items-center justify-center overflow-hidden">
-        <Image src="https://images.unsplash.com/photo-1629236?w=800&q=80" alt="Luxury Skincare" fill className="object-cover" />
-        <div className="absolute inset-0 bg-black/30" />
-        <div className="relative z-10 text-center text-white max-w-4xl mx-auto px-6">
-          <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="text-6xl md:text-8xl font-light mb-6">
-            AURA
-          </motion.h1>
-          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="text-xl md:text-2xl font-light">
-            Luxury Skincare & Wellness
-          </motion.p>
-        </div>
-      </motion.section>
+    <div className="premium-theme min-h-screen bg-[#05050a] text-white selection:bg-violet-500/30 font-sans overflow-x-hidden">
+      
+      {/* Background Gradients */}
+      <div className="fixed top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-violet-600/20 blur-[150px] pointer-events-none z-0" />
+      <div className="fixed bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-blue-600/10 blur-[150px] pointer-events-none z-0" />
 
-      <section className="py-24 px-6 md:px-12">
-        <Reveal>
-          <h2 className="text-5xl font-light mb-12" style={{ color: "#c4887a" }}>Our Collections</h2>
-        </Reveal>
-        <Tabs defaultValue="Serums" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 bg-white border border-[#c4887a]/20">
-            {["Serums", "Moisturisers", "Masks", "Body", "Sets"].map((cat) => (
-              <TabsTrigger key={cat} value={cat} className="data-[state=active]:bg-[#c4887a] data-[state=active]:text-white">
-                {cat}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-          {["Serums", "Moisturisers", "Masks", "Body", "Sets"].map((cat) => (
-            <TabsContent key={cat} value={cat} className="mt-12">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                {PRODUCTS.filter(p => p.cat === cat).map((prod, idx) => (
-                  <Reveal key={prod.id} delay={idx * 0.1}>
-                    <motion.div className="cursor-pointer group" whileHover={{ y: -8 }}>
-                      <div className="relative h-96 overflow-hidden rounded-lg mb-4 bg-[#f9ede8]">
-                        <Image src={prod.img + "?w=400"} alt={prod.title} fill className="object-cover opacity-70 group-hover:opacity-100 transition-opacity duration-500" />
-                      </div>
-                      <div className="flex justify-between items-start mb-3">
-                        <div onClick={() => { setActiveProduct(PRODUCTS.indexOf(prod)); setProductDialog(true); }}>
-                          <h3 className="text-lg font-light text-[#1a0f0a]">{prod.title}</h3>
-                          <p className="text-sm text-[#1a0f0a]/60">{prod.price}</p>
-                        </div>
-                        <button onClick={() => setWishlist(w => w.includes(prod.id) ? w.filter(x => x !== prod.id) : [...w, prod.id])} className="text-xl">
-                          {wishlist.includes(prod.id) ? "❤️" : "🤍"}
-                        </button>
-                      </div>
-                      <Badge className="bg-[#d4a94a] text-[#1a0f0a]">{prod.types}</Badge>
-                    </motion.div>
-                  </Reveal>
-                ))}
-              </div>
-            </TabsContent>
-          ))}
-        </Tabs>
-      </section>
+      {/* NAVIGATION */}
+      <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${scrolled ? "bg-[#05050a]/80 backdrop-blur-xl border-b border-white/5 py-4" : "bg-transparent py-6"}`}>
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-3 relative z-50">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center">
+              <Zap className="w-4 h-4 text-white" />
+            </div>
+            <span className="text-xl font-semibold tracking-tight">Nexus.</span>
+          </Link>
 
-      <Dialog open={productDialog} onOpenChange={setProductDialog}>
-        <DialogContent className="max-w-4xl bg-white">
-          <DialogHeader>
-            <DialogTitle className="text-3xl" style={{ color: "#1a0f0a" }}>{PRODUCTS[activeProduct]?.title}</DialogTitle>
-          </DialogHeader>
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="relative h-96 rounded-lg overflow-hidden bg-[#f9ede8]">
-              <Image src={PRODUCTS[activeProduct]?.img + "?w=500"} alt={PRODUCTS[activeProduct]?.title} fill className="object-cover" />
-            </div>
-            <div>
-              <p className="text-2xl font-light mb-6" style={{ color: "#c4887a" }}>{PRODUCTS[activeProduct]?.price}</p>
-              <Accordion type="single" collapsible>
-                <AccordionItem value="ingredients">
-                  <AccordionTrigger>Key Ingredients</AccordionTrigger>
-                  <AccordionContent>Hyaluronic Acid, Peptide Complex, Botanical Extracts</AccordionContent>
-                </AccordionItem>
-                <AccordionItem value="compatibility">
-                  <AccordionTrigger>Skin Type Compatibility</AccordionTrigger>
-                  <AccordionContent>
-                    <div className="space-y-3">
-                      <div><span className="font-light">Oily: </span><Progress value={85} className="h-2" /></div>
-                      <div><span className="font-light">Dry: </span><Progress value={78} className="h-2" /></div>
-                      <div><span className="font-light">Sensitive: </span><Progress value={92} className="h-2" /></div>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-                <AccordionItem value="usage">
-                  <AccordionTrigger>How to Use</AccordionTrigger>
-                  <AccordionContent>Apply 2-3 drops to cleansed skin morning and evening. Follow with moisturizer.</AccordionContent>
-                </AccordionItem>
-              </Accordion>
-              <button onClick={() => setProductDialog(false)} className="mt-8 w-full py-3 rounded-lg font-light transition-colors" style={{ backgroundColor: "#c4887a", color: "white" }}>
-                Add to Cart
-              </button>
-            </div>
+          <div className="hidden lg:flex items-center gap-8 text-sm font-medium text-white/70">
+            <Link href="#" className="hover:text-white transition-colors">Features</Link>
+            <Link href="#" className="hover:text-white transition-colors">Solutions</Link>
+            <Link href="#" className="hover:text-white transition-colors">Docs</Link>
+            <Link href="#" className="hover:text-white transition-colors">Pricing</Link>
+            <Link href="#" className="hover:text-white transition-colors">Blog</Link>
           </div>
-        </DialogContent>
-      </Dialog>
 
-      <section className="py-24 px-6 md:px-12 bg-[#f9ede8]/30">
-        <Reveal>
-          <h2 className="text-5xl font-light mb-12" style={{ color: "#c4887a" }}>Skin Quiz</h2>
-        </Reveal>
-        <div className="text-center max-w-2xl mx-auto">
-          <p className="text-lg text-[#1a0f0a]/70 mb-8">Discover your personalized routine in 3 questions</p>
-          <button onClick={() => setQuizOpen(true)} className="px-12 py-4 rounded-lg font-light text-white transition-colors" style={{ backgroundColor: "#c4887a" }}>
-            Start Quiz
+          <div className="hidden lg:flex items-center gap-6">
+            <Link href="#" className="text-sm font-medium text-white/70 hover:text-white transition-colors">Sign In</Link>
+            <button className="px-5 py-2.5 bg-white text-black text-sm font-bold rounded-full hover:bg-violet-50 transition-colors">
+              Start Free Trial
+            </button>
+          </div>
+
+          <button onClick={() => setMenuOpen(!menuOpen)} className="lg:hidden relative z-50 text-white">
+            {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
-      </section>
+      </nav>
 
-      <section className="py-24 px-6 md:px-12">
-        <Reveal>
-          <h2 className="text-5xl font-light mb-12" style={{ color: "#c4887a" }}>Ingredient Transparency</h2>
-        </Reveal>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {INGREDIENTS.map((ing, idx) => (
-            <Reveal key={idx} delay={idx * 0.1}>
-              <Card className="bg-white border border-[#c4887a]/10">
-                <CardContent className="p-6">
-                  <h3 className="text-lg font-light text-[#1a0f0a] mb-2">{ing.name}</h3>
-                  <Badge variant="outline" className="mb-4 border-[#c4887a] text-[#c4887a]">{ing.source}</Badge>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-[#1a0f0a]/60">Efficacy</span>
-                    <span className="text-[#c4887a] font-light">{ing.efficacy}%</span>
-                  </div>
-                  <Progress value={ing.efficacy} className="mt-2 bg-[#c4887a]/20" />
-                </CardContent>
-              </Card>
-            </Reveal>
-          ))}
-        </div>
-      </section>
+      {/* MOBILE MENU */}
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.3 }} className="fixed inset-0 z-40 bg-[#05050a]/98 backdrop-blur-2xl flex flex-col pt-32 px-6">
+            <div className="flex flex-col gap-6 text-2xl font-medium">
+              <Link href="#" onClick={() => setMenuOpen(false)}>Features</Link>
+              <Link href="#" onClick={() => setMenuOpen(false)}>Solutions</Link>
+              <Link href="#" onClick={() => setMenuOpen(false)}>Docs</Link>
+              <Link href="#" onClick={() => setMenuOpen(false)}>Pricing</Link>
+            </div>
+            <div className="mt-12 pt-8 border-t border-white/10 flex flex-col gap-4">
+              <button className="w-full py-4 border border-white/20 rounded-xl font-semibold">Sign In</button>
+              <button className="w-full py-4 bg-white text-black rounded-xl font-semibold">Start Free Trial</button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      <section className="py-24 px-6 md:px-12">
-        <Reveal>
-          <h2 className="text-5xl font-light mb-12" style={{ color: "#c4887a" }}>By The Numbers</h2>
-        </Reveal>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-          {[
-            { label: "Happy Customers", value: 500, suffix: "K+" },
-            { label: "Products Offered", value: 15 },
-            { label: "Clean Beauty Certified", value: 100, suffix: "%" },
-            { label: "Customer Rating", value: 49, suffix: "/5" },
-          ].map((stat, idx) => (
-            <Reveal key={idx} delay={idx * 0.1}>
-              <div className="text-center">
-                <p className="text-4xl md:text-5xl font-light mb-2" style={{ color: "#c4887a" }}>
-                  <Counter target={stat.value} suffix={stat.suffix} />
-                </p>
-                <p className="text-sm text-[#1a0f0a]/60">{stat.label}</p>
+      {/* ==========================================
+          1. HERO SECTION
+          ========================================== */}
+      <section className="relative pt-40 pb-20 md:pt-52 md:pb-32 px-6 overflow-hidden">
+        <div className="max-w-[1200px] mx-auto text-center relative z-10 flex flex-col items-center">
+          
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="mb-8 inline-flex items-center gap-3 px-4 py-2 rounded-full border border-violet-500/30 bg-violet-500/10 text-violet-300 text-xs font-semibold uppercase tracking-wider backdrop-blur-sm">
+            <span className="w-2 h-2 rounded-full bg-violet-400 animate-pulse" /> Introducing Nexus Edge 2.0
+          </motion.div>
+
+          <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1 }} className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tighter leading-[1.1] mb-8">
+            Infrastructure for the <br className="hidden md:block" />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 via-fuchsia-300 to-indigo-400">Next Generation.</span>
+          </motion.h1>
+
+          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }} className="text-lg md:text-xl text-white/60 max-w-2xl mx-auto mb-12 leading-relaxed">
+            Build, deploy, and scale globally distributed applications in seconds. We handle the infrastructure complexity so you can focus on writing code.
+          </motion.p>
+
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }} className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+            <button className="px-8 py-4 bg-white text-black rounded-full font-bold text-sm hover:scale-105 transition-transform flex items-center justify-center gap-2">
+              Start Building Free <ArrowRight className="w-4 h-4" />
+            </button>
+            <button className="px-8 py-4 bg-white/5 border border-white/10 text-white rounded-full font-bold text-sm hover:bg-white/10 transition-colors flex items-center justify-center gap-2 backdrop-blur-sm">
+              <Play className="w-4 h-4 fill-current" /> Watch Demo
+            </button>
+          </motion.div>
+
+          {/* DASHBOARD MOCKUP */}
+          <motion.div initial={{ opacity: 0, y: 60 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, delay: 0.5, type: "spring", stiffness: 50 }} className="mt-20 md:mt-32 relative w-full max-w-5xl">
+            <div className="absolute inset-0 bg-gradient-to-t from-[#05050a] via-transparent to-transparent z-20 h-full w-full pointer-events-none" />
+            
+            <div className="rounded-2xl border border-white/10 bg-[#0a0a14]/80 backdrop-blur-xl overflow-hidden shadow-[0_0_80px_rgba(139,92,246,0.15)] relative z-10">
+              {/* Fake Browser Header */}
+              <div className="h-12 border-b border-white/10 flex items-center px-4 gap-2 bg-white/[0.02]">
+                <div className="flex gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-red-500/80" />
+                  <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
+                  <div className="w-3 h-3 rounded-full bg-green-500/80" />
+                </div>
+                <div className="ml-4 px-4 py-1.5 rounded-md bg-black/40 text-xs text-white/40 font-mono border border-white/5">app.nexus.dev/dashboard</div>
               </div>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      <section className="py-24 px-6 md:px-12">
-        <Reveal>
-          <h2 className="text-5xl font-light mb-12" style={{ color: "#c4887a" }}>Dermatologist Endorsements</h2>
-        </Reveal>
-        <Carousel className="w-full max-w-4xl mx-auto">
-          <CarouselContent>
-            {[1, 2, 3].map((idx) => (
-              <CarouselItem key={idx}>
-                <Card className="bg-[#f9ede8]/50 border-none">
-                  <CardContent className="p-8">
-                    <p className="text-lg text-[#1a0f0a] mb-6 italic">"AURA formulations are clinically validated and dermatologist-tested. The results speak for themselves."</p>
-                    <div className="flex items-center gap-4">
-                      <Avatar className="w-12 h-12" style={{ backgroundColor: "#c4887a", color: "white" }}>
-                        <AvatarFallback>D{idx}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-light text-[#1a0f0a]">Dr. Sarah {["Chen", "Patel", "Williams"][idx-1]}</p>
-                        <p className="text-sm text-[#1a0f0a]/60">Dermatologist</p>
+              
+              {/* Dashboard Content */}
+              <div className="p-6 md:p-8 grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+                {/* Metrics */}
+                <div className="col-span-1 md:col-span-3 grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {["Requests/sec", "Latency (p99)", "Bandwidth", "Active Nodes"].map((metric, i) => (
+                    <div key={i} className="p-4 rounded-xl border border-white/5 bg-white/[0.02]">
+                      <div className="text-xs text-white/50 mb-2">{metric}</div>
+                      <div className="text-2xl md:text-3xl font-semibold text-white">
+                        {i === 0 ? "45,212" : i === 1 ? "12ms" : i === 2 ? "1.2TB/s" : "254"}
                       </div>
+                      <div className="text-xs text-emerald-400 mt-2 flex items-center gap-1"><ArrowRight className="w-3 h-3 -rotate-45"/> +12%</div>
                     </div>
-                  </CardContent>
-                </Card>
-              </CarouselItem>
+                  ))}
+                </div>
+                {/* Fake Chart */}
+                <div className="col-span-1 md:col-span-2 p-6 rounded-xl border border-white/5 bg-white/[0.02] h-64 flex flex-col justify-between relative overflow-hidden">
+                  <div className="text-sm font-medium">Global Traffic</div>
+                  {/* CSS fake chart lines */}
+                  <div className="absolute bottom-0 left-0 w-full h-1/2 flex items-end px-6 pb-6 gap-2 opacity-50">
+                    {[40,70,45,90,65,80,100,85,60,75,50,95].map((h, i) => (
+                      <div key={i} className="flex-1 bg-violet-500/40 rounded-t-sm transition-all" style={{ height: `${h}%` }} />
+                    ))}
+                  </div>
+                </div>
+                {/* Status List */}
+                <div className="col-span-1 p-6 rounded-xl border border-white/5 bg-white/[0.02]">
+                  <div className="text-sm font-medium mb-6">Recent Deployments</div>
+                  <div className="space-y-4">
+                    {[1,2,3].map(i => (
+                      <div key={i} className="flex items-center gap-3">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                        <div>
+                          <div className="text-xs font-medium">api-service-v{4-i}.2</div>
+                          <div className="text-[10px] text-white/40">2 mins ago via GitHub</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ==========================================
+          2. LOGOS MARQUEE
+          ========================================== */}
+      <section className="py-12 border-y border-white/5 bg-black/20 overflow-hidden">
+        <div className="max-w-[1200px] mx-auto px-6 mb-8 text-center text-xs font-semibold tracking-widest text-white/40 uppercase">
+          Trusted by innovative engineering teams worldwide
+        </div>
+        <div className="flex whitespace-nowrap opacity-50">
+          <motion.div animate={{ x: ["0%", "-50%"] }} transition={{ duration: 30, repeat: Infinity, ease: "linear" }} className="flex gap-16 px-8 text-xl font-bold tracking-tight">
+            {[...Array(10)].map((_, i) => (
+              <span key={i} className="flex items-center gap-16">
+                ACME Corp <span className="text-white/20">/</span> Globex <span className="text-white/20">/</span> Initech <span className="text-white/20">/</span> Soylent <span className="text-white/20">/</span>
+              </span>
             ))}
-          </CarouselContent>
-          <CarouselPrevious />
-          <CarouselNext />
-        </Carousel>
+          </motion.div>
+        </div>
       </section>
 
-      <section className="py-24 px-6 md:px-12 bg-[#f9ede8]/30">
-        <Reveal>
-          <h2 className="text-5xl font-light mb-12" style={{ color: "#c4887a" }}>Before & After</h2>
-        </Reveal>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-4xl mx-auto">
-          {[1, 2].map((idx) => (
-            <Reveal key={idx} delay={idx * 0.1}>
-              <div>
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="aspect-square rounded-lg overflow-hidden bg-[#f9ede8]">
-                    <Image src={`https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=400&q=50`} alt="Before" fill className="object-cover" />
-                    <p className="relative z-10 text-white font-light p-4">Before</p>
-                  </div>
-                  <div className="aspect-square rounded-lg overflow-hidden bg-[#f9ede8]">
-                    <Image src={`https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=400`} alt="After" fill className="object-cover" />
-                    <p className="relative z-10 text-white font-light p-4">After</p>
-                  </div>
+      {/* ==========================================
+          3. FEATURES GRID (Bento)
+          ========================================== */}
+      <section className="py-32 md:py-48 px-6 max-w-[1400px] mx-auto">
+        <div className="text-center max-w-3xl mx-auto mb-20">
+          <Reveal>
+            <h2 className="text-4xl md:text-6xl font-bold tracking-tight mb-6">Everything you need to scale.</h2>
+            <p className="text-lg text-white/60">A complete platform combining the speed of the edge with the power of serverless, designed for modern development workflows.</p>
+          </Reveal>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {FEATURES.map((feature, i) => (
+            <Reveal key={i} delay={i * 0.1}>
+              <div className="p-8 rounded-2xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.04] transition-colors h-full">
+                <div className="w-12 h-12 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400 mb-6">
+                  {feature.icon}
                 </div>
-                <p className="text-[#1a0f0a]/70">4-week results with AURA Luminous Serum. Clinically visible improvement in radiance.</p>
+                <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
+                <p className="text-white/60 leading-relaxed text-sm">{feature.desc}</p>
               </div>
             </Reveal>
           ))}
         </div>
       </section>
 
-      <section className="py-24 px-6 md:px-12">
-        <Reveal>
-          <h2 className="text-5xl font-light mb-12" style={{ color: "#c4887a" }}>FAQ</h2>
-        </Reveal>
-        <Accordion type="single" collapsible className="max-w-2xl">
-          {[
-            { q: "Are your products vegan?", a: "98% of our products are vegan. Check product pages for specific details." },
-            { q: "What is your shipping policy?", a: "Free shipping on orders over $150. Standard shipping takes 3-5 business days." },
-            { q: "Do you offer returns?", a: "Yes, 60-day money-back guarantee if you're not satisfied with your purchase." },
-            { q: "Can I use multiple serums together?", a: "Yes, layer serums from lightest to heaviest texture. Consult our routine guides." },
-          ].map((item, idx) => (
-            <AccordionItem key={idx} value={`item-${idx}`}>
-              <AccordionTrigger className="text-[#1a0f0a]">{item.q}</AccordionTrigger>
-              <AccordionContent className="text-[#1a0f0a]/70">{item.a}</AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
-      </section>
-
-      <section className="py-24 px-6 md:px-12 bg-[#f9ede8]/30">
-        <Reveal>
-          <h2 className="text-5xl font-light mb-12" style={{ color: "#c4887a" }}>The AURA Story</h2>
-        </Reveal>
-        <div className="max-w-2xl mx-auto">
+      {/* ==========================================
+          4. PERFORMANCE HIGHLIGHT
+          ========================================== */}
+      <section className="py-32 border-y border-white/5 bg-gradient-to-b from-[#0a0a14] to-[#05050a] px-6">
+        <div className="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <Reveal>
-            <p className="text-lg text-[#1a0f0a]/70 mb-6">Founded by skincare scientists and beauty experts, AURA emerged from a simple belief: luxury skincare doesn't require harsh chemicals or false promises. We blend cutting-edge dermatological science with nature's most potent ingredients to create transformative formulations.</p>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-xs font-bold uppercase tracking-wider mb-6">
+              <Activity className="w-3 h-3" /> Zero Latency
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-6">Uncompromising speed, everywhere.</h2>
+            <p className="text-lg text-white/60 mb-8 leading-relaxed">
+              Our custom runtime is written in Rust and boots in under 1ms. By eliminating cold starts and running your code within our global edge network, your users get instant responses no matter where they are.
+            </p>
+            <ul className="space-y-4 mb-10">
+              {[
+                "0ms Cold starts for edge functions",
+                "Global database replication under 50ms",
+                "Built-in Redis-compatible distributed cache"
+              ].map((item, i) => (
+                <li key={i} className="flex items-center gap-3 text-sm font-medium">
+                  <CheckCircle2 className="w-5 h-5 text-violet-500" /> {item}
+                </li>
+              ))}
+            </ul>
           </Reveal>
-          <Reveal delay={0.1}>
-            <p className="text-lg text-[#1a0f0a]/70 mb-6">Every product is rigorously tested, clinically validated, and formulated for real results. Our commitment to clean beauty, sustainability, and ethical sourcing sets AURA apart in the luxury skincare landscape.</p>
-          </Reveal>
+
           <Reveal delay={0.2}>
-            <p className="text-lg text-[#1a0f0a]/70">Join a community of 500K+ women who've discovered their best skin with AURA.</p>
+            {/* Visual code block representation */}
+            <div className="rounded-2xl border border-white/10 bg-[#0a0a14] overflow-hidden shadow-2xl font-mono text-sm">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-white/5 bg-white/[0.02]">
+                <div className="flex gap-2">
+                  <div className="w-3 h-3 rounded-full bg-white/20" />
+                  <div className="w-3 h-3 rounded-full bg-white/20" />
+                </div>
+                <div className="text-white/40 text-xs">api/handler.ts</div>
+              </div>
+              <div className="p-6 overflow-x-auto text-white/70">
+                <div className="text-pink-400">import</div> {"{ Nexus }"} <div className="text-pink-400">from</div> <div className="text-green-400">'@nexus/core'</div>;
+                <br/><br/>
+                <div className="text-pink-400">export default</div> <div className="text-blue-400">Nexus.route</div>{"({"}<br/>
+                &nbsp;&nbsp;path: <div className="text-green-400">'/api/data'</div>,<br/>
+                &nbsp;&nbsp;cache: <div className="text-purple-400">"s-maxage=60"</div>,<br/>
+                &nbsp;&nbsp;<div className="text-blue-400">handler</div>: <div className="text-pink-400">async</div> (req, res) {`=>`} {"{"}<br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;<div className="text-white/40">// Runs instantly at the edge</div><br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;<div className="text-pink-400">const</div> data = <div className="text-pink-400">await</div> db.query(<div className="text-green-400">'SELECT *'</div>);<br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;<div className="text-pink-400">return</div> res.json(data);<br/>
+                &nbsp;&nbsp;{"}"}<br/>
+                {"});"}
+              </div>
+            </div>
           </Reveal>
         </div>
       </section>
 
-      <section className="py-24 px-6 md:px-12">
-        <Reveal>
-          <h2 className="text-5xl font-light mb-12" style={{ color: "#c4887a" }}>Sustainability & Ethics</h2>
+      {/* ==========================================
+          5. TESTIMONIALS
+          ========================================== */}
+      <section className="py-32 px-6 max-w-[1400px] mx-auto">
+        <Reveal className="text-center mb-16">
+          <h2 className="text-4xl md:text-5xl font-bold tracking-tight">Loved by developers.</h2>
         </Reveal>
-        <div className="grid md:grid-cols-3 gap-12">
-          {[
-            { title: "Ethical Sourcing", desc: "100% ethically sourced ingredients with fair-trade partnerships in developing regions." },
-            { title: "Eco Packaging", desc: "Recyclable/biodegradable packaging made from 80% post-consumer recycled materials." },
-            { title: "Cruelty-Free", desc: "Never tested on animals. Certified by Leaping Bunny and PETA." },
-          ].map((value, idx) => (
-            <Reveal key={idx} delay={idx * 0.1}>
-              <div className="text-center">
-                <div className="text-4xl mb-4">
-                  {idx === 0 && "🌍"}
-                  {idx === 1 && "♻️"}
-                  {idx === 2 && "🐰"}
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {TESTIMONIALS.map((t, i) => (
+            <Reveal key={i} delay={i * 0.1}>
+              <div className="p-8 rounded-2xl border border-white/10 bg-white/[0.02] h-full flex flex-col justify-between">
+                <div>
+                  <div className="flex gap-1 mb-6">
+                    {[...Array(5)].map((_, j) => <Star key={j} className="w-4 h-4 fill-violet-500 text-violet-500" />)}
+                  </div>
+                  <p className="text-white/80 leading-relaxed mb-8">"{t.text}"</p>
                 </div>
-                <h3 className="text-xl font-light text-[#1a0f0a] mb-3">{value.title}</h3>
-                <p className="text-[#1a0f0a]/70">{value.desc}</p>
+                <div className="flex items-center gap-4 border-t border-white/5 pt-6">
+                  <div className="w-10 h-10 rounded-full bg-violet-500/20 text-violet-300 flex items-center justify-center font-bold">
+                    {t.name.charAt(0)}
+                  </div>
+                  <div>
+                    <div className="font-semibold text-sm">{t.name}</div>
+                    <div className="text-xs text-white/50">{t.role}</div>
+                  </div>
+                </div>
               </div>
             </Reveal>
           ))}
         </div>
       </section>
 
-      <section className="py-24 px-6 md:px-12 bg-[#f9ede8]/30">
-        <Reveal>
-          <h2 className="text-5xl font-light mb-12" style={{ color: "#c4887a" }}>Routine Builder</h2>
-        </Reveal>
-        <div className="max-w-3xl mx-auto">
-          <Reveal>
-            <p className="text-center text-[#1a0f0a]/70 mb-12">Custom skincare routines built for your unique skin. Answer a few questions and receive personalized product recommendations.</p>
+      {/* ==========================================
+          6. PRICING
+          ========================================== */}
+      <section className="py-32 bg-[#0a0a14] px-6 border-y border-white/5">
+        <div className="max-w-[1200px] mx-auto">
+          <Reveal className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-6">Simple, transparent pricing.</h2>
+            <div className="flex items-center justify-center gap-4">
+              <span className={`text-sm font-medium ${!annualBilling ? 'text-white' : 'text-white/50'}`}>Monthly</span>
+              <button 
+                onClick={() => setAnnualBilling(!annualBilling)}
+                className="w-14 h-8 rounded-full bg-white/10 p-1 relative transition-colors"
+              >
+                <motion.div 
+                  className="w-6 h-6 rounded-full bg-violet-500"
+                  animate={{ x: annualBilling ? 24 : 0 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                />
+              </button>
+              <span className={`text-sm font-medium ${annualBilling ? 'text-white' : 'text-white/50'}`}>
+                Annually <span className="text-emerald-400 text-xs ml-1">(Save 20%)</span>
+              </span>
+            </div>
           </Reveal>
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              { step: "1. Cleanse", products: "Gentle, effective cleansing for daily use" },
-              { step: "2. Treat", products: "Serums and treatments targeting specific concerns" },
-              { step: "3. Protect", products: "Moisturizers and SPF for hydration and protection" },
-            ].map((routine, idx) => (
-              <Reveal key={idx} delay={idx * 0.1}>
-                <Card className="bg-white border-[#c4887a]/10">
-                  <CardContent className="p-6">
-                    <p className="font-light text-[#c4887a] text-sm mb-2">{routine.step}</p>
-                    <p className="text-[#1a0f0a]/70">{routine.products}</p>
-                  </CardContent>
-                </Card>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {PRICING.map((plan, i) => (
+              <Reveal key={i} delay={i * 0.1}>
+                <div className={`relative p-8 rounded-3xl border ${plan.popular ? 'border-violet-500 bg-violet-500/5 shadow-[0_0_30px_rgba(139,92,246,0.1)]' : 'border-white/10 bg-white/[0.02]'} h-full flex flex-col`}>
+                  {plan.popular && (
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-violet-500 text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+                      Most Popular
+                    </div>
+                  )}
+                  <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
+                  <p className="text-sm text-white/50 mb-6 h-10">{plan.desc}</p>
+                  <div className="mb-8">
+                    <span className="text-5xl font-bold tracking-tighter">{plan.price !== 'Custom' && annualBilling && plan.price !== '$0' ? `$${parseInt(plan.price.slice(1)) * 0.8}` : plan.price}</span>
+                    {plan.price !== 'Custom' && <span className="text-white/50 ml-2">/ month</span>}
+                  </div>
+                  
+                  <button className={`w-full py-3.5 rounded-xl font-bold text-sm mb-8 transition-colors ${plan.popular ? 'bg-violet-500 hover:bg-violet-600 text-white' : 'bg-white/10 hover:bg-white/20 text-white'}`}>
+                    {plan.cta}
+                  </button>
+
+                  <div className="space-y-4 mt-auto">
+                    {plan.features.map((feature, j) => (
+                      <div key={j} className="flex items-start gap-3 text-sm text-white/80">
+                        <CheckCircle2 className="w-4 h-4 text-violet-400 shrink-0 mt-0.5" />
+                        <span>{feature}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </Reveal>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="py-24 px-6 md:px-12">
-        <Reveal>
-          <h2 className="text-5xl font-light mb-12" style={{ color: "#c4887a" }}>Research & Innovation</h2>
+      {/* ==========================================
+          7. FAQ
+          ========================================== */}
+      <section className="py-32 px-6 max-w-[800px] mx-auto">
+        <Reveal className="text-center mb-16">
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Frequently Asked Questions</h2>
         </Reveal>
-        <div className="grid md:grid-cols-2 gap-12">
-          <Reveal>
-            <div>
-              <h3 className="text-2xl font-light text-[#1a0f0a] mb-6">Our Lab</h3>
-              <p className="text-[#1a0f0a]/70 mb-4">AURA operates a dedicated research and development laboratory in Switzerland, where our team of 15 PhD-level chemists and dermatologists continuously innovate.</p>
-              <p className="text-[#1a0f0a]/70">We invest 12% of revenue back into R&D, ensuring we're always at the forefront of skincare science.</p>
-            </div>
-          </Reveal>
-          <Reveal delay={0.1}>
-            <div>
-              <h3 className="text-2xl font-light text-[#1a0f0a] mb-6">Clinical Trials</h3>
-              <p className="text-[#1a0f0a]/70 mb-4">Every product undergoes rigorous clinical testing with independent third-party labs. Our studies involve 100-500 participants over 8-12 weeks.</p>
-              <p className="text-[#1a0f0a]/70">Results are published and available for review. Transparency is core to our mission.</p>
-            </div>
-          </Reveal>
+        
+        <div className="space-y-4">
+          {FAQS.map((faq, i) => (
+            <Reveal key={i} delay={i * 0.05}>
+              <div className="border border-white/10 rounded-2xl bg-white/[0.02] overflow-hidden">
+                <button 
+                  onClick={() => setActiveFaq(activeFaq === i ? null : i)}
+                  className="w-full px-6 py-5 text-left flex justify-between items-center hover:bg-white/[0.02] transition-colors"
+                >
+                  <span className="font-medium pr-4">{faq.question}</span>
+                  <ChevronRight className={`w-5 h-5 text-white/40 transition-transform ${activeFaq === i ? 'rotate-90' : ''}`} />
+                </button>
+                <AnimatePresence>
+                  {activeFaq === i && (
+                    <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden">
+                      <div className="px-6 pb-5 text-white/60 text-sm leading-relaxed border-t border-white/5 pt-4">
+                        {faq.answer}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </Reveal>
+          ))}
         </div>
       </section>
 
-      <section className="py-24 px-6 md:px-12 bg-[#f9ede8]/30">
-        <Reveal>
-          <h2 className="text-5xl font-light mb-12" style={{ color: "#c4887a" }}>Contact & Support</h2>
-        </Reveal>
-        <div className="max-w-2xl mx-auto text-center">
-          <p className="text-lg text-[#1a0f0a]/70 mb-6">Our customer success team is available 24/7 to support your AURA journey.</p>
-          <div className="space-y-4 text-[#1a0f0a]/70 mb-8">
-            <div>
-              <p className="font-light text-[#c4887a] text-sm">Email</p>
-              <p>support@aurabeauty.com</p>
-            </div>
-            <div>
-              <p className="font-light text-[#c4887a] text-sm">Phone</p>
-              <p>1-800-AURA-GLOW</p>
-            </div>
+      {/* ==========================================
+          8. BOTTOM CTA
+          ========================================== */}
+      <section className="py-32 px-6 relative overflow-hidden">
+        <div className="absolute inset-0 bg-violet-600/20 blur-[100px] z-0 pointer-events-none rounded-full scale-150" />
+        <div className="max-w-[800px] mx-auto text-center relative z-10 border border-white/10 bg-white/[0.02] backdrop-blur-xl rounded-3xl p-12 md:p-20 shadow-2xl">
+          <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-6">Ready to scale?</h2>
+          <p className="text-lg text-white/60 mb-10">Join thousands of developers building the future on Nexus. Start for free, upgrade when you need to.</p>
+          <div className="flex flex-col sm:flex-row justify-center gap-4">
+            <button className="px-8 py-4 bg-white text-black rounded-full font-bold hover:scale-105 transition-transform">
+              Start Free Trial
+            </button>
+            <button className="px-8 py-4 border border-white/20 text-white rounded-full font-bold hover:bg-white/5 transition-colors">
+              Read Documentation
+            </button>
           </div>
         </div>
       </section>
 
-      <section className="py-24 px-6 md:px-12">
-        <Reveal>
-          <h2 className="text-5xl font-light mb-12" style={{ color: "#c4887a" }}>Join AURA</h2>
-        </Reveal>
-        <div className="text-center">
-          <p className="text-lg text-[#1a0f0a]/70 mb-8">Discover your best skin. Subscribe for exclusive offers, skincare tips, and early access to new launches.</p>
-          <MagneticBtn className="px-12 py-4 rounded-lg font-light text-white transition-colors" style={{ backgroundColor: "#c4887a" }}>
-            Subscribe Now
-          </MagneticBtn>
+      {/* ==========================================
+          9. MEGA FOOTER
+          ========================================== */}
+      <footer className="pt-20 pb-10 px-6 border-t border-white/10 bg-[#020205]">
+        <div className="max-w-[1400px] mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8 mb-16">
+            
+            <div className="col-span-2">
+              <Link href="/" className="flex items-center gap-2 mb-6">
+                <div className="w-6 h-6 rounded bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center">
+                  <Zap className="w-3 h-3 text-white" />
+                </div>
+                <span className="text-lg font-bold tracking-tight">Nexus.</span>
+              </Link>
+              <p className="text-white/40 text-sm leading-relaxed mb-8 max-w-xs">
+                The global edge platform for modern applications. Build faster, scale infinitely, and sleep better at night.
+              </p>
+              <div className="flex gap-4">
+                <a href="#" className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-colors"><Twitter className="w-4 h-4" /></a>
+                <a href="#" className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-colors"><Github className="w-4 h-4" /></a>
+                <a href="#" className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-colors"><Linkedin className="w-4 h-4" /></a>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="font-semibold mb-6 text-sm">Product</h4>
+              <ul className="space-y-4 text-sm text-white/50">
+                <li><a href="#" className="hover:text-white transition-colors">Edge Functions</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Global Database</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Analytics</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Integrations</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Pricing</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Changelog</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-semibold mb-6 text-sm">Resources</h4>
+              <ul className="space-y-4 text-sm text-white/50">
+                <li><a href="#" className="hover:text-white transition-colors">Documentation</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">API Reference</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Community</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Open Source</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">System Status</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-semibold mb-6 text-sm">Company</h4>
+              <ul className="space-y-4 text-sm text-white/50">
+                <li><a href="#" className="hover:text-white transition-colors">About Us</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Careers</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Customers</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Partners</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Contact Sales</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-semibold mb-6 text-sm">Legal</h4>
+              <ul className="space-y-4 text-sm text-white/50">
+                <li><a href="#" className="hover:text-white transition-colors">Privacy Policy</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Terms of Service</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Cookie Policy</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Security</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">DPA</a></li>
+              </ul>
+            </div>
+
+          </div>
+
+          <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-white/40">
+            <span>&copy; {new Date().getFullYear()} Nexus Edge Inc. All rights reserved.</span>
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              All systems operational
+            </div>
+          </div>
         </div>
-      </section>
+      </footer>
     </div>
-  )
+  );
 }
