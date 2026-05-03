@@ -33,7 +33,7 @@ const HIDDEN_IMPACT = new Set([
   "impact-62","impact-63","impact-70","impact-72","impact-75",
   "impact-87","impact-88","impact-91","impact-95",
   
-  "impact-140","impact-141","impact-145","impact-147","impact-148","impact-149","impact-150","impact-151",
+  "impact-141","impact-145","impact-147","impact-148","impact-149","impact-150","impact-151",
 ]);
 
 // ─── Featured (hand-picked best) ─────────────────────────────────────────────

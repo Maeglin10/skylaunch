@@ -1,407 +1,736 @@
-"use client"
-import { motion, useScroll, useTransform, useInView, AnimatePresence, useMotionValue, useSpring } from "framer-motion"
-import { useState, useRef, useEffect } from "react"
-import Image from "next/image"
-import Link from "next/link"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
-import { Menu, X, BookOpen, TrendingUp, Users, Building2, CheckCircle2, ArrowRight } from "lucide-react"
+"use client";
 
-function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true, margin: "-60px" })
+import React, { useState, useEffect, useRef } from "react";
+import {
+  motion,
+  AnimatePresence,
+  useScroll,
+  useTransform,
+  useInView,
+} from "framer-motion";
+import Image from "next/image";
+import Link from "next/link";
+import {
+  ArrowRight,
+  MapPin,
+  Compass,
+  Calendar,
+  Users,
+  Star,
+  ArrowLeft,
+  Globe,
+  Sun,
+  Cloud,
+  Wind,
+  Search,
+  Menu,
+  X,
+  Plane,
+  Coffee,
+  Camera,
+} from "lucide-react";
+
+import "../premium.css";
+
+/* ==========================================================================
+   DATA STRUCTURES
+   ========================================================================== */
+
+const DESTINATIONS = [
+  {
+    id: "dst-01",
+    title: "Namib Desert",
+    country: "Namibia",
+    price: "$4,200",
+    days: "8 Days",
+    desc: "Traverse the oldest desert in the world. Witness the towering red dunes of Sossusvlei and the surreal dead-tree valleys of Deadvlei.",
+    image:
+      "https://images.unsplash.com/photo-1547471080-7fc2caa6f17f?q=80&w=1600&auto=format&fit=crop",
+    color: "#d97736",
+  },
+  {
+    id: "dst-02",
+    title: "Atacama Plateau",
+    country: "Chile",
+    price: "$3,800",
+    days: "10 Days",
+    desc: "High-altitude salt flats, active geysers, and the clearest night skies on Earth. An alien landscape waiting to be explored.",
+    image:
+      "https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=1600&auto=format&fit=crop",
+    color: "#b45309",
+  },
+  {
+    id: "dst-03",
+    title: "Cappadocia",
+    country: "Turkey",
+    price: "$2,900",
+    days: "6 Days",
+    desc: "Fairy chimneys, underground cities, and dawn balloon flights over ancient volcanic valleys.",
+    image:
+      "https://images.unsplash.com/photo-1527838832700-5059252407fa?q=80&w=1600&auto=format&fit=crop",
+    color: "#c2410c",
+  },
+  {
+    id: "dst-04",
+    title: "Wadi Rum",
+    country: "Jordan",
+    price: "$3,100",
+    days: "5 Days",
+    desc: "The Valley of the Moon. Sleep in luxury glass domes under the stars and ride through sandstone canyons.",
+    image:
+      "https://images.unsplash.com/photo-1549887552-cb1071d3e5ca?q=80&w=1600&auto=format&fit=crop",
+    color: "#9a3412",
+  },
+];
+
+const EXPERIENCES = [
+  {
+    title: "Private Expeditions",
+    icon: <Compass className="w-6 h-6 text-amber-500" />,
+    desc: "Fully tailored itineraries crafted by local experts. Go where the guidebooks don't.",
+  },
+  {
+    title: "Aerial Safaris",
+    icon: <Plane className="w-6 h-6 text-amber-500" />,
+    desc: "Gain a new perspective. Charter flights over inaccessible terrain and untouched wilderness.",
+  },
+  {
+    title: "Cultural Immersion",
+    icon: <Coffee className="w-6 h-6 text-amber-500" />,
+    desc: "Spend time with indigenous communities, learning ancient survival and crafting techniques.",
+  },
+  {
+    title: "Photography Tours",
+    icon: <Camera className="w-6 h-6 text-amber-500" />,
+    desc: "Led by National Geographic award winners. Master landscape and wildlife photography.",
+  },
+];
+
+const REVIEWS = [
+  {
+    text: "The Atacama expedition changed the way I see the world. The logistics were flawless, allowing us to just focus on the overwhelming beauty of the landscape.",
+    author: "Marcus T.",
+    role: "Photographer",
+  },
+  {
+    text: "Sleeping in the Namib desert under a billion stars, with nothing but silence around us. Absolute perfection from start to finish.",
+    author: "Elena R.",
+    role: "Travel Writer",
+  },
+  {
+    text: "Wanderlust doesn't just book trips; they architect life-changing moments. Worth every single penny.",
+    author: "Julian S.",
+    role: "Entrepreneur",
+  },
+];
+
+/* ==========================================================================
+   UTILITY COMPONENTS
+   ========================================================================== */
+
+function Reveal({
+  children,
+  delay = 0,
+}: {
+  children: React.ReactNode;
+  delay?: number;
+}) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-50px" });
   return (
-    <motion.div ref={ref}
-      initial={{ opacity: 0, y: 24 }}
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 30 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.55, delay, ease: [0.25, 0.46, 0.45, 0.94] }}
+      transition={{ duration: 0.8, delay, ease: [0.25, 0.1, 0.25, 1] }}
     >
       {children}
     </motion.div>
-  )
+  );
 }
 
-function Counter({ target, suffix = "" }: { target: number; suffix?: string }) {
-  const [count, setCount] = useState(0)
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true })
-  useEffect(() => {
-    if (!inView) return
-    const duration = 1500
-    const step = target / (duration / 16)
-    const t = setInterval(() => setCount(c => { const next = c + step; if (next >= target) { clearInterval(t); return target; } return next; }), 16)
-    return () => clearInterval(t)
-  }, [inView, target])
-  return <span ref={ref}>{Math.floor(count).toLocaleString()}{suffix}</span>
-}
+/* ==========================================================================
+   MAIN PAGE COMPONENT
+   ========================================================================== */
 
-function MagneticBtn({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  const x = useMotionValue(0); const y = useMotionValue(0)
-  const sx = useSpring(x, { stiffness: 400, damping: 20 })
-  const sy = useSpring(y, { stiffness: 400, damping: 20 })
-  const ref = useRef<HTMLButtonElement>(null)
-  const handleMouse = (e: React.MouseEvent) => {
-    const r = ref.current!.getBoundingClientRect()
-    x.set((e.clientX - r.left - r.width / 2) * 0.3)
-    y.set((e.clientY - r.top - r.height / 2) * 0.3)
-  }
-  return (
-    <motion.button ref={ref} style={{ x: sx, y: sy }} onMouseMove={handleMouse}
-      onMouseLeave={() => { x.set(0); y.set(0) }}
-      className={`cursor-pointer transition-all duration-200 ${className}`}
-    >
-      {children}
-    </motion.button>
-  )
-}
+export default function WanderlustPage() {
+  const [activeDst, setActiveDst] = useState(0);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
-export default function MeridianConsulting() {
-  const [mobileOpen, setMobileOpen] = useState(false)
-  const [words, setWords] = useState(0)
-  const [dialogOpen, setDialogOpen] = useState(false)
-  const { scrollY } = useScroll()
-
-  const wordRotations = ["Strategy", "Growth", "Results", "Impact"]
+  const { scrollY } = useScroll();
+  const heroY = useTransform(scrollY, [0, 1000], [0, 300]);
+  const heroOpacity = useTransform(scrollY, [0, 800], [1, 0]);
 
   useEffect(() => {
-    const timer = setInterval(() => setWords((w) => (w + 1) % wordRotations.length), 3000)
-    return () => clearInterval(timer)
-  }, [])
+    const handleScroll = () => setScrolled(window.scrollY > 50);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
-  const services = {
-    strategy: [
-      { name: "Business Strategy", desc: "Market positioning, competitive advantage, 5-year roadmaps" },
-      { name: "Growth Strategy", desc: "Revenue expansion, market entry, M&A planning" },
-    ],
-    operations: [
-      { name: "Process Optimization", desc: "Supply chain, cost reduction, efficiency gains" },
-      { name: "Organization Design", desc: "Structure, roles, governance transformation" },
-    ],
-    digital: [
-      { name: "Digital Transformation", desc: "Technology adoption, business model innovation" },
-      { name: "Data & Analytics", desc: "Insight generation, decision support systems" },
-    ],
-    people: [
-      { name: "Talent Management", desc: "Recruitment, development, retention strategies" },
-      { name: "Change Management", desc: "Organizational change, culture transformation" },
-    ],
-    finance: [
-      { name: "Financial Planning", desc: "Budgeting, forecasting, financial modeling" },
-      { name: "M&A Advisory", desc: "Valuation, due diligence, integration planning" },
-    ],
-    sustainability: [
-      { name: "ESG Strategy", desc: "Sustainability goals, impact measurement" },
-      { name: "Climate Action", desc: "Carbon reduction, renewable transition" },
-    ],
-  }
-
-  const caseStudies = [
-    { industry: "Technology", result: "+40% Revenue", title: "SaaS Scaling Success", company: "Innovate Systems" },
-    { industry: "Healthcare", result: "+35% Efficiency", title: "Clinic Network Optimization", company: "HealthCare Plus" },
-    { industry: "Financial", result: "+50% Profitability", title: "Asset Manager Restructuring", company: "Prime Capital" },
-    { industry: "Retail", result: "+65% Digital Sales", title: "Omnichannel Transformation", company: "Modern Retail" },
-    { industry: "Manufacturing", result: "+25% Output", title: "Production Excellence", company: "Global Manufacturing" },
-    { industry: "Energy", result: "+$80M Savings", title: "Cost Optimization Program", company: "Energy Solutions" },
-  ]
-
-  const articles = [
-    { title: "The Future of Work: 5 Trends Shaping 2025", reading: "8 min", topic: "Workforce" },
-    { title: "Sustainability as Competitive Advantage", reading: "10 min", topic: "ESG" },
-    { title: "AI & Augmented Intelligence in Consulting", reading: "12 min", topic: "Technology" },
-    { title: "Building Resilient Supply Chains", reading: "7 min", topic: "Operations" },
-  ]
-
-  const team = [
-    { name: "Sarah Williams", role: "Managing Partner", prev: "McKinsey", mba: "Harvard MBA" },
-    { name: "David Chen", role: "Senior Partner", prev: "BCG", mba: "Stanford MBA" },
-    { name: "Emma Rodriguez", role: "Partner", prev: "Bain", mba: "Wharton MBA" },
-    { name: "James Patterson", role: "Partner", prev: "Goldman Sachs", mba: "Oxford MBA" },
-  ]
-
-  const clients = ["Apple", "Amazon", "Netflix", "Tesla", "Microsoft", "Google", "Meta", "NVIDIA"]
+  const nextDst = () =>
+    setActiveDst((prev) => (prev + 1) % DESTINATIONS.length);
+  const prevDst = () =>
+    setActiveDst(
+      (prev) => (prev - 1 + DESTINATIONS.length) % DESTINATIONS.length,
+    );
 
   return (
-    <div style={{ overflowX: 'hidden', scrollBehavior: 'smooth' }} className="min-h-screen bg-[#f8f9fa] text-[#0d1b2a]">
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap');
-        body { font-family: 'Inter', sans-serif; }
-        h1, h2, h3, h4, h5, h6 { font-family: 'Inter', sans-serif; letter-spacing: 0.02em; }
-      `}</style>
+    <div className="premium-theme min-h-screen bg-[#0c0a09] text-stone-100 font-sans selection:bg-amber-500/30 selection:text-white">
+      {/* ==========================================
+          NAVIGATION
+          ========================================== */}
+      <nav
+        className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ${scrolled ? "bg-[#0c0a09]/90 backdrop-blur-md py-4 border-b border-amber-900/20" : "bg-transparent py-8"}`}
+      >
+        <div className="max-w-[1600px] mx-auto px-6 md:px-12 flex items-center justify-between">
+          <Link
+            href="/"
+            className="text-xl md:text-2xl font-bold tracking-tighter uppercase flex items-center gap-2"
+          >
+            Wander<span className="text-amber-500">Lust.</span>
+          </Link>
 
-      {/* Mobile Nav */}
-      <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-        <SheetTrigger asChild>
-          <button className="fixed top-6 left-6 z-50 md:hidden cursor-pointer transition-all duration-200 bg-white/80 backdrop-blur p-2 rounded-lg">
-            <Menu className="w-6 h-6 text-[#0d1b2a]" />
+          <div className="hidden lg:flex items-center gap-10 text-[11px] font-bold uppercase tracking-widest">
+            <Link href="#" className="hover:text-amber-500 transition-colors">
+              Destinations
+            </Link>
+            <Link href="#" className="hover:text-amber-500 transition-colors">
+              Expeditions
+            </Link>
+            <Link href="#" className="hover:text-amber-500 transition-colors">
+              Journal
+            </Link>
+            <Link href="#" className="hover:text-amber-500 transition-colors">
+              About
+            </Link>
+          </div>
+
+          <div className="hidden md:flex items-center gap-6">
+            <button className="text-stone-400 hover:text-white transition-colors">
+              <Search className="w-5 h-5" />
+            </button>
+            <button className="px-6 py-2.5 bg-amber-500 text-stone-900 text-[10px] font-bold uppercase tracking-widest hover:bg-amber-400 transition-colors rounded-sm">
+              Plan Your Trip
+            </button>
+          </div>
+
+          <button
+            onClick={() => setMenuOpen(true)}
+            className="md:hidden text-stone-100"
+          >
+            <Menu className="w-6 h-6" />
           </button>
-        </SheetTrigger>
-        <SheetContent side="left" className="bg-white border-[#c9a84c]/20">
-          <nav className="flex flex-col gap-4 mt-8">
-            <Link href="#services" className="text-lg font-semibold text-[#c9a84c] cursor-pointer hover:text-[#0d1b2a]">Services</Link>
-            <Link href="#cases" className="text-lg font-semibold text-[#c9a84c] cursor-pointer hover:text-[#0d1b2a]">Case Studies</Link>
-            <Link href="#team" className="text-lg font-semibold text-[#c9a84c] cursor-pointer hover:text-[#0d1b2a]">Team</Link>
-            <Link href="#faq" className="text-lg font-semibold text-[#c9a84c] cursor-pointer hover:text-[#0d1b2a]">FAQ</Link>
-          </nav>
-        </SheetContent>
-      </Sheet>
-
-      {/* Hero with Word Animation */}
-      <section className="relative h-screen flex items-center justify-center overflow-hidden pt-20">
-        <div className="absolute inset-0 z-0">
-          <Image src="https://images.unsplash.com/photo-1109543?w=800&q=80" alt="Consulting" fill className="object-cover" />
-          <div className="absolute inset-0 bg-black/50" />
         </div>
-        <div className="relative z-10 text-center max-w-5xl px-6">
-          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-            <h1 className="text-6xl md:text-7xl font-bold text-white mb-6 leading-tight">
-              <span>Meridian</span><br />
-              <AnimatePresence mode="wait">
-                <motion.span key={words}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.5 }}
-                  className="text-[#c9a84c]"
+      </nav>
+
+      {/* MOBILE MENU */}
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div
+            initial={{ opacity: 0, x: "100%" }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: "100%" }}
+            transition={{ type: "tween", duration: 0.4 }}
+            className="fixed inset-0 z-[100] bg-[#0c0a09] p-6 pt-24 flex flex-col"
+          >
+            <button
+              onClick={() => setMenuOpen(false)}
+              className="absolute top-8 right-6 text-stone-400"
+            >
+              <X className="w-8 h-8" />
+            </button>
+            <div className="flex flex-col gap-8 text-3xl font-light">
+              <Link href="#" onClick={() => setMenuOpen(false)}>
+                Destinations
+              </Link>
+              <Link href="#" onClick={() => setMenuOpen(false)}>
+                Expeditions
+              </Link>
+              <Link href="#" onClick={() => setMenuOpen(false)}>
+                Journal
+              </Link>
+              <Link href="#" onClick={() => setMenuOpen(false)}>
+                About Us
+              </Link>
+            </div>
+            <div className="mt-auto mb-8">
+              <button className="w-full py-4 bg-amber-500 text-[#0c0a09] text-xs font-bold uppercase tracking-widest rounded-sm">
+                Plan Your Trip
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ==========================================
+          1. HERO CAROUSEL
+          ========================================== */}
+      <section className="relative w-full h-[100svh] overflow-hidden bg-[#0c0a09]">
+        {/* Background Images */}
+        <AnimatePresence initial={false}>
+          <motion.div
+            key={activeDst}
+            initial={{ opacity: 0, scale: 1.05 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1.5, ease: "easeInOut" }}
+            className="absolute inset-0 z-0"
+          >
+            <Image
+              src={DESTINATIONS[activeDst].image}
+              alt={DESTINATIONS[activeDst].title}
+              fill
+              className="object-cover"
+              priority
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0c0a09] via-[#0c0a09]/40 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#0c0a09]/80 via-transparent to-transparent" />
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Content */}
+        <div className="relative z-10 w-full max-w-[1600px] mx-auto px-6 md:px-12 h-full flex flex-col justify-end pb-24 md:pb-32 pt-32 pointer-events-none">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-end w-full">
+            {/* Left Info */}
+            <div className="lg:col-span-8 pointer-events-auto">
+              <motion.div
+                key={`info-${activeDst}`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+              >
+                <div className="flex items-center gap-3 text-amber-500 font-bold uppercase tracking-[0.3em] text-[10px] mb-6">
+                  <MapPin className="w-4 h-4" />{" "}
+                  {DESTINATIONS[activeDst].country}
+                </div>
+                <h1 className="text-6xl md:text-8xl lg:text-[7rem] font-bold tracking-tighter leading-[0.9] mb-6">
+                  {DESTINATIONS[activeDst].title}
+                </h1>
+                <p className="text-lg md:text-xl text-stone-300 max-w-2xl leading-relaxed mb-8 font-light">
+                  {DESTINATIONS[activeDst].desc}
+                </p>
+                <div className="flex items-center gap-8 text-sm font-bold uppercase tracking-widest">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-amber-500" />{" "}
+                    {DESTINATIONS[activeDst].days}
+                  </div>
+                  <div className="flex items-center gap-2 text-amber-500">
+                    {DESTINATIONS[activeDst].price}{" "}
+                    <span className="text-stone-500">/pp</span>
+                  </div>
+                </div>
+                <button className="mt-10 px-8 py-4 bg-amber-500 text-stone-900 text-[10px] font-bold uppercase tracking-widest hover:bg-amber-400 transition-colors rounded-sm flex items-center gap-3">
+                  View Itinerary <ArrowRight className="w-4 h-4" />
+                </button>
+              </motion.div>
+            </div>
+
+            {/* Right Controls & Thumbnails */}
+            <div className="lg:col-span-4 flex flex-col items-end gap-8 pointer-events-auto hidden md:flex">
+              <div className="flex gap-4">
+                <button
+                  onClick={prevDst}
+                  className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center hover:bg-white hover:text-black transition-colors backdrop-blur-md"
                 >
-                  {wordRotations[words]}
-                </motion.span>
-              </AnimatePresence>
-            </h1>
-            <p className="text-xl md:text-2xl text-white/90 mb-8">Strategy & Management Consulting</p>
-            <MagneticBtn className="px-8 py-4 bg-[#c9a84c] text-[#0d1b2a] rounded-lg font-bold hover:bg-[#b89936]">Start Engagement</MagneticBtn>
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={nextDst}
+                  className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center hover:bg-white hover:text-black transition-colors backdrop-blur-md"
+                >
+                  <ArrowRight className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="flex gap-4">
+                {DESTINATIONS.map((dst, i) => (
+                  <button
+                    key={dst.id}
+                    onClick={() => setActiveDst(i)}
+                    className={`relative w-24 h-16 rounded-md overflow-hidden border-2 transition-all duration-300 ${activeDst === i ? "border-amber-500 scale-110" : "border-transparent opacity-50 hover:opacity-100"}`}
+                  >
+                    <Image
+                      src={dst.image}
+                      alt={dst.title}
+                      fill
+                      className="object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ==========================================
+          2. METRICS / STATS
+          ========================================== */}
+      <section className="py-12 bg-amber-500 text-[#0c0a09] relative z-20">
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12 grid grid-cols-2 md:grid-cols-4 gap-8 divide-x divide-amber-600/30">
+          <div className="text-center px-4">
+            <div className="text-3xl md:text-4xl font-black tracking-tighter mb-1">
+              15+
+            </div>
+            <div className="text-[10px] uppercase tracking-widest font-bold opacity-80">
+              Years Experience
+            </div>
+          </div>
+          <div className="text-center px-4">
+            <div className="text-3xl md:text-4xl font-black tracking-tighter mb-1">
+              42
+            </div>
+            <div className="text-[10px] uppercase tracking-widest font-bold opacity-80">
+              Remote Destinations
+            </div>
+          </div>
+          <div className="text-center px-4">
+            <div className="text-3xl md:text-4xl font-black tracking-tighter mb-1">
+              4.9/5
+            </div>
+            <div className="text-[10px] uppercase tracking-widest font-bold opacity-80">
+              Guest Satisfaction
+            </div>
+          </div>
+          <div className="text-center px-4">
+            <div className="text-3xl md:text-4xl font-black tracking-tighter mb-1">
+              100%
+            </div>
+            <div className="text-[10px] uppercase tracking-widest font-bold opacity-80">
+              Carbon Offset
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ==========================================
+          3. EXPERIENCES GRID
+          ========================================== */}
+      <section className="py-32 bg-[#0c0a09] border-y border-stone-800/50">
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12">
+          <Reveal className="text-center max-w-3xl mx-auto mb-20">
+            <span className="text-[10px] text-amber-500 uppercase tracking-[0.3em] font-bold block mb-4">
+              Curated Journeys
+            </span>
+            <h2 className="text-4xl md:text-5xl font-bold tracking-tighter mb-6">
+              Redefining Exploration.
+            </h2>
+            <p className="text-stone-400 text-lg font-light leading-relaxed">
+              We design travel experiences for those who seek the extraordinary.
+              Away from the crowds, immersed in the authentic rhythm of the
+              planet.
+            </p>
+          </Reveal>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {EXPERIENCES.map((exp, i) => (
+              <Reveal key={i} delay={i * 0.1}>
+                <div className="p-10 rounded-2xl bg-stone-900/30 border border-stone-800 hover:border-amber-500/50 hover:bg-stone-900/80 transition-all group">
+                  <div className="w-14 h-14 rounded-xl bg-[#0c0a09] border border-stone-800 flex items-center justify-center mb-8 group-hover:scale-110 transition-transform">
+                    {exp.icon}
+                  </div>
+                  <h3 className="text-2xl font-bold mb-4">{exp.title}</h3>
+                  <p className="text-stone-400 leading-relaxed font-light">
+                    {exp.desc}
+                  </p>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ==========================================
+          4. FEATURED ITINERARY (Split Layout)
+          ========================================== */}
+      <section className="py-32 bg-[#0a0807] overflow-hidden">
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <Reveal className="relative aspect-[4/5] rounded-2xl overflow-hidden order-2 lg:order-1">
+              <Image
+                src="https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?q=80&w=1200&auto=format&fit=crop"
+                alt="Safari"
+                fill
+                className="object-cover hover:scale-105 transition-transform duration-[2s]"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0c0a09] via-transparent to-transparent opacity-80" />
+              <div className="absolute bottom-8 left-8 right-8">
+                <div className="flex gap-2 mb-4">
+                  <span className="px-3 py-1 bg-amber-500/20 text-amber-500 text-[10px] font-bold uppercase tracking-widest rounded-sm backdrop-blur-sm">
+                    Wildlife
+                  </span>
+                  <span className="px-3 py-1 bg-black/40 text-white text-[10px] font-bold uppercase tracking-widest rounded-sm backdrop-blur-sm">
+                    12 Days
+                  </span>
+                </div>
+                <h3 className="text-3xl font-bold">The Great Migration</h3>
+              </div>
+            </Reveal>
+
+            <div className="order-1 lg:order-2">
+              <Reveal>
+                <span className="text-[10px] text-amber-500 uppercase tracking-[0.3em] font-bold block mb-4">
+                  Featured Signature Trip
+                </span>
+                <h2 className="text-4xl md:text-6xl font-bold tracking-tighter mb-8 leading-tight">
+                  Witness the greatest show on earth.
+                </h2>
+                <p className="text-stone-400 text-lg leading-relaxed font-light mb-10">
+                  Track millions of wildebeest and zebra across the Serengeti
+                  and Masai Mara. Stay in exclusive mobile camps that move with
+                  the herds, ensuring you are always at the heart of the action.
+                </p>
+
+                <ul className="space-y-6 mb-12">
+                  <li className="flex items-start gap-4">
+                    <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center shrink-0 mt-1">
+                      <Star className="w-4 h-4 text-amber-500" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-lg mb-1">
+                        Luxury Mobile Camps
+                      </h4>
+                      <p className="text-sm text-stone-500">
+                        Uncompromising comfort in the most remote locations.
+                      </p>
+                    </div>
+                  </li>
+                  <li className="flex items-start gap-4">
+                    <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center shrink-0 mt-1">
+                      <Users className="w-4 h-4 text-amber-500" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-lg mb-1">
+                        Expert Trackers
+                      </h4>
+                      <p className="text-sm text-stone-500">
+                        Guided by Maasai warriors with generations of knowledge.
+                      </p>
+                    </div>
+                  </li>
+                </ul>
+
+                <button className="px-8 py-4 border border-amber-500 text-amber-500 text-[10px] font-bold uppercase tracking-widest hover:bg-amber-500 hover:text-[#0c0a09] transition-colors rounded-sm">
+                  View Full Itinerary
+                </button>
+              </Reveal>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ==========================================
+          5. TESTIMONIALS MARQUEE
+          ========================================== */}
+      <section className="py-32 bg-[#0c0a09] border-y border-stone-800/50 overflow-hidden">
+        <div className="mb-16 text-center px-6">
+          <span className="text-[10px] uppercase tracking-widest font-bold text-amber-500 block mb-4">
+            Traveler Stories
+          </span>
+          <h2 className="text-4xl font-bold tracking-tighter">
+            Words from the Wild
+          </h2>
+        </div>
+
+        <div className="relative flex whitespace-nowrap">
+          <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-[#0c0a09] to-transparent z-10" />
+          <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-[#0c0a09] to-transparent z-10" />
+
+          <motion.div
+            animate={{ x: ["0%", "-50%"] }}
+            transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+            className="flex gap-8 px-4"
+          >
+            {[...REVIEWS, ...REVIEWS].map((r, i) => (
+              <div
+                key={i}
+                className="w-[400px] md:w-[500px] border border-stone-800 p-10 bg-[#0a0807] whitespace-normal shrink-0 rounded-xl"
+              >
+                <div className="flex gap-1 mb-6">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star
+                      key={star}
+                      className="w-4 h-4 fill-amber-500 text-amber-500"
+                    />
+                  ))}
+                </div>
+                <p className="text-lg italic text-stone-300 leading-relaxed mb-8 font-light">
+                  "{r.text}"
+                </p>
+                <div>
+                  <div className="font-bold text-stone-100">{r.author}</div>
+                  <div className="text-xs text-stone-500 uppercase tracking-widest">
+                    {r.role}
+                  </div>
+                </div>
+              </div>
+            ))}
           </motion.div>
         </div>
       </section>
 
-      {/* Services Section */}
-      <section id="services" className="py-20 px-6 max-w-7xl mx-auto">
-        <Reveal>
-          <h2 className="text-5xl font-bold text-[#0d1b2a] mb-4">Services</h2>
-          <p className="text-lg text-[#666] mb-12">Strategic advice across every business function</p>
-        </Reveal>
+      {/* ==========================================
+          6. MEGA FOOTER
+          ========================================== */}
+      <footer className="bg-[#0a0807] pt-32 pb-12 px-6 md:px-12 border-t border-amber-900/20 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-amber-500/5 blur-[150px] rounded-full pointer-events-none" />
 
-        <Tabs defaultValue="strategy" className="w-full">
-          <TabsList className="grid w-full grid-cols-6 bg-white border border-[#c9a84c]/20 rounded-lg p-1">
-            <TabsTrigger value="strategy" className="cursor-pointer text-xs">Strategy</TabsTrigger>
-            <TabsTrigger value="operations" className="cursor-pointer text-xs">Operations</TabsTrigger>
-            <TabsTrigger value="digital" className="cursor-pointer text-xs">Digital</TabsTrigger>
-            <TabsTrigger value="people" className="cursor-pointer text-xs">People</TabsTrigger>
-            <TabsTrigger value="finance" className="cursor-pointer text-xs">Finance</TabsTrigger>
-            <TabsTrigger value="sustainability" className="cursor-pointer text-xs">Sustainability</TabsTrigger>
-          </TabsList>
-
-          {Object.entries(services).map(([key, items]) => (
-            <TabsContent key={key} value={key} className="mt-8 grid md:grid-cols-2 gap-6">
-              {items.map((item, idx) => (
-                <Reveal key={idx} delay={idx * 0.1}>
-                  <Card className="bg-white border-[#c9a84c]/20 hover:shadow-lg transition-all duration-300">
-                    <CardContent className="p-6">
-                      <h3 className="font-bold text-[#0d1b2a] mb-2 text-lg">{item.name}</h3>
-                      <p className="text-[#666] text-sm">{item.desc}</p>
-                      <Badge variant="outline" className="border-[#c9a84c] text-[#c9a84c] mt-4 text-xs">Typical: 3-6 months</Badge>
-                    </CardContent>
-                  </Card>
-                </Reveal>
-              ))}
-            </TabsContent>
-          ))}
-        </Tabs>
-      </section>
-
-      {/* Case Studies */}
-      <section id="cases" className="py-20 px-6 max-w-7xl mx-auto">
-        <Reveal>
-          <h2 className="text-5xl font-bold text-[#0d1b2a] mb-12">Case Studies</h2>
-        </Reveal>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {caseStudies.map((cs, idx) => (
-            <Reveal key={idx} delay={idx * 0.08}>
-              <Card className="bg-white border-[#c9a84c]/20 hover:shadow-xl hover:scale-105 cursor-pointer transition-all duration-300 group overflow-hidden"
-                onClick={() => setDialogOpen(true)}>
-                <CardContent className="p-6">
-                  <div className="mb-4">
-                    <Badge variant="outline" className="border-[#c9a84c] text-[#c9a84c] text-xs">{cs.industry}</Badge>
-                  </div>
-                  <h3 className="font-bold text-[#0d1b2a] mb-2 group-hover:text-[#c9a84c] transition-colors">{cs.title}</h3>
-                  <p className="text-sm text-[#666] mb-4">{cs.company}</p>
-                  <p className="text-2xl font-bold text-[#c9a84c]">{cs.result}</p>
-                </CardContent>
-              </Card>
+        <div className="max-w-[1600px] mx-auto relative z-10">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-32 gap-12">
+            <div>
+              <Reveal>
+                <h2 className="text-5xl md:text-7xl font-bold tracking-tighter leading-[1.1] mb-6">
+                  Ready for the <br />
+                  <span className="text-amber-500">Unknown?</span>
+                </h2>
+                <p className="text-stone-400 text-lg max-w-md">
+                  Our expedition designers are ready to craft your next great
+                  adventure.
+                </p>
+              </Reveal>
+            </div>
+            <Reveal delay={0.2}>
+              <button className="px-10 py-5 bg-amber-500 text-stone-900 text-xs font-bold uppercase tracking-widest hover:bg-amber-400 transition-colors rounded-sm flex items-center gap-3">
+                Start Planning <ArrowRight className="w-5 h-5" />
+              </button>
             </Reveal>
-          ))}
-        </div>
-      </section>
-
-      {/* Thought Leadership */}
-      <section className="py-20 px-6 max-w-7xl mx-auto bg-white/50 rounded-3xl">
-        <Reveal>
-          <h2 className="text-5xl font-bold text-[#0d1b2a] mb-12">Thought Leadership</h2>
-        </Reveal>
-        <div className="grid md:grid-cols-2 gap-8">
-          {articles.map((article, idx) => (
-            <Reveal key={idx} delay={idx * 0.1}>
-              <Card className="bg-white border-[#c9a84c]/20 hover:shadow-lg transition-all duration-300 cursor-pointer">
-                <CardContent className="p-6">
-                  <Badge variant="outline" className="border-[#c9a84c] text-[#c9a84c] text-xs mb-4">{article.topic}</Badge>
-                  <h3 className="font-bold text-[#0d1b2a] mb-4">{article.title}</h3>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-[#666]">{article.reading} read</span>
-                    <ArrowRight className="w-4 h-4 text-[#c9a84c]" />
-                  </div>
-                </CardContent>
-              </Card>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      {/* Stats */}
-      <section className="py-20 px-6 max-w-7xl mx-auto">
-        <div className="grid md:grid-cols-4 gap-8 text-center">
-          {[
-            { num: 200, label: "Client Engagements" },
-            { num: 15, label: "Years in Practice" },
-            { num: 8, label: "Industries Served" },
-            { num: 2, suffix: "B", label: "Value Created" },
-          ].map((stat, idx) => (
-            <Reveal key={idx} delay={idx * 0.1}>
-              <div>
-                <p className="text-5xl font-bold text-[#c9a84c] mb-2"><Counter target={stat.num} suffix={stat.suffix || ""} /></p>
-                <p className="text-[#666] font-semibold">{stat.label}</p>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      {/* Team */}
-      <section id="team" className="py-20 px-6 max-w-7xl mx-auto">
-        <Reveal>
-          <h2 className="text-5xl font-bold text-[#0d1b2a] mb-12">Leadership</h2>
-        </Reveal>
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {team.map((member, idx) => (
-            <Reveal key={idx} delay={idx * 0.1}>
-              <Card className="bg-white border-[#c9a84c]/20 hover:shadow-lg transition-all duration-300">
-                <CardContent className="p-6">
-                  <Avatar className="w-16 h-16 mx-auto mb-4 border-2 border-[#c9a84c]">
-                    <AvatarFallback className="bg-[#c9a84c] text-white font-bold">{member.name.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                  <h3 className="font-bold text-[#0d1b2a] text-center mb-1">{member.name}</h3>
-                  <p className="text-xs text-[#c9a84c] text-center mb-4 font-semibold">{member.role}</p>
-                  <Badge variant="outline" className="block w-full text-center border-[#c9a84c] text-[#666] text-xs mb-2">{member.prev}</Badge>
-                  <Badge variant="secondary" className="block w-full text-center bg-[#c9a84c]/10 text-[#c9a84c] text-xs">{member.mba}</Badge>
-                </CardContent>
-              </Card>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      {/* Client Logos */}
-      <section className="py-20 px-6 bg-white/50 border-y border-[#c9a84c]/20">
-        <Reveal>
-          <p className="text-center text-sm font-bold text-[#666] mb-12 uppercase tracking-wider">Trusted by industry leaders</p>
-        </Reveal>
-        <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-8 items-center">
-          {clients.map((client, idx) => (
-            <Reveal key={idx} delay={idx * 0.05}>
-              <div className="text-center font-bold text-[#0d1b2a]/40 hover:text-[#c9a84c] transition-colors cursor-pointer text-sm">
-                {client}
-              </div>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      {/* Approach Accordion */}
-      <section className="py-20 px-6 max-w-3xl mx-auto">
-        <Reveal>
-          <h2 className="text-5xl font-bold text-[#0d1b2a] mb-12">Our Approach</h2>
-        </Reveal>
-        <Accordion type="single" collapsible className="space-y-4">
-          {[
-            { title: "Diagnose", desc: "Deep situation assessment through data analysis, interviews, and benchmarking. We uncover root causes, not symptoms." },
-            { title: "Design", desc: "Co-create tailored solutions with your team. Detailed implementation roadmap with clear milestones and KPIs." },
-            { title: "Deploy", desc: "Hand-in-hand implementation support. We build internal capability and change management to ensure adoption." },
-            { title: "Sustain", desc: "Ongoing support and monitoring. We track results, adjust course, and ensure lasting impact beyond our engagement." },
-          ].map((step, idx) => (
-            <AccordionItem key={idx} value={`step-${idx}`} className="border border-[#c9a84c]/20 rounded-lg px-6 bg-white">
-              <AccordionTrigger className="text-[#0d1b2a] font-bold cursor-pointer hover:text-[#c9a84c] transition-colors">{step.title}</AccordionTrigger>
-              <AccordionContent className="text-[#666]">{step.desc}</AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
-      </section>
-
-      {/* Testimonials */}
-      <section className="py-20 px-6 max-w-7xl mx-auto bg-white/50 rounded-3xl">
-        <Reveal>
-          <h2 className="text-5xl font-bold text-[#0d1b2a] mb-12">Client Feedback</h2>
-        </Reveal>
-        <div className="grid md:grid-cols-3 gap-8">
-          {[
-            { text: "Meridian helped us unlock $50M in value we didn't know existed. Transformative.", company: "Fortune 500 Tech" },
-            { text: "Their strategic clarity and execution discipline are unmatched in our industry.", company: "Global Consumer" },
-            { text: "They didn't just consult—they built capability within our team for sustained success.", company: "Healthcare Leader" },
-          ].map((test, idx) => (
-            <Reveal key={idx} delay={idx * 0.1}>
-              <Card className="bg-white border-[#c9a84c]/20">
-                <CardContent className="p-6">
-                  <p className="text-[#666] mb-4 italic">"{test.text}"</p>
-                  <p className="font-semibold text-[#0d1b2a]">{test.company}</p>
-                </CardContent>
-              </Card>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      {/* FAQ */}
-      <section id="faq" className="py-20 px-6 max-w-3xl mx-auto">
-        <Reveal>
-          <h2 className="text-5xl font-bold text-[#0d1b2a] mb-12">FAQ</h2>
-        </Reveal>
-        <Accordion type="single" collapsible className="space-y-4">
-          {[
-            { q: "How do you calculate your fees?", a: "Value-based pricing model. We align our success with yours through outcome guarantees on key metrics." },
-            { q: "What's the typical engagement timeline?", a: "3-6 months for most engagements. Complex multi-phase programs can extend 12-24 months with different team compositions." },
-            { q: "Do you work with startups?", a: "Yes. We work across all stages—from Series A through Fortune 500. Different approaches for different scales." },
-            { q: "What makes you different?", a: "Deep industry expertise + execution focus. We don't just create plans; we drive results and build lasting capability." },
-            { q: "Can you guarantee results?", a: "We structure risk-sharing arrangements where our fees are partially tied to achieving defined outcomes." },
-            { q: "How do you ensure knowledge transfer?", a: "Embedded teams + knowledge transfer workshops + documentation. Your team leads by engagement end." },
-          ].map((faq, idx) => (
-            <AccordionItem key={idx} value={`faq-${idx}`} className="border border-[#c9a84c]/20 rounded-lg px-6 bg-white">
-              <AccordionTrigger className="text-[#0d1b2a] font-bold cursor-pointer hover:text-[#c9a84c] transition-colors">{faq.q}</AccordionTrigger>
-              <AccordionContent className="text-[#666]">{faq.a}</AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
-      </section>
-
-      {/* CTA */}
-      <section className="py-20 px-6 max-w-7xl mx-auto">
-        <Reveal>
-          <div className="bg-gradient-to-r from-[#0d1b2a] to-[#1a2a3a] rounded-2xl p-12 text-center text-white">
-            <h2 className="text-4xl font-bold mb-4">Start Your Transformation</h2>
-            <p className="text-lg mb-8 opacity-90">Let's unlock your organization's full potential together.</p>
-            <MagneticBtn className="px-8 py-3 bg-[#c9a84c] text-[#0d1b2a] rounded-lg font-bold hover:bg-[#b89936]">Schedule Kickoff</MagneticBtn>
           </div>
-        </Reveal>
-      </section>
 
-      {/* Footer */}
-      <footer className="bg-[#0d1b2a] text-white py-12 px-6 mt-20">
-        <div className="max-w-7xl mx-auto text-center">
-          <p className="mb-4 font-bold">Meridian Consulting</p>
-          <p className="text-sm text-[#999]">Strategic counsel for transformative change © 2024</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 pt-16 border-t border-stone-800 mb-16">
+            <div className="lg:col-span-1">
+              <Link
+                href="/"
+                className="text-2xl font-bold tracking-tighter uppercase mb-6 block"
+              >
+                Wander<span className="text-amber-500">Lust.</span>
+              </Link>
+              <p className="text-stone-500 text-sm leading-relaxed mb-8">
+                Curators of extraordinary journeys to the most remote corners of
+                the globe.
+              </p>
+            </div>
+
+            <div>
+              <h4 className="text-[10px] font-bold uppercase tracking-widest text-amber-500 mb-6">
+                Destinations
+              </h4>
+              <ul className="space-y-4 text-sm text-stone-400">
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-amber-500 transition-colors"
+                  >
+                    Africa & Safaris
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-amber-500 transition-colors"
+                  >
+                    Polar Regions
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-amber-500 transition-colors"
+                  >
+                    Latin America
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-amber-500 transition-colors"
+                  >
+                    Asia & Himalayas
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="text-[10px] font-bold uppercase tracking-widest text-amber-500 mb-6">
+                Company
+              </h4>
+              <ul className="space-y-4 text-sm text-stone-400">
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-amber-500 transition-colors"
+                  >
+                    Our Story
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-amber-500 transition-colors"
+                  >
+                    Sustainability Impact
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-amber-500 transition-colors"
+                  >
+                    Travel Journal
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-amber-500 transition-colors"
+                  >
+                    Contact Us
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="text-[10px] font-bold uppercase tracking-widest text-amber-500 mb-6">
+                Dispatch Newsletter
+              </h4>
+              <p className="text-sm text-stone-400 mb-4">
+                Field notes, photography, and exclusive expedition
+                announcements.
+              </p>
+              <form className="flex" onSubmit={(e) => e.preventDefault()}>
+                <input
+                  type="email"
+                  placeholder="Email address"
+                  className="bg-transparent border-b border-stone-700 px-0 py-3 flex-1 text-sm focus:outline-none focus:border-amber-500 text-white transition-colors"
+                />
+                <button
+                  type="submit"
+                  className="border-b border-stone-700 px-4 py-3 text-[10px] uppercase tracking-widest font-bold hover:text-amber-500 text-stone-500 transition-colors"
+                >
+                  Subscribe
+                </button>
+              </form>
+            </div>
+          </div>
+
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6 pt-8 border-t border-stone-800 text-[10px] uppercase tracking-widest font-bold text-stone-600">
+            <span>
+              &copy; {new Date().getFullYear()} Wanderlust Expeditions. All
+              rights reserved.
+            </span>
+            <div className="flex gap-6">
+              <Link href="#" className="hover:text-white transition-colors">
+                Privacy Policy
+              </Link>
+              <Link href="#" className="hover:text-white transition-colors">
+                Terms of Booking
+              </Link>
+            </div>
+          </div>
         </div>
       </footer>
     </div>
-  )
+  );
 }
