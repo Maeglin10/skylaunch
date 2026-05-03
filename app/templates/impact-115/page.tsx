@@ -1,449 +1,764 @@
-"use client"
-import { motion, useScroll, useTransform, useInView, AnimatePresence, useMotionValue, useSpring } from "framer-motion"
-import { useState, useRef, useEffect } from "react"
-import Image from "next/image"
-import Link from "next/link"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
-import { Progress } from "@/components/ui/progress"
+"use client";
 
-function Reveal({ children, delay=0 }: { children: React.ReactNode; delay?: number }) {
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true, margin: "-60px" })
-  return <motion.div ref={ref} initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, delay }}>{children}</motion.div>
-}
+import React, { useState, useEffect, useRef } from "react";
+import {
+  motion,
+  useScroll,
+  useTransform,
+  useSpring,
+  AnimatePresence,
+} from "framer-motion";
+import Image from "next/image";
+import Link from "next/link";
+import {
+  ArrowRight,
+  Leaf,
+  Waves,
+  Wind,
+  Sun,
+  Menu,
+  X,
+  Instagram,
+  ArrowUpRight,
+  Play,
+  Compass,
+  MapPin,
+} from "lucide-react";
 
-function Counter({ target, suffix="" }: { target: number; suffix?: string }) {
-  const [count, setCount] = useState(0)
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true })
-  useEffect(() => {
-    if (!inView) return
-    const step = Math.ceil(target / 60)
-    const t = setInterval(() => setCount(c => Math.min(c + step, target)), 16)
-    return () => clearInterval(t)
-  }, [inView, target])
-  return <span ref={ref}>{count.toLocaleString()}{suffix}</span>
-}
+import "../premium.css";
 
-function MagneticBtn({ children, className="" }: { children: React.ReactNode; className?: string }) {
-  const x = useMotionValue(0); const y = useMotionValue(0)
-  const sx = useSpring(x, { stiffness: 500, damping: 25 })
-  const sy = useSpring(y, { stiffness: 500, damping: 25 })
-  const ref = useRef<HTMLButtonElement>(null)
-  const handleMouse = (e: React.MouseEvent) => {
-    const r = ref.current!.getBoundingClientRect()
-    x.set((e.clientX - r.left - r.width/2) * 0.35)
-    y.set((e.clientY - r.top - r.height/2) * 0.35)
-  }
-  return <motion.button ref={ref} style={{ x: sx, y: sy }} onMouseMove={handleMouse} onMouseLeave={() => { x.set(0); y.set(0) }} className={className}>{children}</motion.button>
-}
+/* ==========================================================================
+   DATA STRUCTURES
+   ========================================================================== */
 
-const PRACTICES = [
+const PROJECTS = [
   {
-    name: "Corporate",
-    services: ["M&A", "Securities", "Corporate Governance", "Contract Negotiation"],
-    cases: "520+ cases",
-    lead: "Margaret Chen",
+    id: "p1",
+    title: "Verdant Canopy",
+    category: "Architecture",
+    location: "Singapore",
+    year: "2025",
+    desc: "A residential complex redefining biophilic design. The structure breathes with the environment, capturing rainwater and optimizing natural wind flows to reduce ambient temperature by 4 degrees.",
+    image:
+      "https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?q=80&w=1200&auto=format&fit=crop",
+    speed: 0.1,
   },
   {
-    name: "Litigation",
-    services: ["Civil Disputes", "Commercial Litigation", "Appellate", "Alternative Dispute Resolution"],
-    cases: "890+ cases",
-    lead: "James Mitchell",
+    id: "p2",
+    title: "The Glass House",
+    category: "Interior",
+    location: "Kyoto, Japan",
+    year: "2024",
+    desc: "Seamlessly blending indoor and outdoor spaces, this sanctuary uses refractive materials to scatter sunlight, creating a living painting that changes every hour.",
+    image:
+      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1200&auto=format&fit=crop",
+    speed: 0.25,
   },
   {
-    name: "Real Estate",
-    services: ["Commercial Real Estate", "Residential", "Development", "Financing"],
-    cases: "650+ cases",
-    lead: "Sofia Rodriguez",
+    id: "p3",
+    title: "Moss Pavilion",
+    category: "Public Space",
+    location: "Oslo, Norway",
+    year: "2023",
+    desc: "An acoustic dampening structure built entirely from sustainably harvested moss and reclaimed timber, providing a silent retreat in the heart of the bustling city.",
+    image:
+      "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=1200&auto=format&fit=crop",
+    speed: 0.15,
   },
   {
-    name: "Intellectual Property",
-    services: ["Patents", "Trademarks", "Copyright", "Licensing"],
-    cases: "410+ cases",
-    lead: "David Park",
+    id: "p4",
+    title: "Thermal Baths",
+    category: "Wellness",
+    location: "Vals, Switzerland",
+    year: "2026",
+    desc: "Carved directly into the mountainside, these baths utilize geothermal energy to maintain perfect temperatures year-round, wrapped in local quartzite.",
+    image:
+      "https://images.unsplash.com/photo-1542314831-c6a4d14faaf2?q=80&w=1200&auto=format&fit=crop",
+    speed: 0.3,
   },
   {
-    name: "Employment",
-    services: ["Labor Law", "Employment Disputes", "Compliance", "Executive Compensation"],
-    cases: "380+ cases",
-    lead: "Rebecca Thompson",
+    id: "p5",
+    title: "Bamboo Node",
+    category: "Infrastructure",
+    location: "Bali, Indonesia",
+    year: "2024",
+    desc: "A sprawling community center utilizing structural bamboo to create sweeping, organic arches that withstand severe weather while remaining entirely biodegradable.",
+    image:
+      "https://images.unsplash.com/photo-1518005020951-eccb494ad742?q=80&w=1200&auto=format&fit=crop",
+    speed: 0.2,
   },
-]
+];
 
-const ATTORNEYS = [
-  { name: "Margaret Chen", title: "Managing Partner", bar: "NY, CA", specialty: "Corporate Law" },
-  { name: "James Mitchell", title: "Senior Counsel", bar: "NY, NJ, PA", specialty: "Litigation" },
-  { name: "Sofia Rodriguez", title: "Partner", bar: "NY, FL", specialty: "Real Estate" },
-  { name: "David Park", title: "Partner", bar: "NY, MA", specialty: "IP Law" },
-  { name: "Rebecca Thompson", title: "Counsel", bar: "NY, CT", specialty: "Employment" },
-  { name: "Michael O'Brien", title: "Associate", bar: "NY", specialty: "General Practice" },
-]
+const PHILOSOPHY = [
+  {
+    icon: <Leaf className="w-6 h-6" />,
+    title: "Biophilic Core",
+    desc: "We design structures that do not just exist in nature, but actively participate in the local ecosystem.",
+  },
+  {
+    icon: <Waves className="w-6 h-6" />,
+    title: "Fluid Dynamics",
+    desc: "Harnessing natural air and water flows to passively regulate temperature, reducing energy reliance.",
+  },
+  {
+    icon: <Sun className="w-6 h-6" />,
+    title: "Solar Sculpting",
+    desc: "Using algorithmic modeling to maximize natural light penetration while minimizing thermal gain.",
+  },
+  {
+    icon: <Wind className="w-6 h-6" />,
+    title: "Breathable Materials",
+    desc: "Prioritizing porous, locally sourced materials that age gracefully and sequester carbon.",
+  },
+];
 
-const ARTICLES = [
-  { title: "M&A Trends in 2025", practice: "Corporate", date: "2025-01-15" },
-  { title: "AI Liability and Compliance", practice: "Employment", date: "2025-01-10" },
-  { title: "Real Estate Market Outlook", practice: "Real Estate", date: "2025-01-05" },
-  { title: "Patent Strategy in Tech", practice: "IP", date: "2024-12-28" },
-]
+const TEAM = [
+  {
+    name: "Elena Rostova",
+    role: "Principal Architect",
+    image:
+      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=800&auto=format&fit=crop",
+  },
+  {
+    name: "David Chen",
+    role: "Head of Biophilic Design",
+    image:
+      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=800&auto=format&fit=crop",
+  },
+  {
+    name: "Sarah Jenkins",
+    role: "Material Scientist",
+    image:
+      "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=800&auto=format&fit=crop",
+  },
+];
 
-export default function ApexLaw() {
-  const [activePractice, setActivePractice] = useState(0)
-  const { scrollY } = useScroll()
-  const heroY = useTransform(scrollY, [0, 500], [0, 150])
+/* ==========================================================================
+   UTILITY COMPONENTS
+   ========================================================================== */
+
+function ParallaxImage({
+  src,
+  alt,
+  speed,
+  className,
+}: {
+  src: string;
+  alt: string;
+  speed: number;
+  className: string;
+}) {
+  const ref = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start end", "end start"],
+  });
+
+  const y = useTransform(scrollYProgress, [0, 1], ["-20%", "20%"]);
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] text-[#0f1b2d]">
-      <motion.section style={{ y: heroY }} className="relative h-screen flex items-center justify-center overflow-hidden">
-        <Image src="https://images.unsplash.com/photo-733852?w=800&q=80" alt="Law Firm" fill className="object-cover" />
-        <div className="absolute inset-0 bg-black/50" />
-        <div className="relative z-10 text-center max-w-4xl mx-auto px-6">
-          <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="text-6xl md:text-8xl font-light mb-6 text-white">
-            APEX
-          </motion.h1>
-          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="text-xl md:text-2xl font-light text-white">
-            Modern Legal Excellence
-          </motion.p>
-        </div>
-      </motion.section>
-
-      <section className="py-24 px-6 md:px-12">
-        <Reveal>
-          <h2 className="text-5xl font-light mb-12 text-[#0f1b2d]">Practice Areas</h2>
-        </Reveal>
-        <Tabs defaultValue="Corporate" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 bg-white border border-[#c9a84c]/20">
-            {PRACTICES.map((p) => (
-              <TabsTrigger key={p.name} value={p.name} className="data-[state=active]:bg-[#0f1b2d] data-[state=active]:text-[#c9a84c]">
-                {p.name}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-          {PRACTICES.map((practice) => (
-            <TabsContent key={practice.name} value={practice.name} className="mt-12">
-              <div className="grid md:grid-cols-2 gap-12">
-                <Reveal>
-                  <div>
-                    <h3 className="text-3xl font-light text-[#0f1b2d] mb-6">{practice.name} Law</h3>
-                    <div className="space-y-3 mb-8">
-                      {practice.services.map((svc, idx) => (
-                        <div key={idx} className="flex items-center gap-3">
-                          <div className="w-2 h-2 bg-[#c9a84c] rounded-full" />
-                          <span className="text-[#0f1b2d]/70">{svc}</span>
-                        </div>
-                      ))}
-                    </div>
-                    <Badge className="bg-[#0f1b2d] text-[#c9a84c]">{practice.cases}</Badge>
-                    <p className="text-sm text-[#0f1b2d]/60 mt-6">Led by {practice.lead}</p>
-                  </div>
-                </Reveal>
-                <Reveal delay={0.1}>
-                  <div className="relative h-96 bg-[#e8eef5] rounded-lg overflow-hidden">
-                    <Image src="https://images.unsplash.com/photo-1109543?w=800&q=80" alt={practice.name} fill className="object-cover" />
-                  </div>
-                </Reveal>
-              </div>
-            </TabsContent>
-          ))}
-        </Tabs>
-      </section>
-
-      <section className="py-24 px-6 md:px-12 bg-[#0f1b2d]">
-        <Reveal>
-          <h2 className="text-5xl font-light mb-12 text-white">Our Attorneys</h2>
-        </Reveal>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {ATTORNEYS.map((atty, idx) => (
-            <Reveal key={idx} delay={idx * 0.1}>
-              <Card className="bg-[#1a2a3d] border-[#c9a84c]/20">
-                <CardContent className="p-6">
-                  <Avatar className="w-16 h-16 mb-4" style={{ backgroundColor: "#c9a84c" }}>
-                    <AvatarFallback className="text-[#0f1b2d]">{atty.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                  </Avatar>
-                  <h3 className="text-lg font-light text-white mb-1">{atty.name}</h3>
-                  <p className="text-sm text-[#c9a84c] mb-3">{atty.title}</p>
-                  <Badge variant="outline" className="border-[#c9a84c] text-[#c9a84c]">{atty.bar}</Badge>
-                  <p className="text-xs text-white/60 mt-3">{atty.specialty}</p>
-                </CardContent>
-              </Card>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      <section className="py-24 px-6 md:px-12">
-        <Reveal>
-          <h2 className="text-5xl font-light mb-12 text-[#0f1b2d]">Case Results</h2>
-        </Reveal>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-          {[
-            { label: "Cases Won", value: 2000, suffix: "+" },
-            { label: "Success Rate", value: 98, suffix: "%" },
-            { label: "Years in Practice", value: 35 },
-            { label: "Offices Worldwide", value: 12 },
-          ].map((stat, idx) => (
-            <Reveal key={idx} delay={idx * 0.1}>
-              <div className="text-center">
-                <p className="text-4xl md:text-5xl font-light mb-2 text-[#c9a84c]">
-                  <Counter target={stat.value} suffix={stat.suffix} />
-                </p>
-                <p className="text-sm text-[#0f1b2d]/60">{stat.label}</p>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      <section className="py-24 px-6 md:px-12 bg-[#e8eef5]">
-        <Reveal>
-          <h2 className="text-5xl font-light mb-12 text-[#0f1b2d]">Thought Leadership</h2>
-        </Reveal>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {ARTICLES.map((article, idx) => (
-            <Reveal key={idx} delay={idx * 0.1}>
-              <Card className="bg-white">
-                <CardContent className="p-6">
-                  <Badge className="mb-4 bg-[#0f1b2d] text-[#c9a84c]">{article.practice}</Badge>
-                  <h3 className="text-lg font-light text-[#0f1b2d] mb-3">{article.title}</h3>
-                  <p className="text-sm text-[#0f1b2d]/60">{new Date(article.date).toLocaleDateString()}</p>
-                  <button className="mt-4 text-[#c9a84c] font-light hover:underline">Read Article →</button>
-                </CardContent>
-              </Card>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      <section className="py-24 px-6 md:px-12">
-        <Reveal>
-          <h2 className="text-5xl font-light mb-12 text-[#0f1b2d]">Client Testimonials</h2>
-        </Reveal>
-        <Carousel className="w-full max-w-4xl mx-auto">
-          <CarouselContent>
-            {[1, 2, 3].map((idx) => (
-              <CarouselItem key={idx}>
-                <Card className="bg-[#e8eef5]">
-                  <CardContent className="p-8">
-                    <p className="text-lg text-[#0f1b2d] mb-6 italic">"APEX delivered exceptional results on our most complex litigation. Their expertise is unparalleled."</p>
-                    <div className="flex items-center gap-4">
-                      <Avatar className="w-12 h-12" style={{ backgroundColor: "#c9a84c" }}>
-                        <AvatarFallback className="text-[#0f1b2d]">C{idx}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-light text-[#0f1b2d]">Client {idx}</p>
-                        <p className="text-sm text-[#0f1b2d]/60">Fortune 500 General Counsel</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          <CarouselPrevious />
-          <CarouselNext />
-        </Carousel>
-      </section>
-
-      <section className="py-12 px-6 md:px-12 border-t border-[#c9a84c]/20">
-        <Reveal>
-          <p className="text-center text-sm text-[#0f1b2d]/60 mb-6">Recognized By</p>
-        </Reveal>
-        <div className="flex justify-center gap-8 flex-wrap">
-          {["Martindale", "Chambers USA", "Super Lawyers", "Best Lawyers"].map((badge, idx) => (
-            <Reveal key={idx} delay={idx * 0.05}>
-              <Badge variant="outline" className="border-[#c9a84c] text-[#c9a84c] font-light">{badge}</Badge>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      <section className="py-24 px-6 md:px-12 bg-[#0f1b2d]">
-        <Reveal>
-          <h2 className="text-5xl font-light mb-12 text-white">Retainer Process</h2>
-        </Reveal>
-        <Accordion type="single" collapsible className="max-w-2xl">
-          {[
-            { title: "Initial Consultation", desc: "Comprehensive case review and legal strategy discussion" },
-            { title: "Engagement Agreement", desc: "Transparent fee structure and scope of representation" },
-            { title: "Research & Planning", desc: "Detailed analysis and litigation roadmap development" },
-            { title: "Representation", desc: "Full legal representation throughout proceedings" },
-            { title: "Resolution & Follow-up", desc: "Case conclusion and ongoing advisory services" },
-          ].map((step, idx) => (
-            <AccordionItem key={idx} value={`step-${idx}`} className="border-[#c9a84c]/20">
-              <AccordionTrigger className="text-white">Step {idx + 1}: {step.title}</AccordionTrigger>
-              <AccordionContent className="text-white/70">{step.desc}</AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
-      </section>
-
-      <section className="py-24 px-6 md:px-12">
-        <Reveal>
-          <h2 className="text-5xl font-light mb-12 text-[#0f1b2d]">FAQ</h2>
-        </Reveal>
-        <Accordion type="single" collapsible className="max-w-2xl">
-          {[
-            { q: "What is your consultation process?", a: "Initial consultations are confidential and at no charge. We review your matter and provide preliminary legal assessment." },
-            { q: "How do you structure fees?", a: "We offer hourly rates, flat fees, or contingency arrangements depending on case type and client needs." },
-            { q: "How long does litigation typically take?", a: "Most cases resolve within 18-36 months, though complex matters may extend longer. Early settlement is often possible." },
-            { q: "What about confidentiality?", a: "Attorney-client privilege protects all communications. We maintain strict confidentiality throughout representation." },
-          ].map((item, idx) => (
-            <AccordionItem key={idx} value={`item-${idx}`}>
-              <AccordionTrigger className="text-[#0f1b2d]">{item.q}</AccordionTrigger>
-              <AccordionContent className="text-[#0f1b2d]/70">{item.a}</AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
-      </section>
-
-      <section className="py-24 px-6 md:px-12">
-        <Reveal>
-          <h2 className="text-5xl font-light mb-12 text-[#0f1b2d]">Our Firm</h2>
-        </Reveal>
-        <div className="max-w-3xl mx-auto">
-          <Reveal>
-            <p className="text-lg text-[#0f1b2d]/70 mb-6">APEX Law was founded in 1990 with a simple mission: provide exceptional legal representation to corporations, institutions, and individuals navigating complex legal challenges. Over 35 years, we've evolved into a full-service firm with 12 offices across North America and Europe.</p>
-          </Reveal>
-          <Reveal delay={0.1}>
-            <p className="text-lg text-[#0f1b2d]/70 mb-6">Our 150+ attorneys bring diverse expertise, with deep specialization in corporate law, litigation, real estate, intellectual property, and employment matters. We pride ourselves on our collaborative approach, combining senior expertise with emerging talent.</p>
-          </Reveal>
-          <Reveal delay={0.2}>
-            <p className="text-lg text-[#0f1b2d]/70">We measure success not just by case outcomes, but by long-term client relationships and our contribution to the legal profession.</p>
-          </Reveal>
-        </div>
-      </section>
-
-      <section className="py-24 px-6 md:px-12 bg-[#e8eef5]">
-        <Reveal>
-          <h2 className="text-5xl font-light mb-12 text-[#0f1b2d]">Notable Cases</h2>
-        </Reveal>
-        <div className="grid md:grid-cols-2 gap-12">
-          {[
-            { case: "Smith v. Corporate Giants LLC", outcome: "Won $475M settlement", practice: "Litigation" },
-            { case: "TechFlow International Acquisition", outcome: "$2.1B cross-border M&A", practice: "Corporate" },
-            { case: "IP Patent Infringement Defense", outcome: "Defeated claims, maintained patents", practice: "IP Law" },
-            { case: "Real Estate Development Project", outcome: "Completed $850M mixed-use development", practice: "Real Estate" },
-          ].map((notable, idx) => (
-            <Reveal key={idx} delay={idx * 0.1}>
-              <Card className="bg-white">
-                <CardContent className="p-6">
-                  <h4 className="text-lg font-light text-[#0f1b2d] mb-2">{notable.case}</h4>
-                  <p className="text-[#c9a84c] font-light mb-2">{notable.outcome}</p>
-                  <Badge className="bg-[#0f1b2d] text-[#c9a84c]">{notable.practice}</Badge>
-                </CardContent>
-              </Card>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      <section className="py-24 px-6 md:px-12">
-        <Reveal>
-          <h2 className="text-5xl font-light mb-12 text-[#0f1b2d]">Diversity & Inclusion</h2>
-        </Reveal>
-        <div className="grid md:grid-cols-3 gap-8">
-          {[
-            { stat: "40%", label: "Female Partners & Counsel" },
-            { stat: "38%", label: "Attorneys of Color" },
-            { stat: "$2.5M", label: "Pro Bono Hours Annually" },
-          ].map((diversity, idx) => (
-            <Reveal key={idx} delay={idx * 0.1}>
-              <div className="text-center">
-                <p className="text-4xl font-light text-[#c9a84c] mb-2">{diversity.stat}</p>
-                <p className="text-[#0f1b2d]/70">{diversity.label}</p>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      <section className="py-24 px-6 md:px-12 bg-[#e8eef5]">
-        <Reveal>
-          <h2 className="text-5xl font-light mb-12 text-[#0f1b2d]">Practice Areas Deep Dive</h2>
-        </Reveal>
-        <Accordion type="single" collapsible className="max-w-2xl mx-auto">
-          {[
-            { area: "Corporate Law", sub: "M&A, Securities, Governance, Contracts" },
-            { area: "Litigation", sub: "Commercial, Civil, Appellate, Mediation" },
-            { area: "Real Estate", sub: "Commercial, Residential, Development, Finance" },
-            { area: "IP Law", sub: "Patents, Trademarks, Copyright, Licensing" },
-          ].map((practice, idx) => (
-            <AccordionItem key={idx} value={`practice-${idx}`}>
-              <AccordionTrigger className="text-[#0f1b2d]">{practice.area}</AccordionTrigger>
-              <AccordionContent className="text-[#0f1b2d]/70">{practice.sub}</AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
-      </section>
-
-      <section className="py-24 px-6 md:px-12">
-        <Reveal>
-          <h2 className="text-5xl font-light mb-12 text-[#0f1b2d]">Professional Recognition</h2>
-        </Reveal>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          {["Best Law Firms 2024", "AV Preeminent Rating", "World Class Legal Firm", "Regional Leader", "Client Choice Award", "Innovative Practice", "Diversity Leader", "Pro Bono Champion"].map((recognition, idx) => (
-            <Reveal key={idx} delay={idx * 0.05}>
-              <Card className="bg-[#e8eef5] border-[#c9a84c]/10 text-center">
-                <CardContent className="p-6">
-                  <p className="text-sm font-light text-[#0f1b2d]">{recognition}</p>
-                </CardContent>
-              </Card>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      <section className="py-24 px-6 md:px-12 bg-[#e8eef5]">
-        <Reveal>
-          <h2 className="text-5xl font-light mb-12 text-[#0f1b2d]">Contact Information</h2>
-        </Reveal>
-        <div className="grid md:grid-cols-2 gap-12 max-w-4xl mx-auto">
-          <Reveal>
-            <div>
-              <h3 className="text-2xl font-light text-[#0f1b2d] mb-6">Main Office</h3>
-              <div className="space-y-3 text-[#0f1b2d]/70">
-                <p className="font-light text-[#c9a84c] text-sm">Address</p>
-                <p>500 Park Avenue South, Suite 1500</p>
-                <p>New York, NY 10010</p>
-              </div>
-            </div>
-          </Reveal>
-          <Reveal delay={0.1}>
-            <div>
-              <h3 className="text-2xl font-light text-[#0f1b2d] mb-6">Contact</h3>
-              <div className="space-y-3 text-[#0f1b2d]/70">
-                <div>
-                  <p className="font-light text-[#c9a84c] text-sm">Phone</p>
-                  <p>+1 (212) 555-0200</p>
-                </div>
-                <div>
-                  <p className="font-light text-[#c9a84c] text-sm">Email</p>
-                  <p>info@apexlaw.com</p>
-                </div>
-              </div>
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      <section className="py-24 px-6 md:px-12">
-        <Reveal>
-          <h2 className="text-5xl font-light mb-12 text-[#0f1b2d]">Schedule a Consultation</h2>
-        </Reveal>
-        <div className="text-center">
-          <p className="text-lg text-[#0f1b2d]/70 mb-8">Let us help protect and advance your interests. Our experts are ready to discuss your matter.</p>
-          <MagneticBtn className="px-12 py-4 rounded-lg font-light text-white transition-colors" style={{ backgroundColor: "#0f1b2d" }}>
-            Request Consultation
-          </MagneticBtn>
-        </div>
-      </section>
+    <div ref={ref} className={`relative overflow-hidden ${className}`}>
+      <motion.div
+        style={{ y, scale: 1.1 }}
+        className="absolute inset-0 w-full h-full"
+      >
+        <Image src={src} alt={alt} fill className="object-cover" />
+      </motion.div>
     </div>
-  )
+  );
+}
+
+function RevealText({
+  children,
+  delay = 0,
+}: {
+  children: React.ReactNode;
+  delay?: number;
+}) {
+  return (
+    <div className="overflow-hidden">
+      <motion.div
+        initial={{ y: "100%", opacity: 0 }}
+        whileInView={{ y: 0, opacity: 1 }}
+        viewport={{ once: true, margin: "-50px" }}
+        transition={{ duration: 0.8, delay, ease: [0.76, 0, 0.24, 1] }}
+      >
+        {children}
+      </motion.div>
+    </div>
+  );
+}
+
+/* ==========================================================================
+   MAIN PAGE COMPONENT
+   ========================================================================== */
+
+export default function VerdaParallaxPage() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  const containerRef = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "end end"],
+  });
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 50);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Smooth scroll progress
+  const smoothProgress = useSpring(scrollYProgress, {
+    damping: 20,
+    stiffness: 100,
+  });
+  const progressBarHeight = useTransform(
+    smoothProgress,
+    [0, 1],
+    ["0%", "100%"],
+  );
+
+  return (
+    <div
+      ref={containerRef}
+      className="premium-theme min-h-screen bg-[#021008] text-[#e2e8f0] font-sans selection:bg-[#10b981]/30 selection:text-white"
+    >
+      {/* Scroll Progress Bar */}
+      <div className="fixed right-0 top-0 w-1 h-full bg-white/5 z-50">
+        <motion.div
+          style={{ height: progressBarHeight }}
+          className="w-full bg-[#10b981]"
+        />
+      </div>
+
+      {/* ==========================================
+          NAVIGATION
+          ========================================== */}
+      <nav
+        className={`fixed top-0 left-0 w-full z-40 transition-all duration-500 px-6 md:px-12 ${scrolled ? "bg-[#021008]/80 backdrop-blur-xl py-4 border-b border-white/5" : "bg-transparent py-8"}`}
+      >
+        <div className="max-w-[1600px] mx-auto flex items-center justify-between">
+          <Link
+            href="/"
+            className="text-xl md:text-2xl font-medium tracking-widest uppercase flex items-center gap-3"
+          >
+            <div className="w-8 h-8 rounded-full bg-[#10b981] flex items-center justify-center">
+              <Leaf className="w-4 h-4 text-[#021008]" />
+            </div>
+            Verda
+          </Link>
+
+          <div className="hidden lg:flex items-center gap-12 text-xs uppercase tracking-[0.2em] font-semibold text-white/60">
+            <Link href="#" className="hover:text-[#10b981] transition-colors">
+              Projects
+            </Link>
+            <Link href="#" className="hover:text-[#10b981] transition-colors">
+              Philosophy
+            </Link>
+            <Link href="#" className="hover:text-[#10b981] transition-colors">
+              Studio
+            </Link>
+            <Link href="#" className="hover:text-[#10b981] transition-colors">
+              Journal
+            </Link>
+          </div>
+
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="lg:hidden text-white hover:text-[#10b981] transition-colors"
+          >
+            {menuOpen ? (
+              <X className="w-6 h-6" />
+            ) : (
+              <Menu className="w-6 h-6" />
+            )}
+          </button>
+
+          <div className="hidden lg:block">
+            <button className="px-6 py-2.5 border border-white/20 rounded-full text-[10px] uppercase tracking-widest font-bold hover:bg-white hover:text-[#021008] transition-colors">
+              Start a Project
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      {/* ==========================================
+          MOBILE MENU
+          ========================================== */}
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: "-100%" }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: "-100%" }}
+            transition={{ duration: 0.6, ease: [0.76, 0, 0.24, 1] }}
+            className="fixed inset-0 z-30 bg-[#021008] pt-32 px-6 flex flex-col"
+          >
+            <div className="flex flex-col gap-6 text-4xl font-light">
+              <Link href="#" onClick={() => setMenuOpen(false)}>
+                Projects
+              </Link>
+              <Link href="#" onClick={() => setMenuOpen(false)}>
+                Philosophy
+              </Link>
+              <Link href="#" onClick={() => setMenuOpen(false)}>
+                Studio
+              </Link>
+              <Link href="#" onClick={() => setMenuOpen(false)}>
+                Journal
+              </Link>
+              <Link href="#" onClick={() => setMenuOpen(false)}>
+                Contact
+              </Link>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ==========================================
+          1. HERO SECTION (Immersive Video/Image)
+          ========================================== */}
+      <section className="relative w-full h-[100svh] overflow-hidden flex items-center justify-center">
+        <div className="absolute inset-0 z-0">
+          <Image
+            src="https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?q=80&w=2000&auto=format&fit=crop"
+            alt="Hero background"
+            fill
+            className="object-cover opacity-60"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#021008]/40 via-transparent to-[#021008]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(16,185,129,0.1)_0%,rgba(0,0,0,0)_80%)]" />
+        </div>
+
+        <div className="relative z-10 text-center px-6 mt-16 max-w-5xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, delay: 0.2 }}
+          >
+            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#10b981]/30 bg-[#10b981]/10 text-[#10b981] text-[10px] uppercase tracking-widest font-bold mb-8 backdrop-blur-md">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#10b981] animate-pulse" />{" "}
+              Architecture for the Anthropocene
+            </span>
+          </motion.div>
+
+          <RevealText>
+            <h1 className="text-6xl md:text-8xl lg:text-[9rem] font-medium tracking-tighter leading-[0.9] mb-8">
+              Living <br className="hidden md:block" />
+              <span className="italic font-light text-[#10b981]">
+                Structures.
+              </span>
+            </h1>
+          </RevealText>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1, delay: 1.2 }}
+          >
+            <p className="text-lg md:text-xl text-white/60 max-w-2xl mx-auto font-light leading-relaxed">
+              We design spaces that breathe, adapt, and regenerate. Blending
+              advanced parametric modeling with ancient biomimetic principles.
+            </p>
+          </motion.div>
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1, delay: 1.5 }}
+          className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 text-white/40 z-10"
+        >
+          <span className="text-[9px] uppercase tracking-[0.3em]">
+            Scroll to Explore
+          </span>
+          <div className="w-[1px] h-16 bg-gradient-to-b from-white/40 to-transparent" />
+        </motion.div>
+      </section>
+
+      {/* ==========================================
+          2. PHILOSOPHY
+          ========================================== */}
+      <section className="py-32 md:py-48 px-6 md:px-12 bg-[#021008] relative z-10">
+        <div className="max-w-[1400px] mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-8 mb-32">
+            <div className="lg:col-span-5">
+              <RevealText>
+                <h2 className="text-4xl md:text-6xl font-medium tracking-tight leading-tight">
+                  Design that <br />
+                  <span className="italic text-[#10b981]">responds</span> to
+                  life.
+                </h2>
+              </RevealText>
+            </div>
+            <div className="lg:col-span-7 lg:pl-16">
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+                className="text-xl md:text-2xl text-white/60 font-light leading-relaxed"
+              >
+                The era of static, energy-consuming boxes is over. We believe
+                buildings should act as living organisms—generating their own
+                energy, managing their own water, and actively improving the
+                health of their occupants and the surrounding ecosystem.
+              </motion.p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {PHILOSOPHY.map((item, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: i * 0.1 }}
+                className="p-8 rounded-3xl bg-white/[0.02] border border-[#10b981]/10 hover:bg-white/[0.04] transition-colors group"
+              >
+                <div className="w-14 h-14 rounded-full bg-[#10b981]/10 flex items-center justify-center text-[#10b981] mb-8 group-hover:scale-110 transition-transform">
+                  {item.icon}
+                </div>
+                <h3 className="text-xl font-medium mb-4">{item.title}</h3>
+                <p className="text-white/50 text-sm leading-relaxed">
+                  {item.desc}
+                </p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ==========================================
+          3. MULTI-SPEED PARALLAX GALLERY
+          ========================================== */}
+      <section className="py-24 md:py-32 bg-[#010a05] border-y border-white/5 relative overflow-hidden">
+        {/* Background typographic watermark */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full text-center pointer-events-none opacity-[0.03] z-0">
+          <span className="text-[20vw] font-bold tracking-tighter whitespace-nowrap">
+            ARCHIVE
+          </span>
+        </div>
+
+        <div className="max-w-[1600px] mx-auto px-6 md:px-12 relative z-10">
+          <div className="flex justify-between items-end mb-24">
+            <RevealText>
+              <h2 className="text-5xl md:text-7xl font-medium tracking-tight">
+                Selected <br />
+                <span className="italic text-[#10b981]">Works.</span>
+              </h2>
+            </RevealText>
+            <Link
+              href="#"
+              className="hidden md:flex items-center gap-2 text-xs uppercase tracking-widest font-bold hover:text-[#10b981] transition-colors pb-2 border-b border-white/20"
+            >
+              View All Projects <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+
+          <div className="space-y-32 md:space-y-48">
+            {PROJECTS.map((project, i) => {
+              const isEven = i % 2 === 0;
+              return (
+                <div
+                  key={project.id}
+                  className={`flex flex-col ${isEven ? "md:flex-row" : "md:flex-row-reverse"} gap-12 lg:gap-24 items-center`}
+                >
+                  {/* Image with Parallax */}
+                  <div className="w-full md:w-3/5 lg:w-2/3">
+                    <ParallaxImage
+                      src={project.image}
+                      alt={project.title}
+                      speed={project.speed}
+                      className="aspect-[4/3] md:aspect-[16/10] rounded-3xl"
+                    />
+                  </div>
+
+                  {/* Content */}
+                  <div className="w-full md:w-2/5 lg:w-1/3">
+                    <motion.div
+                      initial={{ opacity: 0, x: isEven ? 50 : -50 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true, margin: "-100px" }}
+                      transition={{ duration: 0.8 }}
+                    >
+                      <div className="flex gap-3 mb-6">
+                        <span className="px-3 py-1 border border-white/10 rounded-full text-[9px] uppercase tracking-widest text-white/60">
+                          {project.category}
+                        </span>
+                        <span className="px-3 py-1 border border-white/10 rounded-full text-[9px] uppercase tracking-widest text-white/60">
+                          {project.year}
+                        </span>
+                      </div>
+                      <h3 className="text-3xl md:text-5xl font-medium mb-6">
+                        {project.title}
+                      </h3>
+                      <div className="flex items-center gap-2 text-[#10b981] text-sm font-medium mb-6">
+                        <MapPin className="w-4 h-4" /> {project.location}
+                      </div>
+                      <p className="text-white/50 text-lg font-light leading-relaxed mb-8">
+                        {project.desc}
+                      </p>
+                      <button className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center hover:bg-[#10b981] hover:border-[#10b981] hover:text-[#021008] transition-all group">
+                        <ArrowUpRight className="w-5 h-5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                      </button>
+                    </motion.div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ==========================================
+          4. THE STUDIO / TEAM
+          ========================================== */}
+      <section className="py-32 md:py-48 px-6 md:px-12 bg-[#021008]">
+        <div className="max-w-[1400px] mx-auto">
+          <div className="text-center mb-24">
+            <RevealText>
+              <span className="text-[#10b981] text-[10px] uppercase tracking-[0.3em] font-bold mb-4 block">
+                Our Studio
+              </span>
+              <h2 className="text-4xl md:text-6xl font-medium tracking-tight">
+                The minds behind <br />
+                <span className="italic">the matter.</span>
+              </h2>
+            </RevealText>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
+            {TEAM.map((member, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8, delay: i * 0.2 }}
+                className="group cursor-pointer"
+              >
+                <div className="relative aspect-[3/4] rounded-3xl overflow-hidden mb-6">
+                  <Image
+                    src={member.image}
+                    alt={member.name}
+                    fill
+                    className="object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#021008] via-transparent to-transparent opacity-80" />
+                  <div className="absolute bottom-6 left-6 right-6">
+                    <h4 className="text-2xl font-medium mb-1">{member.name}</h4>
+                    <p className="text-[#10b981] text-sm uppercase tracking-widest font-semibold">
+                      {member.role}
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ==========================================
+          5. MANIFESTO / VIDEO CTA
+          ========================================== */}
+      <section className="py-32 relative overflow-hidden">
+        <div className="absolute inset-0 z-0">
+          <Image
+            src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=2000&auto=format&fit=crop"
+            alt="Manifesto"
+            fill
+            className="object-cover"
+          />
+          <div className="absolute inset-0 bg-[#021008]/80 backdrop-blur-sm" />
+        </div>
+
+        <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
+          <RevealText>
+            <button className="w-24 h-24 rounded-full bg-[#10b981] text-[#021008] flex items-center justify-center mx-auto mb-12 hover:scale-110 transition-transform">
+              <Play className="w-8 h-8 ml-1" />
+            </button>
+            <h2 className="text-3xl md:text-5xl font-light leading-relaxed mb-12">
+              "We cannot build our way out of the climate crisis using the same
+              thinking that got us into it. Architecture must become a mechanism
+              for healing."
+            </h2>
+            <span className="text-sm font-bold uppercase tracking-widest text-[#10b981]">
+              Watch our Manifesto
+            </span>
+          </RevealText>
+        </div>
+      </section>
+
+      {/* ==========================================
+          6. MEGA FOOTER
+          ========================================== */}
+      <footer className="bg-[#010a05] pt-32 pb-12 px-6 md:px-12 border-t border-white/5">
+        <div className="max-w-[1600px] mx-auto">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-12 mb-32">
+            <div>
+              <h2 className="text-5xl md:text-7xl font-medium tracking-tight mb-6">
+                Let's build <br />
+                <span className="italic text-[#10b981]">tomorrow.</span>
+              </h2>
+              <a
+                href="mailto:hello@verda.studio"
+                className="text-xl md:text-2xl text-white/60 hover:text-white transition-colors border-b border-white/20 pb-2 inline-block"
+              >
+                hello@verda.studio
+              </a>
+            </div>
+            <div className="flex gap-4">
+              <a
+                href="#"
+                className="w-14 h-14 rounded-full border border-white/10 flex items-center justify-center hover:bg-[#10b981] hover:border-[#10b981] hover:text-[#021008] transition-all"
+              >
+                <Instagram className="w-5 h-5" />
+              </a>
+              <a
+                href="#"
+                className="w-14 h-14 rounded-full border border-white/10 flex items-center justify-center hover:bg-[#10b981] hover:border-[#10b981] hover:text-[#021008] transition-all text-xs font-bold uppercase tracking-wider"
+              >
+                In
+              </a>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-20 border-t border-white/5 pt-16">
+            <div>
+              <Link
+                href="/"
+                className="text-2xl font-medium tracking-widest uppercase flex items-center gap-3 mb-8"
+              >
+                <div className="w-6 h-6 rounded-full bg-[#10b981] flex items-center justify-center">
+                  <Leaf className="w-3 h-3 text-[#021008]" />
+                </div>
+                Verda
+              </Link>
+              <p className="text-white/40 text-sm leading-relaxed max-w-xs">
+                Biophilic architecture and sustainable design studio based in
+                Oslo, Norway. Operating globally.
+              </p>
+            </div>
+
+            <div>
+              <h4 className="text-[10px] text-white/50 uppercase tracking-widest font-bold mb-6">
+                Studios
+              </h4>
+              <ul className="space-y-4 text-sm text-white/70">
+                <li>
+                  <strong className="block text-white mb-1">Oslo (HQ)</strong>
+                  Dronning Eufemias gate 16
+                  <br />
+                  0191 Oslo, Norway
+                </li>
+                <li className="pt-4">
+                  <strong className="block text-white mb-1">Singapore</strong>
+                  18 Robinson Road
+                  <br />
+                  Singapore 048547
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="text-[10px] text-white/50 uppercase tracking-widest font-bold mb-6">
+                Index
+              </h4>
+              <ul className="space-y-4 text-sm text-white/70">
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-[#10b981] transition-colors"
+                  >
+                    All Projects
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-[#10b981] transition-colors"
+                  >
+                    Our Philosophy
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-[#10b981] transition-colors"
+                  >
+                    Team & Culture
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-[#10b981] transition-colors"
+                  >
+                    Careers
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-[#10b981] transition-colors"
+                  >
+                    Press
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="text-[10px] text-white/50 uppercase tracking-widest font-bold mb-6">
+                Newsletter
+              </h4>
+              <p className="text-sm text-white/60 mb-6">
+                Insights on sustainable design and biophilic architecture,
+                delivered monthly.
+              </p>
+              <form
+                className="flex border-b border-white/20 pb-2"
+                onSubmit={(e) => e.preventDefault()}
+              >
+                <input
+                  type="email"
+                  placeholder="Email address"
+                  className="bg-transparent flex-1 text-sm focus:outline-none text-white placeholder-white/30"
+                />
+                <button
+                  type="submit"
+                  className="text-[10px] uppercase tracking-widest font-bold text-[#10b981] hover:text-white transition-colors"
+                >
+                  Submit
+                </button>
+              </form>
+            </div>
+          </div>
+
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6 pt-8 border-t border-white/5 text-[10px] text-white/30 uppercase tracking-widest font-bold">
+            <span>
+              &copy; {new Date().getFullYear()} Verda Architecture Studio. All
+              Rights Reserved.
+            </span>
+            <div className="flex gap-6">
+              <a href="#" className="hover:text-white transition-colors">
+                Privacy Policy
+              </a>
+              <a href="#" className="hover:text-white transition-colors">
+                Terms of Service
+              </a>
+              <a href="#" className="hover:text-white transition-colors">
+                Cookies
+              </a>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
 }

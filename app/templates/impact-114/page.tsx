@@ -1,443 +1,793 @@
-"use client"
-import { motion, useScroll, useTransform, useInView, AnimatePresence, useMotionValue, useSpring } from "framer-motion"
-import { useState, useRef, useEffect } from "react"
-import Image from "next/image"
-import Link from "next/link"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
-import { Progress } from "@/components/ui/progress"
+"use client";
 
-function Reveal({ children, delay=0 }: { children: React.ReactNode; delay?: number }) {
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true, margin: "-60px" })
-  return <motion.div ref={ref} initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, delay }}>{children}</motion.div>
-}
+import React, { useState, useEffect, useRef } from "react";
+import {
+  motion,
+  AnimatePresence,
+  useScroll,
+  useTransform,
+  useSpring,
+  useMotionValue,
+} from "framer-motion";
+import Image from "next/image";
+import Link from "next/link";
+import {
+  ArrowRight,
+  ArrowLeft,
+  Menu,
+  X,
+  MapPin,
+  Camera,
+  ExternalLink,
+  Instagram,
+  ChevronDown,
+  Compass,
+  Calendar,
+  Info,
+} from "lucide-react";
 
-function Counter({ target, suffix="" }: { target: number; suffix?: string }) {
-  const [count, setCount] = useState(0)
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true })
+import "../premium.css";
+
+/* ==========================================================================
+   DATA STRUCTURES
+   ========================================================================== */
+
+const SLIDES = [
+  {
+    id: "s1",
+    title: "Svalbard",
+    subtitle: "The Frozen Frontier",
+    location: "Norway",
+    coordinates: "77.8750° N, 20.9752° E",
+    date: "March 2026",
+    camera: "Hasselblad X2D 100C",
+    lens: "XCD 2,5/38V",
+    desc: "A three-week expedition into the high Arctic. Documenting the shifting ice structures and the profound silence of polar night giving way to endless summer days. The isolation here is absolute, stripping away all noise until only the primal rhythm of the earth remains.",
+    image:
+      "https://images.unsplash.com/photo-1463694038165-42777b7ccb2c?q=80&w=1600&auto=format&fit=crop",
+    accent: "#64748b",
+  },
+  {
+    id: "s2",
+    title: "Atacama",
+    subtitle: "Ocean of Sand",
+    location: "Chile",
+    coordinates: "23.8634° S, 69.1328° W",
+    date: "November 2025",
+    camera: "Leica M11 Monochrom",
+    lens: "Summilux-M 35mm f/1.4",
+    desc: "The driest non-polar desert in the world. Its Martian landscapes challenge the very concept of scale. Every dune is a monument, every salt flat a mirror to the cosmos. Photographing Atacama is an exercise in minimalist composition.",
+    image:
+      "https://images.unsplash.com/photo-1542408332-e19a6d09bb2e?q=80&w=1600&auto=format&fit=crop",
+    accent: "#b45309",
+  },
+  {
+    id: "s3",
+    title: "Yakushima",
+    subtitle: "Ancient Canopy",
+    location: "Japan",
+    coordinates: "30.3340° N, 130.5284° E",
+    date: "May 2025",
+    camera: "Phase One XT",
+    lens: "Rodenstock HR 32mm",
+    desc: "A primordial temperate rainforest where cedar trees have stood for over a thousand years. The humidity hangs heavy, painting everything in impossible shades of green. It's a place where time is measured not in hours, but in rings of wood.",
+    image:
+      "https://images.unsplash.com/photo-1472214103451-9374bd1c798e?q=80&w=1600&auto=format&fit=crop",
+    accent: "#15803d",
+  },
+  {
+    id: "s4",
+    title: "Faroe",
+    subtitle: "Edge of the World",
+    location: "Denmark",
+    coordinates: "61.8926° N, 6.9118° W",
+    date: "August 2024",
+    camera: "Sony A1",
+    lens: "FE 12-24mm f/2.8 GM",
+    desc: "Jagged cliffs rising violently from the North Atlantic. The weather here changes by the minute, offering a dramatic canvas of fleeting light and rolling fog. The sheep outnumber the people, and nature reigns undisputed.",
+    image:
+      "https://images.unsplash.com/photo-1510007849646-641559aa3d56?q=80&w=1600&auto=format&fit=crop",
+    accent: "#0f766e",
+  },
+  {
+    id: "s5",
+    title: "Namib",
+    subtitle: "Where Sand Meets Sea",
+    location: "Namibia",
+    coordinates: "24.7336° S, 15.3400° E",
+    date: "January 2024",
+    camera: "Hasselblad 907X",
+    lens: "XCD 4/45P",
+    desc: "The oldest desert in the world colliding abruptly with the violent Atlantic Ocean. The contrast between the towering, iron-rich red dunes and the cold blue water creates a surreal, dreamlike environment that defies logic.",
+    image:
+      "https://images.unsplash.com/photo-1518414441542-9905479dfc82?q=80&w=1600&auto=format&fit=crop",
+    accent: "#c2410c",
+  },
+];
+
+const EXHIBITIONS = [
+  {
+    year: "2026",
+    title: "Edges of the Earth",
+    gallery: "Gagosian",
+    city: "London",
+  },
+  {
+    year: "2025",
+    title: "Silence & Scale",
+    gallery: "Pace Gallery",
+    city: "New York",
+  },
+  {
+    year: "2024",
+    title: "The Frozen Epoch",
+    gallery: "Galerie Perrotin",
+    city: "Paris",
+  },
+  {
+    year: "2023",
+    title: "Monochrome Deserts",
+    gallery: "Taka Ishii",
+    city: "Tokyo",
+  },
+];
+
+const PUBLICATIONS = [
+  { title: "Terra Incognita", publisher: "Phaidon", year: "2025" },
+  {
+    title: "National Geographic",
+    publisher: "Feature Editorial",
+    year: "2024",
+  },
+  { title: "The North Face", publisher: "Campaign Archive", year: "2023" },
+  { title: "Light & Latitude", publisher: "Taschen", year: "2022" },
+];
+
+/* ==========================================================================
+   MAIN PAGE COMPONENT
+   ========================================================================== */
+
+export default function TerraSliderPage() {
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [direction, setDirection] = useState(0); // 1 for next, -1 for prev
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [infoOpen, setInfoOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  const slide = SLIDES[currentIdx];
+
+  // Custom Cursor
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const cursorX = useSpring(mouseX, { stiffness: 150, damping: 25 });
+  const cursorY = useSpring(mouseY, { stiffness: 150, damping: 25 });
+  const [cursorState, setCursorState] = useState<
+    "default" | "prev" | "next" | "view"
+  >("default");
+
   useEffect(() => {
-    if (!inView) return
-    const step = Math.ceil(target / 60)
-    const t = setInterval(() => setCount(c => Math.min(c + step, target)), 16)
-    return () => clearInterval(t)
-  }, [inView, target])
-  return <span ref={ref}>{count.toLocaleString()}{suffix}</span>
-}
+    // Simulate loading
+    const timer = setTimeout(() => setLoading(false), 2500);
+    return () => clearTimeout(timer);
+  }, []);
 
-function MagneticBtn({ children, className="" }: { children: React.ReactNode; className?: string }) {
-  const x = useMotionValue(0); const y = useMotionValue(0)
-  const sx = useSpring(x, { stiffness: 500, damping: 25 })
-  const sy = useSpring(y, { stiffness: 500, damping: 25 })
-  const ref = useRef<HTMLButtonElement>(null)
-  const handleMouse = (e: React.MouseEvent) => {
-    const r = ref.current!.getBoundingClientRect()
-    x.set((e.clientX - r.left - r.width/2) * 0.35)
-    y.set((e.clientY - r.top - r.height/2) * 0.35)
-  }
-  return <motion.button ref={ref} style={{ x: sx, y: sy }} onMouseMove={handleMouse} onMouseLeave={() => { x.set(0); y.set(0) }} className={className}>{children}</motion.button>
-}
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      mouseX.set(e.clientX);
+      mouseY.set(e.clientY);
 
-const ARTWORKS = [
-  { id: 1, title: "Chromatic Void", artist: "Marina Kost", cat: "Featured", medium: "Oil on Canvas", price: "$45,000", img: "https://images.unsplash.com/photo-1578301978162-7aae4d755744" },
-  { id: 2, title: "Ethereal Forms", artist: "James Chen", cat: "Emerging", medium: "Mixed Media", price: "$12,000", img: "https://images.unsplash.com/photo-1561214115-6e4b59552a31" },
-  { id: 3, title: "Monumental Presence", artist: "Sofia Delgado", cat: "Established", medium: "Sculpture", price: "$95,000", img: "https://images.unsplash.com/photo-1561214115-6e4b59552a31" },
-  { id: 4, title: "Digital Dreams", artist: "Yuki Tanaka", cat: "Digital", medium: "NFT/Digital", price: "$8,500", img: "https://images.unsplash.com/photo-1561214115-6e4b59552a31" },
-  { id: 5, title: "Quantum Layers", artist: "Alex Rivera", cat: "NFT", medium: "Blockchain Art", price: "$5,200", img: "https://images.unsplash.com/photo-1578301978162-7aae4d755744" },
-  { id: 6, title: "Intersection", artist: "Maria Volkov", cat: "Featured", medium: "Acrylic", price: "$28,000", img: "https://images.unsplash.com/photo-1578301978162-7aae4d755744" },
-  { id: 7, title: "Temporal Space", artist: "David Wong", cat: "Emerging", medium: "Photography", price: "$6,800", img: "https://images.unsplash.com/photo-1561214115-6e4b59552a31" },
-  { id: 8, title: "Emergence", artist: "Nicole St-Laurent", cat: "Established", medium: "Installation", price: "$120,000", img: "https://images.unsplash.com/photo-1578301978162-7aae4d755744" },
-]
+      // Determine cursor state based on position (if not interacting with UI elements)
+      if (aboutOpen || menuOpen || infoOpen) {
+        setCursorState("default");
+        return;
+      }
 
-const ARTISTS = [
-  { name: "Marina Kost", represented: "2015" },
-  { name: "James Chen", represented: "2018" },
-  { name: "Sofia Delgado", represented: "2012" },
-]
+      const width = window.innerWidth;
+      const height = window.innerHeight;
 
-const AUCTIONS = [
-  { title: "Chromatic Void", current: "$42,000", ends: "2h 15m" },
-  { title: "Monumental Presence", current: "$87,500", ends: "4h 30m" },
-  { title: "Emergence", current: "$115,000", ends: "6h 45m" },
-]
+      // If hovering bottom or top areas, default cursor
+      if (e.clientY < 100 || e.clientY > height - 100) {
+        setCursorState("default");
+      } else if (e.clientX < width / 3) {
+        setCursorState("prev");
+      } else if (e.clientX > (width / 3) * 2) {
+        setCursorState("next");
+      } else {
+        setCursorState("view");
+      }
+    };
 
-export default function PrismaGallery() {
-  const [activeArtwork, setActiveArtwork] = useState(0)
-  const [artworkDialog, setArtworkDialog] = useState(false)
-  const { scrollY } = useScroll()
-  const heroY = useTransform(scrollY, [0, 500], [0, 150])
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, [mouseX, mouseY, aboutOpen, menuOpen, infoOpen]);
+
+  const paginate = (newDirection: number) => {
+    if (isAnimating) return;
+    setIsAnimating(true);
+    setDirection(newDirection);
+
+    setTimeout(() => {
+      let newIdx = currentIdx + newDirection;
+      if (newIdx < 0) newIdx = SLIDES.length - 1;
+      if (newIdx >= SLIDES.length) newIdx = 0;
+      setCurrentIdx(newIdx);
+
+      // Reset animation lock after duration
+      setTimeout(() => setIsAnimating(false), 1200);
+    }, 50);
+  };
+
+  const handleGlobalClick = (e: React.MouseEvent) => {
+    // Don't trigger slider if clicking on UI elements
+    if (aboutOpen || menuOpen || infoOpen) return;
+
+    const target = e.target as HTMLElement;
+    if (target.closest("button") || target.closest("a")) return;
+
+    if (cursorState === "prev") paginate(-1);
+    else if (cursorState === "next") paginate(1);
+    else if (cursorState === "view") setInfoOpen(true);
+  };
+
+  // Variants for Curtain Reveal
+  const imageVariants = {
+    enter: (direction: number) => ({
+      clipPath: direction > 0 ? "inset(0 0 0 100%)" : "inset(0 100% 0 0)",
+      scale: 1.1,
+    }),
+    center: {
+      clipPath: "inset(0 0 0 0)",
+      scale: 1,
+      transition: { duration: 1.2, ease: [0.76, 0, 0.24, 1] },
+    },
+    exit: (direction: number) => ({
+      clipPath: direction > 0 ? "inset(0 100% 0 0)" : "inset(0 0 0 100%)",
+      scale: 0.9,
+      transition: { duration: 1.2, ease: [0.76, 0, 0.24, 1] },
+    }),
+  };
+
+  const textVariants = {
+    enter: (direction: number) => ({
+      y: direction > 0 ? 100 : -100,
+      opacity: 0,
+    }),
+    center: {
+      y: 0,
+      opacity: 1,
+      transition: { duration: 0.8, delay: 0.4, ease: [0.25, 1, 0.5, 1] },
+    },
+    exit: (direction: number) => ({
+      y: direction > 0 ? -100 : 100,
+      opacity: 0,
+      transition: { duration: 0.6, ease: [0.76, 0, 0.24, 1] },
+    }),
+  };
 
   return (
-    <div className="min-h-screen bg-[#080808] text-white">
-      <motion.section style={{ y: heroY }} className="relative h-screen flex items-center justify-center overflow-hidden">
-        <Image src="https://images.unsplash.com/photo-196645?w=800&q=80" alt="Contemporary Art" fill className="object-cover" />
-        <div className="absolute inset-0 bg-black/50" />
-        <div className="relative z-10 text-center max-w-4xl mx-auto px-6">
-          <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="text-6xl md:text-8xl font-light mb-6">
-            PRISMA
-          </motion.h1>
-          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="text-xl md:text-2xl font-light">
-            Contemporary Art Gallery & NFT Platform
-          </motion.p>
+    <div
+      className="premium-theme min-h-screen bg-[#0a0a0a] text-[#f4f4f5] font-serif overflow-hidden selection:bg-white/20"
+      onClick={handleGlobalClick}
+    >
+      {/* ==========================================
+          LOADING SCREEN
+          ========================================== */}
+      <AnimatePresence>
+        {loading && (
+          <motion.div
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1, ease: [0.76, 0, 0.24, 1] }}
+            className="fixed inset-0 z-[200] bg-[#0a0a0a] flex flex-col items-center justify-center"
+          >
+            <motion.div
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ duration: 2, ease: "easeInOut" }}
+              className="w-48 h-[1px] bg-white/40 mb-8 origin-left"
+            />
+            <div className="overflow-hidden">
+              <motion.span
+                initial={{ y: "100%" }}
+                animate={{ y: 0 }}
+                transition={{
+                  duration: 0.8,
+                  delay: 0.5,
+                  ease: [0.76, 0, 0.24, 1],
+                }}
+                className="text-sm font-sans tracking-[0.5em] uppercase text-white/50"
+              >
+                Terra <span className="text-white">Incognita</span>
+              </motion.span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ==========================================
+          CUSTOM CURSOR
+          ========================================== */}
+      <motion.div
+        style={{ x: cursorX, y: cursorY }}
+        className="fixed top-0 left-0 pointer-events-none z-[150] hidden md:flex items-center justify-center -translate-x-1/2 -translate-y-1/2 mix-blend-difference"
+      >
+        <motion.div
+          animate={{
+            width: cursorState !== "default" ? 64 : 12,
+            height: cursorState !== "default" ? 64 : 12,
+            backgroundColor:
+              cursorState !== "default"
+                ? "rgba(255,255,255,1)"
+                : "rgba(255,255,255,1)",
+          }}
+          className="rounded-full flex items-center justify-center transition-all duration-300 ease-out"
+        >
+          <AnimatePresence mode="wait">
+            {cursorState === "prev" && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0 }}
+                className="text-black"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </motion.div>
+            )}
+            {cursorState === "next" && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0 }}
+                className="text-black"
+              >
+                <ArrowRight className="w-5 h-5" />
+              </motion.div>
+            )}
+            {cursorState === "view" && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0 }}
+                className="text-black text-[9px] uppercase tracking-widest font-bold font-sans"
+              >
+                Info
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      </motion.div>
+
+      {/* ==========================================
+          HEADER / NAVIGATION
+          ========================================== */}
+      <header className="fixed top-0 left-0 w-full z-50 mix-blend-difference px-6 md:px-12 py-8 flex justify-between items-center pointer-events-none">
+        <div className="pointer-events-auto">
+          <Link
+            href="/"
+            className="text-xl md:text-2xl font-light tracking-widest uppercase"
+          >
+            Terra<span className="font-bold opacity-60">Archive</span>
+          </Link>
         </div>
-      </motion.section>
 
-      <section className="py-24 px-6 md:px-12">
-        <Reveal>
-          <h2 className="text-5xl font-light mb-12" style={{ color: "#8b5cf6" }}>Current Exhibition</h2>
-        </Reveal>
-        <Tabs defaultValue="Featured" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 bg-[#1a1a1a] border border-[#8b5cf6]/20">
-            {["Featured", "Emerging", "Established", "Digital", "NFT"].map((cat) => (
-              <TabsTrigger key={cat} value={cat} className="data-[state=active]:bg-[#8b5cf6] data-[state=active]:text-white">
-                {cat}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-          {["Featured", "Emerging", "Established", "Digital", "NFT"].map((cat) => (
-            <TabsContent key={cat} value={cat} className="mt-12">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                {ARTWORKS.filter(a => a.cat === cat).map((art, idx) => (
-                  <Reveal key={art.id} delay={idx * 0.1}>
-                    <motion.div className="cursor-pointer group" whileHover={{ y: -8 }}>
-                      <div className="relative h-96 overflow-hidden rounded-sm mb-4 bg-[#1a1a1a]">
-                        <Image src={art.img + "?w=400"} alt={art.title} fill className="object-cover group-hover:scale-110 transition-transform duration-500" />
-                      </div>
-                      <div onClick={() => { setActiveArtwork(ARTWORKS.indexOf(art)); setArtworkDialog(true); }}>
-                        <h3 className="text-lg font-light text-white mb-1">{art.title}</h3>
-                        <p className="text-sm text-white/60 mb-2">{art.artist}</p>
-                        <div className="flex justify-between items-center">
-                          <Badge className="bg-[#8b5cf6] text-white">{art.medium}</Badge>
-                          <span className="text-[#f59e0b]">{art.price}</span>
-                        </div>
-                      </div>
-                    </motion.div>
-                  </Reveal>
-                ))}
-              </div>
-            </TabsContent>
+        <div className="pointer-events-auto flex items-center gap-8">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setAboutOpen(true);
+            }}
+            className="hidden md:block text-[10px] font-sans uppercase tracking-[0.2em] hover:opacity-60 transition-opacity"
+          >
+            About Studio
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setMenuOpen(true);
+            }}
+            className="flex items-center gap-3 hover:opacity-60 transition-opacity"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+        </div>
+      </header>
+
+      {/* ==========================================
+          SLIDER TRACKER (BOTTOM)
+          ========================================== */}
+      <div className="fixed bottom-0 left-0 w-full z-40 mix-blend-difference px-6 md:px-12 py-8 flex justify-between items-end pointer-events-none">
+        {/* Pagination Dots */}
+        <div className="flex gap-3 pointer-events-auto">
+          {SLIDES.map((_, i) => (
+            <button
+              key={i}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (i !== currentIdx) paginate(i > currentIdx ? 1 : -1);
+              }}
+              className="w-10 h-10 flex items-center justify-center group"
+            >
+              <div
+                className={`h-[1px] transition-all duration-500 bg-white ${i === currentIdx ? "w-8 opacity-100" : "w-3 opacity-30 group-hover:w-5 group-hover:opacity-60"}`}
+              />
+            </button>
           ))}
-        </Tabs>
-      </section>
+        </div>
 
-      <Dialog open={artworkDialog} onOpenChange={setArtworkDialog}>
-        <DialogContent className="max-w-4xl bg-[#1a1a1a] border-[#8b5cf6]/20">
-          <DialogHeader>
-            <DialogTitle className="text-3xl text-white">{ARTWORKS[activeArtwork]?.title}</DialogTitle>
-          </DialogHeader>
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="relative h-96 rounded-sm overflow-hidden bg-[#0a0a0a]">
-              <Image src={ARTWORKS[activeArtwork]?.img + "?w=500"} alt={ARTWORKS[activeArtwork]?.title} fill className="object-cover" />
-            </div>
-            <div>
-              <p className="text-[#f59e0b] mb-2">{ARTWORKS[activeArtwork]?.artist}</p>
-              <p className="text-2xl font-light mb-6" style={{ color: "#8b5cf6" }}>{ARTWORKS[activeArtwork]?.price}</p>
-              <p className="text-white/70 mb-6">{ARTWORKS[activeArtwork]?.medium}</p>
-              <div className="mb-6">
-                <h3 className="text-white font-light mb-3">Artist Statement</h3>
-                <p className="text-white/60 text-sm leading-relaxed">A profound exploration of form and consciousness, merging digital abstraction with classical composition principles. This work challenges our perception of reality in the contemporary age.</p>
-              </div>
-              <div className="flex gap-4">
-                <button className="flex-1 py-3 rounded-sm font-light transition-colors bg-[#8b5cf6] text-white hover:bg-[#7c3aed]">
-                  Buy Now
-                </button>
-                <button className="flex-1 py-3 rounded-sm font-light border border-[#8b5cf6] text-[#8b5cf6] hover:bg-[#8b5cf6]/10">
-                  Place Bid
-                </button>
-              </div>
-            </div>
+        {/* Current Info Toggle */}
+        <div className="pointer-events-auto flex items-center gap-6 text-right">
+          <div className="hidden md:flex flex-col items-end">
+            <span className="text-[10px] font-sans uppercase tracking-[0.2em] opacity-60 mb-1">
+              {slide.location}
+            </span>
+            <span className="text-xs font-mono">{slide.coordinates}</span>
           </div>
-        </DialogContent>
-      </Dialog>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setInfoOpen(!infoOpen);
+            }}
+            className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center hover:bg-white hover:text-black transition-all"
+          >
+            {infoOpen ? (
+              <X className="w-5 h-5" />
+            ) : (
+              <Info className="w-5 h-5" />
+            )}
+          </button>
+        </div>
+      </div>
 
-      <section className="py-24 px-6 md:px-12 bg-[#1a1a1a]">
-        <Reveal>
-          <h2 className="text-5xl font-light mb-12" style={{ color: "#8b5cf6" }}>Artist Roster</h2>
-        </Reveal>
-        <Carousel className="w-full max-w-6xl mx-auto">
-          <CarouselContent>
-            {ARTISTS.map((artist, idx) => (
-              <CarouselItem key={idx} className="md:basis-1/3">
-                <Card className="bg-[#080808] border-[#8b5cf6]/20">
-                  <CardContent className="p-6">
-                    <Avatar className="w-16 h-16 mb-4" style={{ backgroundColor: "#8b5cf6" }}>
-                      <AvatarFallback>{artist.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                    </Avatar>
-                    <h3 className="text-lg font-light text-white mb-2">{artist.name}</h3>
-                    <Badge variant="outline" className="border-[#f59e0b] text-[#f59e0b]">Represented since {artist.represented}</Badge>
-                  </CardContent>
-                </Card>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          <CarouselPrevious className="text-white" />
-          <CarouselNext className="text-white" />
-        </Carousel>
-      </section>
+      {/* ==========================================
+          MAIN SLIDER
+          ========================================== */}
+      <main className="relative w-full h-[100svh] overflow-hidden bg-[#050505]">
+        <AnimatePresence initial={false} custom={direction}>
+          <motion.div
+            key={currentIdx}
+            custom={direction}
+            variants={imageVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            className="absolute inset-0"
+          >
+            <Image
+              src={slide.image}
+              alt={slide.title}
+              fill
+              className="object-cover"
+              priority
+              quality={100}
+            />
+            {/* Vignette overlay */}
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0)_20%,rgba(0,0,0,0.6)_100%)]" />
+            <div className="absolute inset-0 bg-black/20" />
+          </motion.div>
+        </AnimatePresence>
 
-      <section className="py-24 px-6 md:px-12">
-        <Reveal>
-          <h2 className="text-5xl font-light mb-12" style={{ color: "#8b5cf6" }}>Live Auctions</h2>
-        </Reveal>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {AUCTIONS.map((auction, idx) => (
-            <Reveal key={idx} delay={idx * 0.1}>
-              <Card className="bg-[#1a1a1a] border-[#8b5cf6]/20">
-                <CardContent className="p-6">
-                  <h3 className="text-lg font-light text-white mb-4">{auction.title}</h3>
-                  <div className="mb-6 p-4 bg-[#8b5cf6]/10 rounded-sm">
-                    <p className="text-sm text-white/60 mb-1">Current Bid</p>
-                    <p className="text-2xl font-light" style={{ color: "#8b5cf6" }}>{auction.current}</p>
+        {/* Centered Typography */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none mix-blend-overlay z-10">
+          <AnimatePresence mode="wait">
+            <motion.h1
+              key={currentIdx}
+              custom={direction}
+              variants={textVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              className="text-[12vw] leading-none font-bold tracking-tighter text-white opacity-80 select-none text-center"
+            >
+              {slide.title}
+            </motion.h1>
+          </AnimatePresence>
+        </div>
+
+        {/* Subtitle */}
+        <div className="absolute inset-x-0 top-[60%] flex items-center justify-center pointer-events-none z-20">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentIdx}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.6, delay: 0.6 }}
+              className="flex items-center gap-4"
+            >
+              <div className="w-12 h-[1px] bg-white/50" />
+              <span className="text-lg md:text-2xl font-light italic text-white/90">
+                {slide.subtitle}
+              </span>
+              <div className="w-12 h-[1px] bg-white/50" />
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </main>
+
+      {/* ==========================================
+          INFO PANEL (SLIDE DETAILS)
+          ========================================== */}
+      <AnimatePresence>
+        {infoOpen && (
+          <motion.div
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ type: "spring", damping: 30, stiffness: 200 }}
+            className="fixed inset-x-0 bottom-0 h-[60vh] md:h-[50vh] bg-[#0a0a0a]/95 backdrop-blur-2xl z-40 border-t border-white/10 flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex-1 overflow-y-auto p-6 md:p-12 pb-32 max-w-[1600px] mx-auto w-full">
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-12">
+                {/* Title & Desc */}
+                <div className="md:col-span-7 lg:col-span-8">
+                  <div className="flex items-center gap-4 mb-6">
+                    <span className="px-3 py-1 bg-white/10 text-white text-[10px] font-sans uppercase tracking-widest rounded-full">
+                      {slide.location}
+                    </span>
+                    <span className="text-sm font-sans text-white/40">
+                      {slide.date}
+                    </span>
                   </div>
-                  <motion.div className="text-center p-3 bg-[#f59e0b]/10 rounded-sm mb-4" animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 2, repeat: Infinity }}>
-                    <p className="text-sm font-light" style={{ color: "#f59e0b" }}>Ends in {auction.ends}</p>
-                  </motion.div>
-                  <button className="w-full py-2 rounded-sm font-light border border-[#8b5cf6] text-[#8b5cf6] hover:bg-[#8b5cf6]/10">
-                    Place Bid
+                  <h2 className="text-4xl md:text-6xl font-light mb-8">
+                    {slide.title}.
+                  </h2>
+                  <p className="text-lg md:text-xl text-white/60 font-sans font-light leading-relaxed max-w-3xl">
+                    {slide.desc}
+                  </p>
+                </div>
+
+                {/* Metadata */}
+                <div className="md:col-span-5 lg:col-span-4 border-t md:border-t-0 md:border-l border-white/10 pt-8 md:pt-0 md:pl-12 flex flex-col gap-8 font-sans">
+                  <div>
+                    <span className="text-[10px] uppercase tracking-[0.2em] text-white/40 block mb-2 flex items-center gap-2">
+                      <Compass className="w-3 h-3" /> Coordinates
+                    </span>
+                    <span className="text-lg font-mono">
+                      {slide.coordinates}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase tracking-[0.2em] text-white/40 block mb-2 flex items-center gap-2">
+                      <Camera className="w-3 h-3" /> Equipment
+                    </span>
+                    <span className="text-lg block">{slide.camera}</span>
+                    <span className="text-sm text-white/60 block mt-1">
+                      {slide.lens}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase tracking-[0.2em] text-white/40 block mb-2 flex items-center gap-2">
+                      <Calendar className="w-3 h-3" /> Expedition
+                    </span>
+                    <span className="text-lg block">{slide.date}</span>
+                  </div>
+                  <button className="mt-auto px-6 py-4 bg-white text-black text-[10px] uppercase tracking-widest font-bold hover:bg-white/90 transition-colors w-full flex items-center justify-between group">
+                    Purchase Fine Art Print{" "}
+                    <ArrowUpRight className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
                   </button>
-                </CardContent>
-              </Card>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      <section className="py-24 px-6 md:px-12">
-        <Reveal>
-          <h2 className="text-5xl font-light mb-12" style={{ color: "#8b5cf6" }}>Gallery Stats</h2>
-        </Reveal>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-          {[
-            { label: "Artists Represented", value: 200 },
-            { label: "Years Active", value: 15 },
-            { label: "Artworks Sold", value: 5, suffix: "K+" },
-            { label: "Countries Served", value: 80 },
-          ].map((stat, idx) => (
-            <Reveal key={idx} delay={idx * 0.1}>
-              <div className="text-center">
-                <p className="text-4xl md:text-5xl font-light mb-2" style={{ color: "#8b5cf6" }}>
-                  <Counter target={stat.value} suffix={stat.suffix} />
-                </p>
-                <p className="text-sm text-white/60">{stat.label}</p>
+                </div>
               </div>
-            </Reveal>
-          ))}
-        </div>
-      </section>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      <section className="py-24 px-6 md:px-12 bg-[#1a1a1a]">
-        <Reveal>
-          <h2 className="text-5xl font-light mb-12" style={{ color: "#8b5cf6" }}>VIP Collector Benefits</h2>
-        </Reveal>
-        <Accordion type="single" collapsible className="max-w-2xl">
-          {[
-            { q: "What are VIP benefits?", a: "Early access to new acquisitions, exclusive preview events, personalized curation, and priority bidding." },
-            { q: "How do I become a collector?", a: "Purchase minimum $50K in artworks or request invitation. Annual membership fee applies." },
-            { q: "Can I attend private events?", a: "Yes, VIP members receive invitations to gallery openings, artist talks, and private viewings." },
-            { q: "What about acquisition support?", a: "Our curators provide professional advice on building collections and investment guidance." },
-          ].map((item, idx) => (
-            <AccordionItem key={idx} value={`item-${idx}`} className="border-[#8b5cf6]/20">
-              <AccordionTrigger className="text-white">{item.q}</AccordionTrigger>
-              <AccordionContent className="text-white/70">{item.a}</AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
-      </section>
+      {/* ==========================================
+          FULLSCREEN ABOUT OVERLAY
+          ========================================== */}
+      <AnimatePresence>
+        {aboutOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+            className="fixed inset-0 z-[100] bg-[#050505] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setAboutOpen(false)}
+              className="fixed top-8 right-8 z-[110] w-12 h-12 rounded-full border border-white/20 flex items-center justify-center hover:bg-white hover:text-black transition-all backdrop-blur-md bg-black/20"
+            >
+              <X className="w-5 h-5" />
+            </button>
 
-      <section className="py-12 px-6 md:px-12">
-        <Reveal>
-          <p className="text-center text-sm text-white/60 mb-6">Institutional Partners</p>
-        </Reveal>
-        <div className="flex justify-center gap-8 flex-wrap">
-          {["MoMA", "Guggenheim", "Tate Modern", "Centre Pompidou"].map((inst, idx) => (
-            <Reveal key={idx} delay={idx * 0.05}>
-              <p className="text-white/40 font-light">{inst}</p>
-            </Reveal>
-          ))}
-        </div>
-      </section>
+            <div className="max-w-[1400px] mx-auto px-6 md:px-12 py-32 md:py-48">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-32 items-center mb-32">
+                <div>
+                  <h2 className="text-5xl md:text-7xl font-light mb-12 leading-tight">
+                    Documenting the{" "}
+                    <span className="italic opacity-70">
+                      edges of the earth.
+                    </span>
+                  </h2>
+                  <div className="font-sans font-light text-white/60 text-lg md:text-xl leading-relaxed space-y-8 max-w-2xl">
+                    <p>
+                      Terra Archive is the collected works of landscape and
+                      expedition photographer Marcus Vane. Operating at the
+                      intersection of fine art and documentary, Vane spends
+                      months embedded in the world's most hostile and remote
+                      environments.
+                    </p>
+                    <p>
+                      By utilizing large-format and medium-format digital
+                      systems, the resulting images capture an impossible level
+                      of detail—transforming vast, chaotic landscapes into
+                      structured, minimalist studies of geology, climate, and
+                      time.
+                    </p>
+                  </div>
+                </div>
+                <div className="relative aspect-[3/4] bg-white/5 rounded-sm overflow-hidden">
+                  <Image
+                    src="https://images.unsplash.com/photo-1542385151-efd9000785a0?q=80&w=1200&auto=format&fit=crop"
+                    alt="Marcus Vane"
+                    fill
+                    className="object-cover grayscale hover:grayscale-0 transition-all duration-[3s]"
+                  />
+                </div>
+              </div>
 
-      <section className="py-24 px-6 md:px-12">
-        <Reveal>
-          <h2 className="text-5xl font-light mb-12" style={{ color: "#8b5cf6" }}>Testimonials</h2>
-        </Reveal>
-        <Carousel className="w-full max-w-4xl mx-auto">
-          <CarouselContent>
-            {[1, 2, 3].map((idx) => (
-              <CarouselItem key={idx}>
-                <Card className="bg-[#1a1a1a] border-[#8b5cf6]/20">
-                  <CardContent className="p-8">
-                    <p className="text-lg text-white mb-6 italic">"PRISMA curates exceptional contemporary art. Their expertise and service are unmatched in the industry."</p>
-                    <div className="flex items-center gap-4">
-                      <Avatar className="w-12 h-12" style={{ backgroundColor: "#8b5cf6" }}>
-                        <AvatarFallback>C{idx}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-light text-white">Collector {idx}</p>
-                        <p className="text-sm text-white/60">Major Collector</p>
+              {/* Data Grids */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-16 md:gap-32 font-sans pt-16 border-t border-white/10">
+                {/* Exhibitions */}
+                <div>
+                  <h3 className="text-[10px] uppercase tracking-[0.3em] text-white/40 mb-10">
+                    Selected Exhibitions
+                  </h3>
+                  <div className="space-y-6">
+                    {EXHIBITIONS.map((ex, i) => (
+                      <div
+                        key={i}
+                        className="flex flex-col sm:flex-row sm:items-end justify-between border-b border-white/5 pb-6 gap-2"
+                      >
+                        <div>
+                          <div className="text-xl font-serif italic mb-1">
+                            {ex.title}
+                          </div>
+                          <div className="text-sm text-white/60">
+                            {ex.gallery}, {ex.city}
+                          </div>
+                        </div>
+                        <span className="text-sm font-mono text-white/40">
+                          {ex.year}
+                        </span>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          <CarouselPrevious className="text-white" />
-          <CarouselNext className="text-white" />
-        </Carousel>
-      </section>
+                    ))}
+                  </div>
+                </div>
+                {/* Publications */}
+                <div>
+                  <h3 className="text-[10px] uppercase tracking-[0.3em] text-white/40 mb-10">
+                    Monographs & Press
+                  </h3>
+                  <div className="space-y-6">
+                    {PUBLICATIONS.map((pub, i) => (
+                      <div
+                        key={i}
+                        className="flex flex-col sm:flex-row sm:items-end justify-between border-b border-white/5 pb-6 gap-2"
+                      >
+                        <div>
+                          <div className="text-xl font-serif italic mb-1">
+                            {pub.title}
+                          </div>
+                          <div className="text-sm text-white/60">
+                            {pub.publisher}
+                          </div>
+                        </div>
+                        <span className="text-sm font-mono text-white/40">
+                          {pub.year}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
 
-      <section className="py-24 px-6 md:px-12 bg-[#1a1a1a]">
-        <Reveal>
-          <h2 className="text-5xl font-light mb-12" style={{ color: "#8b5cf6" }}>FAQ</h2>
-        </Reveal>
-        <Accordion type="single" collapsible className="max-w-2xl">
-          {[
-            { q: "How do you authenticate artworks?", a: "All artworks undergo professional authentication and certification. Provenance is fully documented." },
-            { q: "What is your shipping process?", a: "White-glove delivery service with insurance. Professional installation assistance available." },
-            { q: "Can I return artworks?", a: "Yes, 30-day return policy for gallery-sourced works. NFTs subject to blockchain verification." },
-            { q: "How do NFT sales work?", a: "Smart contracts ensure ownership transfer. You receive wallet keys and provenance certificates." },
-          ].map((item, idx) => (
-            <AccordionItem key={idx} value={`item-${idx}`} className="border-[#8b5cf6]/20">
-              <AccordionTrigger className="text-white">{item.q}</AccordionTrigger>
-              <AccordionContent className="text-white/70">{item.a}</AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
-      </section>
-
-      <section className="py-24 px-6 md:px-12 bg-[#1a1a1a]">
-        <Reveal>
-          <h2 className="text-5xl font-light mb-12" style={{ color: "#8b5cf6" }}>About PRISMA</h2>
-        </Reveal>
-        <div className="max-w-3xl mx-auto">
-          <Reveal>
-            <p className="text-white/70 mb-6 text-lg">Founded in 2010, PRISMA Gallery has established itself as a leading contemporary art platform, representing emerging and established artists from across the globe. Our commitment to artistic excellence and collector education sets us apart in the international art market.</p>
-          </Reveal>
-          <Reveal delay={0.1}>
-            <p className="text-white/70 mb-6 text-lg">We operate a flagship gallery in New York, with additional spaces in London, Los Angeles, and Tokyo. PRISMA also leads the charge in NFT and digital art integration, ensuring contemporary artists thrive in Web3.</p>
-          </Reveal>
-          <Reveal delay={0.2}>
-            <p className="text-white/70 text-lg">Our mission: democratize access to contemporary art while maintaining curatorial integrity and supporting artists at every career stage.</p>
-          </Reveal>
-        </div>
-      </section>
-
-      <section className="py-24 px-6 md:px-12">
-        <Reveal>
-          <h2 className="text-5xl font-light mb-12" style={{ color: "#8b5cf6" }}>Exhibition Schedule</h2>
-        </Reveal>
-        <Accordion type="single" collapsible className="max-w-2xl">
-          {[
-            { month: "May 2025", title: "Marina Kost: Void Series", desc: "New works exploring absence and presence in abstract form. Opening reception May 15." },
-            { month: "June 2025", title: "Emerging Voices", desc: "Curated group exhibition of 12 emerging artists under 35. Rotating monthly features." },
-            { month: "July 2025", title: "Sofia Delgado: Monumentality", desc: "Large-scale sculptural installations examining public space and collective memory." },
-            { month: "August 2025", title: "Digital Futures", desc: "NFT and digital art showcase with virtual/physical hybrid experiences." },
-          ].map((exhibit, idx) => (
-            <AccordionItem key={idx} value={`exhibit-${idx}`} className="border-[#8b5cf6]/20">
-              <AccordionTrigger className="text-white">{exhibit.month}: {exhibit.title}</AccordionTrigger>
-              <AccordionContent className="text-white/70">{exhibit.desc}</AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
-      </section>
-
-      <section className="py-24 px-6 md:px-12 bg-[#1a1a1a]">
-        <Reveal>
-          <h2 className="text-5xl font-light mb-12" style={{ color: "#8b5cf6" }}>Artist Services</h2>
-        </Reveal>
-        <div className="grid md:grid-cols-2 gap-12 max-w-4xl mx-auto">
-          <Reveal>
-            <div>
-              <h3 className="text-2xl font-light text-white mb-6">For Artists</h3>
-              <ul className="space-y-4 text-white/70">
-                <li className="flex items-start gap-3">
-                  <span className="text-[#8b5cf6]">›</span>
-                  <span>International representation and promotion</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-[#8b5cf6]">›</span>
-                  <span>Exhibition opportunities across global galleries</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-[#8b5cf6]">›</span>
-                  <span>Sales facilitation and collector matching</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-[#8b5cf6]">›</span>
-                  <span>Catalog production and documentation</span>
-                </li>
-              </ul>
+              {/* Contact Footer */}
+              <div className="mt-32 pt-16 border-t border-white/10 flex flex-col items-center text-center">
+                <span className="text-[10px] uppercase tracking-[0.3em] text-white/40 mb-6 font-sans">
+                  Inquiries & Print Sales
+                </span>
+                <a
+                  href="mailto:studio@terra-archive.com"
+                  className="text-3xl md:text-5xl font-light hover:italic transition-all duration-300"
+                >
+                  studio@terra-archive.com
+                </a>
+                <div className="flex gap-6 mt-12">
+                  <a
+                    href="#"
+                    className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center hover:bg-white hover:text-black transition-colors"
+                  >
+                    <Instagram className="w-5 h-5" />
+                  </a>
+                  <a
+                    href="#"
+                    className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center hover:bg-white hover:text-black transition-colors text-[10px] font-sans font-bold uppercase tracking-wider"
+                  >
+                    X
+                  </a>
+                </div>
+              </div>
             </div>
-          </Reveal>
-          <Reveal delay={0.1}>
-            <div>
-              <h3 className="text-2xl font-light text-white mb-6">For Collectors</h3>
-              <ul className="space-y-4 text-white/70">
-                <li className="flex items-start gap-3">
-                  <span className="text-[#8b5cf6]">›</span>
-                  <span>Expert acquisition and curation advice</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-[#8b5cf6]">›</span>
-                  <span>Portfolio management and insurance support</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-[#8b5cf6]">›</span>
-                  <span>Early access to new acquisitions</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-[#8b5cf6]">›</span>
-                  <span>Exclusive private viewings and events</span>
-                </li>
-              </ul>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ==========================================
+          FULLSCREEN MENU OVERLAY
+          ========================================== */}
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+            className="fixed inset-0 z-[100] bg-[#050505]/95 backdrop-blur-xl flex flex-col p-6 md:p-12"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center w-full max-w-[1600px] mx-auto">
+              <span className="text-sm font-sans uppercase tracking-[0.3em] opacity-50">
+                Menu
+              </span>
+              <button
+                onClick={() => setMenuOpen(false)}
+                className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center hover:bg-white hover:text-black transition-all"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
-          </Reveal>
-        </div>
-      </section>
 
-      <section className="py-24 px-6 md:px-12">
-        <Reveal>
-          <h2 className="text-5xl font-light mb-12" style={{ color: "#8b5cf6" }}>Global Presence</h2>
-        </Reveal>
-        <div className="grid md:grid-cols-4 gap-8">
-          {[
-            { city: "New York", addr: "500 Park Avenue South", phone: "+1 (212) 555-0100" },
-            { city: "London", addr: "45 Hoxton Street", phone: "+44 (0)20 7555 0100" },
-            { city: "Los Angeles", addr: "8000 Sunset Boulevard", phone: "+1 (323) 555-0100" },
-            { city: "Tokyo", addr: "Chiyoda-ku, Tokyo", phone: "+81 (0)3 5555 0100" },
-          ].map((location, idx) => (
-            <Reveal key={idx} delay={idx * 0.1}>
-              <Card className="bg-[#1a1a1a] border-[#8b5cf6]/20">
-                <CardContent className="p-6">
-                  <h4 className="text-lg font-light text-white mb-3">{location.city}</h4>
-                  <p className="text-white/60 text-sm mb-2">{location.addr}</p>
-                  <p className="text-[#8b5cf6] text-sm">{location.phone}</p>
-                </CardContent>
-              </Card>
-            </Reveal>
-          ))}
-        </div>
-      </section>
+            <div className="flex-1 flex flex-col justify-center items-center gap-8 md:gap-12 text-center">
+              {[
+                "Expeditions",
+                "Fine Art Prints",
+                "Journal",
+                "About Studio",
+                "Contact",
+              ].map((item, i) => (
+                <motion.div
+                  key={item}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1, duration: 0.5 }}
+                >
+                  <Link
+                    href="#"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      if (item === "About Studio") setAboutOpen(true);
+                    }}
+                    className="text-4xl md:text-7xl font-light hover:italic transition-all duration-300"
+                  >
+                    {item}
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
 
-      <section className="py-24 px-6 md:px-12 bg-[#1a1a1a]">
-        <Reveal>
-          <h2 className="text-5xl font-light mb-12" style={{ color: "#8b5cf6" }}>Visit The Gallery</h2>
-        </Reveal>
-        <div className="text-center">
-          <p className="text-lg text-white/70 mb-8">Schedule a private viewing, collector consultation, or artist inquiry</p>
-          <MagneticBtn className="px-12 py-4 rounded-sm font-light text-white transition-colors" style={{ backgroundColor: "#8b5cf6" }}>
-            Book Appointment
-          </MagneticBtn>
-        </div>
-      </section>
+            <div className="w-full max-w-[1600px] mx-auto flex justify-between items-end text-xs font-sans text-white/40 uppercase tracking-widest mt-auto pt-8 border-t border-white/10">
+              <div className="flex flex-col gap-2">
+                <span>Terra Archive</span>
+                <span>All rights reserved &copy; 2026</span>
+              </div>
+              <div className="flex gap-6">
+                <a href="#" className="hover:text-white transition-colors">
+                  Instagram
+                </a>
+                <a href="#" className="hover:text-white transition-colors">
+                  Twitter
+                </a>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
-  )
+  );
 }
