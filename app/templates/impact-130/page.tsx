@@ -1,411 +1,769 @@
-"use client"
-import { motion, useScroll, useTransform, useInView, AnimatePresence, useMotionValue, useSpring } from "framer-motion"
-import { useState, useRef, useEffect } from "react"
-import Image from "next/image"
-import Link from "next/link"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
-import { Progress } from "@/components/ui/progress"
+"use client";
 
-function Reveal({ children, delay=0 }: { children: React.ReactNode; delay?: number }) {
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true, margin: "-60px" })
-  return <motion.div ref={ref} initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, delay }}>{children}</motion.div>
+import React, { useState, useEffect, useRef } from "react";
+import {
+  motion,
+  AnimatePresence,
+  useScroll,
+  useTransform,
+  useInView,
+} from "framer-motion";
+import Image from "next/image";
+import Link from "next/link";
+import {
+  ArrowRight,
+  ArrowLeft,
+  Instagram,
+  Twitter,
+  Linkedin,
+  Mail,
+  ArrowUpRight,
+  Compass,
+  Maximize2,
+  Play,
+  Pause,
+  Camera,
+  Award,
+  Star,
+  ChevronDown,
+  ChevronRight,
+  Minimize2,
+  MapPin,
+} from "lucide-react";
+
+import "../premium.css";
+
+/* ==========================================================================
+   DATA STRUCTURES
+   ========================================================================== */
+
+const SLIDES = [
+  {
+    id: "01",
+    title: "The Emerald Coast",
+    subtitle: "Coastal Conservation",
+    location: "Sardinia, Italy",
+    year: "2025",
+    desc: "A sprawling photographic essay documenting the fragile intersection of luxury tourism and marine conservation. By utilizing underwater medium format systems, the project captures the unseen biomes fighting for survival just meters beneath the yachts. The juxtaposition of human excess and natural vulnerability forms the core narrative tension.",
+    metrics: {
+      depth: "45m",
+      duration: "12 Weeks",
+      species: "142 Catalogued",
+      equipment: "Phase One XF IQ4",
+    },
+    image:
+      "https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=1600&auto=format&fit=crop",
+    accent: "#059669", // emerald-600
+  },
+  {
+    id: "02",
+    title: "Silent Giants",
+    subtitle: "Old Growth Forests",
+    location: "Vancouver Island, Canada",
+    year: "2024",
+    desc: "An immersive study into the last remaining old-growth cedar forests of the Pacific Northwest. The scale of these ancient organisms forces a recalibration of human perspective, highlighting our fleeting existence within deep time. Mist and low light create an ethereal atmosphere where scale becomes ambiguous.",
+    metrics: {
+      age: "800+ Years",
+      altitude: "1,200m",
+      scale: "Macro/Micro",
+      equipment: "Hasselblad H6D-100c",
+    },
+    image:
+      "https://images.unsplash.com/photo-1448375240586-882707db888b?q=80&w=1600&auto=format&fit=crop",
+    accent: "#047857", // emerald-700
+  },
+  {
+    id: "03",
+    title: "Tectonic Veins",
+    subtitle: "Geological Patterns",
+    location: "Vatnajökull, Iceland",
+    year: "2023",
+    desc: "Abstract aerial topographies revealing the violent, shifting nature of glacial meltwater carving through volcanic rock. The patterns mirror biological cardiovascular systems, suggesting the earth itself operates as a living, breathing entity undergoing constant, microscopic trauma and regeneration.",
+    metrics: {
+      altitude: "15,000ft",
+      temp: "-12°C",
+      medium: "Aerial Infra",
+      equipment: "DJI Inspire 3 w/ X9",
+    },
+    image:
+      "https://images.unsplash.com/photo-1476610182048-b716b8518aae?q=80&w=1600&auto=format&fit=crop",
+    accent: "#0f766e", // teal-700
+  },
+  {
+    id: "04",
+    title: "Nocturnal Monsoon",
+    subtitle: "Urban Ecosystems",
+    location: "Kyoto, Japan",
+    year: "2024",
+    desc: "Documenting the transformation of a hyper-structured urban environment during extreme weather events. The monsoon strips away the neon artificiality, returning the ancient capital to its elemental state of water and stone. Shadows deepen, reflections multiply, and the grid dissolves into chaos.",
+    metrics: {
+      rainfall: "300mm/h",
+      hours: "Midnight-4am",
+      format: "B&W 35mm",
+      equipment: "Leica M11 Monochrom",
+    },
+    image:
+      "https://images.unsplash.com/photo-1493780474015-ba834fd0ce2f?q=80&w=1600&auto=format&fit=crop",
+    accent: "#115e59", // teal-800
+  },
+];
+
+const EXHIBITIONS = [
+  {
+    year: "2026",
+    title: "Biomes in Flux",
+    venue: "Tate Modern",
+    location: "London",
+    desc: "A retrospective spanning a decade of environmental documentation.",
+  },
+  {
+    year: "2025",
+    title: "The Emerald Coast",
+    venue: "Pace Gallery",
+    location: "New York",
+    desc: "Solo exhibition featuring large-scale underwater prints.",
+  },
+  {
+    year: "2024",
+    title: "Anthropocene",
+    venue: "Venice Biennale",
+    location: "Venice",
+    desc: "Group exhibition representing the intersection of art and climate science.",
+  },
+  {
+    year: "2023",
+    title: "Silent Giants",
+    venue: "National Gallery",
+    location: "Ottawa",
+    desc: "Immersive installation utilizing soundscapes recorded in old-growth forests.",
+  },
+  {
+    year: "2022",
+    title: "Tectonic Veins",
+    venue: "Reykjavik Art Museum",
+    location: "Reykjavik",
+    desc: "Aerial photography series contrasting fire and ice.",
+  },
+];
+
+const PRESS = [
+  {
+    quote:
+      "Hayes' work doesn't just document nature; it forces us into a profound, often uncomfortable confrontation with scale and time.",
+    publication: "The New York Times",
+    reviewer: "Alice G.",
+  },
+  {
+    quote:
+      "The defining environmental photographer of this decade. The Emerald Coast series is a masterclass in tension.",
+    publication: "National Geographic",
+    reviewer: "Thomas R.",
+  },
+  {
+    quote:
+      "Breathtaking technical mastery paired with an uncompromising ecological conscience.",
+    publication: "Aperture Magazine",
+    reviewer: "Sarah L.",
+  },
+];
+
+const FAQS = [
+  {
+    question: "Are fine art prints available for purchase?",
+    answer:
+      "Yes, limited edition prints are available for all projects. Editions are strictly limited to 10 per image, printed on museum-grade Hahnemühle baryta paper, signed and numbered. Contact the studio for the current catalog and pricing.",
+  },
+  {
+    question: "Do you accept commercial commissions?",
+    answer:
+      "I accept a very limited number of commercial commissions per year, strictly aligning with brands and organizations that demonstrate a verifiable commitment to environmental sustainability and ethical practices.",
+  },
+  {
+    question: "What is your typical post-production workflow?",
+    answer:
+      "The ethos of the studio relies on capturing the image as perfectly as possible in-camera. Post-production is limited to basic tonal adjustments, dodging, and burning. We do not composite elements or alter the fundamental reality of the captured scene.",
+  },
+  {
+    question: "Do you offer workshops or portfolio reviews?",
+    answer:
+      "Currently, I lead one masterclass per year in conjunction with the Leica Akademie. Portfolio reviews are occasionally available for emerging photographers focused on conservation. Subscribe to the newsletter for announcements.",
+  },
+];
+
+/* ==========================================================================
+   UTILITY COMPONENTS
+   ========================================================================== */
+
+function Reveal({
+  children,
+  className = "",
+  delay = 0,
+  y = 30,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  delay?: number;
+  y?: number;
+}) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-50px" });
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.8, delay, ease: [0.25, 0.1, 0.25, 1] }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
 }
-function Counter({ target, suffix="" }: { target: number; suffix?: string }) {
-  const [count, setCount] = useState(0)
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true })
-  useEffect(() => {
-    if (!inView) return
-    const step = Math.ceil(target / 60)
-    const t = setInterval(() => setCount(c => Math.min(c + step, target)), 16)
-    return () => clearInterval(t)
-  }, [inView, target])
-  return <span ref={ref}>{count.toLocaleString()}{suffix}</span>
-}
-function MagneticBtn({ children, className="" }: { children: React.ReactNode; className?: string }) {
-  const x = useMotionValue(0); const y = useMotionValue(0)
-  const sx = useSpring(x, { stiffness: 500, damping: 25 })
-  const sy = useSpring(y, { stiffness: 500, damping: 25 })
-  const ref = useRef<HTMLButtonElement>(null)
-  const handleMouse = (e: React.MouseEvent) => {
-    const r = ref.current!.getBoundingClientRect()
-    x.set((e.clientX - r.left - r.width/2) * 0.35)
-    y.set((e.clientY - r.top - r.height/2) * 0.35)
-  }
-  return <motion.button ref={ref} style={{ x: sx, y: sy }} onMouseMove={handleMouse} onMouseLeave={() => { x.set(0); y.set(0) }} className={className}>{children}</motion.button>
-}
 
-const SERVICES = [
-  { id: 1, name: "Media Relations", deliverables: ["Press releases", "Media outreach", "Crisis management", "Exclusive access"], retainer: "$8K-15K/mo" },
-  { id: 2, name: "Crisis Comms", deliverables: ["24/7 response", "Scenario planning", "Stakeholder management", "Recovery strategy"], retainer: "$12K-25K/mo" },
-  { id: 3, name: "Brand Positioning", deliverables: ["Strategy development", "Messaging framework", "Competitive analysis", "Brand audit"], retainer: "$10K-18K/mo" },
-  { id: 4, name: "Thought Leadership", deliverables: ["Content strategy", "Byline placement", "Speaking opportunities", "Executive visibility"], retainer: "$9K-16K/mo" },
-  { id: 5, name: "Social Strategy", deliverables: ["Platform strategy", "Content calendar", "Community management", "Influencer relations"], retainer: "$6K-12K/mo" },
-  { id: 6, name: "Influencer Activation", deliverables: ["Talent scouting", "Campaign management", "Content amplification", "Performance tracking"], retainer: "$7K-14K/mo" },
-]
-
-const CASES = [
-  { id: 1, industry: "Tech", situation: "Acquisition announcement", result: "400K+ media mentions", img: "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=600" },
-  { id: 2, industry: "Finance", situation: "Leadership transition", result: "60+ tier-1 placements", img: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=600" },
-  { id: 3, industry: "Health", situation: "Product launch", result: "15M earned media value", img: "https://images.unsplash.com/photo-1554224311-beaf415c15e7?w=600" },
-  { id: 4, industry: "Consumer", situation: "Brand relaunch", result: "92% favorable sentiment", img: "https://images.unsplash.com/photo-1552664730-d307ca884978?w=600" },
-  { id: 5, industry: "B2B", situation: "Thought leadership", result: "35+ speaking engagements", img: "https://images.unsplash.com/photo-1552669406-6bde9eaf4303?w=600" },
-  { id: 6, industry: "Nonprofit", situation: "Campaign launch", result: "$5M funding secured", img: "https://images.unsplash.com/photo-1552664730-d307ca884978?w=600" },
-]
-
-const TEAM = [
-  { name: "Alexandra Park", role: "Media Relations Lead", beat: "Technology", avatar: "AP" },
-  { name: "Marcus Johnson", role: "Crisis Director", beat: "Corporate", avatar: "MJ" },
-  { name: "Elena Rodriguez", role: "Thought Leadership", beat: "Innovation", avatar: "ER" },
-  { name: "James Chen", role: "Social Strategist", beat: "Influencer", avatar: "JC" },
-]
-
-const MEDIA = ["New York Times", "Financial Times", "TechCrunch", "Forbes", "BBC", "Bloomberg", "WSJ", "The Guardian"]
-
-const TESTIMONIALS = [
-  { name: "Sarah Mitchell", role: "CMO, Fortune 500", quote: "Transformed our media presence in 90 days." },
-  { name: "David Yang", role: "CEO, Scale-up", quote: "Secured $50M Series B with their positioning." },
-  { name: "Jennifer Lee", role: "COO, Enterprise", quote: "Crisis management saved our reputation." },
-]
-
-export default function HeraldPRPage() {
-  const [selectedCase, setSelectedCase] = useState<typeof CASES[0] | null>(null)
-  const [clientOpen, setClientOpen] = useState(false)
-  const { scrollY } = useScroll()
-
-  const revealText = (text: string) => {
-    return text.split("").map((char, i) => (
-      <motion.span key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.02 }}>
-        {char}
-      </motion.span>
-    ))
-  }
+function Accordion({ items }: { items: typeof FAQS }) {
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <div className="min-h-screen bg-white text-black">
-      {/* Editorial Hero with Text Reveal */}
-      <section className="relative h-[80vh] overflow-hidden flex items-center justify-center bg-gradient-to-br from-white via-[#f5f5f3] to-white px-8">
-        <div className="max-w-4xl text-center z-10">
-          <Reveal>
-            <h1 className="text-7xl md:text-9xl font-black leading-tight mb-8">
-              <div>{revealText("YOUR STORY,")}</div>
-              <motion.div className="text-[#2563eb] mt-2">{revealText("AMPLIFIED.")}</motion.div>
-            </h1>
-            <p className="text-2xl md:text-3xl font-light text-gray-600 mb-12">
-              Public relations, communications strategy, and media influence for brands that matter.
-            </p>
-          </Reveal>
-          <motion.button className="px-8 py-4 bg-[#2563eb] text-white font-bold uppercase tracking-wider hover:bg-blue-600 transition">
-            Schedule Consultation
-          </motion.button>
-        </div>
-      </section>
-
-      {/* Services Grid */}
-      <section className="py-32 px-8 md:px-16 max-w-7xl mx-auto">
-        <Reveal>
-          <h2 className="text-6xl font-black mb-4">Services</h2>
-          <p className="text-2xl text-gray-600 mb-16">Retainer packages tailored to your needs</p>
-        </Reveal>
-        <Tabs defaultValue="media" className="w-full">
-          <TabsList className="grid w-full grid-cols-6 mb-12 bg-[#f5f5f3] p-2 rounded-none">
-            {SERVICES.map(svc => (
-              <TabsTrigger
-                key={svc.id}
-                value={svc.name.toLowerCase().replace(" ", "")}
-                className="data-[state=active]:bg-[#2563eb] data-[state=active]:text-white text-xs"
+    <div className="w-full border-t border-white/10">
+      {items.map((item, i) => (
+        <div key={i} className="border-b border-white/10">
+          <button
+            onClick={() => setOpenIndex(openIndex === i ? null : i)}
+            className="w-full py-6 md:py-8 flex items-center justify-between text-left group"
+          >
+            <span
+              className={`text-lg md:text-xl font-medium transition-colors ${openIndex === i ? "text-emerald-400" : "text-white/60 group-hover:text-white"}`}
+            >
+              {item.question}
+            </span>
+            <div className="relative w-6 h-6 flex items-center justify-center shrink-0">
+              <motion.div
+                animate={{ rotate: openIndex === i ? 180 : 0 }}
+                className="absolute w-full h-[1.5px] bg-white transition-colors"
+              />
+              <motion.div
+                animate={{ rotate: openIndex === i ? 180 : 90 }}
+                className="absolute w-full h-[1.5px] bg-white transition-colors"
+              />
+            </div>
+          </button>
+          <AnimatePresence>
+            {openIndex === i && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
+                className="overflow-hidden"
               >
-                {svc.name.split(" ")[0]}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-          {SERVICES.map(svc => (
-            <TabsContent key={svc.id} value={svc.name.toLowerCase().replace(" ", "")}>
-              <Reveal>
-                <Card className="bg-[#f5f5f3] border-black/10">
-                  <CardContent className="pt-8 space-y-6">
-                    <div>
-                      <h3 className="text-3xl font-black mb-4">{svc.name}</h3>
-                      <p className="text-2xl text-[#2563eb] font-bold mb-8">{svc.retainer}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold uppercase tracking-widest mb-4 text-gray-600">Key Deliverables</p>
-                      <ul className="space-y-2">
-                        {svc.deliverables.map(d => (
-                          <li key={d} className="flex items-center gap-3">
-                            <span className="w-2 h-2 bg-[#2563eb]" />
-                            {d}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Reveal>
-            </TabsContent>
-          ))}
-        </Tabs>
-      </section>
-
-      {/* Case Studies */}
-      <section className="py-32 px-8 md:px-16 bg-[#f5f5f3]">
-        <div className="max-w-7xl mx-auto">
-          <Reveal>
-            <h2 className="text-6xl font-black mb-16">Case Studies</h2>
-          </Reveal>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {CASES.map((cse, i) => (
-              <Reveal key={cse.id} delay={i * 0.1}>
-                <motion.div
-                  whileHover={{ y: -8 }}
-                  className="group cursor-pointer"
-                  onClick={() => setSelectedCase(cse)}
-                >
-                  <div className="relative h-64 mb-6 rounded-lg overflow-hidden border-2 border-black">
-                    <Image src={cse.img} alt={cse.industry} fill className="object-cover group-hover:scale-110 transition duration-500" />
-                  </div>
-                  <Badge className="bg-[#2563eb] text-white mb-3">{cse.industry}</Badge>
-                  <h3 className="text-xl font-black mb-2">{cse.situation}</h3>
-                  <p className="text-lg font-bold text-[#2563eb]">{cse.result}</p>
-                </motion.div>
-              </Reveal>
-            ))}
-          </div>
+                <p className="pb-8 text-white/50 text-base leading-relaxed max-w-3xl">
+                  {item.answer}
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-      </section>
+      ))}
+    </div>
+  );
+}
 
-      {/* Case Detail Dialog */}
-      <Dialog open={!!selectedCase} onOpenChange={() => setSelectedCase(null)}>
-        <DialogContent className="max-w-2xl bg-white border-2 border-black">
-          <DialogHeader>
-            <DialogTitle>{selectedCase?.situation}</DialogTitle>
-          </DialogHeader>
-          {selectedCase && (
-            <div className="space-y-6">
-              <div className="relative h-80 rounded-lg overflow-hidden border-2 border-black">
-                <Image src={selectedCase.img} alt={selectedCase.industry} fill className="object-cover" />
+/* ==========================================================================
+   MAIN PAGE COMPONENT
+   ========================================================================== */
+
+export default function SplitRevealPage() {
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [direction, setDirection] = useState(1);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [autoplay, setAutoplay] = useState(true);
+
+  const currentSlide = SLIDES[currentIdx];
+
+  // Autoplay Logic
+  useEffect(() => {
+    if (!autoplay || aboutOpen || isFullscreen) return;
+
+    const timer = setInterval(() => {
+      paginate(1);
+    }, 6000);
+
+    return () => clearInterval(timer);
+  }, [currentIdx, autoplay, aboutOpen, isFullscreen]);
+
+  const paginate = (newDirection: number) => {
+    if (isAnimating) return;
+    setIsAnimating(true);
+    setDirection(newDirection);
+
+    setTimeout(() => {
+      let newIdx = currentIdx + newDirection;
+      if (newIdx < 0) newIdx = SLIDES.length - 1;
+      if (newIdx >= SLIDES.length) newIdx = 0;
+      setCurrentIdx(newIdx);
+
+      setTimeout(() => setIsAnimating(false), 1000);
+    }, 50);
+  };
+
+  // Variants for Image Split
+  const imageVariants = {
+    enter: (direction: number) => ({
+      y: direction > 0 ? "100%" : "-100%",
+      scale: 1.1,
+      opacity: 0.5,
+    }),
+    center: {
+      y: 0,
+      scale: 1,
+      opacity: 1,
+      transition: { duration: 1, ease: [0.76, 0, 0.24, 1] },
+    },
+    exit: (direction: number) => ({
+      y: direction > 0 ? "-100%" : "100%",
+      scale: 0.9,
+      opacity: 0.5,
+      transition: { duration: 1, ease: [0.76, 0, 0.24, 1] },
+    }),
+  };
+
+  // Variants for Content Split
+  const contentVariants = {
+    enter: (direction: number) => ({
+      y: direction > 0 ? "-20%" : "20%",
+      opacity: 0,
+    }),
+    center: {
+      y: 0,
+      opacity: 1,
+      transition: { duration: 0.8, delay: 0.2, ease: [0.25, 1, 0.5, 1] },
+    },
+    exit: (direction: number) => ({
+      y: direction > 0 ? "20%" : "-20%",
+      opacity: 0,
+      transition: { duration: 0.6, ease: [0.76, 0, 0.24, 1] },
+    }),
+  };
+
+  return (
+    <div className="premium-theme min-h-screen bg-[#050505] text-[#f4f4f5] font-sans overflow-hidden selection:bg-emerald-500/30">
+      {/* ==========================================
+          HEADER (Global)
+          ========================================== */}
+      <header className="fixed top-0 left-0 w-full z-40 px-6 md:px-12 py-8 flex justify-between items-center pointer-events-none mix-blend-difference text-white">
+        <Link
+          href="/"
+          className="pointer-events-auto text-xl tracking-[0.3em] uppercase font-medium"
+        >
+          Split<span className="opacity-50 font-light">Rev</span>
+        </Link>
+
+        <div className="pointer-events-auto flex gap-8 text-[10px] uppercase tracking-widest font-bold">
+          <button
+            onClick={() => setAboutOpen(true)}
+            className="hover:text-emerald-400 transition-colors"
+          >
+            Information
+          </button>
+          <button
+            onClick={() => setAboutOpen(true)}
+            className="hover:text-emerald-400 transition-colors hidden md:block"
+          >
+            Exhibitions
+          </button>
+        </div>
+      </header>
+
+      {/* ==========================================
+          MAIN SPLIT VIEW
+          ========================================== */}
+      <main className="w-full h-[100svh] flex flex-col lg:flex-row relative">
+        {/* LEFT: IMAGE SLIDER */}
+        <div
+          className={`relative w-full h-1/2 lg:h-full transition-all duration-700 ease-[0.76,0,0.24,1] ${isFullscreen ? "lg:w-[100%]" : "lg:w-[55%]"}`}
+        >
+          <AnimatePresence initial={false} custom={direction}>
+            <motion.div
+              key={currentIdx}
+              custom={direction}
+              variants={imageVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              className="absolute inset-0"
+            >
+              <Image
+                src={currentSlide.image}
+                alt={currentSlide.title}
+                fill
+                className="object-cover"
+                priority
+              />
+              <div className="absolute inset-0 bg-black/20" />
+
+              {/* Image Number Overlay */}
+              <div className="absolute bottom-6 md:bottom-12 left-6 md:left-12 text-white/50 text-[8rem] md:text-[15rem] lg:text-[20rem] font-medium leading-none tracking-tighter mix-blend-overlay pointer-events-none select-none">
+                {currentSlide.id}
               </div>
-              <Carousel className="w-full">
-                <CarouselContent>
-                  {[1, 2, 3].map(i => (
-                    <CarouselItem key={i} className="md:basis-1/2">
-                      <div className="relative h-40 bg-[#f5f5f3] rounded-lg border border-black">
-                        <Image
-                          src={`https://images.unsplash.com/photo-${1558000000000 + i * 1000}?w=500`}
-                          alt="Press"
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
-                <CarouselPrevious />
-                <CarouselNext />
-              </Carousel>
-              <div className="space-y-3 pt-4 border-t-2 border-black">
-                <p className="font-bold">Industry: {selectedCase.industry}</p>
-                <p className="text-gray-600">Result: {selectedCase.result}</p>
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Fullscreen Toggle */}
+          <button
+            onClick={() => setIsFullscreen(!isFullscreen)}
+            className="absolute top-6 md:top-8 right-6 md:right-8 w-12 h-12 rounded-full bg-black/20 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-black/40 transition-colors z-20 hidden lg:flex"
+          >
+            {isFullscreen ? (
+              <Minimize2 className="w-5 h-5" />
+            ) : (
+              <Maximize2 className="w-5 h-5" />
+            )}
+          </button>
+        </div>
+
+        {/* RIGHT: CONTENT SLIDER */}
+        <div
+          className={`relative w-full h-1/2 lg:h-full bg-[#0a0a0a] border-t lg:border-t-0 lg:border-l border-white/5 flex flex-col transition-all duration-700 ease-[0.76,0,0.24,1] ${isFullscreen ? "lg:w-[0%] overflow-hidden" : "lg:w-[45%]"}`}
+        >
+          <AnimatePresence mode="wait">
+            {!isFullscreen && (
+              <motion.div
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 50 }}
+                transition={{ duration: 0.5 }}
+                className="flex-1 flex flex-col justify-center p-8 md:p-16 lg:p-20 overflow-y-auto"
+              >
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={currentIdx}
+                    custom={direction}
+                    variants={contentVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    className="max-w-xl"
+                  >
+                    <div className="flex items-center gap-4 mb-8">
+                      <span className="px-3 py-1 rounded-full border border-emerald-900/50 bg-emerald-900/20 text-emerald-400 text-[10px] uppercase tracking-widest font-bold">
+                        {currentSlide.location}
+                      </span>
+                      <span className="text-white/40 text-sm">
+                        {currentSlide.year}
+                      </span>
+                    </div>
+
+                    <h1 className="text-4xl md:text-5xl lg:text-6xl font-light tracking-tight mb-4">
+                      {currentSlide.title}
+                    </h1>
+                    <h2 className="text-xl text-white/50 font-light italic mb-8">
+                      {currentSlide.subtitle}
+                    </h2>
+
+                    <p className="text-white/70 text-lg leading-relaxed mb-12">
+                      {currentSlide.desc}
+                    </p>
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-8 border-t border-white/10">
+                      {Object.entries(currentSlide.metrics).map(
+                        ([key, value], i) => (
+                          <div key={i}>
+                            <span className="block text-[10px] uppercase tracking-widest text-white/40 mb-2">
+                              {key}
+                            </span>
+                            <span className="block text-sm font-medium text-white/80">
+                              {value}
+                            </span>
+                          </div>
+                        ),
+                      )}
+                    </div>
+
+                    <div className="mt-16">
+                      <button
+                        onClick={() => setAboutOpen(true)}
+                        className="flex items-center gap-3 text-xs uppercase tracking-widest font-bold hover:text-emerald-400 transition-colors group"
+                      >
+                        <div className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center group-hover:border-emerald-400 group-hover:bg-emerald-400/10 transition-all">
+                          <ArrowRight className="w-4 h-4" />
+                        </div>
+                        Read Full Story
+                      </button>
+                    </div>
+                  </motion.div>
+                </AnimatePresence>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Controls (Bottom Right) */}
+          <div className="absolute bottom-0 left-0 w-full p-6 md:p-8 flex justify-between items-center border-t border-white/5 bg-[#0a0a0a] z-20">
+            <div className="flex gap-4">
+              <button
+                onClick={() => setAutoplay(!autoplay)}
+                className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center text-white/50 hover:text-white hover:border-white/30 transition-colors"
+              >
+                {autoplay ? (
+                  <Pause className="w-4 h-4" />
+                ) : (
+                  <Play className="w-4 h-4 ml-0.5" />
+                )}
+              </button>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <span className="text-xs font-mono text-white/40 hidden md:block mr-4">
+                0{currentIdx + 1} / 0{SLIDES.length}
+              </span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => paginate(-1)}
+                  className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center hover:bg-white hover:text-black transition-colors"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={() => paginate(1)}
+                  className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center hover:bg-white hover:text-black transition-colors"
+                >
+                  <ArrowRight className="w-5 h-5" />
+                </button>
               </div>
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Media Coverage */}
-      <section className="py-16 px-8 md:px-16 bg-black text-white">
-        <div className="max-w-7xl mx-auto">
-          <Reveal>
-            <p className="text-center text-gray-400 mb-12 uppercase tracking-widest font-bold">Our Placements</p>
-          </Reveal>
-          <div className="flex flex-wrap justify-center gap-8">
-            {MEDIA.map((outlet, i) => (
-              <Reveal key={i}>
-                <p className="font-black text-lg hover:text-[#2563eb] transition cursor-pointer">
-                  {outlet}
-                </p>
-              </Reveal>
-            ))}
           </div>
         </div>
-      </section>
+      </main>
 
-      {/* Stats */}
-      <section className="py-32 px-8 md:px-16">
-        <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-12">
-          {[
-            { number: 200, label: "Brands Served", suffix: "" },
-            { number: 12, label: "Years Experience", suffix: "" },
-            { number: 5, label: "Placements Per Client", suffix: "K+" },
-            { number: 49, label: "Award Winning", suffix: "%" },
-          ].map((stat, i) => (
-            <Reveal key={i} delay={i * 0.1}>
-              <div className="text-center">
-                <div className="text-5xl font-black text-[#2563eb] mb-2">
-                  <Counter target={stat.number} suffix={stat.suffix} />
-                </div>
-                <p className="text-gray-600 font-bold">{stat.label}</p>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      {/* Team */}
-      <section className="py-32 px-8 md:px-16 bg-[#f5f5f3]">
-        <div className="max-w-7xl mx-auto">
-          <Reveal>
-            <h2 className="text-6xl font-black mb-16">The Team</h2>
-          </Reveal>
-          <div className="grid md:grid-cols-4 gap-8">
-            {TEAM.map((member, i) => (
-              <Reveal key={i} delay={i * 0.1}>
-                <Card className="bg-white border-2 border-black">
-                  <CardContent className="pt-8 space-y-4 text-center">
-                    <Avatar className="mx-auto w-16 h-16 border-2 border-[#2563eb]">
-                      <AvatarFallback className="bg-[#2563eb] text-white font-black">{member.avatar}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-black text-lg">{member.name}</p>
-                      <p className="text-sm font-bold text-[#2563eb]">{member.role}</p>
-                      <p className="text-xs text-gray-600 mt-2">Beat: {member.beat}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section className="py-32 px-8 md:px-16">
-        <div className="max-w-7xl mx-auto">
-          <Reveal>
-            <h2 className="text-6xl font-black mb-16">Client Stories</h2>
-          </Reveal>
-          <Carousel className="w-full">
-            <CarouselContent>
-              {TESTIMONIALS.map((test, i) => (
-                <CarouselItem key={i} className="md:basis-1/2">
-                  <Reveal delay={i * 0.1}>
-                    <Card className="bg-[#f5f5f3] border-2 border-black">
-                      <CardContent className="pt-8 space-y-6">
-                        <p className="text-xl italic font-light">"{test.quote}"</p>
-                        <div>
-                          <p className="font-black">{test.name}</p>
-                          <p className="text-sm font-bold text-[#2563eb]">{test.role}</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Reveal>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious />
-            <CarouselNext />
-          </Carousel>
-        </div>
-      </section>
-
-      {/* Retainer Process */}
-      <section className="py-32 px-8 md:px-16 bg-[#f5f5f3]">
-        <div className="max-w-4xl mx-auto">
-          <Reveal>
-            <h2 className="text-6xl font-black mb-12">Our Process</h2>
-          </Reveal>
-          <Accordion className="space-y-4">
-            {[
-              { stage: "Discovery", desc: "We learn your brand, market, and goals" },
-              { stage: "Strategy", desc: "We develop a comprehensive 12-month plan" },
-              { stage: "Execution", desc: "We build relationships and place stories" },
-              { stage: "Optimization", desc: "We refine based on performance data" },
-            ].map((step, i) => (
-              <AccordionItem key={i} value={`process-${i}`} className="border-2 border-black rounded-none px-6">
-                <AccordionTrigger className="text-2xl font-black hover:text-[#2563eb]">
-                  {step.stage}
-                </AccordionTrigger>
-                <AccordionContent className="text-lg font-light">
-                  {step.desc}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        </div>
-      </section>
-
-      {/* FAQ */}
-      <section className="py-32 px-8 md:px-16 max-w-4xl mx-auto">
-        <Reveal>
-          <h2 className="text-6xl font-black mb-12">FAQ</h2>
-        </Reveal>
-        <Accordion className="space-y-4">
-          {["What's the minimum budget?", "Can we do project-based work?", "How do you measure ROI?", "Do you require exclusivity?"].map((q, i) => (
-            <AccordionItem key={i} value={`faq-${i}`} className="border-2 border-black rounded-none px-6">
-              <AccordionTrigger className="text-xl font-bold hover:text-[#2563eb]">
-                {q}
-              </AccordionTrigger>
-              <AccordionContent className="text-gray-600 font-light">
-                We're flexible. Let's discuss your specific needs, timeline, and budget constraints.
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
-      </section>
-
-      {/* New Client CTA */}
-      <section className="py-32 px-8 md:px-16 bg-black text-white">
-        <div className="max-w-4xl mx-auto text-center">
-          <Reveal>
-            <h2 className="text-6xl font-black mb-8">Ready to Build Your Story?</h2>
-            <p className="text-2xl font-light mb-12">
-              Let's discuss how we can elevate your brand presence and drive meaningful results.
-            </p>
-          </Reveal>
-          <MagneticBtn
-            onClick={() => setClientOpen(true)}
-            className="px-8 py-4 bg-white text-black font-bold uppercase tracking-wider hover:bg-[#2563eb] hover:text-white transition"
+      {/* ==========================================
+          ABOUT / INFO OVERLAY (FULL PAGE SCROLL)
+          ========================================== */}
+      <AnimatePresence>
+        {aboutOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: "100%" }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: "100%" }}
+            transition={{ type: "spring", damping: 30, stiffness: 200 }}
+            className="fixed inset-0 z-[100] bg-[#050505] overflow-y-auto"
           >
-            Schedule Strategy Call
-          </MagneticBtn>
-        </div>
-      </section>
+            {/* Header */}
+            <div className="sticky top-0 left-0 w-full z-50 px-6 md:px-12 py-8 flex justify-between items-center bg-[#050505]/80 backdrop-blur-xl border-b border-white/5">
+              <span className="text-xs uppercase tracking-widest font-bold text-emerald-400">
+                Julian Hayes Studio
+              </span>
+              <button
+                onClick={() => setAboutOpen(false)}
+                className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center hover:bg-white hover:text-black transition-all bg-black/50"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-      {/* Client Dialog */}
-      <Dialog open={clientOpen} onOpenChange={setClientOpen}>
-        <DialogContent className="max-w-md bg-white border-2 border-black">
-          <DialogHeader>
-            <DialogTitle>New Client Inquiry</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <input
-              type="text"
-              placeholder="Company name"
-              className="w-full px-4 py-3 border-2 border-black rounded-none focus:outline-none focus:bg-[#f5f5f3]"
-            />
-            <input
-              type="email"
-              placeholder="your@email.com"
-              className="w-full px-4 py-3 border-2 border-black rounded-none focus:outline-none focus:bg-[#f5f5f3]"
-            />
-            <textarea
-              placeholder="Tell us about your business..."
-              className="w-full px-4 py-3 border-2 border-black rounded-none focus:outline-none focus:bg-[#f5f5f3] h-24"
-            />
-            <MagneticBtn className="w-full py-3 bg-[#2563eb] text-white font-bold rounded-none hover:bg-blue-600 transition">
-              Submit Inquiry
-            </MagneticBtn>
-          </div>
-        </DialogContent>
-      </Dialog>
+            <div className="max-w-[1400px] mx-auto">
+              {/* Intro Hero */}
+              <section className="px-6 md:px-12 py-24 md:py-48 grid grid-cols-1 lg:grid-cols-2 gap-16 md:gap-32">
+                <div>
+                  <Reveal>
+                    <h2 className="text-5xl md:text-7xl font-light mb-12 leading-tight">
+                      Documenting the <br />
+                      <span className="italic text-emerald-400">
+                        shifting paradigms
+                      </span>
+                      <br />
+                      of natural spaces.
+                    </h2>
+                  </Reveal>
+                </div>
+                <div>
+                  <Reveal delay={0.2}>
+                    <p className="text-xl md:text-2xl text-white/60 font-light leading-relaxed mb-8">
+                      SplitRev is the creative practice of environmental
+                      photographer and director Julian Hayes. Operating at the
+                      boundary between fine art and photojournalism, the studio
+                      focuses on long-form documentary projects that explore
+                      humanity's relationship with extreme environments.
+                    </p>
+                    <p className="text-xl md:text-2xl text-white/60 font-light leading-relaxed">
+                      By utilizing large-format analog film and cutting-edge
+                      digital cinema systems, the resulting body of work demands
+                      to be viewed at scale—forcing the viewer to confront the
+                      sublime and terrifying beauty of a planet in flux.
+                    </p>
+                  </Reveal>
+                </div>
+              </section>
+
+              {/* Press / Marquee */}
+              <section className="py-24 border-y border-white/5 bg-[#0a0a0a] overflow-hidden">
+                <div className="mb-16 text-center px-6">
+                  <span className="text-[10px] uppercase tracking-widest font-bold text-emerald-400 block mb-4">
+                    Critical Acclaim
+                  </span>
+                  <h3 className="text-3xl font-medium">Selected Press</h3>
+                </div>
+
+                <div className="relative flex whitespace-nowrap">
+                  <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-[#0a0a0a] to-transparent z-10" />
+                  <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-[#0a0a0a] to-transparent z-10" />
+
+                  <motion.div
+                    animate={{ x: ["0%", "-50%"] }}
+                    transition={{
+                      duration: 40,
+                      repeat: Infinity,
+                      ease: "linear",
+                    }}
+                    className="flex gap-8 px-4"
+                  >
+                    {[...PRESS, ...PRESS].map((p, i) => (
+                      <div
+                        key={i}
+                        className="w-[400px] md:w-[500px] border border-white/10 p-10 bg-[#050505] whitespace-normal shrink-0"
+                      >
+                        <Star className="w-6 h-6 text-emerald-400 mb-8" />
+                        <p className="text-xl italic text-white/80 leading-relaxed mb-8">
+                          "{p.quote}"
+                        </p>
+                        <div>
+                          <div className="font-bold text-sm">
+                            {p.publication}
+                          </div>
+                          <div className="text-xs text-white/40">
+                            {p.reviewer}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </motion.div>
+                </div>
+              </section>
+
+              {/* Exhibitions */}
+              <section className="py-24 md:py-48 px-6 md:px-12 grid grid-cols-1 lg:grid-cols-12 gap-16">
+                <div className="lg:col-span-4">
+                  <Reveal>
+                    <h3 className="text-4xl font-medium mb-6">Exhibitions</h3>
+                    <p className="text-white/50">
+                      A comprehensive list of solo and group exhibitions
+                      spanning the last decade.
+                    </p>
+                  </Reveal>
+                </div>
+
+                <div className="lg:col-span-8">
+                  <div className="border-t border-white/10">
+                    {EXHIBITIONS.map((ex, i) => (
+                      <Reveal key={i} delay={i * 0.1}>
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between py-8 border-b border-white/5 group hover:bg-white/[0.02] transition-colors -mx-6 px-6 sm:-mx-8 sm:px-8">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-16 mb-4 sm:mb-0">
+                            <span className="font-mono text-white/40 text-sm">
+                              {ex.year}
+                            </span>
+                            <div>
+                              <span className="text-2xl font-light block mb-2">
+                                {ex.title}
+                              </span>
+                              <span className="text-sm text-white/50">
+                                {ex.desc}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-8 w-full sm:w-auto justify-between sm:justify-end shrink-0">
+                            <span className="text-sm text-white/60">
+                              {ex.venue}
+                            </span>
+                            <span className="text-xs uppercase tracking-widest bg-emerald-900/30 text-emerald-400 border border-emerald-900/50 px-3 py-1 rounded-full">
+                              {ex.location}
+                            </span>
+                          </div>
+                        </div>
+                      </Reveal>
+                    ))}
+                  </div>
+                </div>
+              </section>
+
+              {/* FAQ */}
+              <section className="py-24 md:py-32 px-6 md:px-12 bg-[#0a0a0a] border-y border-white/5">
+                <div className="max-w-[1000px] mx-auto">
+                  <Reveal className="text-center mb-16">
+                    <h3 className="text-4xl font-medium mb-4">
+                      Inquiries & Policy
+                    </h3>
+                    <p className="text-white/50">
+                      Details regarding prints, commissions, and methodology.
+                    </p>
+                  </Reveal>
+                  <Reveal delay={0.2}>
+                    <Accordion items={FAQS} />
+                  </Reveal>
+                </div>
+              </section>
+
+              {/* Contact Footer */}
+              <section className="py-32 px-6 md:px-12 text-center">
+                <Reveal>
+                  <Compass className="w-16 h-16 text-emerald-400 mx-auto mb-10" />
+                  <h2 className="text-4xl md:text-6xl font-light mb-8">
+                    Commission a Project
+                  </h2>
+                  <p className="text-xl text-white/50 max-w-lg mx-auto mb-12">
+                    Available for editorial assignments, commercial campaigns,
+                    and fine art commissions globally.
+                  </p>
+
+                  <a
+                    href="mailto:studio@splitrev.com"
+                    className="inline-flex items-center gap-3 px-10 py-5 bg-white text-black text-xs uppercase tracking-widest font-bold rounded-full hover:bg-emerald-400 transition-colors group"
+                  >
+                    <Mail className="w-5 h-5" /> studio@splitrev.com
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </a>
+
+                  <div className="flex justify-center gap-8 mt-24">
+                    <a
+                      href="#"
+                      className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center hover:bg-emerald-400 hover:text-black hover:border-emerald-400 transition-colors"
+                    >
+                      <Instagram className="w-5 h-5" />
+                    </a>
+                    <a
+                      href="#"
+                      className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center hover:bg-emerald-400 hover:text-black hover:border-emerald-400 transition-colors"
+                    >
+                      <Twitter className="w-5 h-5" />
+                    </a>
+                    <a
+                      href="#"
+                      className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center hover:bg-emerald-400 hover:text-black hover:border-emerald-400 transition-colors"
+                    >
+                      <Linkedin className="w-5 h-5" />
+                    </a>
+                  </div>
+                </Reveal>
+              </section>
+
+              {/* Copyright Bar */}
+              <div className="py-8 px-6 md:px-12 border-t border-white/10 flex flex-col sm:flex-row justify-between items-center gap-4 text-[10px] uppercase tracking-widest text-white/40">
+                <span>
+                  &copy; {new Date().getFullYear()} Julian Hayes Studio. All
+                  rights reserved.
+                </span>
+                <div className="flex gap-6">
+                  <a href="#" className="hover:text-white transition-colors">
+                    Privacy
+                  </a>
+                  <a href="#" className="hover:text-white transition-colors">
+                    Terms
+                  </a>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
-  )
+  );
 }

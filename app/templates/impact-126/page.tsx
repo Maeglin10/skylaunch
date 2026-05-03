@@ -1,455 +1,797 @@
-"use client"
+"use client";
 
-import { motion, useScroll, useTransform, useInView, AnimatePresence, useMotionValue, useSpring } from "framer-motion"
-import { useState, useRef, useEffect } from "react"
-import Image from "next/image"
-import Link from "next/link"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
-import { Progress } from "@/components/ui/progress"
+import React, { useState, useEffect, useRef } from "react";
+import {
+  motion,
+  AnimatePresence,
+  useScroll,
+  useTransform,
+  useInView,
+} from "framer-motion";
+import Image from "next/image";
+import Link from "next/link";
+import {
+  ArrowRight,
+  Utensils,
+  Clock,
+  MapPin,
+  Phone,
+  Instagram,
+  Facebook,
+  Calendar,
+  ChefHat,
+  Star,
+  ChevronRight,
+  Menu,
+  X,
+  Wine,
+} from "lucide-react";
 
-function Reveal({ children, delay=0 }: { children: React.ReactNode; delay?: number }) {
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true, margin: "-60px" })
-  return <motion.div ref={ref} initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, delay }}>{children}</motion.div>
+import "../premium.css";
+
+/* ==========================================================================
+   DATA STRUCTURES
+   ========================================================================== */
+
+const MENU_CATEGORIES = [
+  "Antipasti",
+  "Primi Piatti",
+  "Secondi",
+  "Dolci",
+  "Vini",
+];
+
+const MENU_ITEMS = {
+  Antipasti: [
+    {
+      name: "Burrata e Pomodorini",
+      price: "€18",
+      desc: "Fresh Apulian burrata, confit datterini tomatoes, basil emulsion, toasted pine nuts.",
+      highlight: true,
+    },
+    {
+      name: "Carpaccio di Manzo",
+      price: "€22",
+      desc: "Thinly sliced Fassona beef, 24-month Parmigiano Reggiano, wild rocket, white truffle oil.",
+    },
+    {
+      name: "Vitello Tonnato",
+      price: "€20",
+      desc: "Slow-cooked veal loin, traditional tuna and caper sauce, cucunci.",
+    },
+    {
+      name: "Fiori di Zucca",
+      price: "€16",
+      desc: "Crispy zucchini blossoms stuffed with ricotta and smoked provola, anchovy aioli.",
+    },
+  ],
+  "Primi Piatti": [
+    {
+      name: "Cacio e Pepe",
+      price: "€22",
+      desc: "Tonnarelli pasta, Pecorino Romano DOP, toasted black pepper. Served from the cheese wheel.",
+      highlight: true,
+    },
+    {
+      name: "Agnolotti del Plin",
+      price: "€26",
+      desc: "Handmade Piedmontese ravioli stuffed with roasted meats, veal reduction, sage butter.",
+    },
+    {
+      name: "Spaghetti alle Vongole",
+      price: "€28",
+      desc: "Artisanal spaghetti, Veraci clams, garlic, chili, parsley, white wine.",
+    },
+    {
+      name: "Risotto allo Zafferano",
+      price: "€30",
+      desc: "Acquerello rice, Milanese saffron, bone marrow, 36-month Parmigiano.",
+    },
+  ],
+  Secondi: [
+    {
+      name: "Ossobuco alla Milanese",
+      price: "€38",
+      desc: "Braised veal shank, traditional gremolata, served with saffron risotto.",
+      highlight: true,
+    },
+    {
+      name: "Branzino al Sale",
+      price: "€42",
+      desc: "Whole Mediterranean sea bass baked in sea salt crust, lemon emulsion, grilled asparagus.",
+    },
+    {
+      name: "Bistecca alla Fiorentina",
+      price: "€85",
+      desc: "1.2kg Chianina beef T-bone, roasted potatoes, rosemary. (For 2 persons)",
+    },
+    {
+      name: "Melanzane alla Parmigiana",
+      price: "€24",
+      desc: "Layered eggplant, San Marzano tomato sauce, mozzarella di bufala, fresh basil.",
+    },
+  ],
+  Dolci: [
+    {
+      name: "Tiramisù Classico",
+      price: "€12",
+      desc: "Mascarpone cream, savoiardi dipped in espresso, bitter cocoa powder.",
+      highlight: true,
+    },
+    {
+      name: "Panna Cotta",
+      price: "€10",
+      desc: "Vanilla bean panna cotta, wild berry coulis, almond crumble.",
+    },
+    {
+      name: "Cannolo Siciliano",
+      price: "€11",
+      desc: "Crispy pastry shell, sheep's milk ricotta, candied orange peel, pistachios.",
+    },
+  ],
+  Vini: [
+    {
+      name: "Barolo DOCG 'Monfortino' 2013",
+      price: "€450",
+      desc: "Giacomo Conterno. Nebbiolo. Complex, structured, notes of tar and roses.",
+    },
+    {
+      name: "Brunello di Montalcino 2016",
+      price: "€120",
+      desc: "Biondi-Santi. Sangiovese Grosso. Elegant, bright cherry, leather.",
+    },
+    {
+      name: "Franciacorta Cuvée Prestige",
+      price: "€85",
+      desc: "Ca' del Bosco. Chardonnay, Pinot Bianco, Pinot Nero. Fine perlage, citrus notes.",
+      highlight: true,
+    },
+  ],
+};
+
+const REVIEWS = [
+  {
+    text: "The most authentic Cacio e Pepe outside of Rome. The atmosphere is undeniably warm and inviting.",
+    author: "Alexander P.",
+    rating: 5,
+    date: "October 2025",
+  },
+  {
+    text: "Impeccable service and an outstanding wine list. The Ossobuco transported me straight to Milan.",
+    author: "Sophia R.",
+    rating: 5,
+    date: "September 2025",
+  },
+  {
+    text: "A hidden gem. The Burrata was incredibly fresh, and the handmade Agnolotti were to die for.",
+    author: "James M.",
+    rating: 5,
+    date: "August 2025",
+  },
+  {
+    text: "Perfect for an anniversary dinner. They made us feel like family from the moment we walked in.",
+    author: "Elena C.",
+    rating: 5,
+    date: "July 2025",
+  },
+];
+
+const GALLERY = [
+  "https://images.unsplash.com/photo-1514933651103-005eec06c04b?q=80&w=800&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1551183053-bf91a1d81141?q=80&w=800&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=800&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1582296726210-67c9c0f99478?q=80&w=800&auto=format&fit=crop",
+];
+
+/* ==========================================================================
+   UTILITY COMPONENTS
+   ========================================================================== */
+
+function Reveal({
+  children,
+  className = "",
+  delay = 0,
+  y = 30,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  delay?: number;
+  y?: number;
+}) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-50px" });
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.8, delay, ease: [0.25, 0.1, 0.25, 1] }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
 }
 
-function Counter({ target, suffix="" }: { target: number; suffix?: string }) {
-  const [count, setCount] = useState(0)
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true })
+/* ==========================================================================
+   MAIN PAGE COMPONENT
+   ========================================================================== */
+
+export default function TrattoriaMenuPage() {
+  const [activeCategory, setActiveCategory] = useState("Primi Piatti");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [reservationOpen, setReservationOpen] = useState(false);
+
+  // Parallax
+  const { scrollY } = useScroll();
+  const heroY = useTransform(scrollY, [0, 1000], [0, 300]);
+  const heroOpacity = useTransform(scrollY, [0, 800], [1, 0]);
+
   useEffect(() => {
-    if (!inView) return
-    const step = Math.ceil(target / 60)
-    const t = setInterval(() => setCount(c => Math.min(c + step, target)), 16)
-    return () => clearInterval(t)
-  }, [inView, target])
-  return <span ref={ref}>{count.toLocaleString()}{suffix}</span>
-}
-
-function MagneticBtn({ children, className="" }: { children: React.ReactNode; className?: string }) {
-  const x = useMotionValue(0); const y = useMotionValue(0)
-  const sx = useSpring(x, { stiffness: 500, damping: 25 })
-  const sy = useSpring(y, { stiffness: 500, damping: 25 })
-  const ref = useRef<HTMLButtonElement>(null)
-  const handleMouse = (e: React.MouseEvent) => {
-    const r = ref.current!.getBoundingClientRect()
-    x.set((e.clientX - r.left - r.width/2) * 0.35)
-    y.set((e.clientY - r.top - r.height/2) * 0.35)
-  }
-  return <motion.button ref={ref} style={{ x: sx, y: sy }} onMouseMove={handleMouse} onMouseLeave={() => { x.set(0); y.set(0) }} className={className}>{children}</motion.button>
-}
-
-const ARTISTS = [
-  { id: 1, name: "Luna Echoes", genre: "Synthwave", streams: "15M", bio: "Pioneering electronic dreamscapes", img: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300" },
-  { id: 2, name: "Vinyl Collective", genre: "Hip-Hop", streams: "32M", bio: "Raw beats, authentic stories", img: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300" },
-  { id: 3, name: "Neon Nights", genre: "Indie Pop", streams: "8M", bio: "Modern indie sensibilities", img: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300" },
-  { id: 4, name: "Echo Protocol", genre: "Ambient", streams: "12M", bio: "Atmospheric sound design", img: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300" },
-  { id: 5, name: "Pulse Drive", genre: "Electronic", streams: "28M", bio: "High-energy electronic", img: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300" },
-  { id: 6, name: "Midnight Jazz", genre: "Jazz Fusion", streams: "9M", bio: "Contemporary jazz exploration", img: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300" }
-]
-
-const RELEASES = [
-  { title: "Neon Dreams", artist: "Luna Echoes", date: "2024-04-15", genre: "Synthwave", img: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300" },
-  { title: "Urban Legends", artist: "Vinyl Collective", date: "2024-04-08", genre: "Hip-Hop", img: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300" },
-  { title: "Chromatic Shift", artist: "Echo Protocol", date: "2024-04-01", genre: "Ambient", img: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300" },
-  { title: "Electric Paradise", artist: "Neon Nights", date: "2024-03-25", genre: "Indie Pop", img: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300" }
-]
-
-const SERVICES = [
-  { title: "Digital Distribution", desc: "Global reach across all streaming platforms", includes: ["Spotify", "Apple Music", "YouTube Music", "Amazon Music"] },
-  { title: "Physical Distribution", desc: "Vinyl & CD pressing with fulfillment", includes: ["Vinyl Pressing", "CD Duplication", "Shipping", "Inventory"] },
-  { title: "Sync Licensing", desc: "Music placement in film, TV & games", includes: ["Licensing Deals", "Royalty Tracking", "Rights Management", "Market Access"] },
-  { title: "Publishing", desc: "Full publishing administration", includes: ["Mechanical Licensing", "Performance Rights", "Collection Services", "Legal Support"] }
-]
-
-const TESTIMONIALS = [
-  { name: "Maya Chen", artist: "Luna Echoes", text: "Dusk Records transformed my career. Professional, supportive, and truly passionate about artists.", genre: "Synthwave" },
-  { name: "James Rivera", artist: "Vinyl Collective", text: "The best record label partnership I've had. They handle everything while I focus on music.", genre: "Hip-Hop" },
-  { name: "Sofia Andersson", artist: "Neon Nights", text: "From unknown to 8M streams in 2 years. Dusk Records believed in us from day one.", genre: "Indie Pop" }
-]
-
-export default function DuskRecords() {
-  const [selectedArtist, setSelectedArtist] = useState<typeof ARTISTS[0] | null>(null)
-  const [dialogOpen, setDialogOpen] = useState(false)
-  const [submitOpen, setSubmitOpen] = useState(false)
-  const containerRef = useRef(null)
-  const { scrollYProgress } = useScroll({ target: containerRef })
+    const handleScroll = () => setScrolled(window.scrollY > 50);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-gradient-to-b from-[#08080c] via-[#1a1824] to-[#0f0f14] text-white overflow-hidden">
-      {/* Animated Background Elements */}
-      <motion.div animate={{ rotate: 360 }} transition={{ duration: 20, repeat: Infinity }} className="absolute top-1/4 right-10 w-64 h-64 rounded-full border border-[#f59e0b]/10 pointer-events-none" />
-      <motion.div animate={{ rotate: -360 }} transition={{ duration: 25, repeat: Infinity }} className="absolute bottom-1/3 left-5 w-80 h-80 rounded-full border border-[#7c3aed]/10 pointer-events-none" />
+    <div className="premium-theme min-h-screen bg-[#1c1815] text-[#f4ecd8] font-serif selection:bg-[#d97736]/30 selection:text-white">
+      {/* ==========================================
+          RESERVATION MODAL
+          ========================================== */}
+      <AnimatePresence>
+        {reservationOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-6"
+            onClick={() => setReservationOpen(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-lg bg-[#1c1815] border border-[#d97736]/30 p-8 md:p-12 relative overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 w-32 h-32 bg-[#d97736]/10 blur-[50px] rounded-full pointer-events-none" />
 
-      {/* Parallax Hero */}
-      <section className="relative h-screen overflow-hidden flex items-center justify-center">
-        <motion.div initial={{ scale: 1.1, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 2 }} className="absolute inset-0">
+              <button
+                onClick={() => setReservationOpen(false)}
+                className="absolute top-6 right-6 text-white/50 hover:text-white"
+              >
+                <X className="w-6 h-6" />
+              </button>
+
+              <h3 className="text-3xl font-medium mb-2 text-[#d97736]">
+                Reserve a Table
+              </h3>
+              <p className="text-white/60 font-sans text-sm mb-8">
+                Join us for an unforgettable culinary journey.
+              </p>
+
+              <form
+                className="space-y-6 font-sans"
+                onSubmit={(e) => e.preventDefault()}
+              >
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs uppercase tracking-widest text-white/40 mb-2">
+                      Date
+                    </label>
+                    <input
+                      type="date"
+                      className="w-full bg-[#110e0c] border border-white/10 px-4 py-3 text-white focus:outline-none focus:border-[#d97736] transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs uppercase tracking-widest text-white/40 mb-2">
+                      Time
+                    </label>
+                    <select className="w-full bg-[#110e0c] border border-white/10 px-4 py-3 text-white focus:outline-none focus:border-[#d97736] transition-colors appearance-none">
+                      <option>19:00</option>
+                      <option>19:30</option>
+                      <option>20:00</option>
+                      <option>20:30</option>
+                      <option>21:00</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs uppercase tracking-widest text-white/40 mb-2">
+                    Guests
+                  </label>
+                  <select className="w-full bg-[#110e0c] border border-white/10 px-4 py-3 text-white focus:outline-none focus:border-[#d97736] transition-colors appearance-none">
+                    <option>2 Guests</option>
+                    <option>3 Guests</option>
+                    <option>4 Guests</option>
+                    <option>5+ Guests (Call Us)</option>
+                  </select>
+                </div>
+
+                <div className="pt-4">
+                  <button
+                    type="submit"
+                    className="w-full bg-[#d97736] text-white py-4 text-xs font-bold uppercase tracking-widest hover:bg-[#b85b20] transition-colors"
+                  >
+                    Confirm Reservation
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ==========================================
+          NAVIGATION
+          ========================================== */}
+      <nav
+        className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ${scrolled ? "bg-[#1c1815]/90 backdrop-blur-md border-b border-[#d97736]/20 py-4" : "bg-transparent py-8"}`}
+      >
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12 flex items-center justify-between">
+          <button
+            onClick={() => setMenuOpen(true)}
+            className="md:hidden text-[#f4ecd8]"
+          >
+            <Menu className="w-6 h-6" />
+          </button>
+
+          <div className="hidden md:flex items-center gap-8 text-[11px] font-sans uppercase tracking-[0.2em] font-medium text-[#f4ecd8]/70">
+            <Link href="#" className="hover:text-[#d97736] transition-colors">
+              Il Menu
+            </Link>
+            <Link href="#" className="hover:text-[#d97736] transition-colors">
+              La Storia
+            </Link>
+            <Link href="#" className="hover:text-[#d97736] transition-colors">
+              Gallery
+            </Link>
+          </div>
+
+          <Link
+            href="/"
+            className="absolute left-1/2 -translate-x-1/2 text-2xl md:text-3xl font-medium tracking-widest uppercase text-[#d97736]"
+          >
+            Sartoria
+          </Link>
+
+          <div className="hidden md:flex items-center gap-6">
+            <a
+              href="tel:+39021234567"
+              className="text-[11px] font-sans uppercase tracking-widest text-[#f4ecd8]/70 hover:text-[#d97736] transition-colors hidden lg:block"
+            >
+              +39 02 1234 567
+            </a>
+            <button
+              onClick={() => setReservationOpen(true)}
+              className="px-6 py-2 border border-[#d97736] text-[#d97736] text-[10px] font-sans uppercase tracking-widest hover:bg-[#d97736] hover:text-white transition-colors"
+            >
+              Prenota
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      {/* MOBILE MENU */}
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div
+            initial={{ opacity: 0, x: "-100%" }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: "-100%" }}
+            transition={{ type: "tween", duration: 0.4 }}
+            className="fixed inset-0 z-[60] bg-[#1c1815] flex flex-col p-6"
+          >
+            <div className="flex justify-end mb-16">
+              <button onClick={() => setMenuOpen(false)}>
+                <X className="w-8 h-8 text-[#d97736]" />
+              </button>
+            </div>
+            <div className="flex flex-col gap-8 text-3xl font-light items-center">
+              <Link href="#" onClick={() => setMenuOpen(false)}>
+                Il Menu
+              </Link>
+              <Link href="#" onClick={() => setMenuOpen(false)}>
+                La Vigna
+              </Link>
+              <Link href="#" onClick={() => setMenuOpen(false)}>
+                La Storia
+              </Link>
+              <Link href="#" onClick={() => setMenuOpen(false)}>
+                Contatti
+              </Link>
+            </div>
+            <button
+              onClick={() => {
+                setMenuOpen(false);
+                setReservationOpen(true);
+              }}
+              className="mt-auto mb-12 w-full py-4 bg-[#d97736] text-white text-xs font-sans font-bold uppercase tracking-widest text-center"
+            >
+              Prenota un Tavolo
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ==========================================
+          1. HERO SECTION
+          ========================================== */}
+      <section className="relative w-full h-[90svh] overflow-hidden flex items-center justify-center">
+        <motion.div
+          style={{ y: heroY, opacity: heroOpacity }}
+          className="absolute inset-0 z-0"
+        >
           <Image
-            src="https://images.unsplash.com/photo-1536523?w=800&q=80"
-            alt="Music"
+            src="https://images.unsplash.com/photo-1514933651103-005eec06c04b?q=80&w=2000&auto=format&fit=crop"
+            alt="Restaurant Interior"
             fill
-            className="object-cover brightness-20"
+            className="object-cover"
+            priority
           />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#1c1815] via-black/50 to-black/20" />
         </motion.div>
 
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#08080c]/50 to-[#08080c]" />
-
-        <div className="relative z-10 text-center px-6 max-w-3xl">
-          <Reveal>
-            <motion.h1 className="text-6xl md:text-8xl font-black mb-6 bg-clip-text text-transparent bg-gradient-to-r from-[#f59e0b] via-[#7c3aed] to-white">
-              Dusk Records
-            </motion.h1>
-            <p className="text-xl md:text-2xl text-amber-100 mb-12 font-light">Independent music label & distribution. 500 artists. 8 years. 2 billion streams.</p>
-            <motion.div whileHover={{ x: 5 }} className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-[#f59e0b] to-[#7c3aed] text-white rounded-lg font-semibold cursor-pointer hover:opacity-90">
-              Explore Artists →
-            </motion.div>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* Artist Roster */}
-      <section className="py-24 px-6 md:px-16 max-w-7xl mx-auto">
-        <Reveal>
-          <h2 className="text-5xl font-black mb-16 text-center bg-clip-text text-transparent bg-gradient-to-r from-[#f59e0b] to-[#7c3aed]">Artist Roster</h2>
-        </Reveal>
-
-        <div className="grid md:grid-cols-3 gap-8">
-          {ARTISTS.map((artist, i) => (
-            <Reveal key={artist.id} delay={i * 0.1}>
-              <motion.div
-                whileHover={{ y: -10 }}
-                onClick={() => { setSelectedArtist(artist); setDialogOpen(true) }}
-                className="group cursor-pointer"
-              >
-                <Card className="border border-[#f59e0b]/20 hover:border-[#f59e0b]/50 bg-gradient-to-br from-[#1a1824] to-[#0f0f14] overflow-hidden transition-all">
-                  <div className="relative h-48 overflow-hidden">
-                    <Image src={artist.img} alt={artist.name} fill className="object-cover group-hover:scale-110 transition-transform duration-300" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#08080c]/80 to-transparent" />
-                  </div>
-                  <CardContent className="p-6 relative z-10">
-                    <Badge className="mb-3 bg-[#f59e0b] text-[#08080c]">{artist.genre}</Badge>
-                    <h3 className="text-xl font-bold mb-2">{artist.name}</h3>
-                    <p className="text-sm text-gray-400 mb-3">{artist.streams} Streams</p>
-                    <p className="text-xs text-amber-200 italic">{artist.bio}</p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            </Reveal>
-          ))}
-        </div>
-
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="max-w-2xl bg-[#1a1824] border-[#f59e0b]/20">
-            <DialogHeader>
-              <DialogTitle className="text-[#f59e0b] text-2xl">{selectedArtist?.name}</DialogTitle>
-            </DialogHeader>
-            {selectedArtist && (
-              <div className="space-y-6 text-gray-200">
-                <div className="relative h-64 rounded-lg overflow-hidden">
-                  <Image src={selectedArtist.img} alt={selectedArtist.name} fill className="object-cover" />
-                </div>
-
-                <div className="grid md:grid-cols-3 gap-4">
-                  <div className="bg-[#f59e0b]/10 p-4 rounded-lg border border-[#f59e0b]/20">
-                    <p className="text-xs text-[#f59e0b] uppercase font-semibold">Genre</p>
-                    <p className="text-lg font-bold mt-1">{selectedArtist.genre}</p>
-                  </div>
-                  <div className="bg-[#7c3aed]/10 p-4 rounded-lg border border-[#7c3aed]/20">
-                    <p className="text-xs text-[#7c3aed] uppercase font-semibold">Streams</p>
-                    <p className="text-lg font-bold mt-1">{selectedArtist.streams}</p>
-                  </div>
-                  <div className="bg-amber-100/10 p-4 rounded-lg border border-amber-100/20">
-                    <p className="text-xs text-amber-200 uppercase font-semibold">Status</p>
-                    <p className="text-lg font-bold mt-1">Rising</p>
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="text-lg font-bold mb-4 text-white">Discography</h4>
-                  <Accordion type="single" collapsible className="space-y-2">
-                    {["Latest Album", "Recent EP", "Greatest Hits"].map((disc, i) => (
-                      <AccordionItem key={i} value={String(i)} className="border border-[#f59e0b]/20">
-                        <AccordionTrigger className="text-sm font-semibold text-[#f59e0b]">{disc}</AccordionTrigger>
-                        <AccordionContent className="text-gray-400">
-                          <ul className="space-y-2">
-                            <li>• 12 tracks</li>
-                            <li>• Available on all platforms</li>
-                            <li>• Streaming & download</li>
-                          </ul>
-                        </AccordionContent>
-                      </AccordionItem>
-                    ))}
-                  </Accordion>
-                </div>
-
-                <div className="space-y-3">
-                  <h4 className="font-bold text-white">Links</h4>
-                  <div className="flex gap-3 flex-wrap">
-                    {["Spotify", "Apple Music", "YouTube", "Instagram"].map((platform, i) => (
-                      <Badge key={i} variant="outline" className="text-xs cursor-pointer hover:bg-[#f59e0b]/20">{platform}</Badge>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
-      </section>
-
-      {/* New Releases */}
-      <section className="py-24 px-6 md:px-16 max-w-7xl mx-auto">
-        <Reveal>
-          <h2 className="text-5xl font-black mb-16 text-center bg-clip-text text-transparent bg-gradient-to-r from-[#f59e0b] to-[#7c3aed]">New Releases</h2>
-        </Reveal>
-
-        <div className="grid md:grid-cols-4 gap-6">
-          {RELEASES.map((release, i) => (
-            <Reveal key={i} delay={i * 0.1}>
-              <motion.div whileHover={{ y: -5 }} className="group">
-                <Card className="border border-[#f59e0b]/20 bg-gradient-to-br from-[#1a1824] to-[#0f0f14] overflow-hidden">
-                  <div className="relative h-40">
-                    <Image src={release.img} alt={release.title} fill className="object-cover group-hover:scale-110 transition-transform duration-300" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                  </div>
-                  <CardContent className="p-6">
-                    <Badge className="mb-3 bg-[#f59e0b] text-[#08080c] text-xs">{release.genre}</Badge>
-                    <h3 className="text-lg font-bold mb-1">{release.title}</h3>
-                    <p className="text-sm text-gray-400 mb-2">{release.artist}</p>
-                    <p className="text-xs text-amber-200">{new Date(release.date).toLocaleDateString()}</p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      {/* Services */}
-      <section className="py-24 px-6 md:px-16 max-w-7xl mx-auto">
-        <Reveal>
-          <h2 className="text-5xl font-black mb-16 text-center bg-clip-text text-transparent bg-gradient-to-r from-[#f59e0b] to-[#7c3aed]">Services</h2>
-        </Reveal>
-
-        <Tabs defaultValue="Digital Distribution" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 gap-2 bg-[#1a1824] p-2 rounded-lg mb-12 border border-[#f59e0b]/20">
-            {SERVICES.map((svc) => (
-              <TabsTrigger
-                key={svc.title}
-                value={svc.title}
-                className="text-xs md:text-sm font-semibold data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#f59e0b] data-[state=active]:to-[#7c3aed] data-[state=active]:text-white"
-              >
-                {svc.title.split(" ")[0]}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-
-          {SERVICES.map((service) => (
-            <TabsContent key={service.title} value={service.title} className="mt-8">
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid md:grid-cols-2 gap-12 items-center">
-                <div>
-                  <h3 className="text-4xl font-black mb-6 bg-clip-text text-transparent bg-gradient-to-r from-[#f59e0b] to-[#7c3aed]">{service.title}</h3>
-                  <p className="text-lg text-gray-400 mb-8">{service.desc}</p>
-                  <ul className="space-y-4 mb-8">
-                    {service.includes.map((item, i) => (
-                      <li key={i} className="flex items-center gap-3">
-                        <span className="w-2 h-2 rounded-full bg-[#f59e0b]" />
-                        <span className="text-gray-300">{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <MagneticBtn className="px-6 py-3 bg-gradient-to-r from-[#f59e0b] to-[#7c3aed] text-white rounded-lg font-bold hover:opacity-90">
-                    Learn More →
-                  </MagneticBtn>
-                </div>
-                <div className="relative h-80 rounded-lg overflow-hidden border border-[#f59e0b]/20">
-                  <Image src={`https://images.unsplash.com/photo-1514525253161-7a46d19cd${Math.random().toString().slice(-2)}?w=600`} alt={service.title} fill className="object-cover" />
-                </div>
-              </motion.div>
-            </TabsContent>
-          ))}
-        </Tabs>
-      </section>
-
-      {/* Stats */}
-      <section className="py-24 px-6 md:px-16 max-w-7xl mx-auto bg-gradient-to-r from-[#f59e0b]/10 to-[#7c3aed]/10 rounded-2xl border border-[#f59e0b]/20">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-12 text-center">
-          {[{ v: 500, l: "Artists" }, { v: 8, l: "Years" }, { v: 2, s: "B", l: "Streams" }, { v: 45, l: "Countries" }].map((stat, i) => (
-            <Reveal key={i}>
-              <div>
-                <p className="text-5xl font-black bg-clip-text text-transparent bg-gradient-to-r from-[#f59e0b] to-[#7c3aed]"><Counter target={stat.v} suffix={stat.s || ""} /></p>
-                <p className="text-gray-400 mt-2">{stat.l}</p>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      {/* Studio Sessions */}
-      <section className="py-24 px-6 md:px-16 max-w-7xl mx-auto">
-        <Reveal>
-          <h2 className="text-5xl font-black mb-16 text-center bg-clip-text text-transparent bg-gradient-to-r from-[#f59e0b] to-[#7c3aed]">Studio Moments</h2>
-        </Reveal>
-
-        <div className="relative overflow-hidden">
+        <div className="relative z-10 text-center px-6 mt-20 max-w-4xl mx-auto flex flex-col items-center">
           <motion.div
-            animate={{ x: [-100, 0] }}
-            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-            className="flex gap-4"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, delay: 0.2 }}
           >
-            {[...Array(2)].map((_, batch) =>
-              RELEASES.map((release, i) => (
-                <motion.div key={`${batch}-${i}`} className="flex-shrink-0 w-64">
-                  <div className="relative h-64 rounded-lg overflow-hidden border border-[#f59e0b]/20 group">
-                    <Image src={release.img} alt={release.title} fill className="object-cover group-hover:scale-110 transition-transform duration-300" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-4">
-                      <div>
-                        <p className="text-white font-bold">{release.title}</p>
-                        <p className="text-sm text-amber-200">{release.artist}</p>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              ))
-            )}
+            <span className="flex items-center justify-center gap-4 text-[#d97736] text-[10px] font-sans uppercase tracking-[0.3em] font-bold mb-6">
+              <div className="w-8 h-[1px] bg-[#d97736]" /> Milano{" "}
+              <div className="w-8 h-[1px] bg-[#d97736]" />
+            </span>
+          </motion.div>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, delay: 0.4 }}
+            className="text-6xl md:text-8xl lg:text-[8rem] font-medium leading-[0.9] mb-8"
+          >
+            Cucina <br />
+            <span className="italic text-[#d97736]">Autentica.</span>
+          </motion.h1>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1, delay: 0.8 }}
+          >
+            <p className="text-lg text-white/70 max-w-xl mx-auto font-sans font-light mb-10">
+              A celebration of Italian culinary heritage. Sourced locally,
+              crafted passionately, and served with familial warmth.
+            </p>
+            <button
+              onClick={() => setReservationOpen(true)}
+              className="px-10 py-4 bg-[#d97736] text-white text-[10px] font-sans uppercase tracking-widest font-bold hover:bg-[#b85b20] transition-colors"
+            >
+              Reserve Your Experience
+            </button>
           </motion.div>
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section className="py-24 px-6 md:px-16 max-w-7xl mx-auto">
-        <Reveal>
-          <h2 className="text-5xl font-black mb-16 text-center bg-clip-text text-transparent bg-gradient-to-r from-[#f59e0b] to-[#7c3aed]">Artist Voices</h2>
-        </Reveal>
+      {/* ==========================================
+          2. THE CHEF'S MESSAGE
+          ========================================== */}
+      <section className="py-24 md:py-32 px-6 bg-[#1c1815] relative z-10 border-b border-white/5">
+        <div className="max-w-[1000px] mx-auto text-center">
+          <Reveal>
+            <ChefHat className="w-12 h-12 text-[#d97736] mx-auto mb-8" />
+            <h2 className="text-3xl md:text-5xl font-light leading-relaxed mb-8">
+              "We don't cook to impress. We cook to{" "}
+              <span className="italic text-[#d97736]">remember</span>. Every
+              recipe carries the history of our ancestors, passed down from
+              hands to hands."
+            </h2>
+            <span className="font-sans text-[11px] uppercase tracking-widest text-white/50 block mb-2">
+              Marco Rossi
+            </span>
+            <span className="font-sans text-[9px] uppercase tracking-[0.2em] text-[#d97736]">
+              Executive Chef
+            </span>
+          </Reveal>
+        </div>
+      </section>
 
-        <Carousel className="w-full">
-          <CarouselContent>
-            {TESTIMONIALS.map((testimonial, i) => (
-              <CarouselItem key={i} className="md:basis-1/2 lg:basis-1/3">
-                <Card className="border border-[#f59e0b]/20 bg-gradient-to-br from-[#1a1824] to-[#0f0f14]">
-                  <CardContent className="p-8">
-                    <div className="flex gap-2 mb-4">
-                      {[...Array(5)].map((_, j) => <span key={j} className="text-[#f59e0b]">★</span>)}
-                    </div>
-                    <p className="text-gray-300 mb-6 italic">{testimonial.text}</p>
-                    <div className="flex items-center gap-4">
-                      <Avatar>
-                        <AvatarImage src={`https://images.unsplash.com/photo-150${i + 1}?w=100`} />
-                        <AvatarFallback>{testimonial.name.slice(0, 2)}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-bold text-white">{testimonial.artist}</p>
-                        <p className="text-xs text-[#f59e0b]">{testimonial.genre}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </CarouselItem>
+      {/* ==========================================
+          3. THE MENU (Interactive Tabs)
+          ========================================== */}
+      <section className="py-24 md:py-32 bg-[#110e0c] relative">
+        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-[#d97736]/5 blur-[120px] rounded-full pointer-events-none" />
+
+        <div className="max-w-[1200px] mx-auto px-6 md:px-12 relative z-10">
+          <Reveal className="text-center mb-16">
+            <span className="font-sans text-[10px] text-[#d97736] uppercase tracking-[0.3em] font-bold block mb-4">
+              La Carta
+            </span>
+            <h2 className="text-4xl md:text-6xl font-medium">Our Menu</h2>
+          </Reveal>
+
+          {/* Category Tabs */}
+          <div className="flex flex-wrap justify-center gap-4 md:gap-8 mb-16 font-sans">
+            {MENU_CATEGORIES.map((cat, i) => (
+              <Reveal key={cat} delay={i * 0.1}>
+                <button
+                  onClick={() => setActiveCategory(cat)}
+                  className={`text-[11px] md:text-xs uppercase tracking-widest pb-2 border-b-2 transition-all ${activeCategory === cat ? "border-[#d97736] text-[#d97736] font-bold" : "border-transparent text-white/50 hover:text-white"}`}
+                >
+                  {cat}
+                </button>
+              </Reveal>
             ))}
-          </CarouselContent>
-          <CarouselPrevious />
-          <CarouselNext />
-        </Carousel>
-      </section>
-
-      {/* Submission Portal */}
-      <section className="py-24 px-6 md:px-16 max-w-3xl mx-auto">
-        <Reveal>
-          <h2 className="text-5xl font-black mb-16 text-center bg-clip-text text-transparent bg-gradient-to-r from-[#f59e0b] to-[#7c3aed]">Submission Portal</h2>
-        </Reveal>
-
-        <Accordion type="single" collapsible className="space-y-4">
-          {[
-            { q: "Who can submit?", a: "Independent artists and producers worldwide. We review all submissions regardless of current following." },
-            { q: "What formats do you accept?", a: "WAV, MP3, FLAC. Minimum 320kbps. Include full track metadata and artist bio." },
-            { q: "What's the timeline?", a: "Submissions reviewed within 4-6 weeks. Accepted artists notified via email." },
-            { q: "Who are your A&R contacts?", a: "Submit through our portal and your music will be reviewed by our entire A&R team. Personalized feedback provided." }
-          ].map((item, i) => (
-            <AccordionItem key={i} value={String(i)} className="border border-[#f59e0b]/20 px-6 rounded-lg bg-[#1a1824]/50">
-              <AccordionTrigger className="font-semibold text-[#f59e0b]">{item.q}</AccordionTrigger>
-              <AccordionContent className="text-gray-300">{item.a}</AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
-      </section>
-
-      {/* FAQ */}
-      <section className="py-24 px-6 md:px-16 max-w-3xl mx-auto">
-        <Reveal>
-          <h2 className="text-5xl font-black mb-16 text-center bg-clip-text text-transparent bg-gradient-to-r from-[#f59e0b] to-[#7c3aed]">FAQ</h2>
-        </Reveal>
-
-        <Accordion type="single" collapsible className="space-y-4">
-          {[
-            { q: "What royalty rate do you offer?", a: "Competitive rates: 20% for digital, 15% for physical, 50% for sync. Higher rates for exclusive deals." },
-            { q: "Do you require exclusivity?", a: "No standard exclusivity requirement. Negotiable on a per-artist basis depending on support level." },
-            { q: "Can I get an advance?", a: "Yes. Advance amounts depend on streaming potential and label support commitment. Discussed during signing." },
-            { q: "What does radio support look like?", a: "We pitch to independent and commercial radio. Campaign strategy developed per release. Track record of success across formats." }
-          ].map((item, i) => (
-            <AccordionItem key={i} value={String(i)} className="border border-[#f59e0b]/20 px-6 rounded-lg bg-[#1a1824]/50">
-              <AccordionTrigger className="font-semibold text-[#f59e0b]">{item.q}</AccordionTrigger>
-              <AccordionContent className="text-gray-300">{item.a}</AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
-      </section>
-
-      {/* CTA */}
-      <section className="py-24 px-6 md:px-16 max-w-7xl mx-auto">
-        <Reveal>
-          <div className="bg-gradient-to-r from-[#f59e0b] via-[#7c3aed] to-white rounded-2xl p-16 text-center">
-            <h2 className="text-4xl font-black mb-6 text-[#08080c]">Ready to Join Dusk Records?</h2>
-            <p className="text-lg opacity-90 mb-8 max-w-2xl mx-auto text-[#08080c]">Submit your music and be part of our growing artist community. 2 billion streams. Countless stories.</p>
-            <MagneticBtn
-              onClick={() => setSubmitOpen(true)}
-              className="px-12 py-4 bg-[#08080c] text-white rounded-lg font-bold cursor-pointer hover:bg-[#1a1824]"
-            >
-              Submit Your Demo
-            </MagneticBtn>
           </div>
-        </Reveal>
 
-        <Dialog open={submitOpen} onOpenChange={setSubmitOpen}>
-          <DialogContent className="max-w-2xl bg-[#1a1824] border-[#f59e0b]/20">
-            <DialogHeader>
-              <DialogTitle className="text-[#f59e0b] text-2xl">Demo Submission</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-6 text-gray-200">
-              <div>
-                <label className="block text-sm font-semibold text-[#f59e0b] mb-2">Artist Name</label>
-                <input type="text" className="w-full px-4 py-2 bg-[#08080c] border border-[#f59e0b]/20 rounded-lg text-white" />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-[#f59e0b] mb-2">Email</label>
-                <input type="email" className="w-full px-4 py-2 bg-[#08080c] border border-[#f59e0b]/20 rounded-lg text-white" />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-[#f59e0b] mb-2">Genre</label>
-                <select className="w-full px-4 py-2 bg-[#08080c] border border-[#f59e0b]/20 rounded-lg text-white">
-                  <option>Synthwave</option>
-                  <option>Hip-Hop</option>
-                  <option>Indie Pop</option>
-                  <option>Electronic</option>
-                  <option>Other</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-[#f59e0b] mb-2">Track URL (Dropbox/Drive)</label>
-                <input type="url" className="w-full px-4 py-2 bg-[#08080c] border border-[#f59e0b]/20 rounded-lg text-white" />
-              </div>
-              <MagneticBtn className="w-full py-3 bg-gradient-to-r from-[#f59e0b] to-[#7c3aed] text-white rounded-lg font-bold hover:opacity-90">
-                Submit Demo
-              </MagneticBtn>
-            </div>
-          </DialogContent>
-        </Dialog>
+          {/* Menu Items List */}
+          <div className="max-w-4xl mx-auto">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeCategory}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.5 }}
+                className="space-y-10"
+              >
+                {MENU_ITEMS[activeCategory as keyof typeof MENU_ITEMS].map(
+                  (item, i) => (
+                    <div
+                      key={i}
+                      className="group flex flex-col sm:flex-row sm:items-end justify-between gap-4"
+                    >
+                      <div className="flex-1 pr-0 sm:pr-8">
+                        <div className="flex items-center gap-4 mb-2">
+                          <h3
+                            className={`text-2xl font-medium ${item.highlight ? "text-[#d97736]" : "text-white"}`}
+                          >
+                            {item.name}
+                          </h3>
+                          {item.highlight && (
+                            <span className="px-2 py-0.5 border border-[#d97736] text-[#d97736] text-[8px] font-sans uppercase tracking-widest rounded-full">
+                              Chef's Pick
+                            </span>
+                          )}
+                        </div>
+                        <p className="font-sans text-sm text-white/60 leading-relaxed max-w-xl">
+                          {item.desc}
+                        </p>
+                      </div>
+
+                      {/* Dotted line for desktop */}
+                      <div className="hidden sm:block flex-1 border-b border-white/10 mb-2 border-dashed group-hover:border-[#d97736]/50 transition-colors" />
+
+                      <span className="text-xl font-medium text-[#d97736] shrink-0 sm:mb-2">
+                        {item.price}
+                      </span>
+                    </div>
+                  ),
+                )}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          <div className="mt-20 text-center flex flex-col items-center">
+            <p className="font-sans text-xs text-white/40 max-w-md mx-auto mb-8">
+              Please inform your server of any allergies or dietary
+              requirements. A 12.5% discretionary service charge will be added
+              to your bill.
+            </p>
+            <button className="flex items-center gap-3 font-sans text-[11px] text-[#d97736] uppercase tracking-widest font-bold hover:text-white transition-colors">
+              Download Full PDF Menu <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
       </section>
+
+      {/* ==========================================
+          4. GALLERY BENTO GRID
+          ========================================== */}
+      <section className="py-24 bg-[#1c1815] px-6">
+        <div className="max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-3 gap-4 h-[800px]">
+          <Reveal className="md:col-span-2 h-full relative group overflow-hidden">
+            <Image
+              src={GALLERY[0]}
+              alt="Restaurant"
+              fill
+              className="object-cover group-hover:scale-105 transition-transform duration-[2s]"
+            />
+            <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors" />
+            <div className="absolute bottom-8 left-8">
+              <span className="text-[#d97736] font-sans text-[10px] uppercase tracking-widest font-bold mb-2 block">
+                Atmosphere
+              </span>
+              <h3 className="text-3xl">The Main Dining Room</h3>
+            </div>
+          </Reveal>
+
+          <div className="grid grid-rows-2 gap-4 h-full">
+            <Reveal delay={0.1} className="relative group overflow-hidden">
+              <Image
+                src={GALLERY[1]}
+                alt="Wine"
+                fill
+                className="object-cover group-hover:scale-105 transition-transform duration-[2s]"
+              />
+              <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors" />
+            </Reveal>
+            <Reveal
+              delay={0.2}
+              className="relative group overflow-hidden bg-[#d97736] p-8 flex flex-col justify-center text-[#1c1815]"
+            >
+              <Wine className="w-12 h-12 mb-6" />
+              <h3 className="text-3xl font-medium mb-4">La Cantina</h3>
+              <p className="font-sans text-sm font-medium opacity-80 leading-relaxed">
+                Explore our curated selection of over 400 labels, focusing
+                heavily on Piedmont and Tuscany's finest estates.
+              </p>
+              <button className="mt-8 self-start w-10 h-10 border border-[#1c1815] rounded-full flex items-center justify-center hover:bg-[#1c1815] hover:text-[#d97736] transition-colors">
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </Reveal>
+          </div>
+        </div>
+      </section>
+
+      {/* ==========================================
+          5. REVIEWS MARQUEE
+          ========================================== */}
+      <section className="py-32 bg-[#110e0c] border-y border-white/5 overflow-hidden">
+        <div className="max-w-[1400px] mx-auto px-6 mb-16 text-center">
+          <span className="font-sans text-[10px] text-[#d97736] uppercase tracking-[0.3em] font-bold block mb-4">
+            Dicono Di Noi
+          </span>
+          <h2 className="text-4xl md:text-5xl font-medium">
+            Guest Experiences
+          </h2>
+        </div>
+
+        <div className="relative flex whitespace-nowrap">
+          <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-[#110e0c] to-transparent z-10" />
+          <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-[#110e0c] to-transparent z-10" />
+
+          <motion.div
+            animate={{ x: ["0%", "-50%"] }}
+            transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
+            className="flex gap-8 px-4"
+          >
+            {[...REVIEWS, ...REVIEWS].map((r, i) => (
+              <div
+                key={i}
+                className="w-[350px] md:w-[400px] bg-[#1c1815] border border-white/5 p-8 whitespace-normal shrink-0"
+              >
+                <div className="flex gap-1 mb-6">
+                  {[...Array(r.rating)].map((_, j) => (
+                    <Star
+                      key={j}
+                      className="w-4 h-4 fill-[#d97736] text-[#d97736]"
+                    />
+                  ))}
+                </div>
+                <p className="text-lg italic text-white/80 leading-relaxed mb-8">
+                  "{r.text}"
+                </p>
+                <div className="font-sans">
+                  <div className="text-sm font-bold text-[#d97736]">
+                    {r.author}
+                  </div>
+                  <div className="text-[10px] uppercase tracking-widest text-white/40">
+                    {r.date}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ==========================================
+          6. MEGA FOOTER & INFO
+          ========================================== */}
+      <footer className="bg-[#1c1815] pt-32 pb-12 px-6 md:px-12 relative overflow-hidden">
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-[#d97736]/5 blur-[150px] rounded-t-full pointer-events-none" />
+
+        <div className="max-w-[1400px] mx-auto relative z-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-24">
+            <div className="lg:col-span-2">
+              <h2 className="text-4xl md:text-6xl font-medium mb-8">
+                Sartoria
+              </h2>
+              <p className="font-sans text-sm text-white/60 max-w-sm leading-relaxed mb-8">
+                Bringing the soul of Italian culinary tradition to the heart of
+                the city. A place for family, friends, and unforgettable
+                flavors.
+              </p>
+              <div className="flex gap-4">
+                <a
+                  href="#"
+                  className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center hover:border-[#d97736] hover:text-[#d97736] transition-colors"
+                >
+                  <Instagram className="w-4 h-4" />
+                </a>
+                <a
+                  href="#"
+                  className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center hover:border-[#d97736] hover:text-[#d97736] transition-colors"
+                >
+                  <Facebook className="w-4 h-4" />
+                </a>
+              </div>
+            </div>
+
+            <div className="font-sans">
+              <h4 className="text-[10px] text-[#d97736] uppercase tracking-[0.2em] font-bold mb-6">
+                Orari di Apertura
+              </h4>
+              <ul className="space-y-4 text-sm text-white/70">
+                <li className="flex justify-between border-b border-white/5 pb-2">
+                  <span>Mon - Thu</span>
+                  <span>18:00 - 23:00</span>
+                </li>
+                <li className="flex justify-between border-b border-white/5 pb-2">
+                  <span>Fri - Sat</span>
+                  <span>18:00 - 00:00</span>
+                </li>
+                <li className="flex justify-between border-b border-white/5 pb-2 text-[#d97736]">
+                  <span>Sunday</span>
+                  <span>12:00 - 16:00 (Pranzo)</span>
+                </li>
+              </ul>
+            </div>
+
+            <div className="font-sans">
+              <h4 className="text-[10px] text-[#d97736] uppercase tracking-[0.2em] font-bold mb-6">
+                Contatti
+              </h4>
+              <ul className="space-y-4 text-sm text-white/70">
+                <li className="flex items-start gap-3">
+                  <MapPin className="w-4 h-4 text-[#d97736] shrink-0 mt-1" />
+                  <span>
+                    Via Brera, 24
+                    <br />
+                    20121 Milano MI
+                    <br />
+                    Italy
+                  </span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Phone className="w-4 h-4 text-[#d97736]" />
+                  <span>+39 02 1234 567</span>
+                </li>
+                <li className="pt-4">
+                  <button
+                    onClick={() => setReservationOpen(true)}
+                    className="w-full py-3 bg-[#d97736] text-white text-[10px] uppercase tracking-widest font-bold hover:bg-[#b85b20] transition-colors"
+                  >
+                    Prenota Subito
+                  </button>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6 pt-8 border-t border-white/10 font-sans text-[10px] text-white/40 uppercase tracking-widest">
+            <span>
+              &copy; {new Date().getFullYear()} Ristorante Sartoria. All rights
+              reserved.
+            </span>
+            <div className="flex gap-6">
+              <a href="#" className="hover:text-white transition-colors">
+                Privacy
+              </a>
+              <a href="#" className="hover:text-white transition-colors">
+                Terms
+              </a>
+              <a href="#" className="hover:text-white transition-colors">
+                Press
+              </a>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
-  )
+  );
 }
