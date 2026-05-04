@@ -1,238 +1,464 @@
 "use client";
 
 import { motion, useScroll, useTransform, useInView, AnimatePresence } from "framer-motion";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
 import Image from "next/image";
-import { ArrowRight, X, Menu, Zap, Shield, Globe, BarChart3, Users, ChevronRight, Play, Check, TrendingUp } from "lucide-react";
+import { 
+  ArrowUpRight, 
+  Menu, 
+  X, 
+  Layers, 
+  ShieldCheck,
+  Plus,
+  Play,
+  ArrowRight,
+  ChevronDown,
+  Monitor,
+  LayoutGrid,
+  Zap,
+  BookOpen,
+  Eye,
+  Maximize2,
+  Minimize2,
+  Box,
+  Settings,
+  Sparkles,
+  Command,
+  Activity,
+  Ruler,
+  Scissors,
+  Shirt
+} from "lucide-react";
 import "../premium.css";
 
-const FEATURES = [
-  { icon: Zap, title: "Instant Automation", desc: "Build complex multi-step workflows without writing a single line of code.", color: "#f59e0b" },
-  { icon: Shield, title: "Enterprise Security", desc: "SOC2 Type II, GDPR compliant. Your data stays in your chosen region.", color: "#3b82f6" },
-  { icon: BarChart3, title: "Unified Analytics", desc: "One dashboard for every tool in your stack. Real decisions, not raw data.", color: "#10b981" },
-  { icon: Globe, title: "1,200+ Integrations", desc: "Connect any tool in minutes. From legacy ERPs to modern SaaS.", color: "#8b5cf6" },
-  { icon: Users, title: "Team Collaboration", desc: "Shared workflows, audit trails, and approval gates for regulated industries.", color: "#ef4444" },
-  { icon: TrendingUp, title: "AI-Powered Insights", desc: "Proactive anomaly detection and optimization recommendations.", color: "#06b6d4" },
+// ─── DATA ──────────────────────────────────────────────────────────────────
+
+const EDITORIAL_MANIFESTS = [
+  { 
+    id: "EDT_01",
+    title: "VOID_COUTURE", 
+    category: "Structural Study",
+    volume: "v9.4_STABLE",
+    img: "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=1200&q=80",
+    desc: "A singular exploration of absolute negative space within textile structures. High-fidelity contrast metrics."
+  },
+  { 
+    id: "EDT_02",
+    title: "NEURAL_WEAVE", 
+    category: "Generative Pattern",
+    volume: "v3.1_ACTIVE",
+    img: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=1200&q=80",
+    desc: "Planetary-scale distributed patterns orchestrated through neural weight synthesis. Zero-latency visual objects."
+  },
+  { 
+    id: "EDT_03",
+    title: "VOID_SHELL", 
+    category: "Avant-Garde",
+    volume: "v9.0_EXPERIMENTAL",
+    img: "https://images.unsplash.com/photo-1509631179647-0177331693ae?w=1200&q=80",
+    desc: "A zero-latency editorial engine built for the real-time synthesis of non-standard fashion objects through radical code injection."
+  }
 ];
 
-const STATS = [
-  { value: 14, suffix: "K+", label: "Companies" },
-  { value: 850, suffix: "M+", label: "Workflows Run/Month" },
-  { value: 99, suffix: ".9%", label: "Uptime SLA" },
-  { value: 1200, suffix: "+", label: "Integrations" },
+const METRICS = [
+  { label: "Precision", val: "99.9%", desc: "Absolute architectural synchronization across all distributed fashion edge nodes." },
+  { label: "Throughput", val: "12 EB/s", desc: "Sustainable visual delivery through our dedicated high-fidelity editorial backbone." },
+  { label: "Reliability", val: "IMMUNE", desc: "Zero-leak editorial logic verified through continuous adversarial stress-testing." }
 ];
 
-const TIERS = [
-  { name: "Starter", price: 29, desc: "For small teams getting started.", features: ["5 users", "10K runs/month", "100 integrations", "Email support"] },
-  { name: "Growth", price: 149, desc: "For scaling operations.", features: ["25 users", "500K runs/month", "All integrations", "Priority support", "Custom domains"], highlight: true },
-  { name: "Enterprise", price: null, desc: "For complex, regulated environments.", features: ["Unlimited users", "Unlimited runs", "Dedicated infra", "SLA guarantee", "SSO & SAML", "Custom contracts"] },
+const CAPABILITIES = [
+  { icon: Scissors, title: "Pattern Forge", desc: "Engineering textile volumes through a lens of mathematical and structural purity." },
+  { icon: Eye, title: "Editorial Logic", desc: "Scaling viewer interactions through distributed focal orchestration and visual synthesis." },
+  { icon: Activity, title: "Pulse Sync", desc: "Synchronizing runway spikes with real-time biological demand cycles for absolute sync." },
+  { icon: Box, title: "Archival Shell", desc: "Leveraging heavy archival textile fabrication for ultra-high fidelity garment protection." }
 ];
 
-const LOGOS = ["Salesforce", "HubSpot", "Slack", "Notion", "Jira", "Linear", "Airtable", "Stripe"];
+// ─── COMPONENTS ──────────────────────────────────────────────────────────────
 
-function Reveal({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) {
+function Reveal({ children, className = "", delay = 0, y = 30 }: { children: React.ReactNode; className?: string; delay?: number; y?: number }) {
   const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-80px" });
+  const inView = useInView(ref, { once: true, margin: "-100px" });
   return (
-    <motion.div ref={ref} initial={{ opacity: 0, y: 28 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.8, delay, ease: [0.25, 0.46, 0.45, 0.94] }} className={className}>
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 1, delay, ease: [0.23, 1, 0.32, 1] }}
+      className={className}
+    >
       {children}
     </motion.div>
   );
 }
 
-function Counter({ target, suffix = "" }: { target: number; suffix?: string }) {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true });
-  const [count, setCount] = useState(0);
-  useEffect(() => {
-    if (!inView) return;
-    let s = 0;
-    const step = target / 60;
-    const timer = setInterval(() => {
-      s += step;
-      if (s >= target) { setCount(target); clearInterval(timer); } else setCount(Math.floor(s));
-    }, 16);
-    return () => clearInterval(timer);
-  }, [inView, target]);
-  return <span ref={ref}>{count}{suffix}</span>;
-}
+// ─── MAIN SPA ────────────────────────────────────────────────────────────────
 
-export default function FlowStreamSPA() {
+export default function FlipStudioSPA() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [activeTier, setActiveTier] = useState(1);
-  const [showDemo, setShowDemo] = useState(false);
+  const [activeEdt, setActiveEdt] = useState(0);
   const { scrollY } = useScroll();
-  const heroY = useTransform(scrollY, [0, 700], [0, 180]);
+  
   const heroOpacity = useTransform(scrollY, [0, 400], [1, 0]);
+  const heroScale = useTransform(scrollY, [0, 800], [1, 1.05]);
 
   return (
-    <div className="premium-theme bg-[#040810] text-white min-h-screen overflow-x-hidden">
-
-      {/* NAV */}
-      <nav className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-8 md:px-16 py-4 bg-[#040810]/90 backdrop-blur-xl border-b border-white/5">
-        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="text-sm font-black uppercase tracking-[0.3em]">FLOW<span className="text-emerald-400">STREAM</span></motion.div>
-        <div className="hidden md:flex items-center gap-10 text-[10px] uppercase tracking-[0.35em] text-white/40">
-          {["Features", "Integrations", "Pricing", "Docs"].map(l => <a key={l} href="#" className="hover:text-white transition-colors">{l}</a>)}
-        </div>
-        <div className="flex items-center gap-3">
-          <a href="#" className="hidden md:block text-[10px] uppercase tracking-widest text-white/50 hover:text-white transition-colors">Sign In</a>
-          <a href="#" className="bg-emerald-500 text-white px-5 py-2 text-[10px] uppercase tracking-widest font-black hover:bg-emerald-400 transition-colors">Start Free</a>
-          <button onClick={() => setMenuOpen(true)} className="md:hidden"><Menu size={20} /></button>
-        </div>
-      </nav>
-
-      <AnimatePresence>
-        {menuOpen && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] bg-[#040810] flex flex-col p-10">
-            <button onClick={() => setMenuOpen(false)} className="self-end mb-12 text-white/40"><X size={24} /></button>
-            <div className="flex flex-col gap-8 text-3xl font-black uppercase">
-              {["Features", "Integrations", "Pricing", "Docs", "Sign In"].map(l => <a key={l} href="#" onClick={() => setMenuOpen(false)}>{l}</a>)}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {showDemo && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] bg-black/90 flex items-center justify-center p-8" onClick={() => setShowDemo(false)}>
-            <div className="w-full max-w-4xl bg-[#0d1120] border border-emerald-500/20 p-8 relative">
-              <p className="text-emerald-400 text-sm uppercase tracking-widest text-center">[ Interactive Demo Placeholder ]</p>
-              <button onClick={() => setShowDemo(false)} className="absolute top-4 right-4 text-white/40 hover:text-white"><X size={18} /></button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* HERO */}
-      <section className="relative min-h-screen flex items-center overflow-hidden">
-        <motion.div style={{ y: heroY }} className="absolute inset-0">
-          <Image src="https://images.unsplash.com/photo-1536523?w=800&q=80" alt="Automation" fill className="object-cover opacity-8" unoptimized />
-        </motion.div>
-        <div className="absolute inset-0" style={{ backgroundImage: "linear-gradient(rgba(16,185,129,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,0.04) 1px, transparent 1px)", backgroundSize: "80px 80px" }} />
-        <div className="absolute top-1/3 right-1/3 w-[500px] h-[500px]" style={{ background: "radial-gradient(circle, rgba(16,185,129,0.08) 0%, transparent 70%)", filter: "blur(80px)" }} />
-        <motion.div style={{ opacity: heroOpacity }} className="relative z-10 px-8 md:px-16 pt-28 max-w-5xl">
-          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }} className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-[9px] uppercase tracking-widest px-4 py-2 mb-8">
-            <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
-            New: AI-Powered Workflow Optimization
-          </motion.div>
-          <motion.h1 initial={{ opacity: 0, y: 80 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4, duration: 1, ease: [0.16, 1, 0.3, 1] }} className="text-6xl md:text-[8vw] font-black uppercase leading-none tracking-tighter mb-6">
-            Automate<br />
-            <span className="text-emerald-400">Everything.</span><br />
-            Grow Fast.
-          </motion.h1>
-          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }} className="text-white/50 text-lg max-w-xl mb-10 leading-relaxed">
-            FlowStream connects your entire stack and automates the work between them. No code, no DevOps, no limits.
-          </motion.p>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.1 }} className="flex flex-col sm:flex-row gap-4">
-            <a href="#" className="bg-emerald-500 text-white px-8 py-4 text-[11px] uppercase tracking-widest font-black hover:bg-emerald-400 transition-colors flex items-center gap-2">
-              Start Free — No CC <ArrowRight size={13} />
-            </a>
-            <button onClick={() => setShowDemo(true)} className="border border-white/10 text-white/60 px-8 py-4 text-[11px] uppercase tracking-widest hover:border-white/30 hover:text-white transition-all flex items-center gap-2">
-              <Play size={12} /> Watch Demo
-            </button>
-          </motion.div>
-          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.4 }} className="text-[9px] text-white/20 mt-4 uppercase tracking-widest">
-            Trusted by 14,000+ companies
-          </motion.p>
-        </motion.div>
-      </section>
-
-      {/* LOGOS */}
-      <div className="overflow-hidden bg-white/2 border-y border-white/5 py-4">
-        <motion.div animate={{ x: [0, -1800] }} transition={{ duration: 20, repeat: Infinity, ease: "linear" }} className="flex gap-16 whitespace-nowrap items-center">
-          {Array(4).fill(LOGOS).flat().map((l, i) => (
-            <span key={i} className="text-[10px] uppercase tracking-widest text-white/20 shrink-0 font-black">{l}</span>
-          ))}
-        </motion.div>
+    <div className="min-h-screen bg-[#fcfcfc] text-[#111] font-mono selection:bg-[#111] selection:text-white">
+      
+      {/* ── EDITORIAL OVERLAY ── */}
+      <div className="fixed inset-0 z-[9999] pointer-events-none opacity-[0.05] bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
+      <div className="fixed inset-0 z-[0] opacity-[0.05] pointer-events-none overflow-hidden">
+        <div className="absolute inset-0" style={{ backgroundImage: "linear-gradient(#111 1px, transparent 1px), linear-gradient(90deg, #111 1px, transparent 1px)", backgroundSize: "80px 80px" }} />
       </div>
 
-      {/* STATS */}
-      <section className="px-8 md:px-16 py-20 grid grid-cols-2 md:grid-cols-4 gap-px bg-white/4">
-        {STATS.map((s, i) => (
-          <Reveal key={s.label} delay={i * 0.1} className="bg-[#040810] p-10 text-center border border-white/4">
-            <div className="text-5xl font-black text-emerald-400 mb-2"><Counter target={s.value} suffix={s.suffix} /></div>
-            <div className="text-[9px] uppercase tracking-[0.3em] text-white/30">{s.label}</div>
+      {/* ── NAVIGATION ── */}
+      <motion.nav 
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 md:px-16 py-10 mix-blend-difference"
+      >
+        <div className="flex items-center gap-4">
+          <BookOpen className="w-10 h-10 text-white" />
+          <span className="text-2xl font-black tracking-tighter uppercase italic text-white">FLIP<span className="text-white/30">//</span>STUDIO</span>
+        </div>
+        
+        <div className="hidden lg:flex items-center gap-16 text-[10px] font-bold uppercase tracking-[0.5em] text-white/40">
+          {["Manifest", "Issue", "Atelier", "Portal"].map(item => (
+            <a key={item} href={`#${item.toLowerCase()}`} className="hover:text-white transition-colors">/{item}</a>
+          ))}
+        </div>
+
+        <button 
+          onClick={() => setMenuOpen(true)}
+          className="px-6 py-2 border border-white/20 bg-white/5 backdrop-blur-md text-[10px] font-black uppercase tracking-widest hover:bg-white/20 transition-all text-white"
+        >
+          [INIT_ISSUE]
+        </button>
+      </motion.nav>
+
+      {/* ── MOBILE MENU ── */}
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 1.1 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.1 }}
+            transition={{ duration: 0.8, ease: [0.19, 1, 0.22, 1] }}
+            className="fixed inset-0 z-[60] bg-[#fcfcfc] text-black p-12 flex flex-col justify-between"
+          >
+            <div className="flex justify-between items-center border-b border-black/5 pb-12">
+              <span className="text-xl font-black uppercase tracking-tighter italic">FLIP//STUDIO</span>
+              <button onClick={() => setMenuOpen(false)} className="w-12 h-12 flex items-center justify-center border border-black/10 rounded-full">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="flex flex-col gap-12 text-center md:text-left">
+              {["EDITORIAL_MANIFEST", "ISSUE_ARCHIVE", "PATTERN_FORGE", "ASSET_ENCLAVE", "SECURE_AUTH"].map((item, i) => (
+                <motion.a 
+                  key={item}
+                  initial={{ opacity: 0, y: 50 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1 + 0.3 }}
+                  href="#"
+                  className="text-5xl md:text-9xl font-black uppercase italic tracking-tighter hover:text-black/40 transition-all leading-none"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  {item}
+                </motion.a>
+              ))}
+            </div>
+            <div className="flex justify-between text-[10px] font-bold uppercase tracking-[0.5em] border-t border-black/5 pt-12 text-black/30">
+              <span>EDITORIAL_PRACTICE</span>
+              <span>EST. 2018 // MILAN</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── HERO SECTION ── */}
+      <section className="relative h-screen flex items-center justify-center overflow-hidden bg-black">
+        <motion.div 
+          style={{ opacity: heroOpacity, scale: heroScale }}
+          className="absolute inset-0 z-0"
+        >
+          <Image 
+            src="https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=1600&q=80" 
+            alt="Hero Editorial" 
+            fill 
+            className="object-cover grayscale brightness-50 contrast-125 opacity-30" 
+            unoptimized 
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#fcfcfc]" />
+        </motion.div>
+
+        <div className="relative z-10 text-center px-6">
+          <Reveal>
+            <span className="text-[10px] font-bold uppercase tracking-[2.5em] text-black/40 mb-12 block italic">Editorial Endurance</span>
           </Reveal>
-        ))}
-      </section>
+          <Reveal delay={0.2}>
+            <h1 className="text-8xl md:text-[18rem] font-black tracking-tighter leading-[0.75] uppercase italic text-black mb-20">
+              RAW <br/> <span className="not-italic text-black/10">FLIP.</span>
+            </h1>
+          </Reveal>
+          <Reveal delay={0.4}>
+            <div className="max-w-2xl mx-auto flex flex-col items-center gap-16 border-t border-black/10 pt-20">
+              <p className="text-black/40 text-xl leading-relaxed font-light uppercase tracking-[0.3em] italic leading-loose text-center">
+                Engineering the ultimate fashion archives through distributed editorial orchestration. High-fidelity systems built for absolute structural precision and narrative clarity.
+              </p>
+              <div className="flex gap-8">
+                <button className="px-16 py-6 bg-black text-white font-black uppercase text-xs tracking-[0.4em] hover:bg-white hover:text-black transition-all">
+                  Manifest_Access
+                </button>
+                <button className="px-16 py-6 border border-black/20 text-black font-black uppercase text-xs tracking-[0.4em] hover:bg-black/5 transition-colors">
+                  Atelier_Dossier
+                </button>
+              </div>
+            </div>
+          </Reveal>
+        </div>
 
-      {/* FEATURES */}
-      <section className="px-8 md:px-16 py-24 bg-[#07101a]">
-        <Reveal className="mb-16">
-          <p className="text-[9px] uppercase tracking-[0.5em] text-white/30 mb-4">The Platform</p>
-          <h2 className="text-5xl md:text-6xl font-black uppercase leading-none tracking-tighter">One Platform.<br />Every Workflow.</h2>
-        </Reveal>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {FEATURES.map((f, i) => (
-            <Reveal key={f.title} delay={i * 0.07} className="group p-7 border border-white/6 hover:border-white/15 transition-all" style={{ background: `linear-gradient(135deg, ${f.color}06, transparent)` }}>
-              <f.icon size={22} className="mb-5" style={{ color: f.color + "80" }} />
-              <h3 className="font-black text-base uppercase tracking-tight mb-2">{f.title}</h3>
-              <p className="text-white/40 text-sm leading-relaxed">{f.desc}</p>
-            </Reveal>
-          ))}
+        <div className="absolute bottom-12 left-12 right-12 flex justify-between items-end text-[10px] font-bold uppercase tracking-[0.5em] text-black/20">
+          <div className="flex flex-col gap-2">
+            <span>MILAN // ATELIER</span>
+            <div className="w-48 h-[1px] bg-black/10" />
+          </div>
+          <div className="flex items-center gap-4 italic uppercase tracking-widest">
+             <span className="animate-pulse">●</span> ISSUE_STATUS: NOMINAL
+          </div>
         </div>
       </section>
 
-      {/* PRICING */}
-      <section className="px-8 md:px-16 py-24">
-        <Reveal className="text-center mb-14">
-          <p className="text-[9px] uppercase tracking-[0.5em] text-white/30 mb-4">Pricing</p>
-          <h2 className="text-5xl md:text-6xl font-black uppercase leading-none tracking-tighter">Scale<br />Without Surprises</h2>
-        </Reveal>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-5xl mx-auto">
-          {TIERS.map((t, i) => (
-            <Reveal key={t.name} delay={i * 0.1}>
-              <motion.div onClick={() => setActiveTier(i)} className={`p-8 border cursor-pointer transition-all ${t.highlight || activeTier === i ? "border-emerald-500/50 bg-emerald-500/5" : "border-white/8 hover:border-emerald-500/25"}`} whileHover={{ y: -4 }}>
-                {t.highlight && <div className="text-[8px] uppercase tracking-widest bg-emerald-500 text-white px-3 py-1 mb-4 w-fit font-black">Most Popular</div>}
-                <p className="text-[10px] uppercase tracking-widest text-white/40 mb-1">{t.name}</p>
-                <p className="text-[9px] text-white/25 mb-3">{t.desc}</p>
-                {t.price !== null ? (
-                  <>
-                    <div className="text-4xl font-black text-emerald-400">${t.price}</div>
-                    <p className="text-[9px] text-white/25 mb-6">/month</p>
-                  </>
-                ) : (
-                  <div className="text-3xl font-black mb-7">Custom</div>
-                )}
-                <ul className="space-y-2.5 mb-8">
-                  {t.features.map(f => (
-                    <li key={f} className="flex items-start gap-2 text-sm text-white/60">
-                      <Check size={12} className="text-emerald-400 mt-0.5 shrink-0" /> {f}
-                    </li>
-                  ))}
-                </ul>
-                <a href="#" className={`block text-center py-3 text-[10px] uppercase tracking-widest border transition-all ${t.highlight ? "bg-emerald-500 text-white border-transparent hover:bg-emerald-400" : "border-white/15 hover:border-emerald-400 hover:text-emerald-400"}`}>
-                  {t.price === null ? "Contact Sales" : "Get Started"}
-                </a>
-              </motion.div>
-            </Reveal>
-          ))}
+      {/* ── METRICS GRID ── */}
+      <section className="py-40 bg-[#fcfcfc]">
+        <div className="max-w-[1600px] mx-auto px-8 md:px-16">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-px bg-black/5 border border-black/5">
+            {METRICS.map((s, i) => (
+              <Reveal key={s.label} delay={i * 0.1} className="bg-white p-24 group hover:bg-black/5 transition-all duration-700">
+                <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-black/30 mb-12 block group-hover:text-black/60">{s.label}</span>
+                <h3 className="text-7xl font-black italic text-black mb-8 group-hover:text-black transition-colors">{s.val}</h3>
+                <p className="text-xs text-black/30 font-light tracking-widest uppercase italic leading-loose group-hover:text-black/60">
+                  {s.desc}
+                </p>
+              </Reveal>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="bg-emerald-500/8 border-y border-emerald-500/15 px-8 md:px-16 py-24 flex flex-col md:flex-row items-center justify-between gap-10">
-        <Reveal>
-          <p className="text-[9px] uppercase tracking-[0.5em] text-emerald-400/50 mb-4">Ready to Automate?</p>
-          <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter leading-none">
-            Start today.<br />
-            <span className="text-emerald-400">Scale tomorrow.</span>
-          </h2>
-        </Reveal>
-        <Reveal delay={0.2}>
-          <a href="#" className="bg-emerald-500 text-white px-10 py-4 text-[11px] uppercase tracking-widest font-black hover:bg-emerald-400 transition-colors flex items-center gap-2 shrink-0">
-            Start Free Trial <ArrowRight size={13} />
-          </a>
-        </Reveal>
+      {/* EDITORIAL SHOWCASE ── */}
+      <section className="py-40 bg-white relative overflow-hidden">
+        <div className="max-w-[1600px] mx-auto px-8 md:px-16">
+          <Reveal className="mb-32">
+             <div className="flex flex-col lg:flex-row justify-between items-end gap-12 border-b border-black/10 pb-12">
+               <h2 className="text-7xl md:text-[10rem] font-black italic tracking-tighter leading-[0.8] uppercase text-black">
+                 Issue <br/> <span className="text-black/20 not-italic">Archive.</span>
+               </h2>
+               <div className="text-right">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-black/20 mb-4 block italic">Manifest_Sequence_2024</span>
+                  <div className="flex gap-4">
+                    {EDITORIAL_MANIFESTS.map((_, i) => (
+                      <button 
+                        key={i} 
+                        onClick={() => setActiveEdt(i)}
+                        className={`w-16 h-1 transition-all ${activeEdt === i ? "bg-black w-32" : "bg-black/10"}`}
+                      />
+                    ))}
+                  </div>
+               </div>
+             </div>
+          </Reveal>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-24 items-center">
+            <div className="lg:col-span-8 relative aspect-video rounded-sm overflow-hidden border border-black/5 group bg-[#ddd]">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeEdt}
+                  initial={{ opacity: 0, scale: 1.1 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 1.1 }}
+                  transition={{ duration: 1, ease: [0.19, 1, 0.22, 1] }}
+                  className="absolute inset-0"
+                >
+                  <Image src={EDITORIAL_MANIFESTS[activeEdt].img} alt={EDITORIAL_MANIFESTS[activeEdt].title} fill className="object-cover grayscale brightness-75 group-hover:grayscale-0 transition-all duration-[2s]" unoptimized />
+                  <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-80" />
+                </motion.div>
+              </AnimatePresence>
+              <div className="absolute bottom-12 left-12 flex flex-col gap-4">
+                 <span className="text-[10px] font-black uppercase tracking-widest bg-black/80 backdrop-blur-md text-white px-6 py-2 border border-white/5">{EDITORIAL_MANIFESTS[activeEdt].volume} // ADVISORY</span>
+              </div>
+            </div>
+
+            <div className="lg:col-span-4 space-y-12">
+               <motion.div
+                  key={activeEdt}
+                  initial={{ opacity: 0, x: 50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.6 }}
+                  className="space-y-12"
+               >
+                 <span className="text-[10px] font-black uppercase tracking-[0.4em] text-black/60">{EDITORIAL_MANIFESTS[activeEdt].id} // ISSUE</span>
+                 <h3 className="text-6xl md:text-8xl font-black italic uppercase text-black tracking-tighter">{EDITORIAL_MANIFESTS[activeEdt].title}</h3>
+                 <div className="space-y-6 border-y border-black/10 py-12">
+                    <div className="flex justify-between items-center">
+                       <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-black/30">Category</span>
+                       <span className="text-sm font-black text-black uppercase tracking-widest">{EDITORIAL_MANIFESTS[activeEdt].category}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                       <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-black/30">Editorial_Status</span>
+                       <span className="text-sm font-black text-black uppercase tracking-widest italic">Stable_Optical</span>
+                    </div>
+                 </div>
+                 <p className="text-black/30 text-lg font-light italic leading-loose uppercase tracking-wide">
+                   {EDITORIAL_MANIFESTS[activeEdt].desc}
+                 </p>
+                 <button className="flex items-center gap-6 group">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.8em] text-black">Request_Manifest</span>
+                    <div className="w-16 h-16 border border-black/10 rounded-full flex items-center justify-center group-hover:bg-black transition-all">
+                       <ArrowUpRight className="w-6 h-6 text-black group-hover:text-white transition-colors" />
+                    </div>
+                 </button>
+               </motion.div>
+            </div>
+          </div>
+        </div>
       </section>
 
-      {/* FOOTER */}
-      <footer className="px-8 md:px-16 py-12 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border-t border-white/5">
-        <p className="font-black text-sm uppercase tracking-[0.3em]">FLOW<span className="text-emerald-400">STREAM</span></p>
-        <div className="flex gap-8 text-[9px] uppercase tracking-widest text-white/30">
-          {["Features", "Docs", "Status", "Privacy"].map(l => <a key={l} href="#" className="hover:text-white transition-colors">{l}</a>)}
+      {/* ── CAPABILITIES ── */}
+      <section className="py-40 bg-[#fcfcfc] border-y border-black/10">
+        <div className="max-w-[1600px] mx-auto px-8 md:px-16">
+          <Reveal className="mb-32 text-center">
+             <span className="text-[10px] font-bold uppercase tracking-[1em] text-black/40 mb-8 block italic">Operational Scope</span>
+             <h2 className="text-7xl md:text-[10rem] font-black italic tracking-tighter leading-[0.8] uppercase text-black">
+                Technical <br/> <span className="text-black/20 not-italic">Expertise.</span>
+             </h2>
+          </Reveal>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px bg-black/10 border border-black/10">
+            {CAPABILITIES.map((item, i) => (
+              <Reveal key={item.title} delay={i * 0.1} className="bg-white p-12 group hover:bg-black/5 transition-all duration-700">
+                 <item.icon className="w-12 h-12 text-black/20 group-hover:text-black transition-colors mb-8" />
+                 <h3 className="text-2xl font-black italic uppercase text-black mb-6">{item.title}</h3>
+                 <p className="text-xs text-black/40 group-hover:text-black font-light tracking-widest uppercase italic leading-loose transition-colors">
+                   {item.desc}
+                 </p>
+              </Reveal>
+            ))}
+          </div>
         </div>
-        <p className="text-[9px] text-white/20 uppercase">© 2026 FlowStream Inc.</p>
+      </section>
+
+      {/* ATELIER / LABORATORY ── */}
+      <section className="py-40 bg-white overflow-hidden">
+        <div className="max-w-[1600px] mx-auto px-8 md:px-16 grid grid-cols-1 lg:grid-cols-2 gap-32 items-center">
+          <Reveal>
+             <div className="relative aspect-square bg-[#fcfcfc] border border-black/5 p-20 flex flex-col justify-center group overflow-hidden">
+                <div className="absolute top-0 right-0 p-12">
+                   <Box className="w-16 h-16 text-black/5 group-hover:text-black/10 transition-colors" />
+                </div>
+                <Sparkles className="w-16 h-16 text-black mb-12" />
+                <h3 className="text-5xl font-black italic uppercase text-black mb-8">Editorial <br/> <span className="text-black/20 not-italic">Atelier.</span></h3>
+                <p className="text-black/40 text-lg leading-relaxed mb-12 font-light uppercase tracking-wide italic leading-loose">
+                  Our Milan atelier leverages heavy archival textile fabrication and distributed visual orchestration for the production of non-standard fashion artifacts. We push the tectonic limits of spatial editorial.
+                </p>
+                <div className="flex gap-12 text-[10px] font-bold uppercase tracking-[0.5em] text-black/30">
+                   <span>[01] TEXTILE_BOND</span>
+                   <span>[02] PATTERN_SYNTHESIS</span>
+                </div>
+             </div>
+          </Reveal>
+          <div className="space-y-24">
+             <Reveal delay={0.2}>
+                <span className="text-[10px] font-bold uppercase tracking-[1em] text-black/40 mb-8 block italic">Curation_Sequence</span>
+                <h2 className="text-6xl md:text-8xl font-black italic tracking-tighter leading-none uppercase text-black">Visual <br/> <span className="text-black/20 not-italic">Manifesto.</span></h2>
+             </Reveal>
+             <div className="space-y-12">
+                {[
+                  { n: "01", t: "Sectional Audit", d: "Rigorous cutting of complex fashion volumes to reveal interior structural potential." },
+                  { n: "02", t: "Textile Stress", d: "Simulation of high-fidelity visual performance under extreme archival loads." },
+                  { n: "03", t: "Archive Aging", d: "Analyzing the interaction of archival textile models with digital weathering." }
+                ].map((step, i) => (
+                  <Reveal key={step.n} delay={i * 0.1 + 0.3} className="flex gap-12 group border-l border-black/10 pl-8 hover:border-black transition-colors">
+                    <span className="text-4xl font-black italic text-black/10 group-hover:text-black transition-colors">{step.n}</span>
+                    <div>
+                      <h4 className="text-xl font-black uppercase italic text-white mb-2">{step.t}</h4>
+                      <p className="text-xs text-black/40 font-light tracking-widest uppercase italic leading-loose">{step.d}</p>
+                    </div>
+                  </Reveal>
+                ))}
+             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA / INQUIRY ── */}
+      <section className="py-40 bg-[#fcfcfc] relative">
+         <div className="max-w-[1600px] mx-auto px-8 md:px-16">
+            <div className="bg-black text-white p-24 lg:p-40 relative overflow-hidden flex flex-col items-center text-center group">
+               <div className="absolute inset-0 opacity-10 grayscale brightness-110 group-hover:opacity-20 transition-opacity">
+                  <Image src="https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=1600&q=80" alt="CTA Editorial" fill className="object-cover" />
+               </div>
+               <Reveal>
+                  <span className="text-[10px] font-bold uppercase tracking-[1em] text-white/50 mb-12 block italic">Commission Initiation</span>
+                  <h2 className="text-7xl md:text-[12rem] font-black italic tracking-tighter leading-[0.8] uppercase mb-16">
+                     Own <br/> <span className="text-white/30 not-italic">The Issue.</span>
+                  </h2>
+                  <div className="flex flex-wrap justify-center gap-12 relative z-10">
+                     <button className="px-20 py-8 bg-white text-black font-black uppercase text-sm tracking-[0.5em] hover:italic transition-all">
+                        Request_Selection
+                     </button>
+                     <button className="px-20 py-8 border border-white/20 text-white font-black uppercase text-sm tracking-[0.5em] hover:bg-white/5 transition-all">
+                        Atelier_Dossier
+                     </button>
+                  </div>
+               </Reveal>
+            </div>
+         </div>
+      </section>
+
+      {/* ── FOOTER ── */}
+      <footer className="bg-white pt-40 pb-20 px-8 md:px-16 border-t border-black/10">
+         <div className="max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-32 mb-40">
+            <div className="lg:col-span-6">
+               <div className="flex items-center gap-4 mb-12">
+                 <BookOpen className="w-10 h-10 text-black" />
+                 <span className="text-3xl font-black tracking-tighter uppercase italic text-black">FLIP<span className="text-black/30">//</span>STUDIO</span>
+               </div>
+               <p className="text-black/40 text-sm font-light leading-relaxed uppercase tracking-[0.3em] mb-12 italic max-w-md">
+                 Securing the future of fashion objects through high-fidelity orchestration and radical visual clarity.
+               </p>
+               <div className="flex gap-12">
+                 {["TERMINAL", "EDITORIAL", "FORGE", "ALPHA"].map(s => (
+                   <a key={s} href="#" className="text-[10px] font-bold hover:text-black text-black/30 transition-colors tracking-[0.5em]">[{s}]</a>
+                 ))}
+               </div>
+            </div>
+            
+            <div className="lg:col-span-2">
+               <h4 className="text-[10px] font-bold uppercase tracking-[0.5em] text-black/40 mb-12">Systems</h4>
+               <ul className="space-y-6 text-xs font-bold uppercase tracking-[0.4em]">
+                 {["Archives", "Telemetry", "Shell", "Journal"].map(item => (
+                   <li key={item}><a href="#" className="hover:text-black transition-colors">{item}</a></li>
+                 ))}
+               </ul>
+            </div>
+
+            <div className="lg:col-span-4">
+               <h4 className="text-[10px] font-bold uppercase tracking-[0.5em] text-black/40 mb-12">Partner Inquiry</h4>
+               <p className="text-sm text-black/40 font-light mb-12 italic uppercase tracking-[0.2em] leading-loose">
+                 For new commissions, fashion studies, or distribution enclaves, contact our primary command center in Milan.
+               </p>
+               <a href="mailto:ops@flip-studio.it" className="text-3xl font-black italic hover:text-black transition-colors block border-b border-black/10 pb-8 uppercase tracking-tighter">
+                  ops@flip-studio.it
+               </a>
+            </div>
+         </div>
+
+         <div className="max-w-[1600px] mx-auto flex flex-col md:row items-center justify-between gap-12 text-[9px] font-bold uppercase tracking-[0.8em] text-black/20 border-t border-black/5 pt-20">
+            <p>© 2024 FLIP STUDIO ATELIER AG. ALL RIGHTS RESERVED. MILAN // GLOBAL.</p>
+            <div className="flex gap-16">
+               <a href="#" className="hover:text-black transition-colors">[Editorial_Vault]</a>
+               <a href="#" className="hover:text-white transition-colors">[Terms_of_Service]</a>
+            </div>
+         </div>
       </footer>
     </div>
   );

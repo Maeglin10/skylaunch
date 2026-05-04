@@ -1,253 +1,462 @@
 "use client";
 
 import { motion, useScroll, useTransform, useInView, AnimatePresence } from "framer-motion";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
 import Image from "next/image";
-import { ArrowRight, X, Menu, ChevronDown, ArrowUpRight, Award, MapPin, Play } from "lucide-react";
+import { 
+  ArrowUpRight, 
+  Menu, 
+  X, 
+  Layers, 
+  ShieldCheck,
+  Plus,
+  Play,
+  ArrowRight,
+  ChevronDown,
+  Monitor,
+  LayoutGrid,
+  Building2,
+  Maximize2,
+  Minimize2,
+  Box,
+  Compass,
+  Zap,
+  Activity,
+  Shield,
+  Search,
+  Hammer
+} from "lucide-react";
 import "../premium.css";
 
+// ─── DATA ──────────────────────────────────────────────────────────────────
+
 const PROJECTS = [
-  { id: 1, title: "VOID TOWER", location: "Oslo, NO", year: "2026", type: "Mixed Use", awards: 2, img: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1200&auto=format&fit=crop", hero: true, desc: "72 floors. Zero extrusion from the silhouette. Every service element folded into the structural logic." },
-  { id: 2, title: "THERMAL WING", location: "Lyon, FR", year: "2025", type: "Cultural", awards: 1, img: "https://images.unsplash.com/photo-1541829070764-84a7d30dee62?q=80&w=1000&auto=format&fit=crop", hero: false, desc: "An arts center whose envelope harvests geothermal energy and redistributes it as radiant heat." },
-  { id: 3, title: "MEMBRANE BRIDGE", location: "Copenhagen, DK", year: "2025", type: "Infrastructure", awards: 3, img: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?q=80&w=1000&auto=format&fit=crop", hero: false, desc: "A pedestrian crossing that flexes under load, actively reducing wind-induced vibration." },
-  { id: 4, title: "STRATA CAMPUS", location: "Zurich, CH", year: "2024", type: "Education", awards: 0, img: "https://images.unsplash.com/photo-1490750967868-88df5691cc5c?q=80&w=1000&auto=format&fit=crop", hero: false, desc: "A university research facility organized around a central void — social infrastructure made spatial." },
+  { 
+    id: "ARCH_01",
+    title: "VOID_TOWER", 
+    category: "Mixed Use",
+    location: "Oslo, NO",
+    img: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1200&q=80",
+    desc: "A singular monolithic volume designed for sub-millisecond structural recognition. Every service element is folded into the brutalist logic."
+  },
+  { 
+    id: "ARCH_02",
+    title: "THERMAL_WING", 
+    category: "Cultural",
+    location: "Lyon, FR",
+    img: "https://images.unsplash.com/photo-1541829070764-84a7d30dee62?w=1200&q=80",
+    desc: "An arts center whose envelope harvests geothermal energy and redistributes it as radiant heat through a network of structural voids."
+  },
+  { 
+    id: "ARCH_03",
+    title: "MEMBRANE_HUB", 
+    category: "Infrastructure",
+    location: "Copenhagen, DK",
+    img: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200&q=80",
+    desc: "A pedestrian crossing that flexes under load, actively reducing wind-induced vibration through distributed kinetic logic."
+  }
 ];
 
-const FACTS = [
-  { value: 31, suffix: "", label: "Built Projects" },
-  { value: 14, suffix: "", label: "Awards" },
-  { value: 7, suffix: "", label: "Countries" },
-  { value: 2026, suffix: "", label: "Active Since (est.)" },
+const METRICS = [
+  { label: "Built_Projects", val: "31", desc: "Monolithic structures delivered across global urban enclaves with absolute visual integrity." },
+  { label: "Structural_Yield", val: "94.2%", desc: "Average material efficiency yield across all active architectural manifests." },
+  { label: "Awards_Won", val: "14", desc: "Global recognition for our contributions to structural brutalism and logic." }
 ];
 
-const PROCESS = [
-  { step: "01", title: "Brief & Site", desc: "We read sites like texts — their geology, history, light, and social context all inform the first sketch." },
-  { step: "02", title: "Structural Concept", desc: "Structure and program are designed simultaneously. We do not add a structure to a floor plan." },
-  { step: "03", title: "Environmental Logic", desc: "Every project targets passive energy performance before active systems are considered." },
-  { step: "04", title: "Material Selection", desc: "Material honesty: structure visible, services legible, joints celebrated, not hidden." },
+const CAPABILITIES = [
+  { icon: Building2, title: "Monolith Forge", desc: "Engineering architectural volumes through a lens of mathematical and structural purity." },
+  { icon: Compass, title: "Spatial Sync", desc: "Scaling urban environments through distributed tectonic orchestration." },
+  { icon: Hammer, title: "Logic Build", desc: "Synchronizing construction spikes with real-time biological demand cycles." },
+  { icon: Shield, title: "Void Shell", desc: "Leveraging heavy concrete fabrication for ultra-high fidelity protection." }
 ];
 
-function Reveal({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) {
+// ─── COMPONENTS ──────────────────────────────────────────────────────────────
+
+function Reveal({ children, className = "", delay = 0, y = 40 }: { children: React.ReactNode; className?: string; delay?: number; y?: number }) {
   const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-80px" });
+  const inView = useInView(ref, { once: true, margin: "-100px" });
   return (
-    <motion.div ref={ref} initial={{ opacity: 0, y: 32 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.85, delay, ease: [0.25, 0.46, 0.45, 0.94] }} className={className}>
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 1.2, delay, ease: [0.19, 1, 0.22, 1] }}
+      className={className}
+    >
       {children}
     </motion.div>
   );
 }
 
-function Counter({ target, suffix = "" }: { target: number; suffix?: string }) {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true });
-  const [count, setCount] = useState(0);
-  useEffect(() => {
-    if (!inView) return;
-    let s = 0;
-    const step = target / 55;
-    const timer = setInterval(() => {
-      s += step;
-      if (s >= target) { setCount(target); clearInterval(timer); } else setCount(Math.floor(s));
-    }, 16);
-    return () => clearInterval(timer);
-  }, [inView, target]);
-  return <span ref={ref}>{count}{suffix}</span>;
-}
+// ─── MAIN SPA ────────────────────────────────────────────────────────────────
 
-export default function ArchitectureStory() {
+export default function AetherArchSPA() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [activeProject, setActiveProject] = useState<number | null>(null);
+  const [activeProj, setActiveProj] = useState(0);
   const { scrollY } = useScroll();
-  const heroY = useTransform(scrollY, [0, 700], [0, 220]);
-  const heroScale = useTransform(scrollY, [0, 700], [1, 1.1]);
-  const heroOpacity = useTransform(scrollY, [0, 500], [1, 0]);
+  
+  const heroOpacity = useTransform(scrollY, [0, 400], [1, 0]);
+  const heroScale = useTransform(scrollY, [0, 800], [1, 1.1]);
+  const blueprintY = useTransform(scrollY, [0, 1000], [0, 100]);
 
   return (
-    <div className="premium-theme bg-[#f6f4f0] text-[#111] min-h-screen overflow-x-hidden">
+    <div className="min-h-screen bg-[#f2f2f2] text-[#111] font-mono selection:bg-[#111] selection:text-white">
+      
+      {/* ── BLUEPRINT OVERLAY ── */}
+      <div className="fixed inset-0 z-[9999] pointer-events-none opacity-[0.05] bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
+      <div className="fixed inset-0 z-[0] opacity-[0.1] pointer-events-none">
+        <div className="absolute inset-0" style={{ backgroundImage: "linear-gradient(#111 1px, transparent 1px), linear-gradient(90deg, #111 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
+      </div>
 
-      {/* NAV */}
-      <nav className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-8 md:px-16 py-6 bg-[#f6f4f0]/85 backdrop-blur-xl border-b border-[#111]/6">
-        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="text-sm font-black uppercase tracking-[0.35em]">STRATUM</motion.div>
-        <div className="hidden md:flex items-center gap-10 text-[10px] uppercase tracking-[0.35em] opacity-40">
-          {["Projects", "Practice", "Process", "Contact"].map(l => (
-            <a key={l} href="#" className="hover:opacity-100 transition-opacity">{l}</a>
+      {/* ── NAVIGATION ── */}
+      <motion.nav 
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 md:px-16 py-10 mix-blend-difference"
+      >
+        <div className="flex items-center gap-4">
+          <Building2 className="w-10 h-10 text-white" />
+          <span className="text-2xl font-black tracking-tighter uppercase italic text-white">AETHER<span className="text-white/30">//</span>ARCH</span>
+        </div>
+        
+        <div className="hidden lg:flex items-center gap-16 text-[10px] font-bold uppercase tracking-[0.5em] text-white/40">
+          {["Manifest", "Projects", "Atelier", "Archive"].map(item => (
+            <a key={item} href={`#${item.toLowerCase()}`} className="hover:text-white transition-colors">/{item}</a>
           ))}
         </div>
-        <button onClick={() => setMenuOpen(true)} className="md:hidden"><Menu size={20} /></button>
-      </nav>
 
+        <button 
+          onClick={() => setMenuOpen(true)}
+          className="w-16 h-16 flex items-center justify-center border border-white/10 group bg-white/5 backdrop-blur-md"
+        >
+          <Menu className="w-6 h-6 text-white group-hover:scale-x-50 transition-transform" />
+        </button>
+      </motion.nav>
+
+      {/* ── MOBILE MENU ── */}
       <AnimatePresence>
         {menuOpen && (
-          <motion.div initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ type: "tween", duration: 0.3 }} className="fixed inset-0 z-[100] bg-[#111] text-white flex flex-col p-10">
-            <button onClick={() => setMenuOpen(false)} className="self-end mb-12"><X size={24} /></button>
-            <div className="flex flex-col gap-8 text-4xl font-black uppercase">
-              {["Projects", "Practice", "Process", "Contact"].map(l => <a key={l} href="#" onClick={() => setMenuOpen(false)}>{l}</a>)}
+          <motion.div 
+            initial={{ opacity: 0, scale: 1.1 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.1 }}
+            transition={{ duration: 0.8, ease: [0.19, 1, 0.22, 1] }}
+            className="fixed inset-0 z-[60] bg-[#f2f2f2] text-black p-12 flex flex-col justify-between"
+          >
+            <div className="flex justify-between items-center border-b border-black/5 pb-12">
+              <span className="text-xl font-black uppercase tracking-tighter italic">AETHER//ARCH</span>
+              <button onClick={() => setMenuOpen(false)} className="w-12 h-12 flex items-center justify-center border border-black/10 rounded-full">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="flex flex-col gap-12 text-center md:text-left">
+              {["STRUCTURAL_MANIFEST", "PROJECT_ARCHIVE", "BRUTALIST_FORGE", "URBAN_ENCLAVE", "SECURE_AUTH"].map((item, i) => (
+                <motion.a 
+                  key={item}
+                  initial={{ opacity: 0, y: 50 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1 + 0.3 }}
+                  href="#"
+                  className="text-6xl md:text-9xl font-black uppercase italic tracking-tighter hover:text-black/40 transition-all leading-none"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  {item}
+                </motion.a>
+              ))}
+            </div>
+            <div className="flex justify-between text-[10px] font-bold uppercase tracking-[0.5em] border-t border-black/5 pt-12">
+              <span>ARCHITECTURAL_PRACTICE</span>
+              <span>EST. 2012 // OSLO</span>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* HERO — Full screen feature project */}
-      <section className="relative h-screen flex items-end overflow-hidden">
-        <motion.div style={{ y: heroY, scale: heroScale }} className="absolute inset-0">
-          <Image src={PROJECTS[0].img} alt={PROJECTS[0].title} fill className="object-cover opacity-65" unoptimized />
+      {/* ── HERO SECTION ── */}
+      <section className="relative h-screen flex items-center justify-center overflow-hidden bg-black">
+        <motion.div 
+          style={{ opacity: heroOpacity, scale: heroScale, y: blueprintY }}
+          className="absolute inset-0 z-0"
+        >
+          <Image 
+            src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1600&q=80" 
+            alt="Hero Arch" 
+            fill 
+            className="object-cover grayscale brightness-50 contrast-125 opacity-30" 
+            unoptimized 
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#f2f2f2]" />
         </motion.div>
-        <div className="absolute inset-0 bg-gradient-to-t from-[#111]/90 via-[#111]/10 to-transparent" />
-        <motion.div style={{ opacity: heroOpacity }} className="relative z-10 px-8 md:px-16 pb-20 w-full">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="flex items-center gap-3 text-white/40 mb-6 text-[9px] uppercase tracking-widest">
-            <span>{PROJECTS[0].type}</span>
-            <span>·</span>
-            <MapPin size={9} />
-            <span>{PROJECTS[0].location}</span>
-            <span>·</span>
-            <span>{PROJECTS[0].year}</span>
-          </motion.div>
-          <motion.h1 initial={{ opacity: 0, y: 80 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, duration: 1, ease: [0.16, 1, 0.3, 1] }} className="text-white text-[9vw] md:text-[6vw] font-black uppercase leading-none tracking-tighter mb-6">
-            {PROJECTS[0].title}
-          </motion.h1>
-          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9 }} className="text-white/50 max-w-md text-sm leading-relaxed mb-8">{PROJECTS[0].desc}</motion.p>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.1 }} className="flex items-center gap-6">
-            <a href="#" className="text-white border border-white/25 px-8 py-3 text-[10px] uppercase tracking-widest hover:bg-white hover:text-[#111] transition-all">View Project</a>
-            {PROJECTS[0].awards > 0 && (
-              <div className="flex items-center gap-2 text-yellow-400 text-[9px] uppercase tracking-widest">
-                <Award size={12} /> {PROJECTS[0].awards} Award{PROJECTS[0].awards > 1 ? "s" : ""}
-              </div>
-            )}
-          </motion.div>
-        </motion.div>
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
-          <ChevronDown size={16} className="text-white/30" />
-        </div>
-      </section>
 
-      {/* MARQUEE */}
-      <div className="overflow-hidden bg-[#111] py-4">
-        <motion.div animate={{ x: [0, -2600] }} transition={{ duration: 28, repeat: Infinity, ease: "linear" }} className="flex gap-12 whitespace-nowrap">
-          {Array(18).fill(null).map((_, i) => (
-            <span key={i} className="text-[10px] uppercase tracking-[0.4em] text-white/20 shrink-0">Structural Design · Environmental Logic · Material Honesty · Built Architecture ·</span>
-          ))}
-        </motion.div>
-      </div>
-
-      {/* STATS */}
-      <section className="px-8 md:px-16 py-20 grid grid-cols-2 md:grid-cols-4 gap-8">
-        {FACTS.map((f, i) => (
-          <Reveal key={f.label} delay={i * 0.1} className="text-center">
-            <div className="text-6xl font-black tracking-tighter mb-2"><Counter target={f.value} suffix={f.suffix} /></div>
-            <div className="text-[10px] uppercase tracking-[0.3em] opacity-40">{f.label}</div>
+        <div className="relative z-10 text-center px-6">
+          <Reveal>
+            <span className="text-[10px] font-bold uppercase tracking-[2.5em] text-black/40 mb-12 block">Structural Endurance</span>
           </Reveal>
-        ))}
+          <Reveal delay={0.2}>
+            <h1 className="text-8xl md:text-[18rem] font-black tracking-tighter leading-[0.75] uppercase italic text-black mb-20">
+              PURE <br/> <span className="not-italic text-black/10">VOID.</span>
+            </h1>
+          </Reveal>
+          <Reveal delay={0.4}>
+            <div className="max-w-2xl mx-auto flex flex-col items-center gap-16 border-t border-black/10 pt-20">
+              <p className="text-black/40 text-xl leading-relaxed font-light uppercase tracking-[0.3em] italic leading-loose text-center">
+                Refining the urban environment through radical structural reduction. Where brutalist forge meets domestic synthesis.
+              </p>
+              <div className="flex gap-8">
+                <button className="px-16 py-6 bg-black text-white font-black uppercase text-xs tracking-[0.4em] hover:bg-white hover:text-black transition-all">
+                  Manifest_Access
+                </button>
+                <button className="px-16 py-6 border border-black/20 text-black font-black uppercase text-xs tracking-[0.4em] hover:bg-black/5 transition-colors">
+                  Atelier_Dossier
+                </button>
+              </div>
+            </div>
+          </Reveal>
+        </div>
+
+        <div className="absolute bottom-12 left-12 right-12 flex justify-between items-end text-[10px] font-bold uppercase tracking-[0.5em] text-black/20">
+          <div className="flex flex-col gap-2">
+            <span>OSLO // ATELIER</span>
+            <div className="w-48 h-[1px] bg-black/10" />
+          </div>
+          <div className="flex items-center gap-4 italic uppercase tracking-widest">
+             <span className="animate-pulse">●</span> FORGE_STATUS: CASTING
+          </div>
+        </div>
       </section>
 
-      {/* PROJECTS GRID */}
-      <section className="px-8 md:px-16 py-16">
-        <Reveal className="mb-10">
-          <p className="text-[10px] uppercase tracking-[0.4em] opacity-40 mb-4">Selected Work</p>
-          <h2 className="text-5xl md:text-7xl font-black uppercase leading-none tracking-tighter">Projects</h2>
-        </Reveal>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {PROJECTS.map((p, i) => (
-            <Reveal key={p.id} delay={i * 0.08}>
-              <motion.div className="group relative overflow-hidden cursor-pointer" style={{ height: i === 0 ? "65vh" : "45vh" }} onClick={() => setActiveProject(p.id)} whileHover={{ scale: 1.01 }}>
-                <Image src={p.img} alt={p.title} fill className="object-cover opacity-75 group-hover:opacity-90 group-hover:scale-105 transition-all duration-700" unoptimized />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#111]/80 via-transparent to-transparent" />
-                <div className="absolute inset-0 p-6 flex flex-col justify-end">
-                  <div className="flex items-center gap-2 text-[9px] uppercase tracking-widest text-white/50 mb-2">
-                    <span>{p.type}</span>
-                    <span>·</span>
-                    <MapPin size={8} />
-                    <span>{p.location}</span>
-                    <span>·</span>
-                    <span>{p.year}</span>
+      {/* ── SPECS GRID ── */}
+      <section className="py-40 bg-[#f2f2f2]">
+        <div className="max-w-[1600px] mx-auto px-8 md:px-16">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-px bg-black/5 border border-black/5">
+            {METRICS.map((s, i) => (
+              <Reveal key={s.label} delay={i * 0.1} className="bg-white p-24 group hover:bg-black/5 transition-all duration-700">
+                <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-black/30 mb-12 block group-hover:text-black/60">{s.label}</span>
+                <h3 className="text-7xl font-black italic text-black mb-8 group-hover:text-black transition-colors">{s.val}</h3>
+                <p className="text-xs text-black/30 font-light tracking-widest uppercase italic leading-loose group-hover:text-black/60">
+                  {s.desc}
+                </p>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── PROJECTS SHOWCASE ── */}
+      <section className="py-40 bg-white relative overflow-hidden">
+        <div className="max-w-[1600px] mx-auto px-8 md:px-16">
+          <Reveal className="mb-32">
+             <div className="flex flex-col lg:flex-row justify-between items-end gap-12 border-b border-black/10 pb-12">
+               <h2 className="text-7xl md:text-[10rem] font-black italic tracking-tighter leading-[0.8] uppercase text-black">
+                 Project <br/> <span className="text-black/20 not-italic">Archive.</span>
+               </h2>
+               <div className="text-right">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-black/20 mb-4 block italic">Manifest_Sequence_2024</span>
+                  <div className="flex gap-4">
+                    {PROJECTS.map((_, i) => (
+                      <button 
+                        key={i} 
+                        onClick={() => setActiveProj(i)}
+                        className={`w-16 h-1 transition-all ${activeProj === i ? "bg-black w-32" : "bg-black/10"}`}
+                      />
+                    ))}
                   </div>
-                  <h3 className="text-white font-black text-3xl uppercase tracking-tight mb-2">{p.title}</h3>
-                  {p.awards > 0 && (
-                    <div className="flex items-center gap-1.5 text-yellow-400 text-[9px] uppercase tracking-widest">
-                      <Award size={10} /> {p.awards} Award{p.awards > 1 ? "s" : ""}
+               </div>
+             </div>
+          </Reveal>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-24 items-center">
+            <div className="lg:col-span-8 relative aspect-video rounded-sm overflow-hidden border border-black/5 group bg-[#ddd]">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeProj}
+                  initial={{ opacity: 0, scale: 1.1 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 1.1 }}
+                  transition={{ duration: 1, ease: [0.19, 1, 0.22, 1] }}
+                  className="absolute inset-0"
+                >
+                  <Image src={PROJECTS[activeProj].img} alt={PROJECTS[activeProj].title} fill className="object-cover grayscale brightness-75 group-hover:grayscale-0 transition-all duration-[2s]" unoptimized />
+                  <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-80" />
+                </motion.div>
+              </AnimatePresence>
+              <div className="absolute bottom-12 left-12 flex flex-col gap-4">
+                 <span className="text-[10px] font-black uppercase tracking-widest bg-black/80 backdrop-blur-md text-white px-6 py-2 border border-white/5">{PROJECTS[activeProj].location}</span>
+              </div>
+            </div>
+
+            <div className="lg:col-span-4 space-y-12">
+               <motion.div
+                  key={activeProj}
+                  initial={{ opacity: 0, x: 50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.6 }}
+                  className="space-y-12"
+               >
+                 <span className="text-[10px] font-black uppercase tracking-[0.4em] text-black/60">{PROJECTS[activeProj].id} // MANIFEST</span>
+                 <h3 className="text-6xl md:text-8xl font-black italic uppercase text-black tracking-tighter">{PROJECTS[activeProj].title}</h3>
+                 <div className="space-y-6 border-y border-black/10 py-12">
+                    <div className="flex justify-between items-center">
+                       <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-black/30">Category</span>
+                       <span className="text-sm font-black text-black uppercase tracking-widest">{PROJECTS[activeProj].category}</span>
                     </div>
-                  )}
-                </div>
-                <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <ArrowUpRight size={20} className="text-white" />
-                </div>
-              </motion.div>
-            </Reveal>
-          ))}
+                    <div className="flex justify-between items-center">
+                       <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-black/30">Build_Status</span>
+                       <span className="text-sm font-black text-black uppercase tracking-widest italic">Structural_Stable</span>
+                    </div>
+                 </div>
+                 <p className="text-black/30 text-lg font-light italic leading-loose uppercase tracking-wide">
+                   {PROJECTS[activeProj].desc}
+                 </p>
+                 <button className="flex items-center gap-6 group">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.8em] text-black">Request_Dossier</span>
+                    <div className="w-16 h-16 border border-black/10 rounded-full flex items-center justify-center group-hover:bg-black transition-all">
+                       <ArrowUpRight className="w-6 h-6 text-black group-hover:text-white transition-colors" />
+                    </div>
+                 </button>
+               </motion.div>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* PROJECT MODAL */}
-      <AnimatePresence>
-        {activeProject !== null && (() => {
-          const p = PROJECTS.find(x => x.id === activeProject)!;
-          return (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] bg-[#111]/96 flex items-center justify-center p-8" onClick={() => setActiveProject(null)}>
-              <motion.div initial={{ scale: 0.92, y: 40 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.92, y: 40 }} className="max-w-4xl w-full bg-[#1a1a1a]" onClick={e => e.stopPropagation()}>
-                <div className="relative h-[55vh]">
-                  <Image src={p.img} alt={p.title} fill className="object-cover" unoptimized />
+      {/* ── CAPABILITIES ── */}
+      <section className="py-40 bg-[#f2f2f2] border-y border-black/10">
+        <div className="max-w-[1600px] mx-auto px-8 md:px-16">
+          <Reveal className="mb-32 text-center">
+             <span className="text-[10px] font-bold uppercase tracking-[1em] text-black/40 mb-8 block italic">Operational Scope</span>
+             <h2 className="text-7xl md:text-[10rem] font-black italic tracking-tighter leading-[0.8] uppercase text-black">
+                Technical <br/> <span className="text-black/20 not-italic">Expertise.</span>
+             </h2>
+          </Reveal>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px bg-black/10 border border-black/10">
+            {CAPABILITIES.map((item, i) => (
+              <Reveal key={item.title} delay={i * 0.1} className="bg-white p-12 group hover:bg-black/5 transition-all duration-700">
+                 <item.icon className="w-12 h-12 text-black/20 group-hover:text-black transition-colors mb-8" />
+                 <h3 className="text-2xl font-black italic uppercase text-black mb-6">{item.title}</h3>
+                 <p className="text-xs text-black/40 group-hover:text-black font-light tracking-widest uppercase italic leading-loose transition-colors">
+                   {item.desc}
+                 </p>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── ATELIER / LABORATORY ── */}
+      <section className="py-40 bg-white overflow-hidden">
+        <div className="max-w-[1600px] mx-auto px-8 md:px-16 grid grid-cols-1 lg:grid-cols-2 gap-32 items-center">
+          <Reveal>
+             <div className="relative aspect-square bg-[#f2f2f2] border border-black/5 p-20 flex flex-col justify-center group overflow-hidden">
+                <div className="absolute top-0 right-0 p-12">
+                   <Box className="w-16 h-16 text-black/5 group-hover:text-black/10 transition-colors" />
                 </div>
-                <div className="p-8 flex items-end justify-between">
-                  <div>
-                    <div className="flex items-center gap-2 text-[9px] uppercase tracking-widest text-white/30 mb-2">
-                      <span>{p.type}</span><span>·</span><MapPin size={8} /><span>{p.location}</span><span>·</span><span>{p.year}</span>
+                <Hammer className="w-16 h-16 text-black mb-12" />
+                <h3 className="text-5xl font-black italic uppercase text-black mb-8">Structural <br/> <span className="text-black/20 not-italic">Atelier.</span></h3>
+                <p className="text-black/40 text-lg leading-relaxed mb-12 font-light uppercase tracking-wide italic leading-loose">
+                  Our Oslo atelier leverages heavy concrete fabrication and distributed tectonic orchestration for the production of non-standard architectural artifacts. We push the tectonic limits of spatial brutalism.
+                </p>
+                <div className="flex gap-12 text-[10px] font-bold uppercase tracking-[0.5em] text-black/30">
+                   <span>[01] MONOLITH_BOND</span>
+                   <span>[02] VOID_SYNTHESIS</span>
+                </div>
+             </div>
+          </Reveal>
+          <div className="space-y-24">
+             <Reveal delay={0.2}>
+                <span className="text-[10px] font-bold uppercase tracking-[1em] text-black/40 mb-8 block italic">Curation_Sequence</span>
+                <h2 className="text-6xl md:text-8xl font-black italic tracking-tighter leading-none uppercase text-black">Urban <br/> <span className="text-black/20 not-italic">Manifesto.</span></h2>
+             </Reveal>
+             <div className="space-y-12">
+                {[
+                  { n: "01", t: "Sectional Audit", d: "Rigorous cutting of complex structural volumes to reveal interior spatial potential." },
+                  { n: "02", t: "Structural Stress", d: "Simulation of high-fidelity architectural performance under extreme urban loads." },
+                  { n: "03", t: "Material Aging", d: "Analyzing the interaction of archival concrete models with digital weathering." }
+                ].map((step, i) => (
+                  <Reveal key={step.n} delay={i * 0.1 + 0.3} className="flex gap-12 group border-l border-black/10 pl-8 hover:border-black transition-colors">
+                    <span className="text-4xl font-black italic text-black/10 group-hover:text-black transition-colors">{step.n}</span>
+                    <div>
+                      <h4 className="text-xl font-black uppercase italic text-black mb-2">{step.t}</h4>
+                      <p className="text-xs text-black/40 font-light tracking-widest uppercase italic leading-loose">{step.d}</p>
                     </div>
-                    <h3 className="text-white text-3xl font-black uppercase tracking-tight mb-2">{p.title}</h3>
-                    <p className="text-white/40 text-sm max-w-md leading-relaxed">{p.desc}</p>
+                  </Reveal>
+                ))}
+             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA / INQUIRY ── */}
+      <section className="py-40 bg-[#f2f2f2] relative">
+         <div className="max-w-[1600px] mx-auto px-8 md:px-16">
+            <div className="bg-black text-white p-24 lg:p-40 relative overflow-hidden flex flex-col items-center text-center group">
+               <div className="absolute inset-0 opacity-10 grayscale brightness-110 group-hover:opacity-20 transition-opacity">
+                  <Image src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1600&q=80" alt="CTA Arch" fill className="object-cover" />
+               </div>
+               <Reveal>
+                  <span className="text-[10px] font-bold uppercase tracking-[1em] text-white/50 mb-12 block italic">Commission Initiation</span>
+                  <h2 className="text-7xl md:text-[12rem] font-black italic tracking-tighter leading-[0.8] uppercase mb-16">
+                     Own <br/> <span className="text-white/30 not-italic">The Structure.</span>
+                  </h2>
+                  <div className="flex flex-wrap justify-center gap-12 relative z-10">
+                     <button className="px-20 py-8 bg-white text-black font-black uppercase text-sm tracking-[0.5em] hover:italic transition-all">
+                        Request_Selection
+                     </button>
+                     <button className="px-20 py-8 border border-white/20 text-white font-black uppercase text-sm tracking-[0.5em] hover:bg-white/5 transition-all">
+                        Atelier_Dossier
+                     </button>
                   </div>
-                  <a href="#" className="shrink-0 text-[10px] uppercase tracking-widest text-white border border-white/20 px-6 py-2.5 hover:bg-white hover:text-[#111] transition-all flex items-center gap-2">
-                    Full Project <ArrowRight size={12} />
-                  </a>
-                </div>
-                <button onClick={() => setActiveProject(null)} className="absolute top-4 right-4 text-white bg-black/60 p-1.5 rounded-full"><X size={16} /></button>
-              </motion.div>
-            </motion.div>
-          );
-        })()}
-      </AnimatePresence>
-
-      {/* PROCESS */}
-      <section className="bg-[#111] text-white px-8 md:px-16 py-24">
-        <Reveal className="mb-14">
-          <p className="text-[10px] uppercase tracking-[0.4em] text-white/30 mb-4">Method</p>
-          <h2 className="text-5xl md:text-6xl font-black uppercase leading-none tracking-tighter">How We<br />Design</h2>
-        </Reveal>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px bg-white/5">
-          {PROCESS.map((p, i) => (
-            <Reveal key={p.step} delay={i * 0.1} className="bg-[#111] p-8 border-t-2 border-white/10 hover:border-white/30 transition-colors">
-              <p className="text-[10px] uppercase tracking-widest text-white/20 mb-4">{p.step}</p>
-              <h3 className="font-black text-xl uppercase tracking-tight mb-3">{p.title}</h3>
-              <p className="text-white/40 text-sm leading-relaxed">{p.desc}</p>
-            </Reveal>
-          ))}
-        </div>
+               </Reveal>
+            </div>
+         </div>
       </section>
 
-      {/* CTA */}
-      <section className="px-8 md:px-16 py-28 flex flex-col items-center text-center">
-        <Reveal>
-          <p className="text-[10px] uppercase tracking-[0.5em] opacity-40 mb-6">New Commission</p>
-          <h2 className="text-6xl md:text-8xl font-black uppercase leading-none tracking-tighter mb-10">
-            Start a<br />
-            <span className="text-transparent" style={{ WebkitTextStroke: "2px #111" }}>Project.</span>
-          </h2>
-        </Reveal>
-        <Reveal delay={0.2}>
-          <a href="#" className="bg-[#111] text-white px-12 py-5 text-[11px] uppercase tracking-[0.3em] font-black hover:bg-[#333] transition-colors inline-flex items-center gap-3">
-            Brief Us <ArrowRight size={14} />
-          </a>
-        </Reveal>
-      </section>
+      {/* ── FOOTER ── */}
+      <footer className="bg-white pt-40 pb-20 px-8 md:px-16 border-t border-black/10">
+         <div className="max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-32 mb-40">
+            <div className="lg:col-span-6">
+               <div className="flex items-center gap-4 mb-12">
+                 <Building2 className="w-10 h-10 text-black" />
+                 <span className="text-3xl font-black tracking-tighter uppercase italic text-black">AETHER<span className="text-black/30">//</span>ARCH</span>
+               </div>
+               <p className="text-black/40 text-sm font-light leading-relaxed uppercase tracking-[0.3em] mb-12 italic max-w-md">
+                 Securing the future of architectural objects through high-fidelity orchestration and structural clarity.
+               </p>
+               <div className="flex gap-12">
+                 {["TERMINAL", "STRUCTURE", "FORGE", "ALPHA"].map(s => (
+                   <a key={s} href="#" className="text-[10px] font-bold hover:text-black text-black/30 transition-colors tracking-[0.5em]">[{s}]</a>
+                 ))}
+               </div>
+            </div>
+            
+            <div className="lg:col-span-2">
+               <h4 className="text-[10px] font-bold uppercase tracking-[0.5em] text-black/40 mb-12">Atelier</h4>
+               <ul className="space-y-6 text-xs font-bold uppercase tracking-[0.4em]">
+                 {["Projects", "Manifests", "Atelier", "Journal"].map(item => (
+                   <li key={item}><a href="#" className="hover:text-black transition-colors">{item}</a></li>
+                 ))}
+               </ul>
+            </div>
 
-      {/* FOOTER */}
-      <footer className="bg-[#111] text-white px-8 md:px-16 py-14 flex flex-col md:flex-row items-start md:items-center justify-between gap-8 border-t border-white/5">
-        <div>
-          <p className="font-black text-lg uppercase tracking-[0.3em] mb-1">STRATUM</p>
-          <p className="text-xs text-white/30">Architecture & Urban Practice</p>
-        </div>
-        <div className="flex gap-8 text-[10px] uppercase tracking-widest text-white/30">
-          {["Instagram", "Awards", "Press", "Collaborate"].map(l => <a key={l} href="#" className="hover:text-white transition-colors">{l}</a>)}
-        </div>
-        <p className="text-[9px] text-white/20 uppercase">© 2026 Stratum Architecture</p>
+            <div className="lg:col-span-4">
+               <h4 className="text-[10px] font-bold uppercase tracking-[0.5em] text-black/40 mb-12">Partner Inquiry</h4>
+               <p className="text-sm text-black/40 font-light mb-12 italic uppercase tracking-[0.2em] leading-loose">
+                 For new commissions, structural studies, or distribution enclaves, contact our primary command center in Oslo.
+               </p>
+               <a href="mailto:atelier@aether-arch.no" className="text-3xl font-black italic hover:text-black transition-colors block border-b border-black/10 pb-8 uppercase tracking-tighter">
+                  atelier@aether-arch.no
+               </a>
+            </div>
+         </div>
+
+         <div className="max-w-[1600px] mx-auto flex flex-col md:row items-center justify-between gap-12 text-[9px] font-bold uppercase tracking-[0.8em] text-black/20 border-t border-black/5 pt-20">
+            <p>© 2024 AETHER ARCH ATELIER AG. ALL RIGHTS RESERVED. OSLO // GLOBAL.</p>
+            <div className="flex gap-16">
+               <a href="#" className="hover:text-black transition-colors">[Structural_Vault]</a>
+               <a href="#" className="hover:text-black transition-colors">[Terms_of_Form]</a>
+            </div>
+         </div>
       </footer>
     </div>
   );

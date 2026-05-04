@@ -1,304 +1,458 @@
 "use client";
 
 import { motion, useScroll, useTransform, useInView, AnimatePresence } from "framer-motion";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
 import Image from "next/image";
-import { Star, MapPin, Wifi, Coffee, Waves, ChevronDown, Menu, X, ArrowRight, ChevronLeft, ChevronRight as ChevronRightIcon, Phone, Mail } from "lucide-react";
+import { 
+  ArrowUpRight, 
+  Menu, 
+  X, 
+  Layers, 
+  ShieldCheck,
+  Plus,
+  Play,
+  ArrowRight,
+  ChevronDown,
+  Monitor,
+  LayoutGrid,
+  Sun,
+  Moon,
+  Zap,
+  Eye,
+  Camera
+} from "lucide-react";
 import "../premium.css";
 
-const ROOMS = [
-  { name: "Grand Palais Suite", size: "120 m²", view: "Ocean panoramic", price: "€1,200", img: "https://images.unsplash.com/photo-1445019980597-93fa8acb246c?q=80&w=1200&auto=format&fit=crop" },
-  { name: "Jardin Privé Villa", size: "200 m²", view: "Private garden", price: "€2,400", img: "https://images.unsplash.com/photo-1582719508461-905c673771fd?q=80&w=1200&auto=format&fit=crop" },
-  { name: "Horizon Penthouse", size: "280 m²", view: "360° sea view", price: "€4,800", img: "https://images.unsplash.com/photo-1518684079-3c830dcef090?q=80&w=1200&auto=format&fit=crop" },
-  { name: "Côte d'Azur Room", size: "45 m²", view: "Garden terrace", price: "€480", img: "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?q=80&w=1200&auto=format&fit=crop" },
+// ─── DATA ──────────────────────────────────────────────────────────────────
+
+const EXHIBITIONS = [
+  { 
+    id: "01",
+    title: "NEO_PHOTON", 
+    category: "Atmospheric Installation",
+    year: "2024",
+    img: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1200&q=80",
+    desc: "A generative light sculpture utilizing high-intensity laser arrays and synchronized atmospheric fog enclaves."
+  },
+  { 
+    id: "02",
+    title: "VOID_CHROMA", 
+    category: "Digital Immersion",
+    year: "2023",
+    img: "https://images.unsplash.com/photo-1547891654-e66ed7ebb968?w=1200&q=80",
+    desc: "Exploration of zero-light environments punctuated by single-pixel emission nodes in a vacuum chamber."
+  },
+  { 
+    id: "03",
+    title: "SILENT_BEAMS", 
+    category: "Cinematic Research",
+    year: "2024",
+    img: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200&q=80",
+    desc: "Documenting the interaction of architectural geometry and shifting solar angles in a brutalist monument."
+  }
 ];
 
-const AMENITIES = [
-  { icon: Waves, title: "Infinity Pool", desc: "85m heated infinity pool overlooking the Mediterranean, open year-round." },
-  { icon: Coffee, title: "La Table du Chef", desc: "3-Michelin-star dining from Chef Laurent Dubois, celebrated for his coastal Mediterranean cuisine." },
-  { icon: Star, title: "Prestige Spa", desc: "3,000m² spa sanctuary with hydrotherapy pools, hammam, and bespoke treatment rituals." },
-  { icon: Wifi, title: "Exclusive Transfers", desc: "Helicopter and private yacht transfers from Monaco, Cannes, and Nice on request." },
-  { icon: MapPin, title: "Private Beach", desc: "400m of exclusive white sand beach with butler service and personalised cabanas." },
-  { icon: Star, title: "Concierge 24h", desc: "Legendary service — from private island picnics to Formula 1 hospitality suites." },
+const METRICS = [
+  { label: "Luminance", val: "1.2M nits", desc: "Peak brightness achieved via proprietary xenon-injection modules." },
+  { label: "Fidelity", val: "12-bit RAW", desc: "Total color gamut coverage within the atmospheric spectrum." },
+  { label: "Latency", val: "<0.1ms", desc: "Synchronized photon response for real-time spatial mapping." }
 ];
 
-const STATS = [
-  { value: 34, suffix: "", label: "Years of excellence" },
-  { value: 5, suffix: " stars", label: "Palace distinction" },
-  { value: 48, suffix: "", label: "Suites & villas" },
-  { value: 98, suffix: "%", label: "Guest return rate" },
+const ARCHIVE = [
+  { id: "A", title: "Photon Synthesis", desc: "Computational light design for large-scale urban interventions." },
+  { id: "B", title: "Atmospheric Logic", desc: "Simulating weather systems within contained architectural volumes." },
+  { id: "C", title: "Cinematic Audit", desc: "High-fidelity lighting strategy for premium motion picture enclaves." },
+  { id: "D", title: "Neural Optics", desc: "Shaping light to influence psychological spatial perception." }
 ];
 
-const TESTIMONIALS = [
-  { name: "Princess A.K.", role: "Royal guest, 12 stays", quote: "There is no hotel in the world that understands privacy, comfort, and elegance in quite the same measure.", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop" },
-  { name: "James & Claire Morton", role: "Honeymoon guests", quote: "The penthouse, the dinners, the morning sea views — we return every anniversary without question.", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop" },
-  { name: "Emmanuel Leclerc", role: "CEO, guest since 2018", quote: "When I need to disappear from the world and return refreshed — this is the only address that delivers.", avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=200&auto=format&fit=crop" },
-];
+// ─── COMPONENTS ──────────────────────────────────────────────────────────────
 
-const FAQ = [
-  { q: "What is the minimum stay?", a: "We recommend a minimum of 3 nights to fully experience the property. During peak season (July–August) a 5-night minimum applies for suites and villas." },
-  { q: "Is the hotel family-friendly?", a: "Yes, while we maintain an intimate atmosphere, we warmly welcome families. Children above 12 are welcomed in all areas; we offer a dedicated young guests programme." },
-  { q: "Can you arrange helicopter transfers?", a: "Our concierge arranges helicopter transfers from Nice Côte d'Azur, Monaco Héliport, and private landing pads throughout the region. We require 48 hours notice." },
-  { q: "Are pets welcome?", a: "We welcome small dogs up to 10kg with prior arrangement. A dedicated pet butler service is available, including gourmet pet menus and walking services." },
-];
-
-function Reveal({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
+function Reveal({ children, className = "", delay = 0, y = 30 }: { children: React.ReactNode; className?: string; delay?: number; y?: number }) {
   const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-60px" });
+  const inView = useInView(ref, { once: true, margin: "-100px" });
   return (
-    <motion.div ref={ref} initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.8, delay, ease: [0.25, 0.1, 0.25, 1] }} className={className}>
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 1.2, delay, ease: [0.16, 1, 0.3, 1] }}
+      className={className}
+    >
       {children}
     </motion.div>
   );
 }
 
-function Counter({ target, suffix = "", label }: { target: number; suffix?: string; label: string }) {
-  const [count, setCount] = useState(0);
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true });
-  useEffect(() => {
-    if (!inView) return;
-    const steps = 50;
-    let cur = 0;
-    const t = setInterval(() => {
-      cur += target / steps;
-      if (cur >= target) { setCount(target); clearInterval(t); }
-      else setCount(Math.floor(cur));
-    }, 1800 / steps);
-    return () => clearInterval(t);
-  }, [inView, target]);
-  return (
-    <div ref={ref} className="text-center">
-      <div className="text-5xl font-black text-[#d4af37] mb-2">{count}{suffix}</div>
-      <div className="text-sm text-[#c9b592]/60 uppercase tracking-wider">{label}</div>
-    </div>
-  );
-}
+// ─── MAIN SPA ────────────────────────────────────────────────────────────────
 
-export default function LuxuryHospitalitySPA() {
+export default function LuminaArchiveSPA() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const [activeT, setActiveT] = useState(0);
-  const [activeRoom, setActiveRoom] = useState(0);
+  const [activeExhibition, setActiveExhibition] = useState(0);
   const { scrollY } = useScroll();
-  const heroY = useTransform(scrollY, [0, 600], [0, 200]);
-
-  useEffect(() => {
-    const t = setInterval(() => setActiveT(p => (p + 1) % TESTIMONIALS.length), 6000);
-    return () => clearInterval(t);
-  }, []);
+  
+  const heroOpacity = useTransform(scrollY, [0, 400], [1, 0]);
+  const heroScale = useTransform(scrollY, [0, 800], [1, 1.1]);
+  const beamRotate = useTransform(scrollY, [0, 1000], [0, 45]);
 
   return (
-    <div className="min-h-screen bg-[#0a0a12] text-[#e8dcc8] overflow-x-hidden">
-      <motion.nav initial={{ y: -80 }} animate={{ y: 0 }} transition={{ duration: 0.6 }} className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-12 py-5 bg-[#0a0a12]/90 backdrop-blur-xl border-b border-[#d4af37]/10">
-        <div className="text-center">
-          <div className="font-serif text-xl font-black tracking-widest text-[#d4af37]">GRAND PALAIS</div>
-          <div className="text-xs tracking-[0.3em] text-[#c9b592]/50 uppercase">Côte d'Azur</div>
+    <div className="min-h-screen bg-[#050505] text-[#f8fafc] font-sans selection:bg-white selection:text-black">
+      
+      {/* ── LIGHT BEAM OVERLAY ── */}
+      <motion.div 
+        style={{ rotate: beamRotate }}
+        className="fixed top-[-20%] left-[-20%] w-[140%] h-[140%] z-[0] pointer-events-none opacity-20"
+      >
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.05)_0%,transparent_70%)]" />
+        <div className="absolute top-[10%] left-[50%] w-[1px] h-[80%] bg-gradient-to-b from-transparent via-white/40 to-transparent blur-md" />
+        <div className="absolute top-[30%] left-[20%] w-[1px] h-[50%] bg-gradient-to-b from-transparent via-white/20 to-transparent blur-sm" />
+      </motion.div>
+
+      {/* ── NAVIGATION ── */}
+      <motion.nav 
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 md:px-16 py-10 mix-blend-difference"
+      >
+        <div className="flex items-center gap-4">
+          <Sun className="w-10 h-10 text-white animate-pulse" />
+          <span className="text-2xl font-black tracking-tighter uppercase italic">LUMINA<span className="text-white/30">//</span>ARCHIVE</span>
         </div>
-        <div className="hidden md:flex items-center gap-10 text-xs text-[#c9b592]/50 tracking-widest uppercase">
-          {["Suites", "Experiences", "Dining", "Spa", "Weddings"].map(item => (
-            <a key={item} href="#" className="hover:text-[#d4af37] transition-colors">{item}</a>
+        
+        <div className="hidden lg:flex items-center gap-16 text-[10px] font-bold uppercase tracking-[0.5em] text-white/40">
+          {["Manifest", "Archive", "Optics", "Inquiry"].map(item => (
+            <a key={item} href={`#${item.toLowerCase()}`} className="hover:text-white transition-colors">/{item}</a>
           ))}
         </div>
-        <motion.button whileHover={{ scale: 1.02 }} className="hidden md:block px-6 py-3 border border-[#d4af37]/30 text-[#d4af37] text-xs tracking-widest uppercase hover:bg-[#d4af37]/10 transition-colors">
-          Reserve
-        </motion.button>
-        <button className="md:hidden text-[#d4af37]" onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}</button>
+
+        <button 
+          onClick={() => setMenuOpen(true)}
+          className="w-16 h-16 flex items-center justify-center border border-white/10 rounded-full group"
+        >
+          <Menu className="w-6 h-6 group-hover:rotate-90 transition-transform" />
+        </button>
       </motion.nav>
 
+      {/* ── MOBILE MENU ── */}
       <AnimatePresence>
         {menuOpen && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-40 bg-[#0a0a12] flex flex-col items-center justify-center gap-8">
-            {["Suites", "Experiences", "Dining", "Spa"].map(item => (
-              <a key={item} href="#" className="text-[#d4af37] text-2xl font-serif tracking-widest" onClick={() => setMenuOpen(false)}>{item}</a>
-            ))}
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            className="fixed inset-0 z-[60] bg-[#000] text-white p-12 flex flex-col justify-between"
+          >
+            <div className="flex justify-between items-center border-b border-white/5 pb-12">
+              <span className="text-xl font-black uppercase tracking-tighter italic">LUMINA//ARCHIVE</span>
+              <button onClick={() => setMenuOpen(false)} className="w-12 h-12 flex items-center justify-center border border-white/10 rounded-full">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="flex flex-col gap-12">
+              {["THE MANIFEST", "RESEARCH ARCHIVE", "NEURAL OPTICS", "CULTURAL SYNTHESIS", "INQUIRY"].map((item, i) => (
+                <motion.a 
+                  key={item}
+                  initial={{ opacity: 0, x: -50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.1 + 0.3 }}
+                  href="#"
+                  className="text-6xl md:text-9xl font-black uppercase italic tracking-tighter hover:text-white transition-all leading-none"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  {item}
+                </motion.a>
+              ))}
+            </div>
+            <div className="flex justify-between text-[10px] font-bold uppercase tracking-[0.5em] border-t border-white/5 pt-12">
+              <span>ATMOSPHERIC INTELLIGENCE</span>
+              <span>EST. 2012 // TOKYO</span>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Hero */}
-      <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        <motion.div style={{ y: heroY }} className="absolute inset-0">
-          <Image src="https://images.unsplash.com/photo-209977?w=800&q=80" alt="Grand Palais Hotel" fill className="object-cover opacity-40" unoptimized />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a12]/60 via-transparent to-[#0a0a12]" />
+      {/* ── HERO SECTION ── */}
+      <section className="relative h-screen flex items-center justify-center overflow-hidden">
+        <motion.div 
+          style={{ opacity: heroOpacity, scale: heroScale }}
+          className="absolute inset-0 z-0"
+        >
+          <Image 
+            src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1600&q=80" 
+            alt="Hero Light" 
+            fill 
+            className="object-cover grayscale brightness-50 opacity-30" 
+            unoptimized 
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#050505]/40 via-transparent to-[#050505]" />
         </motion.div>
 
-        <div className="relative z-10 text-center max-w-4xl mx-auto px-6 pt-20">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="flex justify-center mb-6">
-            {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 text-[#d4af37] fill-[#d4af37]" />)}
-          </motion.div>
-          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="text-[#c9b592]/50 text-xs tracking-[0.4em] uppercase mb-8">
-            Palace distinction · Côte d'Azur · Since 1992
-          </motion.p>
-          <motion.h1 initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.15 }} className="text-6xl md:text-8xl font-black font-serif leading-none mb-8 text-white">
-            Where the<br />Mediterranean<br /><em className="not-italic text-[#d4af37]">begins.</em>
-          </motion.h1>
-          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="text-[#c9b592]/60 text-lg max-w-xl mx-auto mb-12 leading-relaxed font-serif">
-            A legendary palace hotel poised above the sea, where timeless elegance meets the eternal blue of the French Riviera.
-          </motion.p>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }} className="flex flex-wrap gap-4 justify-center">
-            <motion.button whileHover={{ scale: 1.02 }} className="px-10 py-4 bg-[#d4af37] hover:bg-[#c9a830] text-black font-black tracking-wider flex items-center gap-2 transition-colors">
-              Reserve a Suite <ArrowRight className="w-4 h-4" />
-            </motion.button>
-            <motion.button whileHover={{ scale: 1.02 }} className="px-10 py-4 border border-[#d4af37]/30 text-[#d4af37] font-bold tracking-wider hover:bg-[#d4af37]/10 transition-colors">
-              Discover
-            </motion.button>
-          </motion.div>
-        </div>
-
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.5 }} className="absolute bottom-8 left-1/2 -translate-x-1/2">
-          <motion.div animate={{ y: [0, 8, 0] }} transition={{ duration: 2.5, repeat: Infinity }}>
-            <ChevronDown className="w-5 h-5 text-[#d4af37]/40" />
-          </motion.div>
-        </motion.div>
-      </div>
-
-      {/* Stats */}
-      <section className="py-20 border-y border-[#d4af37]/10 px-6">
-        <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-12">
-          {STATS.map((s, i) => <Reveal key={s.label} delay={i * 0.1}><Counter target={s.value} suffix={s.suffix} label={s.label} /></Reveal>)}
-        </div>
-      </section>
-
-      {/* Suites */}
-      <section className="py-24 px-6 max-w-7xl mx-auto">
-        <Reveal className="text-center mb-16">
-          <p className="text-[#c9b592]/40 text-xs tracking-[0.3em] uppercase mb-4">Accommodation</p>
-          <h2 className="text-5xl font-black font-serif text-white">Our suites & villas</h2>
-        </Reveal>
-        <div className="relative">
-          <AnimatePresence mode="wait">
-            <motion.div key={activeRoom} initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }} transition={{ duration: 0.5 }} className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-              <div className="relative h-[500px] rounded-2xl overflow-hidden">
-                <Image src={ROOMS[activeRoom].img} alt={ROOMS[activeRoom].name} fill className="object-cover" unoptimized />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                <div className="absolute bottom-6 left-6">
-                  <p className="text-[#d4af37] text-sm font-bold mb-1">{ROOMS[activeRoom].size} · {ROOMS[activeRoom].view}</p>
-                  <p className="text-white font-black text-2xl font-serif">{ROOMS[activeRoom].name}</p>
-                </div>
-              </div>
-              <div>
-                <h3 className="text-4xl font-black font-serif text-white mb-4">{ROOMS[activeRoom].name}</h3>
-                <p className="text-[#c9b592]/60 mb-3 text-sm">{ROOMS[activeRoom].view} · {ROOMS[activeRoom].size}</p>
-                <div className="flex items-baseline gap-1 mb-8">
-                  <span className="text-4xl font-black text-[#d4af37]">{ROOMS[activeRoom].price}</span>
-                  <span className="text-[#c9b592]/40 text-sm">per night</span>
-                </div>
-                <ul className="space-y-3 mb-8 text-sm text-[#c9b592]/70">
-                  {["24h butler service", "Complimentary minibar", "Private terrace", "Premium toiletries", "Evening turndown"].map(f => (
-                    <li key={f} className="flex items-center gap-3"><span className="w-1 h-1 bg-[#d4af37] rounded-full" />{f}</li>
-                  ))}
-                </ul>
-                <motion.button whileHover={{ scale: 1.02 }} className="px-8 py-4 bg-[#d4af37] text-black font-black flex items-center gap-2 hover:bg-[#c9a830] transition-colors">
-                  Reserve this suite <ArrowRight className="w-4 h-4" />
-                </motion.button>
-              </div>
-            </motion.div>
-          </AnimatePresence>
-          <div className="flex items-center justify-center gap-4 mt-12">
-            <button onClick={() => setActiveRoom(p => (p - 1 + ROOMS.length) % ROOMS.length)} className="w-12 h-12 rounded-full border border-[#d4af37]/30 flex items-center justify-center text-[#d4af37] hover:bg-[#d4af37]/10 transition-colors">
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            {ROOMS.map((_, i) => <button key={i} onClick={() => setActiveRoom(i)} className={`w-2 h-2 rounded-full transition-colors ${i === activeRoom ? "bg-[#d4af37]" : "bg-[#d4af37]/20"}`} />)}
-            <button onClick={() => setActiveRoom(p => (p + 1) % ROOMS.length)} className="w-12 h-12 rounded-full border border-[#d4af37]/30 flex items-center justify-center text-[#d4af37] hover:bg-[#d4af37]/10 transition-colors">
-              <ChevronRightIcon className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* Amenities */}
-      <section className="py-24 px-6 max-w-7xl mx-auto">
-        <Reveal className="text-center mb-16">
-          <p className="text-[#c9b592]/40 text-xs tracking-[0.3em] uppercase mb-4">Experiences</p>
-          <h2 className="text-5xl font-black font-serif text-white">The art of the exceptional</h2>
-        </Reveal>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {AMENITIES.map((a, i) => (
-            <Reveal key={a.title} delay={i * 0.07}>
-              <motion.div whileHover={{ y: -6 }} className="p-8 border border-[#d4af37]/10 rounded-2xl hover:border-[#d4af37]/20 transition-colors">
-                <a.icon className="w-8 h-8 text-[#d4af37] mb-6" />
-                <h3 className="font-black text-white font-serif text-xl mb-3">{a.title}</h3>
-                <p className="text-[#c9b592]/50 text-sm leading-relaxed">{a.desc}</p>
-              </motion.div>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section className="py-24 px-6 bg-white/[0.02] border-y border-[#d4af37]/10">
-        <div className="max-w-3xl mx-auto text-center">
-          <Reveal><p className="text-[#c9b592]/40 text-xs tracking-[0.3em] uppercase mb-4">Guest perspectives</p></Reveal>
-          <Reveal><h2 className="text-4xl font-black font-serif text-white mb-16">What our guests say</h2></Reveal>
-          <AnimatePresence mode="wait">
-            <motion.div key={activeT} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.5 }}>
-              <div className="flex justify-center mb-4">{[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 text-[#d4af37] fill-[#d4af37]" />)}</div>
-              <p className="text-xl text-[#e8dcc8]/70 italic font-serif leading-relaxed mb-8">"{TESTIMONIALS[activeT].quote}"</p>
-              <div className="flex items-center justify-center gap-3">
-                <Image src={TESTIMONIALS[activeT].avatar} alt={TESTIMONIALS[activeT].name} width={48} height={48} className="rounded-full object-cover border border-[#d4af37]/20" unoptimized />
-                <div className="text-left">
-                  <p className="font-bold text-white text-sm">{TESTIMONIALS[activeT].name}</p>
-                  <p className="text-[#c9b592]/40 text-xs">{TESTIMONIALS[activeT].role}</p>
-                </div>
-              </div>
-            </motion.div>
-          </AnimatePresence>
-          <div className="flex justify-center gap-2 mt-8">
-            {TESTIMONIALS.map((_, i) => <button key={i} onClick={() => setActiveT(i)} className={`w-2 h-2 rounded-full transition-colors ${i === activeT ? "bg-[#d4af37]" : "bg-[#d4af37]/20"}`} />)}
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ */}
-      <section className="py-24 px-6 max-w-3xl mx-auto">
-        <Reveal className="mb-12"><h2 className="text-4xl font-black font-serif text-white">Guest information</h2></Reveal>
-        <div className="space-y-4">
-          {FAQ.map((f, i) => (
-            <Reveal key={i} delay={i * 0.05}>
-              <div className="border-b border-[#d4af37]/10">
-                <button onClick={() => setOpenFaq(openFaq === i ? null : i)} className="w-full flex items-center justify-between py-6 text-left">
-                  <span className="font-semibold text-[#e8dcc8]">{f.q}</span>
-                  <motion.div animate={{ rotate: openFaq === i ? 180 : 0 }}><ChevronDown className="w-5 h-5 text-[#d4af37]/40 shrink-0" /></motion.div>
+        <div className="relative z-10 text-center px-6">
+          <Reveal>
+            <span className="text-[10px] font-bold uppercase tracking-[2em] text-white/40 mb-12 block">Absolute Luminosity</span>
+          </Reveal>
+          <Reveal delay={0.2}>
+            <h1 className="text-8xl md:text-[16rem] font-black tracking-tighter leading-[0.75] uppercase italic text-white mb-20">
+              PURE <br/> <span className="not-italic text-white/20">PHOTON.</span>
+            </h1>
+          </Reveal>
+          <Reveal delay={0.4}>
+            <div className="max-w-2xl mx-auto flex flex-col items-center gap-16 border-t border-white/10 pt-20">
+              <p className="text-white/40 text-xl leading-relaxed font-light uppercase tracking-[0.3em] italic leading-loose text-center">
+                Engineering the ultimate atmospheric interventions. Where computational light design meets ancestral spatial logic.
+              </p>
+              <div className="flex gap-8">
+                <button className="px-16 py-6 bg-white text-black font-black uppercase text-xs tracking-[0.4em] hover:bg-white/90 transition-colors">
+                  Explore_Archive
                 </button>
-                <AnimatePresence>
-                  {openFaq === i && (
-                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}>
-                      <p className="pb-6 text-[#c9b592]/50 text-sm leading-relaxed">{f.a}</p>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                <button className="px-16 py-6 border border-white/20 text-white font-black uppercase text-xs tracking-[0.4em] hover:bg-white/5 transition-colors">
+                  Technical_Specs
+                </button>
               </div>
-            </Reveal>
-          ))}
+            </div>
+          </Reveal>
+        </div>
+
+        <div className="absolute bottom-12 left-12 right-12 flex justify-between items-end text-[10px] font-bold uppercase tracking-[0.5em] text-white/20">
+          <div className="flex flex-col gap-2">
+            <span>GMT_+9_TOKYO</span>
+            <div className="w-48 h-[1px] bg-white/10" />
+          </div>
+          <div className="flex items-center gap-4">
+             <Moon className="w-4 h-4" /> DARK_MODE: ENGAGED
+          </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-32 px-6 relative overflow-hidden">
-        <div className="absolute inset-0">
-          <Image src="https://images.unsplash.com/photo-1536523?w=800&q=80" alt="Reserve" fill className="object-cover opacity-15" unoptimized />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a12] to-[#0a0a12]/80" />
+      {/* ── METRICS ── */}
+      <section className="py-40 bg-[#050505]">
+        <div className="max-w-[1600px] mx-auto px-8 md:px-16">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-px bg-white/5 border border-white/5">
+            {METRICS.map((s, i) => (
+              <Reveal key={s.label} delay={i * 0.1} className="bg-[#050505] p-24 group hover:bg-white/5 transition-colors">
+                <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-white/30 mb-12 block">{s.label}</span>
+                <h3 className="text-7xl font-black italic text-white mb-8 group-hover:text-white transition-colors">{s.val}</h3>
+                <p className="text-xs text-white/30 font-light tracking-widest uppercase italic leading-loose">
+                  {s.desc}
+                </p>
+              </Reveal>
+            ))}
+          </div>
         </div>
-        <Reveal className="relative z-10 max-w-3xl mx-auto text-center">
-          <p className="text-[#d4af37]/50 text-xs tracking-[0.3em] uppercase mb-6">Begin your stay</p>
-          <h2 className="text-5xl font-black font-serif text-white mb-6">An address beyond compare</h2>
-          <p className="text-[#c9b592]/50 text-lg mb-12 leading-relaxed">Contact our reservations team to begin crafting your stay.</p>
-          <div className="flex flex-col md:flex-row gap-4 justify-center">
-            <motion.button whileHover={{ scale: 1.02 }} className="px-10 py-5 bg-[#d4af37] text-black font-black flex items-center gap-2 justify-center hover:bg-[#c9a830] transition-colors">
-              Reserve now <ArrowRight className="w-4 h-4" />
-            </motion.button>
-            <div className="flex items-center gap-3 justify-center text-[#c9b592]/50 text-sm">
-              <Phone className="w-4 h-4" /><span>+33 4 93 00 00 00</span>
+      </section>
+
+      {/* ── EXHIBITION SHOWCASE ── */}
+      <section className="py-40 bg-[#020202] relative overflow-hidden">
+        <div className="max-w-[1600px] mx-auto px-8 md:px-16">
+          <Reveal className="mb-32">
+             <div className="flex flex-col lg:flex-row justify-between items-end gap-12 border-b border-white/5 pb-12">
+               <h2 className="text-7xl md:text-[10rem] font-black italic tracking-tighter leading-[0.8] uppercase text-white">
+                 The <br/> <span className="text-white/20 not-italic">Manifest.</span>
+               </h2>
+               <div className="text-right">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-white/20 mb-4 block italic">Archive_Sequence_2024</span>
+                  <div className="flex gap-4">
+                    {EXHIBITIONS.map((_, i) => (
+                      <button 
+                        key={i} 
+                        onClick={() => setActiveExhibition(i)}
+                        className={`w-16 h-1 transition-all ${activeExhibition === i ? "bg-white w-32" : "bg-white/10"}`}
+                      />
+                    ))}
+                  </div>
+               </div>
+             </div>
+          </Reveal>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-24 items-center">
+            <div className="lg:col-span-8 relative aspect-video rounded-sm overflow-hidden border border-white/5 group">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeExhibition}
+                  initial={{ opacity: 0, scale: 1.05 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 1.05 }}
+                  transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+                  className="absolute inset-0"
+                >
+                  <Image src={EXHIBITIONS[activeExhibition].img} alt={EXHIBITIONS[activeExhibition].title} fill className="object-cover grayscale brightness-75 group-hover:grayscale-0 transition-all duration-1000" unoptimized />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#020202] via-transparent to-transparent opacity-80" />
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            <div className="lg:col-span-4 space-y-12">
+               <motion.div
+                  key={activeExhibition}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6 }}
+                  className="space-y-12"
+               >
+                 <span className="text-[10px] font-black uppercase tracking-[0.4em] text-white/60">{EXHIBITIONS[activeExhibition].id} // LOG</span>
+                 <h3 className="text-6xl font-black italic uppercase text-white tracking-tighter">{EXHIBITIONS[activeExhibition].title}</h3>
+                 <div className="space-y-6 border-y border-white/5 py-12">
+                    <div className="flex justify-between items-center">
+                       <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-white/30">Category</span>
+                       <span className="text-sm font-black text-white uppercase tracking-widest">{EXHIBITIONS[activeExhibition].category}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                       <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-white/30">Release_Year</span>
+                       <span className="text-sm font-black text-white uppercase tracking-widest">{EXHIBITIONS[activeExhibition].year}</span>
+                    </div>
+                 </div>
+                 <p className="text-white/30 text-lg font-light italic leading-loose uppercase tracking-wide">
+                   {EXHIBITIONS[activeExhibition].desc}
+                 </p>
+                 <button className="flex items-center gap-6 group">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.8em] text-white/60">View_Full_Dossier</span>
+                    <div className="w-16 h-16 border border-white/10 rounded-full flex items-center justify-center group-hover:bg-white group-hover:border-white transition-all">
+                       <ArrowUpRight className="w-6 h-6 text-white group-hover:text-black transition-colors" />
+                    </div>
+                 </button>
+               </motion.div>
             </div>
           </div>
-        </Reveal>
+        </div>
       </section>
 
-      <footer className="py-12 px-6 max-w-7xl mx-auto border-t border-[#d4af37]/10 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-[#c9b592]/30 tracking-widest uppercase">
-        <div className="font-serif font-black text-[#d4af37] text-base">GRAND PALAIS · CÔTE D'AZUR</div>
-        <p>© 2026 Grand Palais. All rights reserved.</p>
-        <div className="flex gap-6">{["Privacy", "Terms", "Contact"].map(l => <a key={l} href="#" className="hover:text-[#d4af37] transition-colors">{l}</a>)}</div>
+      {/* ── ARCHIVE GRID ── */}
+      <section className="py-40 bg-[#050505] border-y border-white/5">
+        <div className="max-w-[1600px] mx-auto px-8 md:px-16">
+          <Reveal className="mb-32 text-center">
+             <span className="text-[10px] font-bold uppercase tracking-[1em] text-white/40 mb-8 block">Operational Scope</span>
+             <h2 className="text-7xl md:text-[10rem] font-black italic tracking-tighter leading-[0.8] uppercase text-white">
+                Technical <br/> <span className="text-white/20 not-italic">Archive.</span>
+             </h2>
+          </Reveal>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px bg-white/5 border border-white/5">
+            {ARCHIVE.map((item, i) => (
+              <Reveal key={item.title} delay={i * 0.1} className="bg-[#050505] p-12 group hover:bg-white/5 transition-colors">
+                 <span className="text-4xl font-black italic text-white/10 mb-8 block group-hover:text-white transition-colors">{item.id}</span>
+                 <h3 className="text-xl font-black italic uppercase text-white mb-6">{item.title}</h3>
+                 <p className="text-xs text-white/30 font-light tracking-widest uppercase italic leading-loose">
+                   {item.desc}
+                 </p>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── OPTICS / RESEARCH ── */}
+      <section className="py-40 bg-black overflow-hidden">
+        <div className="max-w-[1600px] mx-auto px-8 md:px-16 grid grid-cols-1 lg:grid-cols-2 gap-32 items-center">
+          <Reveal>
+             <div className="relative aspect-square bg-[#050505] border border-white/5 p-20 flex flex-col justify-center group overflow-hidden">
+                <div className="absolute top-0 right-0 p-12">
+                   <Monitor className="w-16 h-16 text-white/5 group-hover:text-white/20 transition-colors" />
+                </div>
+                <Eye className="w-16 h-16 text-white mb-12" />
+                <h3 className="text-5xl font-black italic uppercase text-white mb-8">Neural <br/> <span className="text-white/20 not-italic">Optics.</span></h3>
+                <p className="text-white/30 text-lg leading-relaxed mb-12 font-light uppercase tracking-wide italic leading-loose">
+                  Our research explores the biological response to controlled luminosity. We utilize high-fidelity photon emission to reshape psychological spatial perception within architectural enclaves.
+                </p>
+                <div className="flex gap-12 text-[10px] font-bold uppercase tracking-[0.5em] text-white/20">
+                   <span>[01] RETINAL_INTEGRITY</span>
+                   <span>[02] SPATIAL_DOPAMINE</span>
+                </div>
+             </div>
+          </Reveal>
+          <div className="space-y-24">
+             <Reveal delay={0.2}>
+                <span className="text-[10px] font-bold uppercase tracking-[1em] text-white/40 mb-8 block italic">Curation_Sequence</span>
+                <h2 className="text-6xl md:text-8xl font-black italic tracking-tighter leading-none uppercase text-white">Atmospheric <br/> <span className="text-white/20 not-italic">Synthesis.</span></h2>
+             </Reveal>
+             <div className="space-y-12">
+                {[
+                  { n: "01", t: "Photon Mapping", d: "High-density simulation of light interaction with atmospheric particulates." },
+                  { n: "02", t: "Structural Audit", d: "Analyzing architectural geometry for optimal bounce and shadow enclaves." },
+                  { n: "03", t: "Emission Control", d: "Precision calibration of laser and LED arrays for zero-latency response." }
+                ].map((step, i) => (
+                  <Reveal key={step.n} delay={i * 0.1 + 0.3} className="flex gap-12 group border-l border-white/5 pl-8 hover:border-white transition-colors">
+                    <span className="text-4xl font-black italic text-white/10 group-hover:text-white transition-colors">{step.n}</span>
+                    <div>
+                      <h4 className="text-xl font-black uppercase italic text-white mb-2">{step.t}</h4>
+                      <p className="text-xs text-white/30 font-light tracking-widest uppercase italic leading-loose">{step.d}</p>
+                    </div>
+                  </Reveal>
+                ))}
+             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA / INQUIRY ── */}
+      <section className="py-40 bg-[#050505] relative">
+         <div className="max-w-[1600px] mx-auto px-8 md:px-16">
+            <div className="bg-white text-black p-24 lg:p-40 relative overflow-hidden flex flex-col items-center text-center group">
+               <div className="absolute inset-0 opacity-10 grayscale brightness-50 group-hover:opacity-20 transition-opacity">
+                  <Image src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=1600&q=80" alt="CTA Light" fill className="object-cover" />
+               </div>
+               <Reveal>
+                  <span className="text-[10px] font-bold uppercase tracking-[1em] text-black/50 mb-12 block italic">Secure Initiation</span>
+                  <h2 className="text-7xl md:text-[12rem] font-black italic tracking-tighter leading-[0.8] uppercase mb-16">
+                     Command <br/> <span className="text-black/30 not-italic">The Light.</span>
+                  </h2>
+                  <div className="flex flex-wrap justify-center gap-8 relative z-10">
+                     <button className="px-20 py-8 bg-black text-white font-black uppercase text-sm tracking-[0.5em] hover:italic transition-all">
+                        Initiate_Dialogue
+                     </button>
+                     <button className="px-20 py-8 border border-black/20 text-black font-black uppercase text-sm tracking-[0.5em] hover:bg-black/5 transition-all">
+                        Manifest_Dossier
+                     </button>
+                  </div>
+               </Reveal>
+            </div>
+         </div>
+      </section>
+
+      {/* ── FOOTER ── */}
+      <footer className="bg-black pt-40 pb-20 px-8 md:px-16 border-t border-white/5">
+         <div className="max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-32 mb-40">
+            <div className="lg:col-span-6">
+               <div className="flex items-center gap-4 mb-12">
+                 <Sun className="w-10 h-10 text-white" />
+                 <span className="text-3xl font-black tracking-tighter uppercase italic">LUMINA<span className="text-white/30">//</span>ARCHIVE</span>
+               </div>
+               <p className="text-white/20 text-sm font-light leading-relaxed uppercase tracking-[0.3em] mb-12 italic max-w-md">
+                 Engineering the future of atmospheric intelligence through high-fidelity photon synthesis and neural optics.
+               </p>
+               <div className="flex gap-12">
+                 {["INSTAGRAM", "LINKEDIN", "VIMEO", "BEHANCE"].map(s => (
+                   <a key={s} href="#" className="text-[10px] font-bold hover:text-white text-white/20 transition-colors tracking-[0.5em]">[{s}]</a>
+                 ))}
+               </div>
+            </div>
+            
+            <div className="lg:col-span-2">
+               <h4 className="text-[10px] font-bold uppercase tracking-[0.5em] text-white/40 mb-12">Archive</h4>
+               <ul className="space-y-6 text-xs font-bold uppercase tracking-[0.5em]">
+                 {["The Manifest", "Research", "Optics", "Journal"].map(item => (
+                   <li key={item}><a href="#" className="hover:text-white transition-colors">{item}</a></li>
+                 ))}
+               </ul>
+            </div>
+
+            <div className="lg:col-span-4">
+               <h4 className="text-[10px] font-bold uppercase tracking-[0.5em] text-white/40 mb-12">Inquiry</h4>
+               <p className="text-sm text-white/20 font-light mb-12 italic uppercase tracking-[0.2em] leading-loose">
+                 For acquisitions, research collaborations, or architectural commissions, contact our global command center.
+               </p>
+               <a href="mailto:command@lumina-archive.com" className="text-3xl font-black italic hover:text-white transition-colors block border-b border-white/10 pb-8 uppercase tracking-tighter">
+                  command@lumina.archive
+               </a>
+            </div>
+         </div>
+
+         <div className="max-w-[1600px] mx-auto flex flex-col md:row items-center justify-between gap-12 text-[9px] font-bold uppercase tracking-[0.8em] text-white/10 border-t border-white/5 pt-20">
+            <p>© 2024 LUMINA ARCHIVE GROUP. ALL RIGHTS RESERVED. TOKYO // GLOBAL.</p>
+            <div className="flex gap-16">
+               <a href="#" className="hover:text-white transition-colors">[Photon_Protocol]</a>
+               <a href="#" className="hover:text-white transition-colors">[Terms_of_Light]</a>
+            </div>
+         </div>
       </footer>
     </div>
   );

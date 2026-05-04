@@ -1,281 +1,486 @@
 "use client";
 
 import { motion, useScroll, useTransform, useInView, AnimatePresence } from "framer-motion";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
 import Image from "next/image";
-import { X, Menu, Activity, Globe, Zap, Shield, Cpu, Layers, ArrowUpRight, BarChart3, Database, ChevronRight, TrendingUp, Lock } from "lucide-react";
+import { 
+  ArrowUpRight, 
+  Menu, 
+  X, 
+  Layers, 
+  ShieldCheck,
+  Plus,
+  Play,
+  ArrowRight,
+  ChevronDown,
+  Monitor,
+  LayoutGrid,
+  Cpu,
+  Globe,
+  Zap,
+  Terminal,
+  Activity,
+  Code
+} from "lucide-react";
 import "../premium.css";
 
-const GRID_ITEMS = [
-  { id: 1, title: "CORE_ANALYSIS", cat: "Infrastructure", load: "94%", trend: "+12%", img: "https://images.unsplash.com/photo-1558494949-ef010cbdcc51?q=80&w=1000&auto=format&fit=crop", span: "md:col-span-2 md:row-span-2" },
-  { id: 2, title: "DATA_VAULT", cat: "Security", load: "78%", trend: "+5%", img: "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?q=80&w=1000&auto=format&fit=crop", span: "" },
-  { id: 3, title: "NETWORK_HUB", cat: "Connectivity", load: "61%", trend: "+8%", img: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1000&auto=format&fit=crop", span: "" },
-  { id: 4, title: "STREAM_X9", cat: "Processing", load: "87%", trend: "+19%", img: "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1000&auto=format&fit=crop", span: "" },
-  { id: 5, title: "SENTINEL_AI", cat: "Intelligence", load: "99%", trend: "+31%", img: "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?q=80&w=1000&auto=format&fit=crop", span: "" },
+// ─── DATA ──────────────────────────────────────────────────────────────────
+
+const MODULES = [
+  { 
+    id: "01",
+    title: "NEURAL_CORE", 
+    category: "Edge Computing",
+    load: "84%",
+    img: "https://images.unsplash.com/photo-1558494949-ef010cbdcc51?w=1200&q=80",
+    desc: "A distributed intelligence engine capable of processing multi-vector data streams at sub-millisecond latency."
+  },
+  { 
+    id: "02",
+    title: "DATA_FLUIDITY", 
+    category: "Real-time Mesh",
+    load: "62%",
+    img: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200&q=80",
+    desc: "Dynamic data routing across a global mesh network, ensuring zero-packet-loss for high-fidelity operations."
+  },
+  { 
+    id: "03",
+    title: "SENTINEL_SHIELD", 
+    category: "Quantum Security",
+    load: "99%",
+    img: "https://images.unsplash.com/photo-1563986768609-322da13575f3?w=1200&q=80",
+    desc: "Immutable encryption layers designed to neutralize emerging quantum-based threat vectors."
+  }
 ];
 
 const METRICS = [
-  { label: "Uptime SLA", value: 99, suffix: ".99%" },
-  { label: "Nodes Active", value: 14, suffix: "K" },
-  { label: "Data Processed", value: 4, suffix: "PB/day" },
-  { label: "Response Time", value: 2, suffix: "ms avg" },
+  { label: "Throughput", val: "12 PB/s", desc: "Sustained data transfer across our premium fiber backbone." },
+  { label: "Availability", val: "99.999%", desc: "High-availability architecture with zero-single-point-of-failure." },
+  { label: "Sync_Time", val: "<0.4ms", desc: "Synchronized state management for global concurrent users." }
 ];
 
-const FEATURES = [
-  { icon: Shield, title: "Zero-Trust Security", desc: "Every request authenticated at the edge. No implicit trust, ever." },
-  { icon: Cpu, title: "Edge Processing", desc: "Computation pushed to 200+ global PoPs for minimal latency." },
-  { icon: Database, title: "Distributed Storage", desc: "Geo-replicated across 5 regions with automatic failover." },
-  { icon: Activity, title: "Real-Time Telemetry", desc: "Sub-millisecond metrics streams from every node in the grid." },
-  { icon: Globe, title: "Global Mesh", desc: "Anycast routing ensures packets take the optimal path, always." },
-  { icon: Zap, title: "Instant Scaling", desc: "From 0 to 1M req/s in under 3 seconds. No cold start penalty." },
+const INTERFACE = [
+  { id: "OS.1", title: "Kinetic UI", desc: "Interactive interfaces that respond to user intent with physical fidelity." },
+  { id: "OS.2", title: "API_SYNTAX", desc: "Unified development language for seamless hardware-software integration." },
+  { id: "OS.3", title: "VOID_SHELL", desc: "A minimalist operating environment designed for absolute developer focus." },
+  { id: "OS.4", title: "EDGE_RUNTIME", desc: "Executing complex computations at the physical edge of the network." }
 ];
 
-const TIERS = [
-  { name: "Grid Observer", price: 49, features: ["Up to 100 nodes", "5TB data/month", "99.9% SLA", "Community support"] },
-  { name: "Grid Operator", price: 299, features: ["Unlimited nodes", "50TB data/month", "99.99% SLA", "24/7 dedicated support", "Custom dashboards"], highlight: true },
-  { name: "Grid Sovereign", price: 999, features: ["Dedicated cluster", "Unlimited data", "99.999% SLA", "White-glove onboarding", "Private PoPs"], },
-];
+// ─── COMPONENTS ──────────────────────────────────────────────────────────────
 
-function Reveal({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) {
+function Reveal({ children, className = "", delay = 0, y = 30 }: { children: React.ReactNode; className?: string; delay?: number; y?: number }) {
   const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-80px" });
+  const inView = useInView(ref, { once: true, margin: "-100px" });
   return (
-    <motion.div ref={ref} initial={{ opacity: 0, y: 36 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.7, delay, ease: [0.25, 0.46, 0.45, 0.94] }} className={className}>
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 1, delay, ease: [0.23, 1, 0.32, 1] }}
+      className={className}
+    >
       {children}
     </motion.div>
   );
 }
 
-function Counter({ target, suffix = "" }: { target: number; suffix?: string }) {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true });
-  const [count, setCount] = useState(0);
-  useEffect(() => {
-    if (!inView) return;
-    let s = 0;
-    const step = target / 55;
-    const timer = setInterval(() => {
-      s += step;
-      if (s >= target) { setCount(target); clearInterval(timer); } else setCount(Math.floor(s));
-    }, 16);
-    return () => clearInterval(timer);
-  }, [inView, target]);
-  return <span ref={ref}>{count}{suffix}</span>;
-}
+// ─── MAIN SPA ────────────────────────────────────────────────────────────────
 
-function LiveBar({ value }: { value: number }) {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true });
-  return (
-    <div ref={ref} className="h-1 bg-white/10 rounded-full overflow-hidden mt-2">
-      <motion.div initial={{ width: 0 }} animate={inView ? { width: `${value}%` } : {}} transition={{ duration: 1.2, delay: 0.3, ease: "easeOut" }} className="h-full bg-gradient-to-r from-blue-500 to-cyan-400" />
-    </div>
-  );
-}
-
-export default function GridSystemSPA() {
+export default function FluidOSSPA() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [activeItem, setActiveItem] = useState<number | null>(null);
-  const [activeTier, setActiveTier] = useState(1);
+  const [activeModule, setActiveModule] = useState(0);
   const { scrollY } = useScroll();
-  const heroY = useTransform(scrollY, [0, 700], [0, 180]);
+  
   const heroOpacity = useTransform(scrollY, [0, 400], [1, 0]);
+  const heroScale = useTransform(scrollY, [0, 800], [1, 1.05]);
+  const gridX = useTransform(scrollY, [0, 1000], [0, -20]);
 
   return (
-    <div className="premium-theme bg-[#040712] text-white min-h-screen font-mono overflow-x-hidden">
+    <div className="min-h-screen bg-[#020205] text-[#e0e0ff] font-mono selection:bg-[#4d4dff] selection:text-white">
+      
+      {/* ── INTERFACE OVERLAY ── */}
+      <div className="fixed inset-0 z-[9999] pointer-events-none opacity-[0.05] bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
+      <div className="fixed inset-0 z-[0] opacity-10 pointer-events-none">
+        <div className="absolute inset-0" style={{ backgroundImage: "linear-gradient(rgba(77,77,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(77,77,255,0.1) 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
+      </div>
 
-      {/* NAV */}
-      <nav className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-8 md:px-16 py-5 bg-[#040712]/90 backdrop-blur-xl border-b border-white/5">
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-sm font-black uppercase tracking-[0.3em] text-blue-400">GRID_SYS</motion.div>
-        <div className="hidden md:flex items-center gap-8 text-[10px] uppercase tracking-[0.3em] text-white/40">
-          {["Platform", "Infrastructure", "Pricing", "Docs"].map(l => (
-            <a key={l} href="#" className="hover:text-white transition-colors">{l}</a>
+      {/* ── NAVIGATION ── */}
+      <motion.nav 
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 md:px-16 py-10 mix-blend-difference"
+      >
+        <div className="flex items-center gap-4">
+          <Activity className="w-10 h-10 text-[#4d4dff]" />
+          <span className="text-2xl font-black tracking-tighter uppercase italic">FLUID<span className="text-[#4d4dff]/30">//</span>OS</span>
+        </div>
+        
+        <div className="hidden lg:flex items-center gap-16 text-[10px] font-bold uppercase tracking-[0.4em] text-white/40">
+          {["System", "Modules", "Dev_Kit", "Portal"].map(item => (
+            <a key={item} href={`#${item.toLowerCase()}`} className="hover:text-[#4d4dff] transition-colors">/{item}</a>
           ))}
         </div>
-        <div className="flex items-center gap-3">
-          <a href="#" className="hidden md:block text-[10px] uppercase tracking-widest border border-blue-500/40 px-5 py-2 text-blue-400 hover:bg-blue-500/10 transition-all">Get Access</a>
-          <button onClick={() => setMenuOpen(true)} className="md:hidden"><Menu size={20} /></button>
-        </div>
-      </nav>
 
+        <button 
+          onClick={() => setMenuOpen(true)}
+          className="px-6 py-2 border border-[#4d4dff]/20 bg-[#4d4dff]/5 backdrop-blur-md text-[10px] font-black uppercase tracking-widest hover:bg-[#4d4dff]/20 transition-all"
+        >
+          [MENU]
+        </button>
+      </motion.nav>
+
+      {/* ── MOBILE MENU ── */}
       <AnimatePresence>
         {menuOpen && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] bg-[#040712] flex flex-col p-10">
-            <button onClick={() => setMenuOpen(false)} className="self-end mb-12 text-white/50"><X size={24} /></button>
-            <div className="flex flex-col gap-8 text-3xl font-black uppercase text-white">
-              {["Platform", "Infrastructure", "Pricing", "Docs"].map(l => <a key={l} href="#" onClick={() => setMenuOpen(false)}>{l}</a>)}
+          <motion.div 
+            initial={{ opacity: 0, x: "-100%" }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: "-100%" }}
+            transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
+            className="fixed inset-0 z-[60] bg-[#020205] text-[#e0e0ff] p-12 flex flex-col justify-between"
+          >
+            <div className="flex justify-between items-center border-b border-[#4d4dff]/10 pb-12">
+              <span className="text-xl font-black uppercase tracking-tighter italic text-[#4d4dff]">FLUID//OS</span>
+              <button onClick={() => setMenuOpen(false)} className="w-12 h-12 flex items-center justify-center border border-[#4d4dff]/20 rounded-full">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="flex flex-col gap-10">
+              {["KERNEL_MANIFEST", "NODE_ARCHIVE", "DEVELOPER_SHELL", "NETWORK_TOPOLOGY", "SECURE_AUTH"].map((item, i) => (
+                <motion.a 
+                  key={item}
+                  initial={{ opacity: 0, x: -50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.1 + 0.3 }}
+                  href="#"
+                  className="text-5xl md:text-8xl font-black uppercase italic tracking-tighter hover:text-white transition-all leading-none"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  {item}
+                </motion.a>
+              ))}
+            </div>
+            <div className="flex justify-between text-[10px] font-bold uppercase tracking-[0.5em] border-t border-[#4d4dff]/10 pt-12 text-[#4d4dff]/40">
+              <span>CORE_v2.4.0_STABLE</span>
+              <span>GLOBAL_MESH // ACTIVE</span>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* HERO */}
-      <section className="relative min-h-screen flex items-center overflow-hidden">
-        <motion.div style={{ y: heroY }} className="absolute inset-0">
-          <Image src="https://images.unsplash.com/photo-733852?w=800&q=80" alt="Grid System" fill className="object-cover opacity-20" unoptimized />
-        </motion.div>
-        {/* Grid overlay */}
-        <div className="absolute inset-0" style={{ backgroundImage: "linear-gradient(rgba(59,130,246,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.06) 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#040712] via-[#040712]/80 to-transparent" />
-        <motion.div style={{ opacity: heroOpacity }} className="relative z-10 px-8 md:px-16 max-w-4xl pt-32">
-          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }} className="flex items-center gap-3 mb-8">
-            <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
-            <span className="text-[10px] uppercase tracking-[0.5em] text-blue-400/70">System Online — 14,293 nodes active</span>
-          </motion.div>
-          <motion.h1 initial={{ opacity: 0, y: 60 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4, duration: 0.9 }} className="text-6xl md:text-[8vw] font-black uppercase leading-none tracking-tighter mb-6">
-            The<br />
-            <span className="text-blue-400">Intelligent</span><br />
-            Grid
-          </motion.h1>
-          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }} className="text-white/50 text-lg max-w-xl mb-10">
-            A planetary-scale distributed computing mesh. Process anything, anywhere, at the speed of light.
-          </motion.p>
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1 }} className="flex flex-col sm:flex-row gap-4">
-            <a href="#" className="bg-blue-500 text-white px-8 py-4 text-[11px] uppercase tracking-widest font-black hover:bg-blue-400 transition-colors flex items-center gap-2">
-              Enter The Grid <Zap size={14} />
-            </a>
-            <a href="#" className="border border-white/15 text-white/60 px-8 py-4 text-[11px] uppercase tracking-widest hover:border-white/40 hover:text-white transition-all">
-              View Architecture
-            </a>
-          </motion.div>
+      {/* ── HERO SECTION ── */}
+      <section className="relative h-screen flex items-center justify-center overflow-hidden">
+        <motion.div 
+          style={{ opacity: heroOpacity, scale: heroScale, x: gridX }}
+          className="absolute inset-0 z-0"
+        >
+          <Image 
+            src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=1600&q=80" 
+            alt="Hero Tech" 
+            fill 
+            className="object-cover grayscale brightness-50 contrast-150 opacity-20" 
+            unoptimized 
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#020205]/40 via-transparent to-[#020205]" />
         </motion.div>
 
-        {/* Live metrics overlay */}
-        <motion.div initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 1.4 }} className="absolute right-8 md:right-16 top-1/2 -translate-y-1/2 hidden lg:flex flex-col gap-3">
-          {[{ l: "CPU Load", v: "42%" }, { l: "Network", v: "1.8 Tbps" }, { l: "Latency", v: "1.9ms" }].map(m => (
-            <div key={m.l} className="bg-white/5 border border-white/10 px-4 py-3 backdrop-blur-md text-right">
-              <p className="text-[9px] text-white/30 uppercase tracking-widest mb-1">{m.l}</p>
-              <p className="text-blue-400 font-black text-lg">{m.v}</p>
-            </div>
-          ))}
-        </motion.div>
-      </section>
-
-      {/* MARQUEE */}
-      <div className="overflow-hidden bg-blue-500/10 border-y border-blue-500/20 py-3">
-        <motion.div animate={{ x: [0, -2800] }} transition={{ duration: 25, repeat: Infinity, ease: "linear" }} className="flex gap-10 whitespace-nowrap">
-          {Array(20).fill(null).map((_, i) => (
-            <span key={i} className="text-[10px] uppercase tracking-widest text-blue-400/50 shrink-0">Global Infrastructure · Zero Latency · 99.999% Uptime · Infinite Scale ·</span>
-          ))}
-        </motion.div>
-      </div>
-
-      {/* METRICS */}
-      <section className="px-8 md:px-16 py-24 grid grid-cols-2 md:grid-cols-4 gap-px bg-white/5">
-        {METRICS.map((m, i) => (
-          <Reveal key={m.label} delay={i * 0.1} className="bg-[#040712] p-10 text-center">
-            <div className="text-5xl font-black text-blue-400 mb-2"><Counter target={m.value} suffix={m.suffix} /></div>
-            <div className="text-[10px] uppercase tracking-widest text-white/30">{m.label}</div>
+        <div className="relative z-10 text-center px-6">
+          <Reveal>
+             <div className="flex items-center justify-center gap-4 mb-12">
+               <span className="w-12 h-[1px] bg-[#4d4dff]" />
+               <span className="text-[10px] font-bold uppercase tracking-[1.5em] text-[#4d4dff]">Reactive_Environment</span>
+               <span className="w-12 h-[1px] bg-[#4d4dff]" />
+             </div>
           </Reveal>
-        ))}
+          <Reveal delay={0.2}>
+            <h1 className="text-8xl md:text-[16rem] font-black tracking-tighter leading-[0.75] uppercase italic text-white mb-20">
+              FLUID <br/> <span className="not-italic text-[#4d4dff]">FLOW.</span>
+            </h1>
+          </Reveal>
+          <Reveal delay={0.4}>
+            <div className="max-w-2xl mx-auto flex flex-col items-center gap-16 border-t border-[#4d4dff]/10 pt-20">
+              <p className="text-[#e0e0ff]/40 text-xl leading-relaxed font-light uppercase tracking-[0.2em] italic leading-loose text-center">
+                Engineering the next era of creative software enclaves. High-fidelity interfaces built for the speed of human thought.
+              </p>
+              <div className="flex gap-8">
+                <button className="px-16 py-6 bg-[#4d4dff] text-white font-black uppercase text-xs tracking-[0.4em] hover:bg-white hover:text-black transition-all">
+                  Launch_Shell
+                </button>
+                <button className="px-16 py-6 border border-[#4d4dff]/20 text-[#4d4dff] font-black uppercase text-xs tracking-[0.4em] hover:bg-[#4d4dff]/5 transition-colors">
+                  Architecture_v2
+                </button>
+              </div>
+            </div>
+          </Reveal>
+        </div>
+
+        <div className="absolute bottom-12 left-12 right-12 flex justify-between items-end text-[10px] font-bold uppercase tracking-[0.5em] text-[#4d4dff]/40">
+          <div className="flex flex-col gap-2">
+            <span>PACKET_LOSS: 0.00%</span>
+            <div className="w-48 h-[1px] bg-[#4d4dff]/20" />
+          </div>
+          <div className="flex items-center gap-4">
+             <div className="w-2 h-2 bg-[#4d4dff] rounded-full animate-pulse" /> SYSTEM_STATUS: NOMINAL
+          </div>
+        </div>
       </section>
 
-      {/* GRID ITEMS */}
-      <section className="px-8 md:px-16 py-24">
-        <Reveal className="mb-12">
-          <p className="text-[10px] uppercase tracking-[0.4em] text-white/30 mb-4">Infrastructure Nodes</p>
-          <h2 className="text-5xl md:text-7xl font-black uppercase leading-none tracking-tighter">Active<br />Systems</h2>
-        </Reveal>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {GRID_ITEMS.map((item, i) => (
-            <Reveal key={item.id} delay={i * 0.08} className={item.span || ""}>
-              <motion.div className="group relative overflow-hidden bg-white/5 border border-white/8 cursor-pointer" style={{ height: i === 0 ? "65vh" : "30vh" }} onClick={() => setActiveItem(item.id)} whileHover={{ borderColor: "rgba(59,130,246,0.4)" }}>
-                <Image src={item.img} alt={item.title} fill className="object-cover opacity-30 group-hover:opacity-50 transition-all duration-600" unoptimized />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#040712]/90 to-transparent" />
-                <div className="absolute inset-0 p-5 flex flex-col justify-between">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[9px] uppercase tracking-widest bg-blue-500/20 text-blue-400 px-2 py-1 border border-blue-500/30">{item.cat}</span>
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
-                      <span className="text-[9px] text-green-400/70">LIVE</span>
-                    </div>
+      {/* ── METRICS GRID ── */}
+      <section className="py-40 bg-[#04040a]">
+        <div className="max-w-[1600px] mx-auto px-8 md:px-16">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-px bg-[#4d4dff]/10 border border-[#4d4dff]/10">
+            {METRICS.map((s, i) => (
+              <Reveal key={s.label} delay={i * 0.1} className="bg-[#020205] p-24 group hover:bg-[#4d4dff]/5 transition-colors">
+                <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-[#4d4dff]/30 mb-12 block">{s.label}</span>
+                <h3 className="text-7xl font-black italic text-white mb-8 group-hover:text-[#4d4dff] transition-colors">{s.val}</h3>
+                <p className="text-xs text-[#e0e0ff]/30 font-light tracking-widest uppercase italic leading-loose">
+                  {s.desc}
+                </p>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── MODULES SHOWCASE ── */}
+      <section className="py-40 bg-black relative overflow-hidden">
+        <div className="max-w-[1600px] mx-auto px-8 md:px-16">
+          <Reveal className="mb-32">
+             <div className="flex flex-col lg:flex-row justify-between items-end gap-12 border-b border-[#4d4dff]/10 pb-12">
+               <h2 className="text-7xl md:text-[10rem] font-black italic tracking-tighter leading-[0.8] uppercase text-white">
+                 Active <br/> <span className="text-[#4d4dff] not-italic">Nodes.</span>
+               </h2>
+               <div className="text-right">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-[#4d4dff]/30 mb-4 block italic">Module_Audit_Sequence</span>
+                  <div className="flex gap-4">
+                    {MODULES.map((_, i) => (
+                      <button 
+                        key={i} 
+                        onClick={() => setActiveModule(i)}
+                        className={`w-16 h-1 transition-all ${activeModule === i ? "bg-[#4d4dff] w-32" : "bg-[#4d4dff]/10"}`}
+                      />
+                    ))}
                   </div>
-                  <div>
-                    <p className="text-[9px] text-white/30 uppercase tracking-widest mb-1">{item.title}</p>
-                    <LiveBar value={parseInt(item.load)} />
-                    <div className="flex items-center justify-between mt-2">
-                      <span className="text-xs text-white/40">Load: {item.load}</span>
-                      <span className="text-[10px] text-green-400 flex items-center gap-1"><TrendingUp size={9} /> {item.trend}</span>
+               </div>
+             </div>
+          </Reveal>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-24 items-center">
+            <div className="lg:col-span-8 relative aspect-video rounded-sm overflow-hidden border border-[#4d4dff]/10 group bg-[#050505]">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeModule}
+                  initial={{ opacity: 0, scale: 1.05 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 1.05 }}
+                  transition={{ duration: 0.8, ease: [0.23, 1, 0.32, 1] }}
+                  className="absolute inset-0"
+                >
+                  <Image src={MODULES[activeModule].img} alt={MODULES[activeModule].title} fill className="object-cover grayscale contrast-125 opacity-40 group-hover:opacity-60 transition-opacity duration-1000" unoptimized />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-90" />
+                </motion.div>
+              </AnimatePresence>
+              <div className="absolute bottom-12 left-12 flex flex-col gap-2">
+                 <span className="text-[10px] font-bold uppercase tracking-widest text-[#4d4dff]">LOAD_CAPACITY</span>
+                 <div className="w-64 h-1 bg-[#4d4dff]/10 relative overflow-hidden">
+                    <motion.div 
+                      key={activeModule}
+                      initial={{ width: 0 }}
+                      animate={{ width: MODULES[activeModule].load }}
+                      transition={{ duration: 1.5, ease: "easeOut" }}
+                      className="absolute top-0 left-0 h-full bg-[#4d4dff] shadow-[0_0_15px_#4d4dff]"
+                    />
+                 </div>
+              </div>
+            </div>
+
+            <div className="lg:col-span-4 space-y-12">
+               <motion.div
+                  key={activeModule}
+                  initial={{ opacity: 0, x: 50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.6 }}
+                  className="space-y-12"
+               >
+                 <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[#4d4dff]">{MODULES[activeModule].id} // MODULE_DATA</span>
+                 <h3 className="text-6xl font-black italic uppercase text-white tracking-tighter">{MODULES[activeModule].title}</h3>
+                 <div className="space-y-6 border-y border-[#4d4dff]/10 py-12">
+                    <div className="flex justify-between items-center">
+                       <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#4d4dff]/30">Deployment_Category</span>
+                       <span className="text-sm font-black text-white uppercase tracking-widest">{MODULES[activeModule].category}</span>
                     </div>
+                    <div className="flex justify-between items-center">
+                       <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#4d4dff]/30">Current_Latency</span>
+                       <span className="text-sm font-black text-[#4d4dff] uppercase tracking-widest">0.24ms</span>
+                    </div>
+                 </div>
+                 <p className="text-[#e0e0ff]/30 text-lg font-light italic leading-loose uppercase tracking-wide">
+                   {MODULES[activeModule].desc}
+                 </p>
+                 <button className="flex items-center gap-6 group">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.8em] text-[#4d4dff]">Deploy_Enclave</span>
+                    <div className="w-16 h-16 border border-[#4d4dff]/10 rounded-full flex items-center justify-center group-hover:bg-[#4d4dff] transition-all">
+                       <ArrowUpRight className="w-6 h-6 text-white" />
+                    </div>
+                 </button>
+               </motion.div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── INTERFACE ARCHITECTURE ── */}
+      <section className="py-40 bg-[#04040a] border-y border-[#4d4dff]/10">
+        <div className="max-w-[1600px] mx-auto px-8 md:px-16">
+          <Reveal className="mb-32 text-center">
+             <span className="text-[10px] font-bold uppercase tracking-[1em] text-[#4d4dff]/40 mb-8 block">Tectonic Layering</span>
+             <h2 className="text-7xl md:text-[10rem] font-black italic tracking-tighter leading-[0.8] uppercase text-white">
+                Core <br/> <span className="text-[#4d4dff] not-italic">Interface.</span>
+             </h2>
+          </Reveal>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {INTERFACE.map((item, i) => (
+              <Reveal key={item.title} delay={i * 0.1} className="bg-[#020205] border border-[#4d4dff]/5 p-12 hover:border-[#4d4dff]/20 transition-all group">
+                 <span className="text-xs font-black italic text-[#4d4dff] mb-8 block">{item.id}</span>
+                 <h3 className="text-2xl font-black italic uppercase text-white mb-6">{item.title}</h3>
+                 <p className="text-xs text-[#e0e0ff]/30 font-light tracking-widest uppercase italic leading-loose">
+                   {item.desc}
+                 </p>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── DEV CONSOLE / SHELL ── */}
+      <section className="py-40 bg-black overflow-hidden">
+        <div className="max-w-[1600px] mx-auto px-8 md:px-16 grid grid-cols-1 lg:grid-cols-2 gap-32 items-center">
+          <Reveal>
+             <div className="relative aspect-square bg-[#050505] border border-[#4d4dff]/10 p-12 flex flex-col justify-between overflow-hidden group">
+                <div className="absolute top-0 right-0 p-12">
+                   <Terminal className="w-16 h-16 text-[#4d4dff]/5 group-hover:text-[#4d4dff]/10 transition-colors" />
+                </div>
+                <div className="space-y-4">
+                   <div className="flex gap-4 border-b border-[#4d4dff]/10 pb-4">
+                      <div className="w-3 h-3 rounded-full bg-[#4d4dff]/20" />
+                      <div className="w-3 h-3 rounded-full bg-[#4d4dff]/20" />
+                      <div className="w-3 h-3 rounded-full bg-[#4d4dff]/20" />
+                   </div>
+                   <div className="font-mono text-[10px] space-y-2 text-[#4d4dff]/60">
+                      <p>$ fluid-os initiate --shell</p>
+                      <p className="text-white/40">{">"} Core_v2.4.0 verified</p>
+                      <p className="text-white/40">{">"} Mesh_topology active</p>
+                      <p className="text-white/40">{">"} Deploying neural_enclave...</p>
+                      <motion.div 
+                        animate={{ opacity: [1, 0, 1] }}
+                        transition={{ duration: 1, repeat: Infinity }}
+                        className="w-2 h-4 bg-[#4d4dff]"
+                      />
+                   </div>
+                </div>
+                <div className="space-y-8">
+                   <h3 className="text-5xl font-black italic uppercase text-white">Developer <br/> <span className="text-[#4d4dff] not-italic">Enclave.</span></h3>
+                   <p className="text-[#e0e0ff]/30 text-lg leading-relaxed mb-12 font-light uppercase tracking-wide italic leading-loose">
+                     A unified shell environment for the high-fidelity orchestration of distributed data enclaves. Built for those who build the future.
+                   </p>
+                </div>
+             </div>
+          </Reveal>
+          <div className="space-y-24">
+             <Reveal delay={0.2}>
+                <span className="text-[10px] font-bold uppercase tracking-[1em] text-[#4d4dff]/40 mb-8 block italic">Protocol_Sequence</span>
+                <h2 className="text-6xl md:text-8xl font-black italic tracking-tighter leading-none uppercase text-white">System <br/> <span className="text-[#4d4dff] not-italic">Logic.</span></h2>
+             </Reveal>
+             <div className="space-y-12">
+                {[
+                  { n: "01", t: "Mesh Synapse", d: "Connecting disparate data nodes into a unified reactive environment." },
+                  { n: "02", t: "Entropy Zero", d: "Aggressive reduction of system noise for absolute computational clarity." },
+                  { n: "03", t: "Fidelity Push", d: "Delivering high-fidelity visual and data outputs across all edge nodes." }
+                ].map((step, i) => (
+                  <Reveal key={step.n} delay={i * 0.1 + 0.3} className="flex gap-12 group border-l border-[#4d4dff]/10 pl-8 hover:border-[#4d4dff] transition-colors">
+                    <span className="text-4xl font-black italic text-[#4d4dff]/10 group-hover:text-[#4d4dff] transition-colors">{step.n}</span>
+                    <div>
+                      <h4 className="text-xl font-black uppercase italic text-white mb-2">{step.t}</h4>
+                      <p className="text-xs text-[#e0e0ff]/30 font-light tracking-widest uppercase italic leading-loose">{step.d}</p>
+                    </div>
+                  </Reveal>
+                ))}
+             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA / ACCESS ── */}
+      <section className="py-40 bg-[#020205] relative">
+         <div className="max-w-[1600px] mx-auto px-8 md:px-16">
+            <div className="bg-[#4d4dff] text-white p-24 lg:p-40 relative overflow-hidden flex flex-col items-center text-center group">
+               <div className="absolute inset-0 opacity-10 grayscale brightness-50 group-hover:opacity-20 transition-opacity">
+                  <Image src="https://images.unsplash.com/photo-1558494949-ef010cbdcc51?w=1600&q=80" alt="CTA OS" fill className="object-cover" />
+               </div>
+               <Reveal>
+                  <span className="text-[10px] font-bold uppercase tracking-[1em] text-white/50 mb-12 block italic">Authorization_Required</span>
+                  <h2 className="text-7xl md:text-[12rem] font-black italic tracking-tighter leading-[0.8] uppercase mb-16">
+                     Enter <br/> <span className="text-white/30 not-italic">The Mesh.</span>
+                  </h2>
+                  <div className="flex flex-wrap justify-center gap-12 relative z-10">
+                     <button className="px-20 py-8 bg-white text-black font-black uppercase text-sm tracking-[0.5em] hover:italic transition-all">
+                        Request_Access
+                     </button>
+                     <button className="px-20 py-8 border border-white/20 text-white font-black uppercase text-sm tracking-[0.5em] hover:bg-white/5 transition-all">
+                        API_Dossier
+                     </button>
                   </div>
-                </div>
-                <div className="absolute top-1/2 right-4 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <ArrowUpRight size={18} className="text-blue-400" />
-                </div>
-              </motion.div>
-            </Reveal>
-          ))}
-        </div>
+               </Reveal>
+            </div>
+         </div>
       </section>
 
-      {/* FEATURES */}
-      <section className="px-8 md:px-16 py-24 bg-[#06091a]">
-        <Reveal className="mb-16">
-          <p className="text-[10px] uppercase tracking-[0.4em] text-white/30 mb-4">Capabilities</p>
-          <h2 className="text-5xl md:text-6xl font-black uppercase leading-none tracking-tighter">Built for<br />Scale</h2>
-        </Reveal>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {FEATURES.map((f, i) => (
-            <Reveal key={f.title} delay={i * 0.07} className="group p-6 border border-white/8 hover:border-blue-500/40 hover:bg-blue-500/5 transition-all">
-              <f.icon size={22} className="mb-5 text-blue-400/60 group-hover:text-blue-400 transition-colors" />
-              <h3 className="font-black text-lg uppercase tracking-tight mb-2">{f.title}</h3>
-              <p className="text-white/40 text-sm leading-relaxed">{f.desc}</p>
-            </Reveal>
-          ))}
-        </div>
-      </section>
+      {/* ── FOOTER ── */}
+      <footer className="bg-black pt-40 pb-20 px-8 md:px-16 border-t border-[#4d4dff]/10">
+         <div className="max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-32 mb-40">
+            <div className="lg:col-span-6">
+               <div className="flex items-center gap-4 mb-12">
+                 <Activity className="w-10 h-10 text-[#4d4dff]" />
+                 <span className="text-3xl font-black tracking-tighter uppercase italic">FLUID<span className="text-[#4d4dff]/30">//</span>OS</span>
+               </div>
+               <p className="text-[#e0e0ff]/20 text-sm font-light leading-relaxed uppercase tracking-[0.3em] mb-12 italic max-w-md">
+                 Designing the next era of creative software enclaves through distributed intelligence and high-fidelity interfaces.
+               </p>
+               <div className="flex gap-12">
+                 {["GITHUB", "TWITTER", "DISCORD", "LINKEDIN"].map(s => (
+                   <a key={s} href="#" className="text-[10px] font-bold hover:text-white text-[#4d4dff]/30 transition-colors tracking-[0.5em]">[{s}]</a>
+                 ))}
+               </div>
+            </div>
+            
+            <div className="lg:col-span-2">
+               <h4 className="text-[10px] font-bold uppercase tracking-[0.5em] text-[#4d4dff]/40 mb-12">System</h4>
+               <ul className="space-y-6 text-xs font-bold uppercase tracking-[0.4em]">
+                 {["Kernel", "Modules", "Dev_Kit", "Journal"].map(item => (
+                   <li key={item}><a href="#" className="hover:text-white transition-colors">{item}</a></li>
+                 ))}
+               </ul>
+            </div>
 
-      {/* PRICING */}
-      <section className="px-8 md:px-16 py-24">
-        <Reveal className="text-center mb-12">
-          <p className="text-[10px] uppercase tracking-[0.5em] text-white/30 mb-4">Pricing</p>
-          <h2 className="text-5xl md:text-6xl font-black uppercase leading-none tracking-tighter">Choose<br />Your Tier</h2>
-        </Reveal>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          {TIERS.map((t, i) => (
-            <Reveal key={t.name} delay={i * 0.1}>
-              <motion.div onClick={() => setActiveTier(i)} className={`p-8 border cursor-pointer transition-all ${activeTier === i || t.highlight ? "border-blue-500/60 bg-blue-500/8" : "border-white/10 hover:border-blue-500/30"}`} whileHover={{ y: -4 }}>
-                {t.highlight && <div className="text-[9px] uppercase tracking-widest bg-blue-500 text-white px-3 py-1 mb-4 w-fit">Most Popular</div>}
-                <p className="text-[10px] uppercase tracking-widest text-white/40 mb-2">{t.name}</p>
-                <div className="text-5xl font-black text-blue-400 mb-1">${t.price}</div>
-                <p className="text-[10px] text-white/30 mb-6">/month</p>
-                <ul className="space-y-2 mb-8">
-                  {t.features.map(f => (
-                    <li key={f} className="flex items-center gap-2 text-sm text-white/60">
-                      <ChevronRight size={12} className="text-blue-400" />{f}
-                    </li>
-                  ))}
-                </ul>
-                <a href="#" className={`block text-center py-3 text-[10px] uppercase tracking-widest border transition-all ${t.highlight ? "bg-blue-500 text-white border-transparent hover:bg-blue-400" : "border-white/20 hover:border-blue-500 hover:text-blue-400"}`}>
-                  Get Started
-                </a>
-              </motion.div>
-            </Reveal>
-          ))}
-        </div>
-      </section>
+            <div className="lg:col-span-4">
+               <h4 className="text-[10px] font-bold uppercase tracking-[0.5em] text-[#4d4dff]/40 mb-12">Support Inquiry</h4>
+               <p className="text-sm text-[#e0e0ff]/20 font-light mb-12 italic uppercase tracking-[0.2em] leading-loose">
+                 For high-priority enclaves, API integrations, or architectural consultations, contact our core command center.
+               </p>
+               <a href="mailto:core@fluid-os.io" className="text-3xl font-black italic hover:text-white transition-colors block border-b border-[#4d4dff]/10 pb-8 uppercase tracking-tighter">
+                  core@fluid-os.io
+               </a>
+            </div>
+         </div>
 
-      {/* CTA */}
-      <section className="bg-blue-500/10 border-y border-blue-500/20 px-8 md:px-16 py-24 flex flex-col md:flex-row items-center justify-between gap-8">
-        <Reveal>
-          <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter">Join the Grid.<br />
-            <span className="text-blue-400">Go Live Today.</span>
-          </h2>
-        </Reveal>
-        <Reveal delay={0.2} className="shrink-0">
-          <a href="#" className="bg-blue-500 text-white px-10 py-4 text-[11px] uppercase tracking-widest font-black hover:bg-blue-400 transition-colors flex items-center gap-2">
-            Start Free Trial <Lock size={12} />
-          </a>
-        </Reveal>
-      </section>
-
-      {/* FOOTER */}
-      <footer className="px-8 md:px-16 py-12 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border-t border-white/5">
-        <p className="font-black text-sm uppercase tracking-[0.3em] text-blue-400">GRID_SYS™</p>
-        <div className="flex gap-8 text-[10px] uppercase tracking-widest text-white/30">
-          {["Status", "Docs", "API", "Privacy"].map(l => <a key={l} href="#" className="hover:text-white transition-colors">{l}</a>)}
-        </div>
-        <p className="text-[9px] text-white/20 uppercase tracking-widest">© 2026 GRID_SYS™</p>
+         <div className="max-w-[1600px] mx-auto flex flex-col md:row items-center justify-between gap-12 text-[9px] font-bold uppercase tracking-[0.8em] text-[#4d4dff]/10 border-t border-[#4d4dff]/5 pt-20">
+            <p>© 2024 FLUID OS SYSTEMS. ALL RIGHTS RESERVED. GLOBAL // MESH.</p>
+            <div className="flex gap-16">
+               <a href="#" className="hover:text-white transition-colors">[Kernel_Vault]</a>
+               <a href="#" className="hover:text-white transition-colors">[Terms_of_Service]</a>
+            </div>
+         </div>
       </footer>
     </div>
   );

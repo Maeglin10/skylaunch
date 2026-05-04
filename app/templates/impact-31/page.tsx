@@ -1,222 +1,463 @@
 "use client";
 
 import { motion, useScroll, useTransform, useInView, AnimatePresence } from "framer-motion";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
 import Image from "next/image";
-import { ArrowRight, X, Menu, Eye, Layers, Cpu, Globe, Zap, ArrowUpRight, ChevronDown, Play } from "lucide-react";
+import { 
+  ArrowUpRight, 
+  Menu, 
+  X, 
+  Layers, 
+  ShieldCheck,
+  Plus,
+  Play,
+  ArrowRight,
+  ChevronDown,
+  Monitor,
+  LayoutGrid,
+  Zap,
+  Camera,
+  Maximize2,
+  Minimize2,
+  Box,
+  Eye,
+  Settings,
+  Sparkles,
+  Command,
+  Activity,
+  Image as ImageIcon
+} from "lucide-react";
 import "../premium.css";
 
-const WORKS = [
-  { id: 1, title: "AXIS_SHIFT", type: "XR Installation", year: "2026", img: "https://images.unsplash.com/photo-1614728263952-84ea256f9679?q=80&w=1200&auto=format&fit=crop", color: "#e040fb", desc: "A spatial computing environment that remaps proprioception in real time." },
-  { id: 2, title: "DEPTH_FIELD", type: "Generative Film", year: "2025", img: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=1000&auto=format&fit=crop", color: "#40c4ff", desc: "Cosmos rendered in 16K via procedural gravity simulation." },
-  { id: 3, title: "SOMA_NET", type: "Biometric Art", year: "2025", img: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?q=80&w=1000&auto=format&fit=crop", color: "#69ff47", desc: "Audience biometrics drive a live audiovisual topology in shared space." },
-  { id: 4, title: "PARALLAX_IX", type: "Interactive Web", year: "2024", img: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?q=80&w=1000&auto=format&fit=crop", color: "#ff6d00", desc: "Browser-based narrative using WebGPU for full ray-tracing at 60fps." },
-  { id: 5, title: "FLUID_STATE", type: "Performance", year: "2024", img: "https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=1000&auto=format&fit=crop", color: "#f50057", desc: "Live fluid simulation reacting to dancers' motion via depth cameras." },
-  { id: 6, title: "ZERO_LAYER", type: "Sound Design", year: "2023", img: "https://images.unsplash.com/photo-1508193638397-1c4234db14d8?q=80&w=1000&auto=format&fit=crop", color: "#ffea00", desc: "Spatial audio installation mapping city noise into harmonic structures." },
+// ─── DATA ──────────────────────────────────────────────────────────────────
+
+const EXHIBITIONS = [
+  { 
+    id: "EX_01",
+    title: "SILENT_VOID", 
+    category: "Monochrome Study",
+    year: "2024",
+    img: "https://images.unsplash.com/photo-1541643600914-78b084683702?w=1200&q=80",
+    desc: "A singular exploration of absolute negative space within urban structures. High-fidelity contrast metrics."
+  },
+  { 
+    id: "EX_02",
+    title: "NEURAL_FLUX", 
+    category: "Generative Lens",
+    year: "2025",
+    img: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=1200&q=80",
+    desc: "Planetary-scale distributed imagery synthesized through neural weight orchestration. Zero-latency visual objects."
+  },
+  { 
+    id: "EX_03",
+    title: "VOID_MEMBRANE", 
+    category: "Abstract Macro",
+    year: "2026",
+    img: "https://images.unsplash.com/photo-1547005327-834182f8e05a?w=1200&q=80",
+    desc: "A study in material reduction at the molecular level. Removing every decorative element until only the essential structure remains."
+  }
 ];
 
-const SERVICES = [
-  { icon: Eye, title: "XR & Spatial Computing", desc: "Mixed reality environments for brand activations, cultural institutions, and public space." },
-  { icon: Layers, title: "Generative Systems", desc: "Procedural visuals and parametric design using custom GPU-accelerated pipelines." },
-  { icon: Cpu, title: "Interactive Technology", desc: "WebGPU, WASM, and real-time processing for browser and native contexts." },
-  { icon: Globe, title: "Immersive Events", desc: "Full-service production of large-scale live experiences with technical direction." },
+const METRICS = [
+  { label: "Capture_Rate", val: "120 FPS", desc: "Absolute architectural synchronization across all distributed visual edge nodes." },
+  { label: "Resolution", val: "16K RAW", desc: "Sustainable visual delivery through our dedicated high-fidelity optical backbone." },
+  { label: "Archival", val: "IMMUNE", desc: "Zero-leak visual logic verified through continuous adversarial stress-testing." }
 ];
 
-function Reveal({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) {
+const CAPABILITIES = [
+  { icon: Camera, title: "Optical Forge", desc: "Engineering visual volumes through a lens of mathematical and structural purity." },
+  { icon: Eye, title: "Lens Logic", desc: "Scaling viewer interactions through distributed focal orchestration and visual synthesis." },
+  { icon: Activity, title: "Neural Sync", desc: "Synchronizing capture spikes with real-time biological demand cycles for absolute sync." },
+  { icon: Box, title: "Frame Shell", desc: "Leveraging heavy archival glass fabrication for ultra-high fidelity visual protection." }
+];
+
+// ─── COMPONENTS ──────────────────────────────────────────────────────────────
+
+function Reveal({ children, className = "", delay = 0, y = 30 }: { children: React.ReactNode; className?: string; delay?: number; y?: number }) {
   const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-80px" });
+  const inView = useInView(ref, { once: true, margin: "-100px" });
   return (
-    <motion.div ref={ref} initial={{ opacity: 0, y: 32 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.8, delay, ease: [0.25, 0.46, 0.45, 0.94] }} className={className}>
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 1, delay, ease: [0.23, 1, 0.32, 1] }}
+      className={className}
+    >
       {children}
     </motion.div>
   );
 }
 
-export default function PerspectiveCoreSPA() {
+// ─── MAIN SPA ────────────────────────────────────────────────────────────────
+
+export default function LensStudioSPA() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [activeWork, setActiveWork] = useState<number | null>(null);
-  const [hovered, setHovered] = useState<number | null>(null);
-  const [showReel, setShowReel] = useState(false);
+  const [activeEx, setActiveEx] = useState(0);
   const { scrollY } = useScroll();
-  const heroY = useTransform(scrollY, [0, 700], [0, 200]);
-  const heroScale = useTransform(scrollY, [0, 700], [1, 1.12]);
-  const heroOpacity = useTransform(scrollY, [0, 500], [1, 0]);
+  
+  const heroOpacity = useTransform(scrollY, [0, 400], [1, 0]);
+  const heroScale = useTransform(scrollY, [0, 800], [1, 1.05]);
+  const lensBlur = useTransform(scrollY, [0, 600], [0, 10]);
 
   return (
-    <div className="premium-theme bg-[#06030a] text-white min-h-screen overflow-x-hidden">
-
-      {/* NAV */}
-      <nav className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-8 md:px-16 py-5 bg-[#06030a]/85 backdrop-blur-xl">
-        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="text-sm font-black uppercase tracking-[0.35em]">PERSPECTIVE<span className="text-[#e040fb]">.</span></motion.div>
-        <div className="hidden md:flex items-center gap-10 text-[10px] uppercase tracking-[0.35em] text-white/40">
-          {["Work", "Studio", "Services", "Contact"].map(l => (
-            <a key={l} href="#" className="hover:text-white transition-colors">{l}</a>
-          ))}
-        </div>
-        <div className="flex items-center gap-3">
-          <a href="#" className="hidden md:block text-[10px] uppercase tracking-widest border border-[#e040fb]/30 text-[#e040fb] px-5 py-2 hover:bg-[#e040fb]/10 transition-all">New Project</a>
-          <button onClick={() => setMenuOpen(true)} className="md:hidden"><Menu size={20} /></button>
-        </div>
-      </nav>
-
-      <AnimatePresence>
-        {menuOpen && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] bg-[#06030a] flex flex-col p-10">
-            <button onClick={() => setMenuOpen(false)} className="self-end mb-12 text-white/40"><X size={24} /></button>
-            <div className="flex flex-col gap-8 text-4xl font-black uppercase">
-              {["Work", "Studio", "Services", "Contact"].map(l => <a key={l} href="#" onClick={() => setMenuOpen(false)} className="hover:text-[#e040fb] transition-colors">{l}</a>)}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* REEL MODAL */}
-      <AnimatePresence>
-        {showReel && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] bg-black/98 flex items-center justify-center" onClick={() => setShowReel(false)}>
-            <div className="w-full max-w-5xl aspect-video bg-[#111] flex items-center justify-center relative">
-              <p className="text-white/20 text-sm uppercase tracking-widest font-mono">[ Showreel 2026 ]</p>
-              <button className="absolute top-4 right-4 text-white/40 hover:text-white"><X size={20} /></button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* HERO */}
-      <section className="relative h-screen flex items-center overflow-hidden">
-        <motion.div style={{ y: heroY, scale: heroScale }} className="absolute inset-0">
-          <Image src="https://images.unsplash.com/photo-1536482?w=800&q=80" alt="Immersive" fill className="object-cover opacity-35" unoptimized />
-        </motion.div>
-        <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at 30% 50%, rgba(224,64,251,0.15) 0%, transparent 60%), radial-gradient(ellipse at 80% 30%, rgba(64,196,255,0.1) 0%, transparent 50%)" }} />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#06030a]/90 via-[#06030a]/50 to-transparent" />
-        <motion.div style={{ opacity: heroOpacity }} className="relative z-10 px-8 md:px-16 pt-20">
-          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="text-[10px] uppercase tracking-[0.5em] text-[#e040fb]/60 mb-8">Immersive Experience Studio — Paris · Berlin · Tokyo</motion.p>
-          <motion.h1 initial={{ opacity: 0, y: 80 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, duration: 1, ease: [0.16, 1, 0.3, 1] }} className="text-7xl md:text-[9vw] font-black uppercase leading-none tracking-tighter mb-8">
-            We Build<br />
-            <span className="text-[#e040fb]">Worlds</span><br />
-            People Feel.
-          </motion.h1>
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1 }} className="flex items-center gap-6">
-            <a href="#work" className="bg-[#e040fb] text-white px-8 py-4 text-[11px] uppercase tracking-widest font-black hover:bg-[#c030d0] transition-colors">See Our Work</a>
-            <button onClick={() => setShowReel(true)} className="flex items-center gap-3 text-white/50 text-[11px] uppercase tracking-widest hover:text-white transition-colors">
-              <div className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center hover:border-white/50 transition-colors"><Play size={12} className="ml-0.5" /></div>
-              Watch Reel
-            </button>
-          </motion.div>
-        </motion.div>
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce"><ChevronDown size={16} className="text-white/25" /></div>
-      </section>
-
-      {/* MARQUEE */}
-      <div className="overflow-hidden bg-[#e040fb]/8 border-y border-[#e040fb]/15 py-3.5">
-        <motion.div animate={{ x: [0, -2800] }} transition={{ duration: 25, repeat: Infinity, ease: "linear" }} className="flex gap-12 whitespace-nowrap">
-          {Array(18).fill(null).map((_, i) => (
-            <span key={i} className="text-[10px] uppercase tracking-widest text-[#e040fb]/40 shrink-0">XR · Generative Art · Interactive Web · Biometric Performance · Spatial Audio · WebGPU ·</span>
-          ))}
-        </motion.div>
+    <div className="min-h-screen bg-[#fcfcfc] text-[#111] font-mono selection:bg-[#111] selection:text-white">
+      
+      {/* ── OPTICAL OVERLAY ── */}
+      <div className="fixed inset-0 z-[9999] pointer-events-none opacity-[0.05] bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
+      <div className="fixed inset-0 z-[0] opacity-[0.05] pointer-events-none overflow-hidden">
+        <div className="absolute inset-0" style={{ backgroundImage: "linear-gradient(#111 1px, transparent 1px), linear-gradient(90deg, #111 1px, transparent 1px)", backgroundSize: "80px 80px" }} />
       </div>
 
-      {/* WORKS */}
-      <section id="work" className="px-8 md:px-16 py-24">
-        <Reveal className="mb-12">
-          <p className="text-[10px] uppercase tracking-[0.4em] text-white/30 mb-4">Portfolio — 2023/2026</p>
-          <h2 className="text-5xl md:text-7xl font-black uppercase leading-none tracking-tighter">Selected<br />Work</h2>
-        </Reveal>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {WORKS.map((w, i) => (
-            <Reveal key={w.id} delay={i * 0.07}>
-              <motion.div className="group relative overflow-hidden cursor-pointer" style={{ height: "48vh" }} onHoverStart={() => setHovered(w.id)} onHoverEnd={() => setHovered(null)} onClick={() => setActiveWork(w.id)} whileHover={{ scale: 1.01 }}>
-                <Image src={w.img} alt={w.title} fill className="object-cover opacity-40 group-hover:opacity-65 transition-all duration-700 group-hover:scale-105" unoptimized />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#06030a]/90 via-transparent to-transparent" />
-                <motion.div initial={{ opacity: 0 }} animate={hovered === w.id ? { opacity: 1 } : { opacity: 0 }} className="absolute inset-0" style={{ background: `radial-gradient(circle at 50% 50%, ${w.color}15, transparent 70%)` }} />
-                <div className="absolute inset-0 p-5 flex flex-col justify-between">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[9px] uppercase tracking-widest px-2 py-1 border" style={{ color: w.color, borderColor: w.color + "40" }}>{w.type}</span>
-                    <span className="text-[9px] text-white/25">{w.year}</span>
-                  </div>
-                  <div>
-                    <h3 className="font-black text-2xl uppercase tracking-tight mb-1" style={{ color: w.color }}>{w.title}</h3>
-                    <p className="text-white/40 text-xs">{w.desc}</p>
-                  </div>
-                </div>
-                <motion.div initial={{ opacity: 0, x: 10 }} animate={hovered === w.id ? { opacity: 1, x: 0 } : { opacity: 0, x: 10 }} className="absolute top-4 right-4">
-                  <ArrowUpRight size={16} style={{ color: w.color }} />
-                </motion.div>
-              </motion.div>
-            </Reveal>
+      {/* ── NAVIGATION ── */}
+      <motion.nav 
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 md:px-16 py-10 mix-blend-difference"
+      >
+        <div className="flex items-center gap-4">
+          <Camera className="w-10 h-10 text-white" />
+          <span className="text-2xl font-black tracking-tighter uppercase italic text-white">LENS<span className="text-white/30">//</span>STUDIO</span>
+        </div>
+        
+        <div className="hidden lg:flex items-center gap-16 text-[10px] font-bold uppercase tracking-[0.5em] text-white/40">
+          {["Manifest", "Gallery", "Atelier", "Archive"].map(item => (
+            <a key={item} href={`#${item.toLowerCase()}`} className="hover:text-white transition-colors">/{item}</a>
           ))}
         </div>
-      </section>
 
-      {/* WORK MODAL */}
+        <button 
+          onClick={() => setMenuOpen(true)}
+          className="w-16 h-16 flex items-center justify-center border border-white/10 group bg-white/5 backdrop-blur-md"
+        >
+          <Menu className="w-6 h-6 text-white group-hover:scale-y-50 transition-transform" />
+        </button>
+      </motion.nav>
+
+      {/* ── MOBILE MENU ── */}
       <AnimatePresence>
-        {activeWork !== null && (() => {
-          const w = WORKS.find(x => x.id === activeWork)!;
-          return (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] bg-[#06030a]/96 flex items-center justify-center p-8" onClick={() => setActiveWork(null)}>
-              <motion.div initial={{ scale: 0.9, y: 50 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9 }} className="max-w-3xl w-full" onClick={e => e.stopPropagation()}>
-                <div className="relative h-64 overflow-hidden" style={{ border: `1px solid ${w.color}30` }}>
-                  <Image src={w.img} alt={w.title} fill className="object-cover opacity-50" unoptimized />
-                </div>
-                <div className="bg-[#0d0812] p-8" style={{ borderLeft: `2px solid ${w.color}` }}>
-                  <p className="text-[9px] uppercase tracking-widest mb-2" style={{ color: w.color + "80" }}>{w.type} — {w.year}</p>
-                  <h3 className="font-black text-3xl uppercase tracking-tight mb-3" style={{ color: w.color }}>{w.title}</h3>
-                  <p className="text-white/40 text-sm leading-relaxed mb-6">{w.desc}</p>
-                  <a href="#" className="text-[10px] uppercase tracking-widest border px-5 py-2.5 inline-flex items-center gap-2 hover:opacity-80 transition-opacity" style={{ color: w.color, borderColor: w.color + "40" }}>
-                    View Full Case <ArrowRight size={12} />
-                  </a>
-                </div>
-                <button onClick={() => setActiveWork(null)} className="absolute top-4 right-4 text-white/30 hover:text-white"><X size={18} /></button>
-              </motion.div>
-            </motion.div>
-          );
-        })()}
+        {menuOpen && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 1.1 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.1 }}
+            transition={{ duration: 0.8, ease: [0.19, 1, 0.22, 1] }}
+            className="fixed inset-0 z-[60] bg-[#fcfcfc] text-black p-12 flex flex-col justify-between"
+          >
+            <div className="flex justify-between items-center border-b border-black/5 pb-12">
+              <span className="text-xl font-black uppercase tracking-tighter italic">LENS//STUDIO</span>
+              <button onClick={() => setMenuOpen(false)} className="w-12 h-12 flex items-center justify-center border border-black/10 rounded-full">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="flex flex-col gap-12 text-center md:text-left">
+              {["OPTICAL_MANIFEST", "GALLERY_ARCHIVE", "LENS_FORGE", "VISUAL_ENCLAVE", "SECURE_AUTH"].map((item, i) => (
+                <motion.a 
+                  key={item}
+                  initial={{ opacity: 0, y: 50 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1 + 0.3 }}
+                  href="#"
+                  className="text-6xl md:text-9xl font-black uppercase italic tracking-tighter hover:text-black/40 transition-all leading-none"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  {item}
+                </motion.a>
+              ))}
+            </div>
+            <div className="flex justify-between text-[10px] font-bold uppercase tracking-[0.5em] border-t border-black/5 pt-12 text-black/30">
+              <span>FINE_ART_PRACTICE</span>
+              <span>EST. 2018 // PARIS</span>
+            </div>
+          </motion.div>
+        )}
       </AnimatePresence>
 
-      {/* SERVICES */}
-      <section className="bg-[#0a0612] px-8 md:px-16 py-24 border-y border-white/5">
-        <Reveal className="mb-14">
-          <p className="text-[10px] uppercase tracking-[0.4em] text-white/30 mb-4">What We Do</p>
-          <h2 className="text-5xl md:text-6xl font-black uppercase leading-none tracking-tighter">Services</h2>
-        </Reveal>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px bg-white/5">
-          {SERVICES.map((s, i) => (
-            <Reveal key={s.title} delay={i * 0.08} className="bg-[#0a0612] p-8 group hover:bg-[#120918] transition-colors">
-              <s.icon size={22} className="text-[#e040fb]/40 group-hover:text-[#e040fb] transition-colors mb-5" />
-              <h3 className="font-black text-base uppercase tracking-tight mb-3">{s.title}</h3>
-              <p className="text-white/35 text-sm leading-relaxed">{s.desc}</p>
-            </Reveal>
-          ))}
+      {/* ── HERO SECTION ── */}
+      <section className="relative h-screen flex items-center justify-center overflow-hidden bg-black">
+        <motion.div 
+          style={{ opacity: heroOpacity, scale: heroScale }}
+          className="absolute inset-0 z-0"
+        >
+          <Image 
+            src="https://images.unsplash.com/photo-1541643600914-78b084683702?w=1600&q=80" 
+            alt="Hero Lens" 
+            fill 
+            className="object-cover grayscale brightness-50 contrast-125 opacity-30" 
+            unoptimized 
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#fcfcfc]" />
+        </motion.div>
+
+        <div className="relative z-10 text-center px-6">
+          <Reveal>
+            <span className="text-[10px] font-bold uppercase tracking-[2.5em] text-black/40 mb-12 block italic">Optical Endurance</span>
+          </Reveal>
+          <Reveal delay={0.2}>
+            <h1 className="text-8xl md:text-[18rem] font-black tracking-tighter leading-[0.75] uppercase italic text-black mb-20">
+              RAW <br/> <span className="not-italic text-black/10">LENS.</span>
+            </h1>
+          </Reveal>
+          <Reveal delay={0.4}>
+            <div className="max-w-2xl mx-auto flex flex-col items-center gap-16 border-t border-black/10 pt-20">
+              <p className="text-black/40 text-xl leading-relaxed font-light uppercase tracking-[0.3em] italic leading-loose text-center">
+                Refining the visual environment through radical optical reduction. Where high-end forge meets domestic synthesis.
+              </p>
+              <div className="flex gap-8">
+                <button className="px-16 py-6 bg-black text-white font-black uppercase text-xs tracking-[0.4em] hover:bg-white hover:text-black transition-all">
+                  Manifest_Access
+                </button>
+                <button className="px-16 py-6 border border-black/20 text-black font-black uppercase text-xs tracking-[0.4em] hover:bg-black/5 transition-colors">
+                  Atelier_Dossier
+                </button>
+              </div>
+            </div>
+          </Reveal>
+        </div>
+
+        <div className="absolute bottom-12 left-12 right-12 flex justify-between items-end text-[10px] font-bold uppercase tracking-[0.5em] text-black/20">
+          <div className="flex flex-col gap-2">
+            <span>PARIS // ATELIER</span>
+            <div className="w-48 h-[1px] bg-black/10" />
+          </div>
+          <div className="flex items-center gap-4 italic uppercase tracking-widest">
+             <span className="animate-pulse">●</span> OPTIC_STATUS: CRYSTAL
+          </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="px-8 md:px-16 py-28 flex flex-col items-center text-center">
-        <Reveal>
-          <p className="text-[10px] uppercase tracking-[0.5em] text-[#e040fb]/40 mb-6">New Commission</p>
-          <h2 className="text-6xl md:text-8xl font-black uppercase leading-none tracking-tighter mb-10">
-            Create<br />
-            <span className="text-[#e040fb]">Something</span><br />
-            <span className="text-transparent" style={{ WebkitTextStroke: "2px white" }}>New.</span>
-          </h2>
-        </Reveal>
-        <Reveal delay={0.2}>
-          <a href="#" className="bg-[#e040fb] text-white px-12 py-5 text-[11px] uppercase tracking-[0.3em] font-black hover:bg-[#c030d0] transition-colors inline-flex items-center gap-3">
-            Start a Project <ArrowRight size={14} />
-          </a>
-        </Reveal>
+      {/* ── METRICS GRID ── */}
+      <section className="py-40 bg-[#fcfcfc]">
+        <div className="max-w-[1600px] mx-auto px-8 md:px-16">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-px bg-black/5 border border-black/5">
+            {METRICS.map((s, i) => (
+              <Reveal key={s.label} delay={i * 0.1} className="bg-white p-24 group hover:bg-black/5 transition-all duration-700">
+                <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-black/30 mb-12 block group-hover:text-black/60">{s.label}</span>
+                <h3 className="text-7xl font-black italic text-black mb-8 group-hover:text-black transition-colors">{s.val}</h3>
+                <p className="text-xs text-black/30 font-light tracking-widest uppercase italic leading-loose group-hover:text-black/60">
+                  {s.desc}
+                </p>
+              </Reveal>
+            ))}
+          </div>
+        </div>
       </section>
 
-      {/* FOOTER */}
-      <footer className="bg-[#06030a] px-8 md:px-16 py-14 flex flex-col md:flex-row items-start md:items-center justify-between gap-8 border-t border-white/5">
-        <div>
-          <p className="font-black text-base uppercase tracking-[0.2em] mb-1">PERSPECTIVE<span className="text-[#e040fb]">.</span></p>
-          <p className="text-xs text-white/25">Immersive Experience Studio</p>
+      {/* ── EXHIBITION SHOWCASE ── */}
+      <section className="py-40 bg-white relative overflow-hidden">
+        <div className="max-w-[1600px] mx-auto px-8 md:px-16">
+          <Reveal className="mb-32">
+             <div className="flex flex-col lg:flex-row justify-between items-end gap-12 border-b border-black/10 pb-12">
+               <h2 className="text-7xl md:text-[10rem] font-black italic tracking-tighter leading-[0.8] uppercase text-black">
+                 Gallery <br/> <span className="text-black/20 not-italic">Archive.</span>
+               </h2>
+               <div className="text-right">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-black/20 mb-4 block italic">Manifest_Sequence_2024</span>
+                  <div className="flex gap-4">
+                    {EXHIBITIONS.map((_, i) => (
+                      <button 
+                        key={i} 
+                        onClick={() => setActiveEx(i)}
+                        className={`w-16 h-1 transition-all ${activeEx === i ? "bg-black w-32" : "bg-black/10"}`}
+                      />
+                    ))}
+                  </div>
+               </div>
+             </div>
+          </Reveal>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-24 items-center">
+            <div className="lg:col-span-8 relative aspect-video rounded-sm overflow-hidden border border-black/5 group bg-[#ddd]">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeEx}
+                  initial={{ opacity: 0, scale: 1.1 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 1.1 }}
+                  transition={{ duration: 1, ease: [0.19, 1, 0.22, 1] }}
+                  className="absolute inset-0"
+                >
+                  <Image src={EXHIBITIONS[activeEx].img} alt={EXHIBITIONS[activeEx].title} fill className="object-cover grayscale brightness-75 group-hover:grayscale-0 transition-all duration-[2s]" unoptimized />
+                  <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-80" />
+                </motion.div>
+              </AnimatePresence>
+              <div className="absolute bottom-12 left-12 flex flex-col gap-4">
+                 <span className="text-[10px] font-black uppercase tracking-widest bg-black/80 backdrop-blur-md text-white px-6 py-2 border border-white/5">{EXHIBITIONS[activeEx].year} // MANIFEST</span>
+              </div>
+            </div>
+
+            <div className="lg:col-span-4 space-y-12">
+               <motion.div
+                  key={activeEx}
+                  initial={{ opacity: 0, x: 50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.6 }}
+                  className="space-y-12"
+               >
+                 <span className="text-[10px] font-black uppercase tracking-[0.4em] text-black/60">{EXHIBITIONS[activeEx].id} // EXHIBIT</span>
+                 <h3 className="text-6xl md:text-8xl font-black italic uppercase text-black tracking-tighter">{EXHIBITIONS[activeEx].title}</h3>
+                 <div className="space-y-6 border-y border-black/10 py-12">
+                    <div className="flex justify-between items-center">
+                       <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-black/30">Category</span>
+                       <span className="text-sm font-black text-black uppercase tracking-widest">{EXHIBITIONS[activeEx].category}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                       <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-black/30">LENS_STATUS</span>
+                       <span className="text-sm font-black text-black uppercase tracking-widest italic">Stable_Optical</span>
+                    </div>
+                 </div>
+                 <p className="text-black/30 text-lg font-light italic leading-loose uppercase tracking-wide">
+                   {EXHIBITIONS[activeEx].desc}
+                 </p>
+                 <button className="flex items-center gap-6 group">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.8em] text-black">Request_Manifest</span>
+                    <div className="w-16 h-16 border border-black/10 rounded-full flex items-center justify-center group-hover:bg-black transition-all">
+                       <ArrowUpRight className="w-6 h-6 text-black group-hover:text-white transition-colors" />
+                    </div>
+                 </button>
+               </motion.div>
+            </div>
+          </div>
         </div>
-        <div className="flex gap-8 text-[10px] uppercase tracking-widest text-white/30">
-          {["Instagram", "Vimeo", "Awards", "Press"].map(l => <a key={l} href="#" className="hover:text-white transition-colors">{l}</a>)}
+      </section>
+
+      {/* ── CAPABILITIES ── */}
+      <section className="py-40 bg-[#fcfcfc] border-y border-black/10">
+        <div className="max-w-[1600px] mx-auto px-8 md:px-16">
+          <Reveal className="mb-32 text-center">
+             <span className="text-[10px] font-bold uppercase tracking-[1em] text-black/40 mb-8 block italic">Operational Scope</span>
+             <h2 className="text-7xl md:text-[10rem] font-black italic tracking-tighter leading-[0.8] uppercase text-black">
+                Technical <br/> <span className="text-black/20 not-italic">Expertise.</span>
+             </h2>
+          </Reveal>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px bg-black/10 border border-black/10">
+            {CAPABILITIES.map((item, i) => (
+              <Reveal key={item.title} delay={i * 0.1} className="bg-white p-12 group hover:bg-black/5 transition-all duration-700">
+                 <item.icon className="w-12 h-12 text-black/20 group-hover:text-black transition-colors mb-8" />
+                 <h3 className="text-2xl font-black italic uppercase text-black mb-6">{item.title}</h3>
+                 <p className="text-xs text-black/40 group-hover:text-black font-light tracking-widest uppercase italic leading-loose transition-colors">
+                   {item.desc}
+                 </p>
+              </Reveal>
+            ))}
+          </div>
         </div>
-        <p className="text-[9px] text-white/15 uppercase">© 2026 Perspective Studio</p>
+      </section>
+
+      {/* ── ATELIER / LABORATORY ── */}
+      <section className="py-40 bg-white overflow-hidden">
+        <div className="max-w-[1600px] mx-auto px-8 md:px-16 grid grid-cols-1 lg:grid-cols-2 gap-32 items-center">
+          <Reveal>
+             <div className="relative aspect-square bg-[#fcfcfc] border border-black/5 p-20 flex flex-col justify-center group overflow-hidden">
+                <div className="absolute top-0 right-0 p-12">
+                   <Box className="w-16 h-16 text-black/5 group-hover:text-black/10 transition-colors" />
+                </div>
+                <Sparkles className="w-16 h-16 text-black mb-12" />
+                <h3 className="text-5xl font-black italic uppercase text-black mb-8">Visual <br/> <span className="text-black/20 not-italic">Atelier.</span></h3>
+                <p className="text-black/40 text-lg leading-relaxed mb-12 font-light uppercase tracking-wide italic leading-loose">
+                  Our Paris atelier leverages heavy archival glass fabrication and distributed visual orchestration for the production of non-standard optical artifacts. We push the tectonic limits of spatial photography.
+                </p>
+                <div className="flex gap-12 text-[10px] font-bold uppercase tracking-[0.5em] text-black/30">
+                   <span>[01] OPTIC_BOND</span>
+                   <span>[02] LENS_SYNTHESIS</span>
+                </div>
+             </div>
+          </Reveal>
+          <div className="space-y-24">
+             <Reveal delay={0.2}>
+                <span className="text-[10px] font-bold uppercase tracking-[1em] text-black/40 mb-8 block italic">Curation_Sequence</span>
+                <h2 className="text-6xl md:text-8xl font-black italic tracking-tighter leading-none uppercase text-black">Visual <br/> <span className="text-black/20 not-italic">Manifesto.</span></h2>
+             </Reveal>
+             <div className="space-y-12">
+                {[
+                  { n: "01", t: "Sectional Audit", d: "Rigorous cutting of complex visual volumes to reveal interior spatial potential." },
+                  { n: "02", t: "Optical Stress", d: "Simulation of high-fidelity visual performance under extreme archival loads." },
+                  { n: "03", t: "Archive Aging", d: "Analyzing the interaction of archival visual models with digital weathering." }
+                ].map((step, i) => (
+                  <Reveal key={step.n} delay={i * 0.1 + 0.3} className="flex gap-12 group border-l border-black/10 pl-8 hover:border-black transition-colors">
+                    <span className="text-4xl font-black italic text-black/10 group-hover:text-black transition-colors">{step.n}</span>
+                    <div>
+                      <h4 className="text-xl font-black uppercase italic text-white mb-2">{step.t}</h4>
+                      <p className="text-xs text-black/40 font-light tracking-widest uppercase italic leading-loose">{step.d}</p>
+                    </div>
+                  </Reveal>
+                ))}
+             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA / INQUIRY ── */}
+      <section className="py-40 bg-[#fcfcfc] relative">
+         <div className="max-w-[1600px] mx-auto px-8 md:px-16">
+            <div className="bg-black text-white p-24 lg:p-40 relative overflow-hidden flex flex-col items-center text-center group">
+               <div className="absolute inset-0 opacity-10 grayscale brightness-110 group-hover:opacity-20 transition-opacity">
+                  <Image src="https://images.unsplash.com/photo-1541643600914-78b084683702?w=1600&q=80" alt="CTA Lens" fill className="object-cover" />
+               </div>
+               <Reveal>
+                  <span className="text-[10px] font-bold uppercase tracking-[1em] text-white/50 mb-12 block italic">Commission Initiation</span>
+                  <h2 className="text-7xl md:text-[12rem] font-black italic tracking-tighter leading-[0.8] uppercase mb-16">
+                     Own <br/> <span className="text-white/30 not-italic">The Visual.</span>
+                  </h2>
+                  <div className="flex flex-wrap justify-center gap-12 relative z-10">
+                     <button className="px-20 py-8 bg-white text-black font-black uppercase text-sm tracking-[0.5em] hover:italic transition-all">
+                        Request_Selection
+                     </button>
+                     <button className="px-20 py-8 border border-white/20 text-white font-black uppercase text-sm tracking-[0.5em] hover:bg-white/5 transition-all">
+                        Atelier_Dossier
+                     </button>
+                  </div>
+               </Reveal>
+            </div>
+         </div>
+      </section>
+
+      {/* ── FOOTER ── */}
+      <footer className="bg-white pt-40 pb-20 px-8 md:px-16 border-t border-black/10">
+         <div className="max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-32 mb-40">
+            <div className="lg:col-span-6">
+               <div className="flex items-center gap-4 mb-12">
+                 <Camera className="w-10 h-10 text-black" />
+                 <span className="text-3xl font-black tracking-tighter uppercase italic text-black">LENS<span className="text-black/30">//</span>STUDIO</span>
+               </div>
+               <p className="text-black/40 text-sm font-light leading-relaxed uppercase tracking-[0.3em] mb-12 italic max-w-md">
+                 Securing the future of optical objects through high-fidelity orchestration and radical visual clarity.
+               </p>
+               <div className="flex gap-12">
+                 {["TERMINAL", "OPTICAL", "FORGE", "ALPHA"].map(s => (
+                   <a key={s} href="#" className="text-[10px] font-bold hover:text-black text-black/30 transition-colors tracking-[0.5em]">[{s}]</a>
+                 ))}
+               </div>
+            </div>
+            
+            <div className="lg:col-span-2">
+               <h4 className="text-[10px] font-bold uppercase tracking-[0.5em] text-black/40 mb-12">Atelier</h4>
+               <ul className="space-y-6 text-xs font-bold uppercase tracking-[0.4em]">
+                 {["Gallery", "Manifests", "Atelier", "Journal"].map(item => (
+                   <li key={item}><a href="#" className="hover:text-black transition-colors">{item}</a></li>
+                 ))}
+               </ul>
+            </div>
+
+            <div className="lg:col-span-4">
+               <h4 className="text-[10px] font-bold uppercase tracking-[0.5em] text-black/40 mb-12">Partner Inquiry</h4>
+               <p className="text-sm text-black/40 font-light mb-12 italic uppercase tracking-[0.2em] leading-loose">
+                 For new commissions, optical studies, or distribution enclaves, contact our primary command center in Paris.
+               </p>
+               <a href="mailto:atelier@lens-studio.fr" className="text-3xl font-black italic hover:text-black transition-colors block border-b border-black/10 pb-8 uppercase tracking-tighter">
+                  atelier@lens-studio.fr
+               </a>
+            </div>
+         </div>
+
+         <div className="max-w-[1600px] mx-auto flex flex-col md:row items-center justify-between gap-12 text-[9px] font-bold uppercase tracking-[0.8em] text-black/20 border-t border-black/5 pt-20">
+            <p>© 2024 LENS STUDIO ATELIER AG. ALL RIGHTS RESERVED. PARIS // GLOBAL.</p>
+            <div className="flex gap-16">
+               <a href="#" className="hover:text-black transition-colors">[Optical_Vault]</a>
+               <a href="#" className="hover:text-white transition-colors">[Terms_of_Form]</a>
+            </div>
+         </div>
       </footer>
     </div>
   );
