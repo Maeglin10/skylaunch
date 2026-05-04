@@ -1,366 +1,404 @@
-"use client"
-import { motion, useScroll, useTransform, useInView, AnimatePresence, useMotionValue, useSpring } from "framer-motion"
-import { useState, useRef, useEffect } from "react"
-import Image from "next/image"
-import Link from "next/link"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
-import { Progress } from "@/components/ui/progress"
-import { Separator } from "@/components/ui/separator"
-import { Hammer, Square3Stack3D, Sparkles, Menu, X, ChevronRight, Heart, Zap, MapPin, Truck } from "lucide-react"
+"use client";
 
-function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true, margin: "-60px" })
-  return <motion.div ref={ref} initial={{ opacity: 0, y: 24 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.55, delay, ease: [0.25, 0.46, 0.45, 0.94] }}>{children}</motion.div>
+import React, { useState, useEffect, useRef } from "react";
+import {
+  motion,
+  AnimatePresence,
+  useScroll,
+  useTransform,
+  useInView,
+} from "framer-motion";
+import Image from "next/image";
+import Link from "next/link";
+import {
+  Zap,
+  Shield,
+  Cpu,
+  Terminal,
+  Radio,
+  Share2,
+  ShoppingCart,
+  Heart,
+  Search,
+  Menu,
+  X,
+  ChevronRight,
+  Play,
+  ArrowRight,
+  Activity,
+  Crosshair,
+  Eye,
+  Lock,
+} from "lucide-react";
+
+import "../premium.css";
+
+/* ==========================================================================
+   DATA STRUCTURES
+   ========================================================================== */
+
+const PRODUCTS = [
+  {
+    id: "unit-01",
+    name: "Aegis Shell v2.0",
+    category: "Outerwear",
+    price: "Ξ 0.42",
+    desc: "Triple-layered nanoweave with active thermoregulation. Rated for Acid Rain and EM Interference.",
+    image:
+      "https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?q=80&w=800&auto=format&fit=crop",
+    specs: ["Waterproof: IPX7", "Thermal: -40°C", "Signal Blocking"],
+  },
+  {
+    id: "unit-02",
+    name: "Neural Mesh Tee",
+    category: "Basics",
+    price: "Ξ 0.15",
+    desc: "Pressure-sensitive fibers that change opacity based on biometrics. Fully breathable, zero-friction seams.",
+    image:
+      "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=800&auto=format&fit=crop",
+    specs: ["Bio-feedback", "Odor Resistant", "Ultra-light"],
+  },
+  {
+    id: "unit-03",
+    name: "Proxy Cargoes",
+    category: "Trousers",
+    price: "Ξ 0.28",
+    desc: "14-pocket modular system with hidden holster points. Ripstop Cordura with stretch panels.",
+    image:
+      "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?q=80&w=800&auto=format&fit=crop",
+    specs: ["Modular Pockets", "Reinforced Knees", "Hidden Zipper"],
+  },
+  {
+    id: "unit-04",
+    name: "Static Balaclava",
+    category: "Accessories",
+    price: "Ξ 0.08",
+    desc: "Facial recognition scrambling weave. Protect your identity in the surveillance state.",
+    image:
+      "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?q=80&w=800&auto=format&fit=crop",
+    specs: ["Privacy Shield", "One Size", "Breathable"],
+  },
+];
+
+const ANNOUNCEMENTS = [
+  "SYSTEM_UPGRADE: NEW_DROP_DETECTED",
+  "IDENTITY_VERIFIED: WELCOME_CITIZEN_402",
+  "GLOBAL_SHIPPING_ENABLED: NEURAL_LINK_ONLY",
+  "PROTOCOL_X: INITIALIZING_SCAN",
+];
+
+/* ==========================================================================
+   UTILITY COMPONENTS
+   ========================================================================== */
+
+function Reveal({
+  children,
+  delay = 0,
+  y = 30,
+}: {
+  children: React.ReactNode;
+  delay?: number;
+  y?: number;
+}) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-50px" });
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.8, delay, ease: [0.25, 0.1, 0.25, 1] }}
+    >
+      {children}
+    </motion.div>
+  );
 }
 
-function Counter({ target, suffix = "", prefix = "" }: { target: number; suffix?: string; prefix?: string }) {
-  const [count, setCount] = useState(0)
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true })
+function GlitchText({ text }: { text: string }) {
+  return (
+    <motion.span
+      animate={{
+        skewX: [0, -10, 10, 0, 5, -5, 0],
+        opacity: [1, 0.8, 1, 0.9, 1, 0.7, 1],
+      }}
+      transition={{ duration: 0.3, repeat: Infinity, repeatDelay: 5 }}
+      className="inline-block"
+    >
+      {text}
+    </motion.span>
+  );
+}
+
+/* ==========================================================================
+   MAIN PAGE COMPONENT
+   ========================================================================== */
+
+export default function NeonUnitApparelPage() {
+  const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [activeAnnouncement, setActiveAnnouncement] = useState(0);
+
   useEffect(() => {
-    if (!inView) return
-    const step = target / 90
-    const t = setInterval(() => setCount(c => { const n = c + step; if (n >= target) { clearInterval(t); return target; } return n; }), 16)
-    return () => clearInterval(t)
-  }, [inView, target])
-  return <span ref={ref}>{prefix}{Math.floor(count).toLocaleString()}{suffix}</span>
-}
+    const handleScroll = () => setScrolled(window.scrollY > 50);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
-function MagneticBtn({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  const x = useMotionValue(0); const y = useMotionValue(0)
-  const sx = useSpring(x, { stiffness: 400, damping: 20 })
-  const sy = useSpring(y, { stiffness: 400, damping: 20 })
-  const ref = useRef<HTMLButtonElement>(null)
-  const handleMouse = (e: React.MouseEvent) => {
-    const r = ref.current!.getBoundingClientRect()
-    x.set((e.clientX - r.left - r.width / 2) * 0.3)
-    y.set((e.clientY - r.top - r.height / 2) * 0.3)
-  }
-  return <motion.button ref={ref} style={{ x: sx, y: sy }} onMouseMove={handleMouse} onMouseLeave={() => { x.set(0); y.set(0) }} className={`cursor-pointer ${className}`}>{children}</motion.button>
-}
-
-const products = [
-  { name: "Industrial Dining", material: "Steel/Oak", dims: "200×100cm", finishes: 4, price: "€4,200" },
-  { name: "Canvas Sofa", material: "Glass/Concrete", dims: "180cm", finishes: 3, price: "€3,800" },
-  { name: "Studio Shelving", material: "Steel", dims: "Custom", finishes: 5, price: "€2,400" },
-  { name: "Workshop Table", material: "Reclaimed Oak", dims: "220cm", finishes: 2, price: "€3,100" },
-  { name: "Cantilever Chair", material: "Steel/Leather", dims: "Std", finishes: 6, price: "€890" },
-  { name: "Pendant Lighting", material: "Brass/Glass", dims: "Variable", finishes: 4, price: "€1,200" },
-  { name: "Side Cabinet", material: "Oak/Steel", dims: "90×50cm", finishes: 3, price: "€1,600" },
-  { name: "Floor Lamp", material: "Raw Steel", dims: "190cm", finishes: 2, price: "€680" }
-]
-
-const collections = [
-  { name: "Dining", pieces: 8, lead: "12 weeks" },
-  { name: "Living", pieces: 12, lead: "14 weeks" },
-  { name: "Office", pieces: 6, lead: "10 weeks" },
-  { name: "Outdoor", pieces: 5, lead: "16 weeks" },
-  { name: "Lighting", pieces: 9, lead: "8 weeks" }
-]
-
-const workshops = [
-  { title: "Forge Process", desc: "See steel shaping and heat treatment" },
-  { title: "Finishing", desc: "Patina development and surface prep" },
-  { title: "Assembly", desc: "Joinery and final fitting" },
-  { title: "Quality", desc: "Inspection and testing protocols" }
-]
-
-export default function IronAndGlass() {
-  const [dialogOpen, setDialogOpen] = useState(false)
-  const [mobileOpen, setMobileOpen] = useState(false)
-  const [wishlist, setWishlist] = useState<number[]>([])
-  const containerRef = useRef<HTMLDivElement>(null)
-  const { scrollYProgress } = useScroll({ target: containerRef })
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.3], [1, 0])
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveAnnouncement((prev) => (prev + 1) % ANNOUNCEMENTS.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
-    <div ref={containerRef} style={{ overflowX: 'hidden', scrollBehavior: 'smooth' }} className="bg-[#1a1a1a] text-[#f5f0e6] min-h-screen font-sans">
-      {/* NAV */}
-      <motion.nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl border-b border-[#8b4513]/20 bg-[#1a1a1a]/80 px-6 md:px-12 py-4 md:py-6">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-[#8b4513] to-[#708090] rounded-lg flex items-center justify-center">
-              <Hammer className="w-5 h-5 text-[#f5f0e6]" />
-            </div>
-            <span className="font-black text-lg tracking-tight">IRON & GLASS</span>
+    <div
+      className="premium-theme min-h-screen bg-[#050505] text-[#00f3ff] font-mono selection:bg-[#00f3ff]/20 selection:text-white overflow-x-hidden"
+      style={{ scrollBehavior: "smooth" }}
+    >
+      {/* ==========================================
+          SCANLINE OVERLAY
+          ========================================== */}
+      <div className="fixed inset-0 pointer-events-none z-[100] opacity-[0.03] bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_2px,3px_100%]" />
+
+      {/* ==========================================
+          NAVIGATION
+          ========================================== */}
+      <nav
+        className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ${scrolled ? "bg-black/90 backdrop-blur-md py-4 border-b border-[#00f3ff]/20 shadow-[0_0_20px_rgba(0,243,255,0.1)]" : "bg-transparent py-8"}`}
+      >
+        <div className="max-w-[1600px] mx-auto px-6 md:px-12 flex items-center justify-between">
+          <Link
+            href="/"
+            className="text-xl md:text-2xl font-black tracking-tighter flex items-center gap-3"
+          >
+            <Zap className="w-6 h-6 animate-pulse" />
+            NEON<span className="text-white">UNIT.</span>
+          </Link>
+
+          <div className="hidden lg:flex items-center gap-10 text-[10px] font-bold uppercase tracking-[0.2em]">
+            <Link href="#" className="hover:text-white transition-colors">
+              Catalog
+            </Link>
+            <Link href="#" className="hover:text-white transition-colors">
+              Archive
+            </Link>
+            <Link href="#" className="hover:text-white transition-colors">
+              Syndicate
+            </Link>
+            <Link href="#" className="hover:text-white transition-colors">
+              Contact
+            </Link>
           </div>
 
-          <div className="hidden lg:flex gap-12 text-sm font-medium text-[#f5f0e6]/60">
-            <button className="hover:text-[#f5f0e6] transition-colors cursor-pointer duration-200">Collections</button>
-            <button className="hover:text-[#f5f0e6] transition-colors cursor-pointer duration-200">Workshop</button>
-            <button className="hover:text-[#f5f0e6] transition-colors cursor-pointer duration-200">Trade</button>
-            <button className="hover:text-[#f5f0e6] transition-colors cursor-pointer duration-200">Custom</button>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <button onClick={() => setDialogOpen(true)} className="cursor-pointer hidden md:inline-flex bg-[#8b4513] text-[#f5f0e6] px-6 py-2 rounded-lg font-semibold hover:bg-[#6d3810] transition-all duration-200 text-sm">
-              Showroom Booking
+          <div className="flex items-center gap-6">
+            <button className="hidden md:block hover:text-white transition-colors">
+              <Search className="w-5 h-5" />
             </button>
-            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-              <SheetTrigger asChild>
-                <button className="lg:hidden cursor-pointer">
-                  {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-                </button>
-              </SheetTrigger>
-              <SheetContent side="right" className="bg-[#1a1a1a] border-[#8b4513]/20">
-                <div className="flex flex-col gap-6 mt-8">
-                  <button className="hover:text-[#8b4513] transition-colors cursor-pointer">Collections</button>
-                  <button className="hover:text-[#8b4513] transition-colors cursor-pointer">Workshop</button>
-                  <button className="hover:text-[#8b4513] transition-colors cursor-pointer">Trade</button>
-                  <button className="hover:text-[#8b4513] transition-colors cursor-pointer">Custom</button>
-                  <Separator className="bg-[#8b4513]/20" />
-                  <button onClick={() => { setDialogOpen(true); setMobileOpen(false); }} className="cursor-pointer bg-[#8b4513] text-[#f5f0e6] px-6 py-2 rounded-lg font-semibold w-full">
-                    Book Showroom
-                  </button>
-                </div>
-              </SheetContent>
-            </Sheet>
+            <button className="relative hover:text-white transition-colors">
+              <ShoppingCart className="w-5 h-5" />
+              <span className="absolute -top-2 -right-2 w-4 h-4 bg-white text-black text-[8px] flex items-center justify-center rounded-full font-bold">
+                4
+              </span>
+            </button>
+            <button onClick={() => setMenuOpen(true)} className="lg:hidden">
+              <Menu className="w-6 h-6" />
+            </button>
           </div>
         </div>
-      </motion.nav>
+      </nav>
 
-      {/* HERO */}
-      <motion.section style={{ opacity: heroOpacity }} className="relative min-h-screen flex items-center justify-center pt-32 px-6 overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          <Image src="https://images.unsplash.com/photo-1629236?w=800&q=80" alt="Industrial Design" fill className="object-cover opacity-25" priority />
-          <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a1a] via-[#1a1a1a]/80 to-[#1a1a1a]" />
-        </div>
-
-        <div className="relative z-10 max-w-4xl text-center space-y-8">
+      {/* MOBILE MENU */}
+      <AnimatePresence>
+        {menuOpen && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8 }}
-            className="inline-block"
+            initial={{ opacity: 0, x: "-100%" }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: "-100%" }}
+            transition={{ type: "tween", duration: 0.5 }}
+            className="fixed inset-0 z-[100] bg-black p-8 pt-32 flex flex-col border-r border-[#00f3ff]/20"
           >
-            <Badge className="bg-[#8b4513]/20 text-[#8b4513] border-[#8b4513]/40 text-xs font-semibold px-4 py-1.5">
-              Handcrafted Industrial Furniture
-            </Badge>
-          </motion.div>
-
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.1 }}
-            className="text-6xl md:text-7xl font-black leading-tight tracking-tight"
-          >
-            Forged with <br /> <span className="bg-gradient-to-r from-[#8b4513] to-[#708090] bg-clip-text text-transparent">Precision</span>
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-lg text-[#f5f0e6]/60 max-w-2xl mx-auto"
-          >
-            Custom industrial furniture for residential and commercial spaces. Handcrafted in our Berlin workshop since 2008. 2,000+ pieces in 80 countries.
-          </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.3 }}
-            className="flex gap-4 justify-center"
-          >
-            <button onClick={() => setDialogOpen(true)} className="cursor-pointer bg-gradient-to-r from-[#8b4513] to-[#6d3810] text-[#f5f0e6] px-8 py-3 rounded-lg font-semibold hover:shadow-lg hover:shadow-[#8b4513]/50 transition-all duration-200 flex items-center gap-2">
-              Schedule Showroom Visit <ChevronRight className="w-4 h-4" />
+            <button
+              onClick={() => setMenuOpen(false)}
+              className="absolute top-10 right-8"
+            >
+              <X className="w-8 h-8" />
             </button>
-            <button className="cursor-pointer border border-[#8b4513]/40 text-[#f5f0e6] px-8 py-3 rounded-lg font-semibold hover:border-[#8b4513] hover:bg-[#8b4513]/5 transition-all duration-200">
-              Browse Collections
-            </button>
-          </motion.div>
-        </div>
-      </motion.section>
-
-      {/* COLLECTIONS TABS */}
-      <section className="py-24 px-6 md:px-12 bg-gradient-to-b from-[#1a1a1a] to-[#242424]">
-        <div className="max-w-7xl mx-auto">
-          <Reveal>
-            <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-5xl font-black mb-4">Collections</h2>
-              <p className="text-[#f5f0e6]/60 text-lg">Curated designs for every space</p>
+            <div className="flex flex-col gap-8 text-4xl font-black tracking-tighter">
+              <Link href="#" onClick={() => setMenuOpen(false)}>
+                <GlitchText text="Catalog" />
+              </Link>
+              <Link href="#" onClick={() => setMenuOpen(false)}>
+                Archive
+              </Link>
+              <Link href="#" onClick={() => setMenuOpen(false)}>
+                Syndicate
+              </Link>
+              <Link href="#" onClick={() => setMenuOpen(false)}>
+                Access_Log
+              </Link>
             </div>
-          </Reveal>
-
-          <Reveal delay={0.2}>
-            <Tabs defaultValue="all" className="w-full">
-              <TabsList className="grid w-full grid-cols-6 bg-[#8b4513]/10 p-1 mb-8">
-                {["all", "dining", "living", "office", "outdoor", "lighting"].map(tab => (
-                  <TabsTrigger key={tab} value={tab} className="text-xs md:text-sm cursor-pointer data-[state=active]:bg-[#8b4513] data-[state=active]:text-white">
-                    {tab === "all" ? "All" : tab.charAt(0).toUpperCase() + tab.slice(1)}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {products.map((prod, i) => (
-                  <Reveal key={prod.name} delay={i * 0.05}>
-                    <Card className="bg-[#242424] border border-[#8b4513]/20 hover:border-[#8b4513]/40 transition-all duration-200 cursor-pointer group overflow-hidden">
-                      <CardContent className="p-6 space-y-4">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h3 className="font-bold text-lg">{prod.name}</h3>
-                            <p className="text-[#f5f0e6]/60 text-sm">{prod.material}</p>
-                          </div>
-                          <button
-                            onClick={() => setWishlist(w => w.includes(i) ? w.filter(x => x !== i) : [...w, i])}
-                            className="cursor-pointer"
-                          >
-                            <Heart className={`w-5 h-5 transition-all ${wishlist.includes(i) ? "fill-[#8b4513] text-[#8b4513]" : "text-[#f5f0e6]/40 hover:text-[#f5f0e6]"}`} />
-                          </button>
-                        </div>
-                        <div className="space-y-2">
-                          <p className="text-sm text-[#f5f0e6]/60">{prod.dims}</p>
-                          <Badge className="bg-[#8b4513]/20 text-[#8b4513] text-xs">{prod.finishes} finishes</Badge>
-                        </div>
-                        <div className="flex justify-between items-center pt-4 border-t border-[#8b4513]/10">
-                          <span className="text-lg font-black text-[#8b4513]">{prod.price}</span>
-                          <button className="bg-[#8b4513]/20 text-[#8b4513] hover:bg-[#8b4513]/30 px-3 py-1 rounded text-xs font-semibold transition-all duration-200">
-                            View
-                          </button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Reveal>
-                ))}
+            <div className="mt-auto pt-10 border-t border-[#00f3ff]/10">
+              <div className="text-[10px] uppercase tracking-widest text-slate-500 mb-4">
+                Network_Status: Optimal
               </div>
-            </Tabs>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* WORKSHOP CAROUSEL */}
-      <section className="py-24 px-6 md:px-12 bg-[#1a1a1a]">
-        <div className="max-w-6xl mx-auto">
-          <Reveal>
-            <h2 className="text-4xl md:text-5xl font-black text-center mb-16">The Workshop</h2>
-          </Reveal>
-
-          <Reveal delay={0.2}>
-            <Carousel className="w-full">
-              <CarouselContent>
-                {[
-                  { img: "https://images.unsplash.com/photo-1565043666747-69f6646db940?auto=format&fit=crop&q=80&w=1000", title: "Forge Station", desc: "Traditional metalworking" },
-                  { img: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&q=80&w=1000", title: "Finishing", desc: "Precision surface treatment" },
-                  { img: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&q=80&w=1000", title: "Assembly", desc: "Expert craftsmanship" },
-                  { img: "https://images.unsplash.com/photo-1486262715619-67b519e0bbe3?auto=format&fit=crop&q=80&w=1000", title: "Quality Control", desc: "Final inspection" }
-                ].map((item, i) => (
-                  <CarouselItem key={i} className="basis-full md:basis-1/2">
-                    <Card className="bg-[#242424] border border-[#8b4513]/20 overflow-hidden">
-                      <div className="relative h-64 w-full">
-                        <Image src={item.img} alt={item.title} fill className="object-cover" />
-                      </div>
-                      <CardContent className="p-6">
-                        <h3 className="font-bold text-lg mb-2">{item.title}</h3>
-                        <p className="text-[#f5f0e6]/60 text-sm">{item.desc}</p>
-                      </CardContent>
-                    </Card>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              <CarouselPrevious className="cursor-pointer" />
-              <CarouselNext className="cursor-pointer" />
-            </Carousel>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* TRADE PROGRAM */}
-      <section className="py-24 px-6 md:px-12 bg-gradient-to-b from-[#1a1a1a] to-[#242424]">
-        <div className="max-w-7xl mx-auto">
-          <Reveal>
-            <h2 className="text-4xl md:text-5xl font-black text-center mb-16">Interior Designer Trade Program</h2>
-          </Reveal>
-
-          <Reveal delay={0.2}>
-            <Tabs defaultValue="pricing" className="w-full">
-              <TabsList className="grid w-full grid-cols-4 bg-[#8b4513]/10 p-1 mb-8">
-                {["pricing", "samples", "leads", "portfolio"].map(tab => (
-                  <TabsTrigger key={tab} value={tab} className="text-xs md:text-sm cursor-pointer data-[state=active]:bg-[#8b4513] data-[state=active]:text-white">
-                    {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-
-              <TabsContent value="pricing" className="space-y-4">
-                <Card className="bg-[#242424] border border-[#8b4513]/20">
-                  <CardContent className="p-8">
-                    <h3 className="text-2xl font-bold mb-6">Trade Pricing Benefits</h3>
-                    <ul className="space-y-3">
-                      {["25% discount on all collections", "Priority lead times (6-week expedited)", "Volume discounts available", "Dedicated account manager", "Sample program access"].map((benefit, i) => (
-                        <li key={i} className="flex items-center gap-3 text-[#f5f0e6]/80">
-                          <span className="w-2 h-2 bg-[#8b4513] rounded-full" />
-                          {benefit}
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* CUSTOM ORDER */}
-      <section className="py-24 px-6 md:px-12 bg-[#1a1a1a]">
-        <div className="max-w-4xl mx-auto">
-          <Reveal>
-            <h2 className="text-4xl md:text-5xl font-black text-center mb-16">Custom Orders</h2>
-          </Reveal>
-
-          <Reveal delay={0.2}>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[
-                { step: "1. Consultation", desc: "Discuss your vision, dimensions, and material preferences" },
-                { step: "2. Custom Quote", desc: "Detailed estimate including timeline and specifications" },
-                { step: "3. Production", desc: "Handcrafted in our workshop with regular updates" }
-              ].map((item, i) => (
-                <Card key={i} className="bg-gradient-to-br from-[#8b4513]/10 to-[#708090]/10 border border-[#8b4513]/20 cursor-pointer hover:border-[#8b4513]/40 transition-all duration-200">
-                  <CardContent className="p-6 text-center">
-                    <div className="text-3xl font-black text-[#8b4513] mb-3">{i + 1}</div>
-                    <h3 className="font-bold mb-2">{item.step}</h3>
-                    <p className="text-[#f5f0e6]/60 text-sm">{item.desc}</p>
-                  </CardContent>
-                </Card>
-              ))}
+              <div className="w-full h-1 bg-slate-900 rounded-full overflow-hidden">
+                <motion.div
+                  animate={{ width: ["0%", "100%", "0%"] }}
+                  transition={{ duration: 5, repeat: Infinity }}
+                  className="h-full bg-[#00f3ff]"
+                />
+              </div>
             </div>
-          </Reveal>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-          <Reveal delay={0.4}>
-            <div className="mt-8 bg-[#242424] border-2 border-[#8b4513] rounded-lg p-8 text-center">
-              <button onClick={() => setDialogOpen(true)} className="cursor-pointer bg-[#8b4513] text-[#f5f0e6] px-8 py-3 rounded-lg font-semibold hover:bg-[#6d3810] transition-all duration-200">
-                Request Custom Quote
+      {/* ==========================================
+          1. HERO (HUD Aesthetic)
+          ========================================== */}
+      <section className="relative w-full h-[100svh] flex flex-col justify-center items-center px-6 overflow-hidden pt-20">
+        {/* Background Grid */}
+        <div className="absolute inset-0 z-0 bg-[linear-gradient(to_right,#111_1px,transparent_1px),linear-gradient(to_bottom,#111_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
+
+        {/* Animated HUD Elements */}
+        <div className="absolute inset-0 pointer-events-none">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] border border-[#00f3ff]/5 rounded-full"
+          />
+          <motion.div
+            animate={{ rotate: -360 }}
+            transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] border-t-2 border-[#00f3ff]/10 rounded-full"
+          />
+        </div>
+
+        <div className="relative z-10 text-center max-w-5xl">
+          <Reveal>
+            <div className="inline-flex items-center gap-3 px-4 py-1 rounded-full border border-[#00f3ff]/30 bg-[#00f3ff]/5 text-[10px] font-bold uppercase tracking-widest mb-10">
+              <Activity className="w-3 h-3" />{" "}
+              {ANNOUNCEMENTS[activeAnnouncement]}
+            </div>
+            <h1 className="text-6xl md:text-9xl font-black tracking-tighter leading-[0.85] mb-12">
+              EQUIP FOR <br />{" "}
+              <span className="text-white italic">SURVIVAL.</span>
+            </h1>
+            <p className="max-w-xl mx-auto text-sm md:text-base text-slate-500 leading-relaxed font-light mb-12 uppercase tracking-wider">
+              High-performance apparel for the metropolitan wasteland.
+              Engineered with active nanoweave and ballistic ripstop.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-6 justify-center">
+              <button className="px-12 py-5 bg-[#00f3ff] text-black text-[10px] font-black uppercase tracking-widest hover:bg-white transition-all shadow-[0_0_30px_rgba(0,243,255,0.3)] flex items-center justify-center gap-3">
+                <Terminal className="w-4 h-4" /> Initialize Shop
+              </button>
+              <button className="px-12 py-5 border border-[#00f3ff]/30 text-[#00f3ff] text-[10px] font-black uppercase tracking-widest hover:bg-[#00f3ff]/10 transition-all flex items-center justify-center gap-3">
+                <Crosshair className="w-4 h-4" /> View Manifesto
               </button>
             </div>
           </Reveal>
         </div>
+
+        <div className="absolute bottom-10 left-10 hidden lg:block">
+          <div className="flex flex-col gap-4 text-[10px] font-bold text-slate-600">
+            <div className="flex items-center gap-4">
+              <div className="w-8 h-[1px] bg-slate-800" />
+              LAT: 35.6895° N
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="w-8 h-[1px] bg-slate-800" />
+              LNG: 139.6917° E
+            </div>
+          </div>
+        </div>
+
+        <div className="absolute bottom-10 right-10 hidden lg:block">
+          <div className="text-[10px] font-bold text-slate-600 flex flex-col items-end gap-2">
+            <span>ENCRYPTION: AES-256</span>
+            <span>CONNECTION: SECURE_V3</span>
+          </div>
+        </div>
       </section>
 
-      {/* STATS */}
-      <section className="py-24 px-6 md:px-12 bg-gradient-to-b from-[#1a1a1a] via-[#242424] to-[#1a1a1a]">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {[
-              { label: "Established", value: 2008, suffix: "" },
-              { label: "Pieces Crafted", value: 2000, suffix: "" },
-              { label: "Countries", value: 80, suffix: "" },
-              { label: "Avg Rating", value: 4.9, suffix: "★" }
-            ].map((stat, i) => (
-              <Reveal key={stat.label} delay={i * 0.1}>
-                <div className="text-center">
-                  <div className="text-4xl md:text-5xl font-black text-[#8b4513] mb-2">
-                    <Counter target={stat.value} suffix={stat.suffix} />
+      {/* ==========================================
+          2. THE GEAR (Catalog Grid)
+          ========================================== */}
+      <section className="py-32 bg-black relative z-20">
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12">
+          <div className="flex flex-col md:flex-row justify-between items-end mb-24 gap-8">
+            <Reveal>
+              <span className="text-[10px] uppercase tracking-[0.4em] font-bold text-[#00f3ff] mb-4 block">
+                Deployment // 004
+              </span>
+              <h2 className="text-5xl md:text-7xl font-black tracking-tighter uppercase leading-[0.9]">
+                Technical <br />
+                <span className="text-white italic">Hardware.</span>
+              </h2>
+            </Reveal>
+            <div className="flex gap-4">
+              <button className="px-6 py-2 border border-[#00f3ff]/20 text-[10px] font-bold uppercase tracking-widest text-[#00f3ff] hover:bg-[#00f3ff]/10 transition-all">
+                Filter: All
+              </button>
+              <button className="px-6 py-2 border border-slate-800 text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-white transition-all">
+                Sort: Price
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {PRODUCTS.map((prod, i) => (
+              <Reveal key={prod.id} delay={i * 0.1}>
+                <div className="group relative bg-[#111] border border-slate-900 overflow-hidden hover:border-[#00f3ff]/50 transition-all duration-500">
+                  {/* Scanline Effect on hover */}
+                  <div className="absolute inset-0 pointer-events-none z-10 opacity-0 group-hover:opacity-100 transition-opacity bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,243,255,0.05)_50%)] bg-[length:100%_4px]" />
+
+                  <div className="relative aspect-[3/4] overflow-hidden">
+                    <Image
+                      src={prod.image}
+                      alt={prod.name}
+                      fill
+                      className="object-cover grayscale group-hover:grayscale-0 transition-all duration-700 group-hover:scale-105"
+                    />
+                    <div className="absolute top-4 left-4">
+                      <span className="px-2 py-1 bg-black/80 text-[8px] font-black uppercase text-[#00f3ff] border border-[#00f3ff]/30">
+                        {prod.category}
+                      </span>
+                    </div>
+                    <div className="absolute top-4 right-4 translate-x-12 group-hover:translate-x-0 transition-transform duration-500">
+                      <button className="w-10 h-10 bg-[#00f3ff] text-black flex items-center justify-center hover:bg-white transition-colors">
+                        <ShoppingCart className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
-                  <p className="text-[#f5f0e6]/60">{stat.label}</p>
+
+                  <div className="p-6 relative z-20">
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h3 className="text-xl font-black uppercase tracking-tight text-white group-hover:text-[#00f3ff] transition-colors">
+                          {prod.name}
+                        </h3>
+                        <span className="text-[10px] font-bold text-slate-500">
+                          {prod.id}
+                        </span>
+                      </div>
+                      <span className="text-lg font-black">{prod.price}</span>
+                    </div>
+                    <p className="text-xs text-slate-500 leading-relaxed mb-6 font-light">
+                      {prod.desc}
+                    </p>
+                    <div className="space-y-2">
+                      {prod.specs.map((spec) => (
+                        <div
+                          key={spec}
+                          className="flex items-center gap-2 text-[9px] uppercase tracking-widest text-slate-600"
+                        >
+                          <div className="w-1 h-1 bg-[#00f3ff]/40 rounded-full" />
+                          {spec}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </Reveal>
             ))}
@@ -368,84 +406,258 @@ export default function IronAndGlass() {
         </div>
       </section>
 
-      {/* TESTIMONIALS */}
-      <section className="py-24 px-6 md:px-12 bg-[#1a1a1a]">
-        <div className="max-w-6xl mx-auto">
-          <Reveal>
-            <h2 className="text-4xl md:text-5xl font-black text-center mb-16">Client Stories</h2>
+      {/* ==========================================
+          3. THE SYNDICATE (Full Width Reveal)
+          ========================================= */}
+      <section className="py-32 bg-[#050505] overflow-hidden border-y border-[#00f3ff]/10">
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12 grid grid-cols-1 lg:grid-cols-2 gap-16 md:gap-32 items-center">
+          <Reveal className="relative aspect-square md:aspect-[4/3] rounded-sm overflow-hidden border border-[#00f3ff]/20">
+            <Image
+              src="https://images.unsplash.com/photo-1510915228340-29c85a43dcfe?q=80&w=1200&auto=format&fit=crop"
+              alt="Syndicate"
+              fill
+              className="object-cover opacity-50"
+            />
+            <div className="absolute inset-0 bg-[#00f3ff]/5 mix-blend-color" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,#000_100%)]" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-4">
+              <Lock className="w-12 h-12 text-[#00f3ff] animate-pulse" />
+              <span className="text-[10px] uppercase tracking-[0.4em] font-bold">
+                Access_Restricted
+              </span>
+            </div>
           </Reveal>
 
-          <Reveal delay={0.2}>
-            <Carousel className="w-full">
-              <CarouselContent>
+          <div>
+            <Reveal>
+              <h2 className="text-5xl md:text-7xl font-black tracking-tighter uppercase leading-[0.9] mb-12">
+                Shadow <br />{" "}
+                <span className="text-white italic">Protocols.</span>
+              </h2>
+              <p className="text-xl text-slate-400 font-light leading-relaxed mb-12 max-w-lg">
+                Neon Unit was born in the neon-lit back alleys of the megacity.
+                We build tools for those who operate outside the grid.
+              </p>
+
+              <div className="grid grid-cols-1 gap-6 mb-12">
                 {[
-                  { name: "Michael A.", quote: "The craftsmanship is incredible. Every piece is a statement." },
-                  { name: "Sarah L.", quote: "Custom order was perfect. Lead time was faster than expected." },
-                  { name: "James C.", quote: "Trade pricing saved us thousands on a major project." }
-                ].map((review, i) => (
-                  <CarouselItem key={i} className="basis-full md:basis-1/2">
-                    <Card className="bg-[#242424] border border-[#8b4513]/20">
-                      <CardContent className="p-8">
-                        <p className="text-[#f5f0e6] font-semibold mb-4">"{review.quote}"</p>
-                        <p className="text-[#f5f0e6]/60">— {review.name}</p>
-                      </CardContent>
-                    </Card>
-                  </CarouselItem>
+                  {
+                    icon: <Shield className="w-5 h-5" />,
+                    title: "Ballistic Weave",
+                    desc: "Our ripstop is infused with carbon nanotubes for extreme durability.",
+                  },
+                  {
+                    icon: <Cpu className="w-5 h-5" />,
+                    title: "Neural Link Ready",
+                    desc: "Every unit includes integrated cable management for cybernetic interfaces.",
+                  },
+                  {
+                    icon: <Eye className="w-5 h-5" />,
+                    title: "Surveillance Proof",
+                    desc: "Anti-IR coatings to scramble drone-based thermal imaging.",
+                  },
+                ].map((feat, i) => (
+                  <div
+                    key={i}
+                    className="flex gap-6 p-6 bg-slate-900/30 border border-slate-800 hover:border-[#00f3ff]/30 transition-colors"
+                  >
+                    <div className="text-[#00f3ff] shrink-0">{feat.icon}</div>
+                    <div>
+                      <h4 className="text-sm font-black uppercase mb-1 text-white">
+                        {feat.title}
+                      </h4>
+                      <p className="text-xs text-slate-500">{feat.desc}</p>
+                    </div>
+                  </div>
                 ))}
-              </CarouselContent>
-              <CarouselPrevious className="cursor-pointer" />
-              <CarouselNext className="cursor-pointer" />
-            </Carousel>
-          </Reveal>
-        </div>
-      </section>
+              </div>
 
-      {/* FAQ */}
-      <section className="py-24 px-6 md:px-12 bg-gradient-to-b from-[#1a1a1a] to-[#242424]">
-        <div className="max-w-3xl mx-auto">
-          <Reveal>
-            <h2 className="text-4xl md:text-5xl font-black text-center mb-16">FAQ</h2>
-          </Reveal>
-
-          <Reveal delay={0.2}>
-            <Accordion type="single" collapsible className="w-full space-y-3">
-              {[
-                { q: "What are typical lead times?", a: "Stock items ship within 2 weeks. Custom pieces take 12-16 weeks depending on complexity. Expedited 6-week options available." },
-                { q: "Do you offer delivery?", a: "Yes, we ship internationally. Europe €200-500, rest of world via freight. White-glove assembly available in major cities." },
-                { q: "Can I customize dimensions?", a: "Absolutely. All pieces can be adjusted for your space. Custom quotes include fabrication costs." },
-                { q: "What's your return policy?", a: "30-day returns on stock items. Custom pieces are final sale but we stand behind our craftsmanship with lifetime support." }
-              ].map((item, i) => (
-                <AccordionItem key={i} value={`item-${i}`} className="border border-[#8b4513]/20 rounded-lg px-4 data-[state=open]:border-[#8b4513]/40 transition-all">
-                  <AccordionTrigger className="cursor-pointer hover:text-[#8b4513] transition-colors py-4">
-                    {item.q}
-                  </AccordionTrigger>
-                  <AccordionContent className="text-[#f5f0e6]/60 pb-4">
-                    {item.a}
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* BOOKING DIALOG */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="bg-[#242424] border-[#8b4513]/20">
-          <DialogHeader>
-            <DialogTitle className="text-2xl">Book Showroom Visit</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <input type="text" placeholder="Your name" className="w-full bg-[#1a1a1a] border border-[#8b4513]/20 rounded-lg px-4 py-2 text-[#f5f0e6] placeholder-[#f5f0e6]/40 focus:border-[#8b4513] outline-none cursor-text" />
-            <input type="email" placeholder="Your email" className="w-full bg-[#1a1a1a] border border-[#8b4513]/20 rounded-lg px-4 py-2 text-[#f5f0e6] placeholder-[#f5f0e6]/40 focus:border-[#8b4513] outline-none cursor-text" />
-            <input type="tel" placeholder="Phone number" className="w-full bg-[#1a1a1a] border border-[#8b4513]/20 rounded-lg px-4 py-2 text-[#f5f0e6] placeholder-[#f5f0e6]/40 focus:border-[#8b4513] outline-none cursor-text" />
-            <textarea placeholder="Project details" rows={3} className="w-full bg-[#1a1a1a] border border-[#8b4513]/20 rounded-lg px-4 py-2 text-[#f5f0e6] placeholder-[#f5f0e6]/40 focus:border-[#8b4513] outline-none resize-none cursor-text" />
-            <MagneticBtn className="w-full bg-gradient-to-r from-[#8b4513] to-[#6d3810] text-[#f5f0e6] py-3 rounded-lg font-semibold hover:shadow-lg hover:shadow-[#8b4513]/50 transition-all duration-200">
-              Request Showroom Visit
-            </MagneticBtn>
+              <button className="text-[10px] uppercase tracking-widest font-black text-[#00f3ff] border-b border-[#00f3ff]/30 pb-2 hover:border-white hover:text-white transition-all flex items-center gap-3">
+                Download Operations Log <ArrowRight className="w-4 h-4" />
+              </button>
+            </Reveal>
           </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      </section>
+
+      {/* ==========================================
+          4. MEGA FOOTER (Cyberpunk Grid)
+          ========================================== */}
+      <footer className="bg-black pt-32 pb-12 px-6 md:px-12 relative overflow-hidden">
+        {/* Animated HUD line */}
+        <motion.div
+          animate={{ scaleX: [0, 1, 0] }}
+          transition={{ duration: 10, repeat: Infinity }}
+          className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#00f3ff] to-transparent"
+        />
+
+        <div className="max-w-[1600px] mx-auto relative z-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-16 mb-24">
+            <div className="lg:col-span-5">
+              <Reveal>
+                <div className="text-3xl font-black tracking-tighter uppercase mb-10 flex items-center gap-3">
+                  <Zap className="w-8 h-8 text-[#00f3ff]" />
+                  NEON<span className="text-white">UNIT.</span>
+                </div>
+                <p className="text-slate-500 max-w-sm mb-12">
+                  Survival isn't a state, it's a protocol. Join the network for
+                  priority drop access and mission briefings.
+                </p>
+                <form
+                  className="relative max-w-md"
+                  onSubmit={(e) => e.preventDefault()}
+                >
+                  <input
+                    type="email"
+                    placeholder="ENTER_IDENT_EMAIL"
+                    className="w-full bg-[#0a0a0a] border border-slate-800 rounded-sm px-6 py-4 text-xs font-bold outline-none focus:border-[#00f3ff] text-white transition-all"
+                  />
+                  <button
+                    type="submit"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-[#00f3ff] hover:text-white transition-colors"
+                  >
+                    AUTHENTICATE
+                  </button>
+                </form>
+              </Reveal>
+            </div>
+
+            <div className="lg:col-span-2 lg:col-start-7">
+              <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-700 mb-10">
+                Network_Map
+              </h4>
+              <ul className="space-y-4 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-[#00f3ff] transition-colors"
+                  >
+                    Catalog_v4
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-[#00f3ff] transition-colors"
+                  >
+                    Archive_Data
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-[#00f3ff] transition-colors"
+                  >
+                    Syndicate_Info
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-[#00f3ff] transition-colors"
+                  >
+                    Mission_Logs
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            <div className="lg:col-span-2">
+              <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-700 mb-10">
+                Support_Protocol
+              </h4>
+              <ul className="space-y-4 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-[#00f3ff] transition-colors"
+                  >
+                    Shipping_Route
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-[#00f3ff] transition-colors"
+                  >
+                    Exchange_Code
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-[#00f3ff] transition-colors"
+                  >
+                    Care_Manual
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-[#00f3ff] transition-colors"
+                  >
+                    Size_Matrix
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            <div className="lg:col-span-2">
+              <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-700 mb-10">
+                Neural_Outlets
+              </h4>
+              <ul className="space-y-4 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-[#00f3ff] transition-colors flex items-center gap-2"
+                  >
+                    <Radio className="w-3 h-3" /> Instagram_v2
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-[#00f3ff] transition-colors flex items-center gap-2"
+                  >
+                    <Share2 className="w-3 h-3" /> Terminal_X
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-[#00f3ff] transition-colors flex items-center gap-2"
+                  >
+                    <Zap className="w-3 h-3" /> Discord_Link
+                  </Link>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="flex flex-col md:flex-row justify-between items-center gap-8 pt-10 border-t border-slate-900 text-[9px] font-bold uppercase tracking-widest text-slate-700">
+            <div className="flex items-center gap-10">
+              <span>
+                &copy; {new Date().getFullYear()} Neon Unit Heavy Industries
+              </span>
+              <Link href="#" className="hover:text-[#00f3ff] transition-colors">
+                Privacy_Override
+              </Link>
+              <Link href="#" className="hover:text-[#00f3ff] transition-colors">
+                Service_Terms
+              </Link>
+            </div>
+            <div className="flex gap-10">
+              <span>Location: REDACTED</span>
+              <span className="flex items-center gap-2">
+                Status:{" "}
+                <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />{" "}
+                Active
+              </span>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
-  )
+  );
 }
