@@ -1,401 +1,486 @@
-"use client"
+"use client";
 
-import { motion, useScroll, useTransform, useInView, AnimatePresence, useMotionValue, useSpring } from "framer-motion"
-import { useState, useRef, useEffect, useCallback } from "react"
-import Image from "next/image"
-import Link from "next/link"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
-import { Progress } from "@/components/ui/progress"
-import { X, Menu, ChevronDown, ArrowRight, Zap, Battery, Gauge } from "lucide-react"
+import {
+  motion,
+  useScroll,
+  useTransform,
+  useInView,
+  AnimatePresence,
+  useMotionValue,
+  useSpring,
+} from "framer-motion";
+import { useState, useRef, useEffect, useCallback } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
+import {
+  Gem,
+  Sparkles,
+  Wand2,
+  Zap,
+  Globe,
+  Activity,
+  Terminal,
+  Box,
+  Share2,
+  Layers,
+  Maximize,
+  Monitor,
+  MousePointer2,
+  Navigation,
+  Wifi,
+  Shield,
+  ShoppingBag,
+  Search,
+  Star,
+  Instagram,
+  Twitter,
+  Mail,
+  Phone,
+  Check,
+  Menu,
+  X,
+  MapPin,
+  Clock,
+  Lock,
+  Plus,
+  Bell,
+  Settings,
+  ArrowRight,
+  ArrowUpRight,
+  ChevronRight,
+  Eye,
+  PenTool,
+  Clock3,
+  History,
+  Award,
+} from "lucide-react";
 
-function Reveal({ children, delay=0 }: { children: React.ReactNode; delay?: number }) {
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true, margin: "-60px" })
+import "../premium.css";
+
+/* ==========================================================================
+   DATA STRUCTURES
+   ========================================================================= */
+
+const PIECES = [
+  {
+    id: 1,
+    name: "AURELIUS_NOIRE",
+    category: "High Jewelry",
+    price: "€85,000",
+    img: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=1200&q=80",
+    desc: "18k white gold necklace featuring a central 5-carat ethically sourced black diamond.",
+  },
+  {
+    id: 2,
+    name: "LUNAR_ORBIT",
+    category: "Timepiece",
+    price: "€120,000",
+    img: "https://images.unsplash.com/photo-1524805444758-089113d48a6d?w=1200&q=80",
+    desc: "Manual-wind mechanical movement with a hand-engraved lunar phase complication.",
+  },
+  {
+    id: 3,
+    name: "SOLAR_BAND",
+    category: "Bespoke",
+    price: "€12,500",
+    img: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=1200&q=80",
+    desc: "Recycled yellow gold band with pavé-set solar-spectrum yellow sapphires.",
+  },
+];
+
+const HERITAGE_TIMELINE = [
+  {
+    year: "1882",
+    event: "Foundation of the Aurelius Atelier in Geneva by Marcus Aurelius.",
+  },
+  {
+    year: "1924",
+    event: "Invention of the 'Floating Set' technique for rare gemstones.",
+  },
+  {
+    year: "1978",
+    event: "Opening of the flagship boutique on Place Vendôme, Paris.",
+  },
+  {
+    year: "2026",
+    event: "Introduction of the Ethical Blockchain Provenance Protocol.",
+  },
+];
+
+/* ==========================================================================
+   UTILITY COMPONENTS
+   ========================================================================= */
+
+function Reveal({
+  children,
+  delay = 0,
+  y = 30,
+}: {
+  children: React.ReactNode;
+  delay?: number;
+  y?: number;
+}) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-50px" });
   return (
-    <motion.div ref={ref} initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, delay }} >
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 1, delay, ease: [0.25, 0.1, 0.25, 1] }}
+    >
       {children}
     </motion.div>
-  )
+  );
 }
 
-function Counter({ target, suffix="" }: { target: number; suffix?: string }) {
-  const [count, setCount] = useState(0)
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true })
+function Counter({
+  to,
+  prefix = "",
+  suffix = "",
+}: {
+  to: number;
+  prefix?: string;
+  suffix?: string;
+}) {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true });
+  const [count, setCount] = useState(0);
   useEffect(() => {
-    if (!inView) return
-    const step = Math.ceil(target / 60)
-    const t = setInterval(() => setCount(c => Math.min(c + step, target)), 16)
-    return () => clearInterval(t)
-  }, [inView, target])
-  return <span ref={ref}>{count.toLocaleString()}{suffix}</span>
+    if (!isInView) return;
+    let cur = 0;
+    const step = to / 70;
+    const t = setInterval(() => {
+      cur += step;
+      if (cur >= to) {
+        setCount(to);
+        clearInterval(t);
+      } else {
+        setCount(Math.floor(cur));
+      }
+    }, 16);
+    return () => clearInterval(t);
+  }, [isInView, to]);
+  return (
+    <span ref={ref}>
+      {prefix}
+      {count.toLocaleString()}
+      {suffix}
+    </span>
+  );
 }
 
-function MagneticBtn({ children, className="" }: { children: React.ReactNode; className?: string }) {
-  const x = useMotionValue(0); const y = useMotionValue(0)
-  const sx = useSpring(x, { stiffness: 500, damping: 25 })
-  const sy = useSpring(y, { stiffness: 500, damping: 25 })
-  const ref = useRef<HTMLButtonElement>(null)
-  const handleMouse = (e: React.MouseEvent) => {
-    const r = ref.current!.getBoundingClientRect()
-    x.set((e.clientX - r.left - r.width/2) * 0.35)
-    y.set((e.clientY - r.top - r.height/2) * 0.35)
-  }
-  return <motion.button ref={ref} style={{ x: sx, y: sy }} onMouseMove={handleMouse} onMouseLeave={() => { x.set(0); y.set(0) }} className={className}>{children}</motion.button>
-}
+function MagneticBtn({
+  children,
+  className = "",
+  onClick,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  onClick?: () => void;
+}) {
+  const ref = useRef<HTMLButtonElement>(null);
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const sx = useSpring(x, { stiffness: 200, damping: 20 });
+  const sy = useSpring(y, { stiffness: 200, damping: 20 });
 
-const specs = [
-  { label: "Range", value: 500, max: 600, unit: "km", icon: Zap },
-  { label: "0-100 km/h", value: 3.2, max: 5, unit: "s", icon: Gauge },
-  { label: "Battery Capacity", value: 85, max: 100, unit: "kWh", icon: Battery },
-]
+  const handleMouse = useCallback(
+    (e: React.MouseEvent) => {
+      const rect = ref.current?.getBoundingClientRect();
+      if (!rect) return;
+      x.set((e.clientX - rect.left - rect.width / 2) * 0.35);
+      y.set((e.clientY - rect.top - rect.height / 2) * 0.35);
+    },
+    [x, y],
+  );
 
-const models = [
-  { id: "s", name: "VOLTA S", price: "$45K", range: "400 km", accel: "4.2s", seats: 5, warranty: "5 years" },
-  { id: "x", name: "VOLTA X", price: "$65K", range: "500 km", accel: "3.2s", seats: 5, warranty: "8 years" },
-  { id: "gt", name: "VOLTA GT", price: "$89K", range: "600 km", accel: "2.8s", seats: 4, warranty: "10 years" },
-]
-
-const faqs = [
-  { q: "How does range anxiety work with 500km?", a: "Real-world range is 450–550km depending on conditions. You can drive 5+ hours without charging. Most owners charge overnight at home." },
-  { q: "What's the charging infrastructure like?", a: "850+ Volta Fast Charge stations across North America. 10% charge in 15 min, 80% in 45 min. Home charging adds 80km in 2 hours." },
-  { q: "Are batteries covered under warranty?", a: "Full 8–10 year battery warranty depending on model. Covers degradation, defects, and replacement." },
-  { q: "How do I pre-order?", a: "Secure your reservation with $5,000 deposit on our platform. Full payment due 30 days before delivery. Financing available." },
-]
-
-export default function VoltaMotors() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [selectedModel, setSelectedModel] = useState("x")
-  const [showPreorderModal, setShowPreorderModal] = useState(false)
-  const [chargeLevel, setChargeLevel] = useState(80)
-  const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
-  const { scrollY } = useScroll()
-  const heroY = useTransform(scrollY, [0, 500], [0, 150])
-
-  const rangeAtCharge = Math.round((chargeLevel / 100) * 500)
+  const reset = useCallback(() => {
+    x.set(0);
+    y.set(0);
+  }, [x, y]);
 
   return (
-    <div style={{ backgroundColor: "#050c0a", color: "#ffffff", minHeight: "100vh" }}>
-      {/* NAV */}
-      <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 50, backgroundColor: "rgba(5,12,10,0.97)", backdropFilter: "blur(12px)", borderBottom: "1px solid #00d97e30" }}>
-        <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "1rem 2rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h1 style={{ fontSize: "1.5rem", fontWeight: "900", color: "#00d97e", letterSpacing: "-0.02em" }}>VOLTA</h1>
-          <div style={{ display: "none", gap: "2.5rem" }} className="md:flex">
-            {["Models", "Technology", "Charging", "Order"].map((item) => (
-              <a key={item} href="#" style={{ fontSize: "0.85rem", fontWeight: "600", color: "#ffffff", opacity: 0.7, textDecoration: "none" }}>
-                {item}
-              </a>
-            ))}
+    <motion.button
+      ref={ref}
+      style={{ x: sx, y: sy }}
+      onMouseMove={handleMouse}
+      onMouseLeave={reset}
+      onClick={onClick}
+      className={className}
+    >
+      {children}
+    </motion.button>
+  );
+}
+
+/* ==========================================================================
+   MAIN PAGE COMPONENT
+   ========================================================================= */
+
+export default function HeritageOSPage() {
+  const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [activePiece, setActivePiece] = useState<number | null>(null);
+
+  const heroRef = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"],
+  });
+  const heroY = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 50);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  return (
+    <div
+      className="premium-theme min-h-screen bg-[#0a0a0c] text-[#f4f4f5] font-serif selection:bg-amber-900 selection:text-white overflow-x-hidden"
+      style={{ scrollBehavior: "smooth" }}
+    >
+      {/* ==========================================
+          NAVIGATION
+          ========================================== */}
+      <nav
+        className={`fixed top-0 left-0 w-full z-50 transition-all duration-1000 ${scrolled ? "bg-black/95 backdrop-blur-xl py-4 border-b border-white/5" : "bg-transparent py-10"}`}
+      >
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12 flex items-center justify-between">
+          <Link href="/" className="flex flex-col items-center">
+            <span className="text-[10px] font-bold uppercase tracking-[0.6em] text-amber-600/40 mb-1">
+              Maison.
+            </span>
+            <span className="text-xl md:text-2xl font-black tracking-tighter uppercase text-white">
+              AURELIUS<span className="text-amber-900">.HERITAGE</span>
+            </span>
+          </Link>
+
+          <div className="hidden lg:flex items-center gap-12 text-[10px] font-bold uppercase tracking-[0.3em] text-white/20">
+            <Link
+              href="#collection"
+              className="hover:text-amber-500 transition-colors"
+            >
+              Collection
+            </Link>
+            <Link
+              href="#heritage"
+              className="hover:text-amber-500 transition-colors"
+            >
+              Heritage
+            </Link>
+            <Link
+              href="#provenance"
+              className="hover:text-amber-500 transition-colors"
+            >
+              Provenance
+            </Link>
+            <Link
+              href="#bespoke"
+              className="hover:text-amber-500 transition-colors"
+            >
+              Bespoke
+            </Link>
           </div>
-          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-            <SheetTrigger asChild>
-              <button style={{ display: "none", cursor: "pointer", background: "none", border: "none", padding: 0 }} className="md:hidden">
-                <Menu size={24} color="#00d97e" />
-              </button>
-            </SheetTrigger>
-            <SheetContent side="right" style={{ backgroundColor: "#050c0a" }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", marginTop: "2rem" }}>
-                {["Models", "Technology", "Charging", "Order"].map((item) => (
-                  <a key={item} href="#" style={{ fontSize: "1rem", fontWeight: "600", color: "#00d97e", textDecoration: "none" }}>{item}</a>
-                ))}
-              </div>
-            </SheetContent>
-          </Sheet>
+
+          <div className="flex items-center gap-8">
+            <div className="hidden xl:flex flex-col items-end">
+              <span className="text-[9px] font-bold text-white/10 uppercase tracking-widest">
+                Geneva // Paris // NYC
+              </span>
+              <span className="text-[11px] font-black text-amber-500 flex items-center gap-1">
+                CERTIFIED_ATELIER <Award className="w-3 h-3" />
+              </span>
+            </div>
+            <MagneticBtn className="px-8 py-3 bg-white text-black text-[10px] font-bold uppercase tracking-widest rounded-none hover:bg-amber-900 hover:text-white transition-all shadow-xl">
+              BOOK_VIEWING
+            </MagneticBtn>
+            <button onClick={() => setMenuOpen(true)} className="lg:hidden">
+              <Menu className="w-6 h-6 text-stone-500" />
+            </button>
+          </div>
         </div>
       </nav>
 
-      {/* HERO */}
-      <motion.section style={{ height: "100vh", position: "relative", overflow: "hidden", marginTop: "60px" }}>
-        <motion.div style={{ position: "absolute", inset: 0, y: heroY }}>
-          <Image src="https://images.unsplash.com/photo-209977?w=800&q=80" alt="Electric Car" fill style={{ objectFit: "cover" }} priority />
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(5,12,10,0.85) 0%, rgba(0,217,126,0.08) 100%)" }} />
-        </motion.div>
-        <div style={{ position: "relative", height: "100%", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", textAlign: "center", padding: "2rem" }}>
-          <Reveal>
-            <motion.span style={{ fontSize: "0.85rem", fontWeight: "900", letterSpacing: "0.12em", color: "#00d97e", textTransform: "uppercase", marginBottom: "1rem", display: "block" }}>
-              Premium Electric Vehicles
-            </motion.span>
-          </Reveal>
-          <Reveal delay={0.2}>
-            <h2 style={{ fontSize: "clamp(2.5rem, 12vw, 7rem)", fontWeight: "900", lineHeight: 1.1, marginBottom: "1.5rem", maxWidth: "900px" }}>
-              Electric <span style={{ color: "#00d97e" }}>Redefined</span>
-            </h2>
-          </Reveal>
-          <Reveal delay={0.4}>
-            <p style={{ fontSize: "1.1rem", opacity: 0.7, marginBottom: "3rem", maxWidth: "650px" }}>
-              500km range. 3.2s acceleration. Zero emissions. Pure electric performance.
-            </p>
-          </Reveal>
-          <Reveal delay={0.6}>
-            <motion.div animate={{ y: [0, 12, 0] }} transition={{ duration: 2.5, repeat: Infinity }}>
-              <ChevronDown size={28} style={{ color: "#00d97e" }} />
-            </motion.div>
-          </Reveal>
-        </div>
-      </motion.section>
-
-      {/* PERFORMANCE SPEC BARS */}
-      <section style={{ padding: "5rem 2rem", backgroundColor: "#0a1410" }}>
-        <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
-          <Reveal>
-            <h2 style={{ fontSize: "2.2rem", fontWeight: "900", marginBottom: "0.5rem" }}>Performance Specs</h2>
-          </Reveal>
-          <Reveal delay={0.1}>
-            <p style={{ opacity: 0.6, marginBottom: "3rem" }}>Volta X benchmark performance</p>
-          </Reveal>
-
-          {specs.map((spec, i) => {
-            const IconComp = spec.icon
-            return (
-              <Reveal key={i} delay={i * 0.1}>
-                <motion.div style={{ marginBottom: "2.5rem" }}>
-                  <div style={{ display: "flex", gap: "1rem", alignItems: "center", marginBottom: "0.75rem" }}>
-                    <IconComp size={20} style={{ color: "#00d97e" }} />
-                    <span style={{ fontWeight: "700", fontSize: "0.95rem" }}>{spec.label}</span>
-                    <span style={{ color: "#00d97e", fontWeight: "900", marginLeft: "auto" }}>
-                      {spec.value}{spec.unit}
-                    </span>
-                  </div>
-                  <div style={{ height: "6px", backgroundColor: "#1a2825", borderRadius: "9999px", overflow: "hidden" }}>
-                    <motion.div
-                      initial={{ width: 0 }}
-                      whileInView={{ width: `${(spec.value / spec.max) * 100}%` }}
-                      transition={{ duration: 1.2, delay: i * 0.15 }}
-                      viewport={{ once: true }}
-                      style={{ height: "100%", backgroundColor: "#00d97e", borderRadius: "9999px" }}
-                    />
-                  </div>
-                </motion.div>
-              </Reveal>
-            )
-          })}
-        </div>
-      </section>
-
-      {/* RANGE CALCULATOR */}
-      <section style={{ padding: "6rem 2rem" }}>
-        <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
-          <Reveal>
-            <h2 style={{ fontSize: "2.2rem", fontWeight: "900", marginBottom: "1rem", textAlign: "center" }}>Range Calculator</h2>
-          </Reveal>
-          <Reveal delay={0.1}>
-            <p style={{ opacity: 0.6, textAlign: "center", marginBottom: "3rem" }}>
-              Adjust battery charge to see real-time range
-            </p>
-          </Reveal>
-
+      {/* MOBILE MENU */}
+      <AnimatePresence>
+        {menuOpen && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            style={{
-              padding: "3rem",
-              backgroundColor: "#0a1410",
-              borderRadius: "1rem",
-              border: "1px solid #00d97e30",
-            }}
+            initial={{ opacity: 0, x: "100%" }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: "100%" }}
+            transition={{ type: "tween", duration: 0.5 }}
+            className="fixed inset-0 z-[100] bg-black p-8 pt-32 flex flex-col border-l border-white/5"
           >
-            <div style={{ marginBottom: "2.5rem" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "1rem", alignItems: "center" }}>
-                <span style={{ fontWeight: "700" }}>Battery Charge</span>
-                <span style={{ color: "#00d97e", fontWeight: "900", fontSize: "1.5rem" }}>{chargeLevel}%</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={chargeLevel}
-                onChange={(e) => setChargeLevel(Number(e.target.value))}
-                style={{
-                  width: "100%",
-                  height: "8px",
-                  borderRadius: "9999px",
-                  backgroundColor: "#1a2825",
-                  outline: "none",
-                  WebkitAppearance: "none",
-                  appearance: "none",
-                  cursor: "pointer",
-                }}
-              />
-              <style>{`
-                input[type="range"]::-webkit-slider-thumb {
-                  appearance: none;
-                  width: 24px;
-                  height: 24px;
-                  border-radius: 50%;
-                  background: #00d97e;
-                  cursor: pointer;
-                  box-shadow: 0 0 20px rgba(0, 217, 126, 0.6);
-                }
-                input[type="range"]::-moz-range-thumb {
-                  width: 24px;
-                  height: 24px;
-                  border-radius: 50%;
-                  background: #00d97e;
-                  cursor: pointer;
-                  border: none;
-                  box-shadow: 0 0 20px rgba(0, 217, 126, 0.6);
-                }
-              `}</style>
-            </div>
-
-            <motion.div
-              key={chargeLevel}
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              style={{
-                padding: "2.5rem",
-                backgroundColor: "#050c0a",
-                borderRadius: "0.75rem",
-                border: "2px solid #00d97e",
-                textAlign: "center",
-              }}
+            <button
+              onClick={() => setMenuOpen(false)}
+              className="absolute top-10 right-8 text-stone-300"
             >
-              <div style={{ fontSize: "0.8rem", opacity: 0.6, marginBottom: "0.75rem", textTransform: "uppercase", fontWeight: "700" }}>
-                Estimated Range
-              </div>
-              <div style={{ fontSize: "3.5rem", fontWeight: "900", color: "#00d97e" }}>
-                {rangeAtCharge} <span style={{ fontSize: "1.25rem", opacity: 0.6 }}>km</span>
-              </div>
-            </motion.div>
+              <X className="w-8 h-8" />
+            </button>
+            <div className="flex flex-col gap-10 text-5xl font-black tracking-tighter uppercase italic text-amber-900/50">
+              <Link href="#collection" onClick={() => setMenuOpen(false)}>
+                Collection
+              </Link>
+              <Link href="#heritage" onClick={() => setMenuOpen(false)}>
+                Heritage
+              </Link>
+              <Link href="#provenance" onClick={() => setMenuOpen(false)}>
+                Provenance
+              </Link>
+              <Link href="#bespoke" onClick={() => setMenuOpen(false)}>
+                Bespoke
+              </Link>
+            </div>
           </motion.div>
-        </div>
-      </section>
+        )}
+      </AnimatePresence>
 
-      {/* MODEL TABS */}
-      <section style={{ padding: "6rem 2rem", backgroundColor: "#0a1410" }}>
-        <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
+      {/* ==========================================
+          1. HERO (Cinematic Reveal)
+          ========================================== */}
+      <section
+        ref={heroRef}
+        className="relative w-full h-[100svh] flex flex-col justify-center overflow-hidden"
+      >
+        <motion.div
+          style={{ y: heroY, opacity: heroOpacity }}
+          className="absolute inset-0 z-0"
+        >
+          <Image
+            src="https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=1600&q=80"
+            alt="Heritage Hero"
+            fill
+            className="object-cover brightness-50 contrast-125"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0c] via-transparent to-transparent" />
+        </motion.div>
+
+        {/* AMBER RADIANT GLOW */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vw] bg-amber-900/10 rounded-full blur-[150px] pointer-events-none" />
+
+        <div className="relative z-10 max-w-[1400px] mx-auto px-6 md:px-12 w-full">
           <Reveal>
-            <h2 style={{ fontSize: "2.2rem", fontWeight: "900", marginBottom: "3rem", textAlign: "center" }}>Compare Models</h2>
+            <div className="inline-flex items-center gap-3 px-4 py-2 bg-amber-900/20 rounded-none border border-amber-900/40 text-amber-500 text-[10px] font-bold uppercase tracking-widest mb-10 shadow-sm">
+              <Gem className="w-3.5 h-3.5" />
+              Maison de Haute Joaillerie // Est. 1882
+            </div>
+            <h1 className="text-7xl md:text-9xl lg:text-[11rem] font-black leading-[0.85] tracking-tighter mb-12 uppercase">
+              The Weight <br />{" "}
+              <span className="text-amber-900 italic">of Legacy.</span>
+            </h1>
+            <p className="max-w-xl text-lg md:text-xl text-white/20 leading-relaxed font-bold mb-12 uppercase tracking-tight italic">
+              Mastering the molecular brilliance of rare earth minerals. A
+              century of artisanal precision, refined for the modern elite.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-6">
+              <MagneticBtn className="px-12 py-5 bg-white text-black text-[10px] font-bold uppercase tracking-[0.4em] rounded-none hover:bg-amber-900 hover:text-white transition-all cursor-pointer shadow-2xl">
+                Explore The Vault
+              </MagneticBtn>
+              <button className="px-12 py-5 border border-white/10 text-white text-[10px] font-bold uppercase tracking-[0.4em] rounded-none hover:bg-white hover:text-black transition-all cursor-pointer">
+                Provenance_Report
+              </button>
+            </div>
           </Reveal>
-
-          <Tabs value={selectedModel} onValueChange={setSelectedModel}>
-            <TabsList style={{ display: "flex", justifyContent: "center", gap: "1rem", backgroundColor: "transparent", padding: "1rem" }}>
-              {models.map((model) => (
-                <TabsTrigger key={model.id} value={model.id} style={{ padding: "0.75rem 1.5rem", borderRadius: "0.35rem" }}>
-                  {model.name}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-
-            {models.map((model) => (
-              <TabsContent key={model.id} value={model.id}>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-                    gap: "2rem",
-                    marginTop: "2rem",
-                  }}
-                >
-                  {[
-                    { label: "Price", value: model.price },
-                    { label: "Range", value: model.range },
-                    { label: "0-100 km/h", value: model.accel },
-                    { label: "Seats", value: model.seats },
-                  ].map((spec, i) => (
-                    <Reveal key={i} delay={i * 0.1}>
-                      <motion.div
-                        whileHover={{ y: -4 }}
-                        style={{
-                          padding: "2rem",
-                          backgroundColor: "#050c0a",
-                          borderRadius: "0.75rem",
-                          border: "1px solid #00d97e30",
-                          textAlign: "center",
-                        }}
-                      >
-                        <p style={{ fontSize: "0.8rem", opacity: 0.6, marginBottom: "0.75rem", textTransform: "uppercase" }}>
-                          {spec.label}
-                        </p>
-                        <p style={{ fontSize: "1.8rem", fontWeight: "900", color: "#00d97e" }}>
-                          {spec.value}
-                        </p>
-                      </motion.div>
-                    </Reveal>
-                  ))}
-                </motion.div>
-              </TabsContent>
-            ))}
-          </Tabs>
         </div>
-      </section>
 
-      {/* CHARGING STATS */}
-      <section style={{ padding: "6rem 2rem" }}>
-        <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
-          <Reveal>
-            <h2 style={{ fontSize: "2.2rem", fontWeight: "900", marginBottom: "3rem", textAlign: "center" }}>Charging Network</h2>
-          </Reveal>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "2rem" }}>
-            {[
-              { label: "Fast Charge Stations", value: 850, icon: Zap },
-              { label: "Charge Time (10–80%)", value: 45, suffix: " min", icon: Battery },
-              { label: "Countries Covered", value: 12, icon: Gauge },
-              { label: "Home Charge Rate", value: 80, suffix: " km/2h", icon: Battery },
-            ].map((stat, i) => (
-              <Reveal key={i} delay={i * 0.1}>
-                <motion.div
-                  whileHover={{ y: -4 }}
-                  style={{
-                    padding: "2rem",
-                    backgroundColor: "#0a1410",
-                    borderRadius: "0.75rem",
-                    border: "1px solid #00d97e30",
-                    textAlign: "center",
-                  }}
-                >
-                  <div style={{ color: "#00d97e", marginBottom: "1rem", display: "flex", justifyContent: "center" }}>
-                    <stat.icon size={32} />
-                  </div>
-                  <div style={{ fontSize: "2rem", fontWeight: "900", color: "#00d97e", marginBottom: "0.5rem" }}>
-                    <Counter target={stat.value} suffix={stat.suffix} />
-                  </div>
-                  <p style={{ fontSize: "0.8rem", opacity: 0.6, textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                    {stat.label}
-                  </p>
-                </motion.div>
-              </Reveal>
-            ))}
+        <motion.div
+          style={{ opacity: heroOpacity }}
+          className="absolute bottom-10 left-12 hidden md:block"
+        >
+          <div className="flex flex-col items-start gap-3">
+            <span className="text-[9px] font-bold text-white/10 uppercase tracking-[0.5em]">
+              AURELIUS_HERITAGE_OS // CORE_083
+            </span>
+            <div className="w-32 h-[1px] bg-amber-900/40" />
           </div>
-        </div>
+        </motion.div>
       </section>
 
-      {/* SUSTAINABILITY COUNTERS */}
-      <section style={{ padding: "6rem 2rem", backgroundColor: "#0a1410" }}>
-        <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
-          <Reveal>
-            <h2 style={{ fontSize: "2.2rem", fontWeight: "900", marginBottom: "1rem", textAlign: "center" }}>Environmental Impact</h2>
-          </Reveal>
-          <Reveal delay={0.1}>
-            <p style={{ fontSize: "1rem", opacity: 0.6, textAlign: "center", marginBottom: "3rem" }}>Every Volta prevents CO2 emissions</p>
-          </Reveal>
+      {/* ==========================================
+          2. THE VAULT (Collection Grid)
+          ========================================== */}
+      <section
+        id="collection"
+        className="py-32 bg-[#0a0a0c] border-y border-white/5"
+      >
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12">
+          <div className="flex flex-col md:flex-row justify-between items-end mb-24 gap-12">
+            <Reveal>
+              <h2 className="text-5xl md:text-8xl font-black tracking-tighter uppercase leading-[0.9] text-white">
+                The <br /> <span className="text-amber-900 italic">Vault.</span>
+              </h2>
+            </Reveal>
+            <p className="max-w-sm text-sm text-white/10 leading-relaxed font-bold uppercase tracking-widest italic text-right">
+              Our non-exhaustive collection of high-jewelry artifacts. Each
+              piece is a unique geological certificate of prestige.
+            </p>
+          </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "2rem" }}>
-            {[
-              { label: "CO2 Saved Per Vehicle", value: 45, suffix: " tons/life" },
-              { label: "Battery Recycling Rate", value: 95, suffix: "%" },
-              { label: "Renewable Energy Used", value: 100, suffix: "%" },
-              { label: "Manufacturing Carbon Neutral", value: 2023, suffix: "" },
-            ].map((stat, i) => (
-              <Reveal key={i} delay={i * 0.1}>
-                <div style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: "2.5rem", fontWeight: "900", marginBottom: "0.5rem", color: "#00d97e" }}>
-                    <Counter target={stat.value} suffix={stat.suffix} />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
+            {PIECES.map((p, i) => (
+              <Reveal key={p.id} delay={i * 0.1}>
+                <div
+                  onClick={() => setActivePiece(i)}
+                  className="group cursor-pointer bg-white/[0.01] border border-white/5 hover:border-amber-900/40 transition-all rounded-none p-8 shadow-sm h-full flex flex-col justify-between overflow-hidden"
+                >
+                  <div>
+                    <div className="relative aspect-[4/5] mb-10 overflow-hidden">
+                      <Image
+                        src={p.img}
+                        alt={p.name}
+                        fill
+                        className="object-cover group-hover:scale-110 transition-transform duration-1000 grayscale-[0.2] group-hover:grayscale-0"
+                      />
+                      <div className="absolute inset-0 bg-amber-900/10 mix-blend-overlay" />
+                      <div className="absolute top-6 left-6">
+                        <Badge className="bg-amber-900 text-white border-none text-[8px] font-black tracking-widest uppercase px-3 py-1">
+                          {p.category}
+                        </Badge>
+                      </div>
+                    </div>
+                    <h3 className="text-2xl font-black uppercase tracking-tighter text-white italic mb-4">
+                      {p.name}
+                    </h3>
+                    <div className="text-[10px] font-black text-amber-900 uppercase tracking-widest mb-6">
+                      {p.price}
+                    </div>
+                    <p className="text-[10px] text-white/20 leading-relaxed font-bold uppercase tracking-widest mb-10 italic">
+                      {p.desc}
+                    </p>
                   </div>
-                  <p style={{ fontSize: "0.8rem", opacity: 0.6, textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                    {stat.label}
-                  </p>
+                  <button className="flex items-center gap-4 text-[9px] font-black uppercase tracking-widest text-stone-500 group-hover:text-white transition-colors">
+                    INSPECT_SPECIMEN <ArrowRight className="w-4 h-4" />
+                  </button>
                 </div>
               </Reveal>
             ))}
@@ -403,56 +488,161 @@ export default function VoltaMotors() {
         </div>
       </section>
 
-      {/* TESTIMONIALS */}
-      <section style={{ padding: "6rem 2rem" }}>
-        <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-          <Reveal>
-            <h2 style={{ fontSize: "2.2rem", fontWeight: "900", marginBottom: "3rem", textAlign: "center" }}>Owner Stories</h2>
-          </Reveal>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "2rem" }}>
-            {[
-              { quote: "The Volta X changed my daily commute. 500km range means I charge once a week.", author: "Alex Kumar", role: "Volta X Owner" },
-              { quote: "Acceleration is insane. Zero to 100 in 3.2 seconds never gets old.", author: "Jordan Lee", role: "Volta GT Owner" },
-              { quote: "Best investment I've made. Zero maintenance, zero fuel costs, infinite peace of mind.", author: "Sam Chen", role: "Volta S Owner" },
-            ].map((t, i) => (
-              <Reveal key={i} delay={i * 0.15}>
-                <motion.div
-                  whileHover={{ y: -4 }}
-                  style={{
-                    padding: "2rem",
-                    backgroundColor: "#0a1410",
-                    borderLeft: "3px solid #00d97e",
-                    borderRadius: "0.25rem",
-                  }}
-                >
-                  <p style={{ fontSize: "1rem", marginBottom: "1.5rem", lineHeight: 1.6 }}>
-                    "{t.quote}"
-                  </p>
-                  <div>
-                    <p style={{ fontWeight: "900", fontSize: "0.95rem" }}>— {t.author}</p>
-                    <p style={{ fontSize: "0.85rem", opacity: 0.5 }}>{t.role}</p>
-                  </div>
-                </motion.div>
+      {/* ==========================================
+          3. HERITAGE (Timeline)
+          ========================================== */}
+      <section id="heritage" className="py-32 bg-[#0a0a0c]">
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 md:gap-32 items-center">
+            <div className="lg:col-span-5">
+              <Reveal>
+                <span className="text-[10px] uppercase tracking-[0.4em] font-bold text-amber-900 mb-6 block">
+                  Artisan Lineage
+                </span>
+                <h2 className="text-5xl md:text-7xl font-black tracking-tighter leading-tight mb-12 text-white uppercase italic">
+                  Chronicle <br />{" "}
+                  <span className="text-amber-900 not-italic">Heritage.</span>
+                </h2>
+                <p className="text-lg text-white/20 leading-relaxed font-bold mb-16 uppercase tracking-tight italic">
+                  Since 1882, Maison Aurelius has defined the upper echelon of
+                  gemstone architecture. A legacy of precision, born in Geneva.
+                </p>
+
+                <div className="space-y-12">
+                  {HERITAGE_TIMELINE.map((item, i) => (
+                    <div
+                      key={i}
+                      className="group border-l border-amber-900/20 pl-8 hover:border-amber-900 transition-all"
+                    >
+                      <h4 className="text-xl font-black uppercase tracking-tight mb-2 text-amber-900 italic">
+                        {item.year}
+                      </h4>
+                      <p className="text-[11px] text-white/30 leading-relaxed font-bold uppercase tracking-widest">
+                        {item.event}
+                      </p>
+                    </div>
+                  ))}
+                </div>
               </Reveal>
-            ))}
+            </div>
+
+            <div className="lg:col-span-7">
+              <Reveal className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {[
+                  {
+                    title: "GOLCONDA_AUDIT",
+                    icon: <Gem className="w-6 h-6" />,
+                  },
+                  {
+                    title: "CARAT_METRICS",
+                    icon: <Activity className="w-6 h-6" />,
+                  },
+                  {
+                    title: "FACET_OPTIMIZATION",
+                    icon: <Layers className="w-6 h-6" />,
+                  },
+                  {
+                    title: "GENEVA_SEAL",
+                    icon: <Shield className="w-6 h-6" />,
+                  },
+                ].map((t, i) => (
+                  <div
+                    key={i}
+                    className="p-12 bg-white/[0.02] border border-white/5 rounded-none hover:border-amber-900 transition-all group relative overflow-hidden"
+                  >
+                    <div className="absolute inset-0 bg-amber-900/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="text-amber-900 mb-8">{t.icon}</div>
+                    <h4 className="text-xl font-black uppercase text-white italic mb-4">
+                      {t.title}
+                    </h4>
+                    <div className="h-1 w-0 bg-amber-900 group-hover:w-full transition-all duration-700" />
+                  </div>
+                ))}
+                <div className="md:col-span-2 p-12 bg-amber-900/5 border border-amber-900/20 rounded-none mt-4 text-center">
+                  <Clock3 className="w-8 h-8 text-amber-900 mx-auto mb-6" />
+                  <h3 className="text-xl font-black uppercase tracking-tight text-white mb-4 italic">
+                    Bespoke Concierge Protocol
+                  </h3>
+                  <p className="text-[10px] text-white/20 uppercase tracking-widest mb-8 leading-relaxed">
+                    Appointments are strictly limited to verified collectors.
+                    Our atelier in Geneva operates by institutional invitation
+                    only.
+                  </p>
+                  <button className="px-12 py-4 bg-amber-900 text-white text-[10px] font-bold uppercase tracking-widest rounded-none hover:bg-amber-800 transition-all shadow-xl">
+                    REQUEST_INVITATION
+                  </button>
+                </div>
+              </Reveal>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* FAQ */}
-      <section style={{ padding: "6rem 2rem", backgroundColor: "#0a1410" }}>
-        <div style={{ maxWidth: "800px", margin: "0 auto" }}>
-          <Reveal>
-            <h2 style={{ fontSize: "2.2rem", fontWeight: "900", marginBottom: "3rem", textAlign: "center" }}>Frequently Asked</h2>
+      {/* ==========================================
+          4. STATS (Counters)
+          ========================================== */}
+      <section
+        id="provenance"
+        className="py-24 bg-[#0a0a0c] border-y border-white/5"
+      >
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12 grid grid-cols-2 lg:grid-cols-4 gap-16 text-center">
+          {[
+            { label: "Active_Ateliers", val: 3, suffix: "" },
+            { label: "Gemstone_Archive", val: 1250, suffix: "+" },
+            { label: "Artisans_Intern", val: 12, suffix: "" },
+            { label: "Atelier_Valuation", val: 4.2, suffix: " B" },
+          ].map((stat, i) => (
+            <Reveal key={i} delay={i * 0.1}>
+              <div className="text-5xl md:text-7xl font-black text-amber-900 mb-4 italic tabular-nums">
+                <Counter to={stat.val} suffix={stat.suffix} />
+              </div>
+              <div className="text-[10px] font-bold uppercase tracking-[0.5em] text-white/20">
+                {stat.label}
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* ==========================================
+          5. FAQ (The Buffer)
+          ========================================== */}
+      <section id="bespoke" className="py-32 bg-[#0a0a0c]">
+        <div className="max-w-3xl mx-auto px-6">
+          <Reveal className="text-center mb-24">
+            <h2 className="text-4xl md:text-5xl font-black tracking-tighter leading-none uppercase italic text-white">
+              Heritage_Buffer
+            </h2>
           </Reveal>
 
-          <Accordion type="single" collapsible>
-            {faqs.map((faq, i) => (
-              <AccordionItem key={i} value={`faq-${i}`}>
-                <AccordionTrigger style={{ fontSize: "1rem", fontWeight: "700", padding: "1.25rem", color: "white" }}>
+          <Accordion type="single" collapsible className="space-y-4">
+            {[
+              {
+                q: "What is your ethical sourcing protocol?",
+                a: "Every gemstone in the Aurelius Vault is backed by our 'Ethical Blockchain Provenance Protocol'. We track each stone from the mine to the final setting, ensuring zero environmental or human conflict.",
+              },
+              {
+                q: "Do you offer international viewings?",
+                a: "We operate secure viewings in our Geneva, Paris, and New York ateliers. For high-value acquisitions, our 'Aurelius Fly-In' concierge can arrange private viewings in your preferred global location.",
+              },
+              {
+                q: "What is the process for bespoke commissions?",
+                a: "Bespoke projects begin with a molecular audit of the client's preferred gemstone profile. Our master artisans then draft three architectural concepts before moving into 1:1 wax modeling and final gold-smithing.",
+              },
+              {
+                q: "How are high-jewelry pieces appraised?",
+                a: "All pieces are appraised by the GIA (Gemological Institute of America) and our internal 'Heritage Council'. We provide a multi-layered certificate of authenticity and institutional valuation reports.",
+              },
+            ].map((faq, i) => (
+              <AccordionItem
+                key={i}
+                value={`item-${i}`}
+                className="border-b border-white/5"
+              >
+                <AccordionTrigger className="text-left text-sm uppercase font-bold tracking-widest py-8 hover:text-amber-500 hover:no-underline">
                   {faq.q}
                 </AccordionTrigger>
-                <AccordionContent style={{ padding: "0 1.25rem 1.25rem", fontSize: "0.95rem", opacity: 0.8, color: "rgba(255,255,255,0.8)" }}>
+                <AccordionContent className="text-sm text-white/20 leading-relaxed font-bold uppercase tracking-widest pb-8 italic">
                   {faq.a}
                 </AccordionContent>
               </AccordionItem>
@@ -461,148 +651,264 @@ export default function VoltaMotors() {
         </div>
       </section>
 
-      {/* PRE-ORDER MODAL */}
+      {/* ==========================================
+          6. MEGA FOOTER (Premium Minimal)
+          ========================================== */}
+      <footer className="bg-[#050505] pt-32 pb-12 px-6 md:px-12 border-t border-white/5 relative overflow-hidden">
+        <div className="max-w-[1600px] mx-auto relative z-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-16 mb-32">
+            <div className="lg:col-span-5">
+              <Reveal>
+                <div className="flex flex-col mb-10">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.6em] text-white/20 mb-1">
+                    Maison.
+                  </span>
+                  <span className="text-2xl font-black tracking-tighter uppercase text-white">
+                    AURELIUS<span className="text-amber-900">.HERITAGE</span>
+                  </span>
+                </div>
+                <p className="text-white/20 max-w-sm mb-12 uppercase tracking-widest text-[10px] font-bold leading-relaxed italic">
+                  The structural infrastructure for the next generation of
+                  high-jewelry. Est. 1882. Precision distilled. Globally
+                  distributed.
+                </p>
+                <form
+                  className="relative max-w-md"
+                  onSubmit={(e) => e.preventDefault()}
+                >
+                  <input
+                    type="email"
+                    placeholder="ACCESS_THE_MANIFESTO"
+                    className="w-full bg-white/[0.02] border border-white/5 rounded-none px-6 py-4 text-xs font-bold outline-none focus:border-amber-900 text-white transition-all uppercase tracking-widest"
+                  />
+                  <button
+                    type="submit"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-amber-900 hover:text-white transition-colors uppercase tracking-[0.3em]"
+                  >
+                    ACCESS
+                  </button>
+                </form>
+              </Reveal>
+            </div>
+
+            <div className="lg:col-span-2 lg:col-start-7">
+              <h4 className="text-[10px] font-bold uppercase tracking-widest text-amber-900 mb-10">
+                The Vault
+              </h4>
+              <ul className="space-y-4 text-[10px] font-bold uppercase tracking-widest text-white/20">
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-amber-500 transition-colors"
+                  >
+                    High_Jewelry
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-amber-500 transition-colors"
+                  >
+                    Master_Watches
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-amber-500 transition-colors"
+                  >
+                    Bespoke_Atelier
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-amber-500 transition-colors"
+                  >
+                    Rare_Specimens
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            <div className="lg:col-span-2">
+              <h4 className="text-[10px] font-bold uppercase tracking-widest text-amber-900 mb-10">
+                Heritage
+              </h4>
+              <ul className="space-y-4 text-[10px] font-bold uppercase tracking-widest text-white/20">
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-amber-500 transition-colors"
+                  >
+                    Geneva_Lineage
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-amber-500 transition-colors"
+                  >
+                    Ethical_Protocol
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-amber-500 transition-colors"
+                  >
+                    Atelier_Tour
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-amber-500 transition-colors"
+                  >
+                    Concierge
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            <div className="lg:col-span-2">
+              <h4 className="text-[10px] font-bold uppercase tracking-widest text-amber-900 mb-10">
+                Network
+              </h4>
+              <ul className="space-y-4 text-[10px] font-bold uppercase tracking-widest text-white/20">
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-amber-500 transition-colors flex items-center gap-3"
+                  >
+                    <Instagram className="w-3 h-3" /> Instagram
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-amber-500 transition-colors flex items-center gap-3"
+                  >
+                    <Twitter className="w-3 h-3" /> X_Entropy
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-amber-500 transition-colors flex items-center gap-3"
+                  >
+                    <Mail className="w-3 h-3" /> Headquarters
+                  </Link>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="flex flex-col md:flex-row justify-between items-center gap-8 pt-10 border-t border-white/5 text-[9px] font-bold uppercase tracking-widest text-white/10">
+            <div className="flex items-center gap-10">
+              <span>
+                &copy; {new Date().getFullYear()} AURELIUS HERITAGE Group.
+              </span>
+              <Link href="#" className="hover:text-white transition-colors">
+                Regulatory_Terms
+              </Link>
+              <Link href="#" className="hover:text-white transition-colors">
+                Privacy_Buffer
+              </Link>
+            </div>
+            <div className="flex gap-10">
+              <span>Geneva // Paris // NYC</span>
+              <span>In Craft We Trust</span>
+            </div>
+          </div>
+        </div>
+      </footer>
+
+      {/* PIECE MODAL */}
       <AnimatePresence>
-        {showPreorderModal && (
+        {activePiece !== null && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => setShowPreorderModal(false)}
-            style={{
-              position: "fixed",
-              inset: 0,
-              backgroundColor: "rgba(0,0,0,0.8)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              zIndex: 70,
-              padding: "2rem",
-            }}
+            className="fixed inset-0 z-[200] bg-black/98 backdrop-blur-3xl flex items-center justify-center p-6"
+            onClick={() => setActivePiece(null)}
           >
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
+              initial={{ scale: 0.9, y: 30 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 30 }}
+              className="bg-[#0e0e11] border border-white/10 max-w-6xl w-full grid grid-cols-1 lg:grid-cols-12 overflow-hidden rounded-none shadow-2xl relative"
               onClick={(e) => e.stopPropagation()}
-              style={{
-                backgroundColor: "#050c0a",
-                borderRadius: "0.75rem",
-                padding: "2.5rem",
-                maxWidth: "450px",
-                width: "100%",
-                position: "relative",
-                border: "1px solid #00d97e30",
-              }}
             >
-              <motion.button
-                onClick={() => setShowPreorderModal(false)}
-                style={{ position: "absolute", top: "1.5rem", right: "1.5rem", background: "none", border: "none", cursor: "pointer", color: "#00d97e" }}
+              <button
+                onClick={() => setActivePiece(null)}
+                className="absolute top-8 right-8 text-white/20 hover:text-amber-900 transition-colors z-10"
               >
-                <X size={24} />
-              </motion.button>
-              <h3 style={{ fontSize: "1.6rem", fontWeight: "900", marginBottom: "0.75rem", color: "#00d97e" }}>Reserve Your Volta</h3>
-              <p style={{ opacity: 0.7, marginBottom: "2rem", fontSize: "0.95rem" }}>$5,000 deposit secures your reservation. Balance due 30 days before delivery.</p>
-              <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "2rem" }}>
-                <input
-                  type="text"
-                  placeholder="Full Name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  style={{
-                    padding: "0.75rem",
-                    backgroundColor: "#0a1410",
-                    border: "1px solid #00d97e30",
-                    borderRadius: "0.35rem",
-                    color: "white",
-                    fontSize: "0.95rem",
-                  }}
+                <X className="w-6 h-6" />
+              </button>
+
+              {/* IMAGE AREA */}
+              <div className="lg:col-span-8 relative aspect-video lg:aspect-auto bg-black">
+                <Image
+                  src={PIECES[activePiece].img}
+                  alt="Piece"
+                  fill
+                  className="object-cover opacity-80"
                 />
-                <input
-                  type="email"
-                  placeholder="Email Address"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  style={{
-                    padding: "0.75rem",
-                    backgroundColor: "#0a1410",
-                    border: "1px solid #00d97e30",
-                    borderRadius: "0.35rem",
-                    color: "white",
-                    fontSize: "0.95rem",
-                  }}
-                />
-                <select style={{
-                  padding: "0.75rem",
-                  backgroundColor: "#0a1410",
-                  border: "1px solid #00d97e30",
-                  borderRadius: "0.35rem",
-                  color: "white",
-                  fontSize: "0.95rem",
-                }}>
-                  <option style={{ color: "#0a0a0a" }}>Select Model</option>
-                  <option style={{ color: "#0a0a0a" }}>Volta S</option>
-                  <option style={{ color: "#0a0a0a" }}>Volta X</option>
-                  <option style={{ color: "#0a0a0a" }}>Volta GT</option>
-                </select>
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
+                <div className="absolute bottom-8 left-8">
+                  <h3 className="text-4xl font-black text-white italic">
+                    {PIECES[activePiece].name}
+                  </h3>
+                </div>
               </div>
-              <motion.button
-                whileHover={{ backgroundColor: "#00b366" }}
-                style={{
-                  width: "100%",
-                  padding: "0.85rem",
-                  backgroundColor: "#00d97e",
-                  color: "#050c0a",
-                  fontWeight: "900",
-                  borderRadius: "0.35rem",
-                  border: "none",
-                  cursor: "pointer",
-                  fontSize: "0.95rem",
-                  textTransform: "uppercase",
-                }}
-              >
-                Secure Reservation
-              </motion.button>
+
+              {/* SIDEBAR AREA */}
+              <div className="lg:col-span-4 p-8 flex flex-col justify-between bg-[#0e0e11] border-l border-white/5">
+                <div>
+                  <div className="text-[10px] font-black uppercase tracking-widest text-amber-900 mb-6 flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-amber-900" />
+                    Molecular Provenance Report
+                  </div>
+                  <div className="space-y-6 mb-12">
+                    {[
+                      { label: "Category", val: PIECES[activePiece].category },
+                      { label: "Metal", val: "18K White Gold" },
+                      { label: "Certification", val: "GIA Certified" },
+                      { label: "Status", val: "IN_THE_VAULT" },
+                    ].map((spec, i) => (
+                      <div
+                        key={i}
+                        className="flex justify-between items-center border-b border-white/5 pb-4"
+                      >
+                        <span className="text-[9px] font-bold text-white/20 uppercase tracking-widest">
+                          {spec.label}
+                        </span>
+                        <span className="text-[10px] font-black text-white uppercase italic">
+                          {spec.val}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-white/40 leading-relaxed font-bold uppercase tracking-tight italic mb-10">
+                    {PIECES[activePiece].desc}
+                  </p>
+                </div>
+
+                <button className="w-full py-5 bg-white text-black text-[10px] font-bold uppercase tracking-widest hover:bg-amber-900 hover:text-white transition-all cursor-pointer shadow-xl">
+                  REQUEST_PRIVATE_AUDIT
+                </button>
+              </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* CTA FOOTER */}
-      <section style={{ padding: "6rem 2rem", backgroundColor: "#0a1410" }}>
-        <div style={{ maxWidth: "1000px", margin: "0 auto", textAlign: "center" }}>
-          <Reveal>
-            <h2 style={{ fontSize: "2.2rem", fontWeight: "900", marginBottom: "1rem" }}>Ready to Go Electric?</h2>
-          </Reveal>
-          <Reveal delay={0.1}>
-            <p style={{ fontSize: "1rem", opacity: 0.7, marginBottom: "2.5rem", maxWidth: "500px", margin: "0 auto 2.5rem" }}>
-              Secure your Volta today with a $5,000 deposit. Flexible financing available.
-            </p>
-          </Reveal>
-          <Reveal delay={0.2}>
-            <motion.button
-              onClick={() => setShowPreorderModal(true)}
-              whileHover={{ scale: 1.05 }}
-              style={{
-                padding: "0.9rem 2.25rem",
-                backgroundColor: "#00d97e",
-                color: "#050c0a",
-                fontWeight: "900",
-                fontSize: "0.9rem",
-                borderRadius: "0.35rem",
-                border: "none",
-                cursor: "pointer",
-                display: "inline-flex",
-                gap: "0.75rem",
-                alignItems: "center",
-                textTransform: "uppercase",
-              }}
-            >
-              Pre-Order Now <Zap size={18} />
-            </motion.button>
-          </Reveal>
-        </div>
-      </section>
+      <style>{`
+        ::-webkit-scrollbar{width:4px;background:#0a0a0c}
+        ::-webkit-scrollbar-thumb{background:rgba(120,53,15,0.2)}
+      `}</style>
     </div>
-  )
+  );
 }

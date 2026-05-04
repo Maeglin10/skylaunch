@@ -1,427 +1,859 @@
-"use client"
-import { motion, useScroll, useTransform, useInView, AnimatePresence, useMotionValue, useSpring } from "framer-motion"
-import { useState, useRef, useEffect } from "react"
-import Image from "next/image"
-import Link from "next/link"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
-import { Progress } from "@/components/ui/progress"
-import { Separator } from "@/components/ui/separator"
-import {
-  Satellite, Globe, Menu, ArrowRight, ChevronDown, Rocket,
-  Radio, Shield, Star, Check, Zap, Activity, Database,
-  Twitter, Linkedin, Github, MapPin, Wifi
-} from "lucide-react"
+"use client";
 
-function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
-  const ref = useRef(null)
-  const isInView = useInView(ref, { once: true, margin: "-80px" })
+import {
+  motion,
+  useScroll,
+  useTransform,
+  useInView,
+  AnimatePresence,
+  useMotionValue,
+  useSpring,
+} from "framer-motion";
+import { useState, useRef, useEffect, useCallback } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
+import {
+  Satellite,
+  Globe,
+  Menu,
+  ArrowRight,
+  ChevronDown,
+  Rocket,
+  Radio,
+  Shield,
+  Star,
+  Check,
+  Zap,
+  Activity,
+  Database,
+  Plus,
+  Terminal,
+  Cpu,
+  Box,
+  Share2,
+  Layers,
+  Maximize,
+  Monitor,
+  MousePointer2,
+  Navigation,
+  Smartphone,
+  Twitter,
+  Linkedin,
+  Github,
+  MapPin,
+  Wifi,
+  Mail,
+  Phone,
+} from "lucide-react";
+
+import "../premium.css";
+
+/* ==========================================================================
+   DATA STRUCTURES
+   ========================================================================= */
+
+const CONSTELLATION = [
+  {
+    id: "APEX-1",
+    orbit: "LEO 550km",
+    capacity: "2.8 TB/day",
+    instruments: "SAR + Multispectral",
+    status: "Operational",
+    uptime: 99.9,
+    launched: "Mar 2020",
+    img: "https://images.unsplash.com/photo-1446776653964-20c1d3a81b06?w=800&q=80",
+    desc: "Primary SAR (Synthetic Aperture Radar) node providing all-weather, day/night imaging at 0.5m resolution.",
+  },
+  {
+    id: "APEX-2",
+    orbit: "GEO 35,786km",
+    capacity: "1.9 TB/day",
+    instruments: "Thermal IR + SAR",
+    status: "Operational",
+    uptime: 99.7,
+    launched: "Sep 2021",
+    img: "https://images.unsplash.com/photo-1446776877081-d282a0f896e2?w=800&q=80",
+    desc: "High-altitude node for continuous regional monitoring and early thermal signature detection.",
+  },
+  {
+    id: "APEX-3",
+    orbit: "LEO 480km",
+    capacity: "3.4 TB/day",
+    instruments: "Hyperspectral 240-band",
+    status: "Operational",
+    uptime: 99.8,
+    launched: "Feb 2022",
+    img: "https://images.unsplash.com/photo-1614728894747-a83421e2b9c9?w=800&q=80",
+    desc: "Specialized for material analysis, agricultural health tracking, and chemical signature mapping.",
+  },
+  {
+    id: "APEX-4",
+    orbit: "MEO 8,000km",
+    capacity: "1.1 TB/day",
+    instruments: "Radiation Monitor",
+    status: "Commissioning",
+    uptime: 98.2,
+    launched: "Dec 2024",
+    img: "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=800&q=80",
+    desc: "Environmental monitoring node for orbital safety and radiation belt analysis.",
+  },
+];
+
+const TELEMETRY_LOGS = [
+  {
+    ts: "14:22:01",
+    node: "APEX-1",
+    event: "SAR_PULSE_TX",
+    status: "OK",
+    val: "542.1 MHz",
+  },
+  {
+    ts: "14:22:05",
+    node: "APEX-3",
+    event: "DOWNLINK_INIT",
+    status: "OK",
+    val: "GND_STATION_ALPHA",
+  },
+  {
+    ts: "14:22:12",
+    node: "APEX-2",
+    event: "THERMAL_SYNC",
+    status: "WARN",
+    val: "BUS_TEMP_HIGH",
+  },
+  {
+    ts: "14:22:18",
+    node: "APEX-4",
+    event: "BOOT_STRAP_C12",
+    status: "OK",
+    val: "SECURE_HANDSHAKE",
+  },
+];
+
+const GROUND_STATIONS = [
+  {
+    city: "Tromsø, Norway",
+    lat: "69.6N",
+    lon: "18.9E",
+    ping: "14ms",
+    status: "Active",
+  },
+  {
+    city: "Inuvik, Canada",
+    lat: "68.3N",
+    lon: "133.5W",
+    ping: "22ms",
+    status: "Active",
+  },
+  {
+    city: "Punta Arenas, Chile",
+    lat: "53.1S",
+    lon: "70.9W",
+    ping: "18ms",
+    status: "Standby",
+  },
+  {
+    city: "Rooisand, Namibia",
+    lat: "23.3S",
+    lon: "16.1E",
+    ping: "29ms",
+    status: "Active",
+  },
+];
+
+/* ==========================================================================
+   UTILITY COMPONENTS
+   ========================================================================= */
+
+function Reveal({
+  children,
+  delay = 0,
+  y = 30,
+}: {
+  children: React.ReactNode;
+  delay?: number;
+  y?: number;
+}) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-50px" });
   return (
-    <motion.div ref={ref} initial={{ opacity: 0, y: 32 }} animate={isInView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] }}>
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 1, delay, ease: [0.25, 0.1, 0.25, 1] }}
+    >
       {children}
     </motion.div>
-  )
+  );
 }
 
-function Counter({ target, suffix = "", decimals = 0 }: { target: number; suffix?: string; decimals?: number }) {
-  const [count, setCount] = useState(0)
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true })
+function Counter({
+  to,
+  prefix = "",
+  suffix = "",
+}: {
+  to: number;
+  prefix?: string;
+  suffix?: string;
+}) {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true });
+  const [count, setCount] = useState(0);
   useEffect(() => {
-    if (!inView) return
-    const step = target / 80
-    const t = setInterval(() => setCount(c => {
-      const next = c + step
-      if (next >= target) { clearInterval(t); return target }
-      return next
-    }), 16)
-    return () => clearInterval(t)
-  }, [inView, target])
-  return <span ref={ref}>{decimals > 0 ? count.toFixed(decimals) : Math.floor(count).toLocaleString()}{suffix}</span>
+    if (!isInView) return;
+    let cur = 0;
+    const step = to / 70;
+    const t = setInterval(() => {
+      cur += step;
+      if (cur >= to) {
+        setCount(to);
+        clearInterval(t);
+      } else {
+        setCount(Math.floor(cur));
+      }
+    }, 16);
+    return () => clearInterval(t);
+  }, [isInView, to]);
+  return (
+    <span ref={ref}>
+      {prefix}
+      {count.toLocaleString()}
+      {suffix}
+    </span>
+  );
 }
 
-function MagneticBtn({ children, className = "", onClick }: { children: React.ReactNode; className?: string; onClick?: () => void }) {
-  const x = useMotionValue(0); const y = useMotionValue(0)
-  const sx = useSpring(x, { stiffness: 400, damping: 20 })
-  const sy = useSpring(y, { stiffness: 400, damping: 20 })
-  const ref = useRef<HTMLButtonElement>(null)
-  const handleMouse = (e: React.MouseEvent) => {
-    const r = ref.current!.getBoundingClientRect()
-    x.set((e.clientX - r.left - r.width / 2) * 0.3)
-    y.set((e.clientY - r.top - r.height / 2) * 0.3)
-  }
+function MagneticBtn({
+  children,
+  className = "",
+  onClick,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  onClick?: () => void;
+}) {
+  const ref = useRef<HTMLButtonElement>(null);
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const sx = useSpring(x, { stiffness: 200, damping: 20 });
+  const sy = useSpring(y, { stiffness: 200, damping: 20 });
+
+  const handleMouse = useCallback(
+    (e: React.MouseEvent) => {
+      const rect = ref.current?.getBoundingClientRect();
+      if (!rect) return;
+      x.set((e.clientX - rect.left - rect.width / 2) * 0.35);
+      y.set((e.clientY - rect.top - rect.height / 2) * 0.35);
+    },
+    [x, y],
+  );
+
+  const reset = useCallback(() => {
+    x.set(0);
+    y.set(0);
+  }, [x, y]);
+
   return (
-    <motion.button ref={ref} style={{ x: sx, y: sy }} onMouseMove={handleMouse} onMouseLeave={() => { x.set(0); y.set(0) }} onClick={onClick} className={`cursor-pointer ${className}`}>
+    <motion.button
+      ref={ref}
+      style={{ x: sx, y: sy }}
+      onMouseMove={handleMouse}
+      onMouseLeave={reset}
+      onClick={onClick}
+      className={className}
+    >
       {children}
     </motion.button>
-  )
+  );
 }
 
-const SATELLITES = [
-  { id: "APEX-1", orbit: "LEO 550km", capacity: "2.8 TB/day", instruments: "SAR + Multispectral", status: "Operational", uptime: 99.9, launched: "Mar 2020", img: "https://images.unsplash.com/photo-1446776653964-20c1d3a81b06?w=800&q=80" },
-  { id: "APEX-2", orbit: "GEO 35,786km", capacity: "1.9 TB/day", instruments: "Thermal IR + SAR", status: "Operational", uptime: 99.7, launched: "Sep 2021", img: "https://images.unsplash.com/photo-1446776877081-d282a0f896e2?w=800&q=80" },
-  { id: "APEX-3", orbit: "LEO 480km", capacity: "3.4 TB/day", instruments: "Hyperspectral 240-band", status: "Operational", uptime: 99.8, launched: "Feb 2022", img: "https://images.unsplash.com/photo-1614728894747-a83421e2b9c9?w=800&q=80" },
-  { id: "APEX-4", orbit: "MEO 8,000km", capacity: "1.1 TB/day", instruments: "Radiation Monitor", status: "Commissioning", uptime: 98.2, launched: "Dec 2024", img: "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=800&q=80" },
-]
+/* ==========================================================================
+   MAIN PAGE COMPONENT
+   ========================================================================= */
 
-const TESTIMONIALS = [
-  { name: "Dr. Elena Vasquez", role: "Director of Earth Observation, ESA", text: "APEX Orbital&apos;s SAR-optical fusion data has fundamentally transformed our climate monitoring capabilities. The 0.47m GSD resolution and 23-minute delivery latency are genuinely unmatched in the commercial sector.", avatar: "EV", img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80", rating: 5 },
-  { name: "James Okafor", role: "VP Geospatial Intelligence, Palantir Technologies", text: "From acquisition to delivery in 23 minutes flat. We&apos;ve built entire defense intelligence platforms on APEX data streams — the uptime record over 4 years gives us the reliability our clients demand.", avatar: "JO", img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&q=80", rating: 5 },
-  { name: "Dr. Sarah Lim", role: "Chief Science Officer, CNSA Collaboration Division", text: "APEX&apos;s hyperspectral payload quality on APEX-3 exceeds what we achieved with our own Gaofen missions in the same spectral range. The 240-band configuration is a significant technical achievement.", avatar: "SL", img: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&q=80", rating: 5 },
-  { name: "Brigadier Thomas Walsh", role: "Director NGA, US National Geospatial-Intelligence Agency", text: "APEX&apos;s 45-minute priority tasking guarantee and ITAR-compliant data pipeline made them our preferred commercial augmentation source. Replaced two legacy government contracts.", avatar: "TW", img: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&q=80", rating: 5 },
-  { name: "Prof. Anya Petrov", role: "Lead Researcher, Climate Change Institute Oxford", text: "The multitemporal change detection capability at 0.5m resolution has opened entirely new research methodologies for us. Our Arctic ice-melt paper relied entirely on APEX-1 SAR data.", avatar: "AP", img: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=200&q=80", rating: 5 },
-]
+export default function ApexOrbitalPage() {
+  const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [activeSat, setActiveSat] = useState<number | null>(null);
+  const [liveTB, setLiveTB] = useState(847293);
 
-const PLANS = [
-  { name: "Research", price: "$4,200", period: "/mo", desc: "Academic & research institutions", features: ["3 TB data/month", "APEX-1 + APEX-3 access", "SAR + Optical bands", "REST API access", "30-day archive access", "Academic licensing terms", "Python + JS SDK"], highlight: false, cta: "Apply for Access" },
-  { name: "Enterprise", price: "$18,500", period: "/mo", desc: "Commercial & government organizations", features: ["Unlimited data volume", "Full 4-satellite access", "All sensor modalities", "Priority 45-min tasking", "Real-time streaming API", "Dedicated support SLA", "Custom processing pipeline", "STAC-compliant delivery"], highlight: true, cta: "Start Enterprise Trial" },
-  { name: "Mission Partner", price: "Custom", period: "", desc: "Joint mission and payload development", features: ["Co-branded payload capacity", "Instrument hosting on APEX-5", "Ground station co-location", "Mission operations support", "Custom orbit design", "IP co-ownership agreement", "Revenue sharing structure"], highlight: false, cta: "Discuss Partnership" },
-]
-
-const FAQS = [
-  { q: "What is the minimum ground sample distance (GSD) achievable?", a: "APEX-3 delivers 0.47m GSD in panchromatic mode and 2.1m multispectral. Our SAR sensor on APEX-1 achieves 0.5m Stripmap resolution in all weather, day or night. APEX-2 thermal IR provides 3m GSD for heat signature applications." },
-  { q: "How quickly can you task a satellite for specific area coverage?", a: "Standard tasking is confirmed within 4 hours. Enterprise priority queue guarantees satellite look-angle confirmation within 45 minutes. Emergency national security tasking is handled under dedicated bilateral SLA contracts with response under 8 minutes." },
-  { q: "What data formats and delivery methods do you support?", a: "We deliver GeoTIFF, HDF5, NetCDF4, and STAC-compliant COG formats. Delivery via REST API, AWS S3 bucket mirror, SFTP, or real-time WebSocket stream. Average acquisition-to-delivery latency is 23 minutes for standard orders." },
-  { q: "How does APEX handle data security and sovereignty requirements?", a: "All data is encrypted in transit (TLS 1.3) and at rest (AES-256-GCM). We operate sovereign data centers in the US, EU, and Singapore. ITAR/EAR compliance is built into the access control layer for all US government clients. FedRAMP authorization in progress." },
-  { q: "Can we integrate APEX data with existing GIS and analytics platforms?", a: "Yes. Native connectors for ArcGIS, QGIS, Google Earth Engine, Palantir Foundry, and Esri Living Atlas. Our Python SDK supports Jupyter, Dask, and Xarray. JavaScript SDK supports Node.js and browser environments. Typical integration takes under one business day." },
-  { q: "What is the planned constellation expansion timeline?", a: "APEX-5 (hyperspectral + LiDAR fusion) is scheduled for launch Q3 2026 on SpaceX Transporter-14. APEX-6 through APEX-12 follow across 2027-2028, bringing global revisit time from the current 14 minutes to under 4 hours for any point on Earth." },
-]
-
-const PARTNERS = ["NASA", "ESA", "ISRO", "JAXA", "Airbus Defence", "Thales Alenia", "Boeing Space", "Lockheed Martin", "Palantir", "Maxar", "Planet Labs", "NGA"]
-
-export default function ApexOrbital() {
-  const [mobileOpen, setMobileOpen] = useState(false)
-  const [selectedSat, setSelectedSat] = useState<typeof SATELLITES[0] | null>(null)
-  const [liveGB, setLiveGB] = useState(847293)
-  const [scrolled, setScrolled] = useState(false)
-  const heroRef = useRef(null)
-  const { scrollY } = useScroll()
-  const heroY = useTransform(scrollY, [0, 700], [0, 200])
-  const heroOpacity = useTransform(scrollY, [0, 400], [1, 0])
+  const heroRef = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"],
+  });
+  const heroY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
 
   useEffect(() => {
-    const t = setInterval(() => setLiveGB(c => c + Math.floor(Math.random() * 12) + 3), 800)
-    return () => clearInterval(t)
-  }, [])
-
-  useEffect(() => {
-    const unsub = scrollY.on("change", v => setScrolled(v > 40))
-    return unsub
-  }, [scrollY])
-
-  const NAV_LINKS = ["Constellation", "Missions", "Data", "Pricing", "Partners"]
+    const handleScroll = () => setScrolled(window.scrollY > 50);
+    window.addEventListener("scroll", handleScroll);
+    const t = setInterval(
+      () => setLiveTB((prev) => prev + Math.floor(Math.random() * 50)),
+      1000,
+    );
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      clearInterval(t);
+    };
+  }, []);
 
   return (
-    <div style={{ overflowX: "hidden", scrollBehavior: "smooth" }} className="bg-[#030b1a] text-[#e8f0fe] min-h-screen">
+    <div
+      className="premium-theme min-h-screen bg-[#030712] text-white font-mono selection:bg-[#3b82f6] selection:text-white overflow-x-hidden"
+      style={{ scrollBehavior: "smooth" }}
+    >
+      {/* ==========================================
+          NAVIGATION
+          ========================================== */}
+      <nav
+        className={`fixed top-0 left-0 w-full z-50 transition-all duration-1000 ${scrolled ? "bg-[#030712]/95 backdrop-blur-md py-4 border-b border-blue-500/10 shadow-lg shadow-blue-500/5" : "bg-transparent py-10"}`}
+      >
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12 flex items-center justify-between">
+          <Link href="/" className="flex flex-col items-start">
+            <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-blue-400/40 mb-1">
+              Orbital.
+            </span>
+            <span className="text-xl md:text-2xl font-black tracking-tighter uppercase text-white">
+              APEX<span className="text-blue-500">.</span>
+            </span>
+          </Link>
 
-      {/* NAVBAR */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 ${scrolled ? "bg-[#030b1a]/95 backdrop-blur-xl border-b border-[#0066ff]/15 shadow-[0_4px_40px_rgba(0,102,255,0.06)]" : "bg-transparent border-b border-transparent"}`}>
-        <div className="max-w-[1400px] mx-auto px-6 md:px-10 h-[72px] flex items-center justify-between">
-          <div className="flex items-center gap-3 cursor-pointer">
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#0066ff] to-[#003399] flex items-center justify-center shadow-[0_0_20px_rgba(0,102,255,0.4)]">
-              <Satellite className="w-4.5 h-4.5 text-white" size={18} />
+          <div className="hidden lg:flex items-center gap-12 text-[10px] font-bold uppercase tracking-[0.3em] text-white/30">
+            <Link
+              href="#constellation"
+              className="hover:text-blue-400 transition-colors"
+            >
+              Constellation
+            </Link>
+            <Link
+              href="#ground"
+              className="hover:text-blue-400 transition-colors"
+            >
+              Ground_Segment
+            </Link>
+            <Link
+              href="#telemetry"
+              className="hover:text-blue-400 transition-colors"
+            >
+              Live_Telemetry
+            </Link>
+            <Link
+              href="#missions"
+              className="hover:text-blue-400 transition-colors"
+            >
+              Missions
+            </Link>
+          </div>
+
+          <div className="flex items-center gap-8">
+            <div className="hidden xl:flex flex-col items-end">
+              <span className="text-[9px] font-bold text-white/10 uppercase tracking-widest">
+                Active Data Feed
+              </span>
+              <span className="text-[11px] font-black text-blue-500 flex items-center gap-1">
+                99.9% UPTIME <Activity className="w-3 h-3" />
+              </span>
             </div>
-            <span className="font-black text-xl tracking-tight text-white">APEX <span className="text-[#4d9fff]">ORBITAL</span></span>
-          </div>
-          <div className="hidden md:flex gap-10">
-            {NAV_LINKS.map(item => (
-              <a key={item} href={`#${item.toLowerCase()}`} className="text-sm font-semibold text-white/60 hover:text-[#4d9fff] transition-all duration-200 cursor-pointer">{item}</a>
-            ))}
-          </div>
-          <div className="flex items-center gap-4">
-            <button className="hidden md:block px-5 py-2.5 border border-[#0066ff]/50 rounded-md text-[#4d9fff] font-bold text-sm hover:bg-[#0066ff]/10 transition-all duration-200 cursor-pointer">Request Data</button>
-            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-              <SheetTrigger asChild>
-                <button className="md:hidden cursor-pointer text-white"><Menu size={24} /></button>
-              </SheetTrigger>
-              <SheetContent side="right" className="bg-[#030b1a] border-l border-[#0066ff]/15">
-                <div className="flex flex-col gap-6 mt-12">
-                  {NAV_LINKS.map((item, i) => (
-                    <motion.a key={item} href={`#${item.toLowerCase()}`} initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.07 }}
-                      onClick={() => setMobileOpen(false)} className="text-2xl font-bold text-[#4d9fff] cursor-pointer hover:text-white transition-all duration-200">{item}</motion.a>
-                  ))}
-                </div>
-              </SheetContent>
-            </Sheet>
+            <MagneticBtn className="px-8 py-3 bg-blue-600 text-white text-[10px] font-bold uppercase tracking-widest rounded-md hover:bg-blue-500 transition-all shadow-xl shadow-blue-600/20">
+              REQUEST_DATA
+            </MagneticBtn>
+            <button onClick={() => setMenuOpen(true)} className="lg:hidden">
+              <Menu className="w-6 h-6" />
+            </button>
           </div>
         </div>
       </nav>
 
-      {/* HERO */}
-      <section ref={heroRef} className="h-screen relative overflow-hidden">
-        <motion.div style={{ y: heroY }} className="absolute inset-0">
-          <Image src="https://images.unsplash.com/photo-1446776653964-20c1d3a81b06?w=800&q=80" alt="Space constellation" fill style={{ objectFit: "cover", opacity: 0.35 }} priority unoptimized />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_50%,rgba(0,102,255,0.12)_0%,transparent_70%)]" />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#030b1a]" />
+      {/* MOBILE MENU */}
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div
+            initial={{ opacity: 0, x: "100%" }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: "100%" }}
+            transition={{ type: "tween", duration: 0.5 }}
+            className="fixed inset-0 z-[100] bg-[#030712] p-8 pt-32 flex flex-col border-l border-blue-500/10"
+          >
+            <button
+              onClick={() => setMenuOpen(false)}
+              className="absolute top-10 right-8"
+            >
+              <X className="w-8 h-8" />
+            </button>
+            <div className="flex flex-col gap-10 text-5xl font-black tracking-tighter uppercase italic text-blue-500">
+              <Link href="#constellation" onClick={() => setMenuOpen(false)}>
+                Constellation
+              </Link>
+              <Link href="#ground" onClick={() => setMenuOpen(false)}>
+                Ground
+              </Link>
+              <Link href="#telemetry" onClick={() => setMenuOpen(false)}>
+                Telemetry
+              </Link>
+              <Link href="#missions" onClick={() => setMenuOpen(false)}>
+                Missions
+              </Link>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ==========================================
+          1. HERO (Cyber-Space)
+          ========================================== */}
+      <section
+        ref={heroRef}
+        className="relative w-full h-[100svh] flex flex-col justify-center overflow-hidden"
+      >
+        <motion.div
+          style={{ y: heroY, opacity: heroOpacity }}
+          className="absolute inset-0 z-0"
+        >
+          <Image
+            src="https://images.unsplash.com/photo-1446776653964-20c1d3a81b06?w=1600&q=80"
+            alt="Apex Hero"
+            fill
+            className="object-cover brightness-[0.4] opacity-60"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#030712] via-[#030712]/40 to-transparent" />
         </motion.div>
 
-        {/* Animated orbit rings */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          {[280, 420, 560].map((size, i) => (
-            <motion.div key={i} animate={{ rotate: i % 2 === 0 ? 360 : -360 }} transition={{ duration: 24 + i * 12, repeat: Infinity, ease: "linear" }}
-              style={{ position: "absolute", width: size, height: size, borderRadius: "50%", border: `1px solid rgba(0,102,255,${0.07 + i * 0.03})` }} />
-          ))}
-          <motion.div animate={{ scale: [1, 1.3, 1], opacity: [0.5, 1, 0.5] }} transition={{ duration: 3, repeat: Infinity }}
-            className="absolute w-3 h-3 rounded-full bg-[#0066ff] shadow-[0_0_24px_rgba(0,102,255,0.9)]" />
-        </div>
+        {/* BLUE GRID OVERLAY */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.05)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_80%)]" />
 
-        <motion.div style={{ opacity: heroOpacity }} className="relative h-full flex flex-col items-center justify-center text-center px-6 pt-[72px]">
+        {/* GLOW ORB */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blue-600/10 rounded-full blur-[150px] pointer-events-none animate-pulse" />
+
+        <div className="relative z-10 max-w-[1400px] mx-auto px-6 md:px-12 w-full">
           <Reveal>
-            <Badge className="mb-6 bg-[#0066ff]/15 border border-[#0066ff]/40 text-[#4d9fff] text-xs tracking-[0.15em] px-4 py-1.5 rounded-full">
-              ESTABLISHED 2018 · 42 MISSIONS COMPLETE · 4 ACTIVE SATELLITES
-            </Badge>
-          </Reveal>
-          <Reveal delay={0.15}>
-            <h1 className="text-[clamp(3rem,11vw,8rem)] font-black leading-[0.9] tracking-[-0.04em] mb-6 max-w-[900px]">
-              ORBITAL<br />
-              <span className="bg-gradient-to-r from-[#4d9fff] to-[#0066ff] bg-clip-text text-transparent">INTELLIGENCE</span>
+            <div className="inline-flex items-center gap-3 px-4 py-2 bg-blue-600/10 rounded-md border border-blue-600/30 text-blue-400 text-[10px] font-bold uppercase tracking-widest mb-10 shadow-sm">
+              <Satellite className="w-3.5 h-3.5" />
+              Apex Constellation: Operational
+            </div>
+            <h1 className="text-7xl md:text-9xl lg:text-[11rem] font-black leading-[0.85] tracking-tighter mb-12 uppercase">
+              Orbital <br />{" "}
+              <span className="text-blue-500 italic">Intel.</span>
             </h1>
-          </Reveal>
-          <Reveal delay={0.3}>
-            <p className="text-xl text-white/65 max-w-[600px] leading-relaxed mb-10">
-              Advanced satellite constellation management. 0.47m resolution. 23-minute acquisition-to-delivery. Trusted by NASA, ESA, and 21 national defense agencies.
+            <p className="max-w-xl text-lg md:text-xl text-white/40 leading-relaxed font-bold mb-12 uppercase tracking-tight">
+              Advanced satellite constellation management. 0.47m resolution.
+              Real-time data fusion for mission-critical intelligence.
             </p>
-          </Reveal>
-          <Reveal delay={0.45}>
-            <div className="flex gap-4 flex-wrap justify-center">
-              <MagneticBtn className="px-8 py-4 bg-gradient-to-br from-[#0066ff] to-[#003399] text-white font-bold text-sm rounded-lg border-none shadow-[0_8px_32px_rgba(0,102,255,0.4)] hover:shadow-[0_12px_48px_rgba(0,102,255,0.6)] transition-all duration-200 flex items-center gap-2">
-                Explore Constellation <ArrowRight size={16} />
+            <div className="flex flex-col sm:flex-row gap-6">
+              <MagneticBtn className="px-12 py-5 bg-blue-600 text-white text-[10px] font-bold uppercase tracking-[0.4em] rounded-md hover:bg-blue-500 transition-all cursor-pointer shadow-2xl shadow-blue-600/20">
+                Access Data Catalog
               </MagneticBtn>
-              <button className="px-8 py-4 bg-white/5 text-white font-semibold text-sm rounded-lg border border-white/15 hover:bg-white/10 hover:border-white/30 transition-all duration-200 cursor-pointer flex items-center gap-2">
-                <Radio size={16} className="text-[#4d9fff]" /> Watch Mission Reel
+              <button className="px-12 py-5 border border-white/10 text-white text-[10px] font-bold uppercase tracking-[0.4em] rounded-md hover:bg-white hover:text-[#030712] transition-all cursor-pointer">
+                Mission_Dashboard
               </button>
             </div>
           </Reveal>
+        </div>
 
-          {/* Live data floating card */}
-          <Reveal delay={0.6}>
-            <motion.div animate={{ y: [0, -10, 0] }} transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
-              className="mt-14 px-8 py-5 bg-[#0066ff]/8 backdrop-blur-2xl border border-[#0066ff]/25 rounded-2xl flex gap-10 flex-wrap justify-center shadow-[0_0_60px_rgba(0,102,255,0.1)]">
-              {[
-                { label: "Active Satellites", val: "4 / 4", color: "#00ff88" },
-                { label: "Data Transmitted Today", val: `${liveGB.toLocaleString()} GB`, color: "#4d9fff" },
-                { label: "Ground Contacts/Day", val: "287", color: "#a78bfa" },
-                { label: "Avg Delivery Latency", val: "23 min", color: "#fbbf24" },
-              ].map((d, i) => (
-                <div key={i} className="text-center">
-                  <div className="text-2xl font-black" style={{ color: d.color }}>{d.val}</div>
-                  <div className="text-xs text-white/45 tracking-[0.08em] mt-1 uppercase">{d.label}</div>
-                </div>
-              ))}
-              <div className="flex items-center gap-2">
-                <motion.div animate={{ opacity: [1, 0.2, 1] }} transition={{ duration: 1.4, repeat: Infinity }} className="w-2 h-2 rounded-full bg-[#00ff88]" />
-                <span className="text-xs font-bold text-[#00ff88] tracking-widest">LIVE</span>
-              </div>
-            </motion.div>
-          </Reveal>
-        </motion.div>
-
-        <motion.div animate={{ y: [0, 14, 0] }} transition={{ duration: 2.5, repeat: Infinity }} className="absolute bottom-10 left-1/2 -translate-x-1/2">
-          <ChevronDown size={28} className="text-[#4d9fff]/50" />
+        <motion.div
+          style={{ opacity: heroOpacity }}
+          className="absolute bottom-10 left-12 hidden md:block"
+        >
+          <div className="flex flex-col items-start gap-3">
+            <span className="text-[9px] font-bold text-white/10 uppercase tracking-[0.5em]">
+              APEX_V4 // ORBITAL_OS
+            </span>
+            <div className="w-32 h-[1px] bg-blue-500/40" />
+          </div>
         </motion.div>
       </section>
 
-      {/* STATS BAR */}
-      <section className="py-16 px-6 md:px-14 bg-gradient-to-br from-[#0066ff]/8 to-[#003399]/12 border-t border-b border-[#0066ff]/10">
-        <div className="max-w-[1400px] mx-auto grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
-          {[
-            { label: "Missions Launched", val: 42, suffix: "" },
-            { label: "Mission Success Rate", val: 99.7, suffix: "%", decimals: 1 },
-            { label: "Ground Stations", val: 14, suffix: "" },
-            { label: "Partner Agencies", val: 23, suffix: "" },
-            { label: "TB Delivered Daily", val: 9.4, suffix: "", decimals: 1 },
-            { label: "Countries Served", val: 47, suffix: "" },
-          ].map((s, i) => (
-            <Reveal key={i} delay={i * 0.08}>
-              <div className="text-center">
-                <div className="text-4xl font-black text-[#4d9fff] tracking-tight mb-1">
-                  <Counter target={s.val} suffix={s.suffix} decimals={s.decimals} />
-                </div>
-                <div className="text-xs text-white/45 uppercase tracking-[0.1em]">{s.label}</div>
-              </div>
+      {/* ==========================================
+          2. CONSTELLATION (Satellite Cards)
+          ========================================== */}
+      <section
+        id="constellation"
+        className="py-32 bg-[#030712] border-y border-white/5"
+      >
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12">
+          <div className="flex flex-col md:flex-row justify-between items-end mb-24 gap-12">
+            <Reveal>
+              <h2 className="text-5xl md:text-8xl font-black tracking-tighter uppercase leading-[0.9] text-white">
+                Active <br />{" "}
+                <span className="text-blue-500 italic">Nodes.</span>
+              </h2>
             </Reveal>
-          ))}
-        </div>
-      </section>
+            <p className="max-w-sm text-sm text-white/30 leading-relaxed font-bold uppercase tracking-widest italic text-right">
+              Our multi-modal constellation provides continuous coverage across
+              LEO, MEO, and GEO tiers.
+            </p>
+          </div>
 
-      {/* PARTNER MARQUEE */}
-      <div className="overflow-hidden bg-[#0066ff]/5 border-b border-[#0066ff]/10 py-5">
-        <motion.div className="flex gap-16 whitespace-nowrap" animate={{ x: [0, -1800] }} transition={{ duration: 28, repeat: Infinity, ease: "linear" }}>
-          {[...PARTNERS, ...PARTNERS].map((p, i) => (
-            <span key={i} className="text-sm font-black tracking-[0.2em] text-[#4d9fff]/50 flex-shrink-0 uppercase">{p}</span>
-          ))}
-        </motion.div>
-      </div>
-
-      {/* CONSTELLATION TABS */}
-      <section id="constellation" className="py-28 px-6 md:px-14">
-        <div className="max-w-[1400px] mx-auto">
-          <Reveal className="text-center mb-16">
-            <p className="text-xs tracking-[0.25em] text-[#4d9fff] font-bold mb-3 uppercase">Orbital Architecture</p>
-            <h2 className="text-[clamp(2rem,5vw,3.5rem)] font-black tracking-tight mb-4">Active Constellation</h2>
-            <p className="text-white/50 max-w-[560px] mx-auto text-lg leading-relaxed">Four operational satellites across LEO, MEO, and GEO orbits providing continuous global coverage with sub-15-minute revisit times.</p>
-          </Reveal>
-
-          <Tabs defaultValue="leo">
-            <div className="flex justify-center mb-12">
-              <TabsList className="bg-[#0066ff]/8 border border-[#0066ff]/15 rounded-xl p-1.5">
-                {[{ id: "leo", label: "LEO Orbit" }, { id: "geo", label: "GEO Orbit" }, { id: "meo", label: "MEO Orbit" }].map(t => (
-                  <TabsTrigger key={t.id} value={t.id} className="rounded-lg px-6 py-2.5 font-bold text-sm cursor-pointer transition-all duration-200 data-[state=active]:bg-gradient-to-br data-[state=active]:from-[#0066ff] data-[state=active]:to-[#003399] data-[state=active]:text-white">{t.label}</TabsTrigger>
-                ))}
-              </TabsList>
-            </div>
-
-            {[
-              { id: "leo", sats: SATELLITES.filter(s => s.orbit.includes("LEO")) },
-              { id: "geo", sats: SATELLITES.filter(s => s.orbit.includes("GEO")) },
-              { id: "meo", sats: SATELLITES.filter(s => s.orbit.includes("MEO")) },
-            ].map(tab => (
-              <TabsContent key={tab.id} value={tab.id}>
-                {tab.sats.length === 0 ? (
-                  <p className="text-center py-16 text-white/35 text-lg">No satellites in this orbital tier — check back after the 2026 launch manifest.</p>
-                ) : (
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {tab.sats.map((sat, i) => (
-                      <Reveal key={sat.id} delay={i * 0.1}>
-                        <motion.div whileHover={{ y: -8, boxShadow: "0 24px 64px rgba(0,102,255,0.2)" }} onClick={() => setSelectedSat(sat)}
-                          className="bg-white/[0.02] border border-[#0066ff]/20 rounded-2xl overflow-hidden cursor-pointer transition-all duration-200 group">
-                          <div className="relative h-52">
-                            <Image src={sat.img} alt={sat.id} fill style={{ objectFit: "cover" }} unoptimized />
-                            <div className="absolute inset-0 bg-gradient-to-t from-[#030b1a]/90 via-transparent to-transparent" />
-                            <div className="absolute top-4 right-4">
-                              <Badge className={`text-xs font-bold ${sat.status === "Operational" ? "bg-[#00ff88]/15 border-[#00ff88]/40 text-[#00ff88]" : "bg-orange-500/15 border-orange-500/40 text-orange-400"}`}>
-                                {sat.status}
-                              </Badge>
-                            </div>
-                            <div className="absolute bottom-4 left-5">
-                              <div className="text-2xl font-black text-white">{sat.id}</div>
-                              <div className="text-sm text-white/55 flex items-center gap-1.5 mt-0.5"><MapPin size={12} />{sat.orbit}</div>
-                            </div>
-                          </div>
-                          <div className="p-5">
-                            <div className="grid grid-cols-2 gap-4 mb-5">
-                              <div><div className="text-[10px] text-white/35 uppercase tracking-widest mb-1">Data Capacity</div><div className="font-bold text-sm">{sat.capacity}</div></div>
-                              <div><div className="text-[10px] text-white/35 uppercase tracking-widest mb-1">Instruments</div><div className="font-bold text-sm">{sat.instruments}</div></div>
-                            </div>
-                            <div>
-                              <div className="flex justify-between text-xs mb-2"><span className="text-white/45">System Uptime</span><span className="text-[#4d9fff] font-bold">{sat.uptime}%</span></div>
-                              <Progress value={sat.uptime} className="h-1.5 bg-[#0066ff]/15 [&>div]:bg-gradient-to-r [&>div]:from-[#4d9fff] [&>div]:to-[#0066ff]" />
-                            </div>
-                          </div>
-                        </motion.div>
-                      </Reveal>
-                    ))}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {CONSTELLATION.map((s, i) => (
+              <Reveal key={s.id} delay={i * 0.1}>
+                <div
+                  onClick={() => setActiveSat(i)}
+                  className="group cursor-pointer bg-white/[0.02] border border-white/5 hover:border-blue-500/40 transition-all rounded-2xl p-5 shadow-sm overflow-hidden"
+                >
+                  <div className="relative aspect-video rounded-xl overflow-hidden mb-8">
+                    <Image
+                      src={s.img}
+                      alt={s.id}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-1000"
+                    />
+                    <div className="absolute inset-0 bg-blue-600/10 mix-blend-overlay" />
                   </div>
-                )}
-              </TabsContent>
-            ))}
-          </Tabs>
-        </div>
-      </section>
-
-      {/* TESTIMONIALS */}
-      <section id="missions" className="py-24 px-6 md:px-14 bg-[#0066ff]/[0.03] border-t border-b border-[#0066ff]/10">
-        <div className="max-w-[1400px] mx-auto">
-          <Reveal className="text-center mb-14">
-            <p className="text-xs tracking-[0.25em] text-[#4d9fff] font-bold mb-3 uppercase">Client Testimonials</p>
-            <h2 className="text-[clamp(2rem,5vw,3.5rem)] font-black tracking-tight">Trusted by World Leaders</h2>
-          </Reveal>
-          <Carousel opts={{ loop: true }}>
-            <CarouselContent>
-              {TESTIMONIALS.map((t, i) => (
-                <CarouselItem key={i} className="md:basis-1/2 lg:basis-1/3">
-                  <Reveal delay={i * 0.08}>
-                    <Card className="bg-[#0066ff]/5 border border-[#0066ff]/15 rounded-2xl h-full hover:border-[#0066ff]/35 transition-all duration-200">
-                      <CardContent className="p-7 flex flex-col h-full">
-                        <div className="flex gap-1 mb-5">
-                          {[...Array(t.rating)].map((_, j) => <Star key={j} size={14} fill="#0066ff" className="text-[#0066ff]" />)}
-                        </div>
-                        <p className="text-white/70 text-sm leading-[1.75] mb-6 flex-1 italic">&ldquo;{t.text}&rdquo;</p>
-                        <Separator className="bg-[#0066ff]/10 mb-5" />
-                        <div className="flex items-center gap-3">
-                          <Avatar className="w-10 h-10 border-2 border-[#0066ff]/25">
-                            <AvatarImage src={t.img} />
-                            <AvatarFallback className="bg-[#0066ff]/15 text-[#4d9fff] text-xs font-black">{t.avatar}</AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <div className="font-black text-sm text-white">{t.name}</div>
-                            <div className="text-xs text-white/45">{t.role}</div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Reveal>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious className="bg-[#0066ff]/15 border-[#0066ff]/30 text-[#4d9fff] hover:bg-[#0066ff]/25 cursor-pointer transition-all duration-200" />
-            <CarouselNext className="bg-[#0066ff]/15 border-[#0066ff]/30 text-[#4d9fff] hover:bg-[#0066ff]/25 cursor-pointer transition-all duration-200" />
-          </Carousel>
-        </div>
-      </section>
-
-      {/* PRICING */}
-      <section id="pricing" className="py-28 px-6 md:px-14 bg-[#0066ff]/[0.02]">
-        <div className="max-w-[1400px] mx-auto">
-          <Reveal className="text-center mb-16">
-            <p className="text-xs tracking-[0.25em] text-[#4d9fff] font-bold mb-3 uppercase">Data Access Plans</p>
-            <h2 className="text-[clamp(2rem,5vw,3.5rem)] font-black tracking-tight">Choose Your Tier</h2>
-            <p className="text-white/45 mt-4 max-w-[480px] mx-auto">Scalable access to Earth intelligence — from research grants to full constellation enterprise agreements.</p>
-          </Reveal>
-          <div className="grid md:grid-cols-3 gap-8">
-            {PLANS.map((plan, i) => (
-              <Reveal key={i} delay={i * 0.15}>
-                <motion.div whileHover={{ y: -10, boxShadow: plan.highlight ? "0 28px 80px rgba(0,102,255,0.35)" : "0 20px 60px rgba(0,102,255,0.12)" }}
-                  className={`relative rounded-2xl p-8 border-2 transition-all duration-200 ${plan.highlight ? "bg-gradient-to-br from-[#0066ff]/20 to-[#003399]/20 border-[#0066ff]/60" : "bg-white/[0.02] border-[#0066ff]/15 hover:border-[#0066ff]/30"}`}>
-                  {plan.highlight && (
-                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[#0066ff] to-[#003399] px-5 py-1.5 rounded-full text-xs font-black tracking-[0.1em] whitespace-nowrap">
-                      MOST POPULAR
+                  <div className="px-2 pb-2">
+                    <div className="flex justify-between items-center mb-4">
+                      <span className="text-[10px] uppercase tracking-widest text-blue-500 font-black">
+                        {s.id}
+                      </span>
+                      <Badge className="bg-blue-500/10 text-blue-400 border-blue-500/20 text-[8px] uppercase tracking-widest">
+                        {s.status}
+                      </Badge>
                     </div>
-                  )}
-                  <div className="text-xs tracking-[0.2em] text-[#4d9fff] font-bold mb-3 uppercase">{plan.name}</div>
-                  <div className="flex items-end gap-1.5 mb-2">
-                    <span className="text-5xl font-black tracking-tight">{plan.price}</span>
-                    <span className="text-white/35 pb-2">{plan.period}</span>
+                    <h3 className="text-xl font-black uppercase tracking-tight mb-4 text-white truncate">
+                      {s.instruments}
+                    </h3>
+                    <div className="space-y-3 mb-8">
+                      <div className="flex justify-between text-[10px] uppercase tracking-widest text-white/20">
+                        <span>Orbit</span>
+                        <span className="text-white/60">{s.orbit}</span>
+                      </div>
+                      <div className="flex justify-between text-[10px] uppercase tracking-widest text-white/20">
+                        <span>Capacity</span>
+                        <span className="text-white/60">{s.capacity}</span>
+                      </div>
+                    </div>
+                    <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        whileInView={{ width: `${s.uptime}%` }}
+                        transition={{ duration: 1.5, delay: i * 0.1 }}
+                        className="h-full bg-blue-500"
+                      />
+                    </div>
+                    <div className="flex justify-between items-center mt-3 text-[9px] uppercase tracking-widest text-white/20">
+                      <span>Uptime</span>
+                      <span className="text-blue-500 font-black">
+                        {s.uptime}%
+                      </span>
+                    </div>
                   </div>
-                  <p className="text-white/45 text-sm mb-6">{plan.desc}</p>
-                  <Separator className="bg-[#0066ff]/10 mb-6" />
-                  <ul className="space-y-3 mb-8">
-                    {plan.features.map((f, j) => (
-                      <li key={j} className="flex items-start gap-3 text-sm text-white/70">
-                        <Check size={15} className="text-[#4d9fff] mt-0.5 flex-shrink-0" />{f}
-                      </li>
-                    ))}
-                  </ul>
-                  <button className={`w-full py-3.5 rounded-xl font-bold text-sm tracking-[0.05em] transition-all duration-200 cursor-pointer ${plan.highlight ? "bg-gradient-to-r from-[#0066ff] to-[#003399] text-white hover:opacity-90" : "bg-[#0066ff]/10 border border-[#0066ff]/30 text-[#4d9fff] hover:bg-[#0066ff]/20"}`}>
-                    {plan.cta}
-                  </button>
-                </motion.div>
+                </div>
               </Reveal>
             ))}
           </div>
         </div>
       </section>
 
-      {/* FAQ */}
-      <section id="data" className="py-24 px-6 md:px-14">
-        <div className="max-w-[860px] mx-auto">
-          <Reveal className="text-center mb-14">
-            <p className="text-xs tracking-[0.25em] text-[#4d9fff] font-bold mb-3 uppercase">Technical FAQ</p>
-            <h2 className="text-[clamp(2rem,5vw,3.5rem)] font-black tracking-tight">Common Questions</h2>
+      {/* ==========================================
+          3. GROUND SEGMENT (Global Network)
+          ========================================== */}
+      <section id="ground" className="py-32 bg-[#030712]">
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 md:gap-32 items-center">
+            <div className="lg:col-span-5">
+              <Reveal>
+                <span className="text-[10px] uppercase tracking-[0.4em] font-bold text-blue-500 mb-6 block">
+                  Global Downlink
+                </span>
+                <h2 className="text-5xl md:text-7xl font-black tracking-tighter leading-tight mb-12 text-white uppercase italic">
+                  Ground <br /> <span className="text-blue-500">Segment.</span>
+                </h2>
+                <p className="text-lg text-white/30 leading-relaxed font-bold mb-16 uppercase tracking-tight italic">
+                  Our globally distributed ground station network ensures
+                  ultra-low latency data delivery from orbit to your terminal.
+                </p>
+
+                <div className="space-y-10">
+                  {GROUND_STATIONS.map((st, i) => (
+                    <div
+                      key={i}
+                      className="group border-l border-blue-500/20 pl-8 hover:border-blue-500 transition-all"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-sm font-bold uppercase tracking-tight text-white/60">
+                          {st.city}
+                        </h4>
+                        <span
+                          className={`text-[8px] uppercase tracking-widest font-black ${st.status === "Active" ? "text-emerald-500" : "text-blue-500/40"}`}
+                        >
+                          {st.status}
+                        </span>
+                      </div>
+                      <div className="flex gap-6 text-[10px] text-white/20 font-black uppercase tracking-widest">
+                        <span>
+                          {st.lat} // {st.lon}
+                        </span>
+                        <span className="text-blue-500 italic">
+                          Ping: {st.ping}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Reveal>
+            </div>
+
+            <div className="lg:col-span-7">
+              <Reveal className="relative aspect-video rounded-2xl overflow-hidden shadow-2xl border border-white/5 bg-[#0a0a0a] p-1 group">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.1)_0%,transparent_70%)] animate-pulse" />
+                <div className="relative h-full w-full border border-white/5 bg-[#030712] p-8 flex flex-col justify-between overflow-hidden">
+                  <div className="flex items-center justify-between mb-10 pb-6 border-b border-white/5">
+                    <div className="flex items-center gap-4">
+                      <Globe className="w-5 h-5 text-blue-500" />
+                      <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-blue-500">
+                        Global_Network_Visualizer
+                      </span>
+                    </div>
+                    <div className="flex gap-2">
+                      <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
+                      <div className="w-1.5 h-1.5 bg-blue-500/30 rounded-full" />
+                    </div>
+                  </div>
+
+                  {/* SIMULATED MAP */}
+                  <div className="relative flex-1 bg-blue-600/[0.03] rounded-xl border border-white/[0.03] flex items-center justify-center overflow-hidden">
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{
+                        duration: 120,
+                        repeat: Infinity,
+                        ease: "linear",
+                      }}
+                      className="absolute w-[600px] h-[600px] border border-blue-500/10 rounded-full"
+                    />
+                    <motion.div
+                      animate={{ rotate: -360 }}
+                      transition={{
+                        duration: 180,
+                        repeat: Infinity,
+                        ease: "linear",
+                      }}
+                      className="absolute w-[400px] h-[400px] border border-blue-500/5 rounded-full"
+                    />
+
+                    {/* STATION DOTS */}
+                    {[...Array(8)].map((_, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: [0, 1, 0] }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          delay: i * 0.4,
+                        }}
+                        className="absolute w-2 h-2 bg-blue-500 rounded-full blur-sm"
+                        style={{
+                          top: `${20 + Math.random() * 60}%`,
+                          left: `${20 + Math.random() * 60}%`,
+                        }}
+                      />
+                    ))}
+
+                    <div className="relative z-10 flex flex-col items-center">
+                      <span className="text-[9px] font-bold text-blue-500 uppercase tracking-[0.5em] mb-4">
+                        Network Status
+                      </span>
+                      <div className="text-4xl font-black text-white italic tabular-nums">
+                        14 Active Nodes
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-12 flex justify-between items-end">
+                    <div className="space-y-2">
+                      <span className="text-[9px] font-bold text-white/20 uppercase tracking-widest">
+                        Aggregate Throughput
+                      </span>
+                      <div className="text-2xl font-black text-white italic">
+                        {liveTB.toLocaleString()} GB
+                      </div>
+                    </div>
+                    <div className="flex gap-4">
+                      <div className="w-10 h-10 rounded-lg bg-blue-600/10 border border-blue-500/20 flex items-center justify-center">
+                        <Wifi className="w-5 h-5 text-blue-500" />
+                      </div>
+                      <div className="w-10 h-10 rounded-lg bg-blue-600/10 border border-blue-500/20 flex items-center justify-center">
+                        <Navigation className="w-5 h-5 text-blue-500" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Reveal>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ==========================================
+          4. TELEMETRY (Live Terminal)
+          ========================================== */}
+      <section
+        id="telemetry"
+        className="py-32 bg-[#030712] border-y border-white/5"
+      >
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12">
+          <Reveal className="text-center mb-24 max-w-2xl mx-auto">
+            <span className="text-[10px] uppercase tracking-[0.5em] font-black text-blue-500 mb-6 block">
+              Real-Time Ops
+            </span>
+            <h2 className="text-5xl md:text-7xl font-black tracking-tighter uppercase italic text-white">
+              Live Index.
+            </h2>
           </Reveal>
-          <Accordion type="single" collapsible>
-            {FAQS.map((faq, i) => (
-              <AccordionItem key={i} value={`f${i}`} className="border-b border-[#0066ff]/12">
-                <AccordionTrigger className="text-base font-bold text-white hover:text-[#4d9fff] py-5 cursor-pointer transition-all duration-200 [&[data-state=open]]:text-[#4d9fff]">
+
+          <div className="bg-[#050914] border border-white/5 rounded-3xl overflow-hidden shadow-2xl">
+            <div className="p-6 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
+              <div className="flex items-center gap-6">
+                <div className="flex gap-1.5">
+                  <div className="w-2 h-2 rounded-full bg-red-500/50" />
+                  <div className="w-2 h-2 rounded-full bg-amber-500/50" />
+                  <div className="w-2 h-2 rounded-full bg-emerald-500/50" />
+                </div>
+                <span className="text-[10px] font-bold text-white/20 uppercase tracking-widest">
+                  mission_control_v4.2.sh
+                </span>
+              </div>
+              <div className="flex items-center gap-4 text-[10px] font-black text-blue-500 uppercase tracking-widest">
+                <span className="animate-pulse">RECORDING_TELEMETRY</span>
+                <Terminal className="w-4 h-4" />
+              </div>
+            </div>
+
+            <div className="p-8 font-mono space-y-4">
+              <div className="flex gap-4 text-[11px] text-blue-500/40 border-b border-white/[0.02] pb-4 uppercase font-black tracking-widest">
+                <span className="w-20">TIMESTAMP</span>
+                <span className="w-24">NODE_ID</span>
+                <span className="w-40">EVENT_ID</span>
+                <span className="w-20">STATUS</span>
+                <span>VALUE_LOG</span>
+              </div>
+              {TELEMETRY_LOGS.map((log, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, x: -10 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                  className="flex gap-4 text-[11px] py-3 border-b border-white/[0.02] group hover:bg-white/[0.02] transition-colors"
+                >
+                  <span className="w-20 text-white/20">{log.ts}</span>
+                  <span className="w-24 text-white/60 font-black">
+                    {log.node}
+                  </span>
+                  <span className="w-40 text-blue-500 font-black">
+                    {log.event}
+                  </span>
+                  <span
+                    className={`w-20 font-black ${log.status === "OK" ? "text-emerald-500" : "text-amber-500"}`}
+                  >
+                    {log.status}
+                  </span>
+                  <span className="text-white/40 italic">{log.val}</span>
+                </motion.div>
+              ))}
+              <div className="pt-8 flex items-center gap-4">
+                <span className="text-blue-500 animate-pulse">_</span>
+                <input
+                  type="text"
+                  placeholder="CMD_INPUT: Execute Priority Tasking..."
+                  className="bg-transparent border-none outline-none text-[11px] text-white/20 font-black uppercase tracking-widest w-full"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ==========================================
+          5. STATS (Counters)
+          ========================================== */}
+      <section className="py-24 bg-[#030712] border-b border-white/5">
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12 grid grid-cols-2 lg:grid-cols-4 gap-16 text-center">
+          {[
+            { label: "Missions_Launched", val: 42, suffix: "+" },
+            { label: "Success_Rate", val: 99, suffix: "%" },
+            { label: "Data_Volume_Daily", val: 12, suffix: " TB" },
+            { label: "Delivery_Latency", val: 23, suffix: "m" },
+          ].map((stat, i) => (
+            <Reveal key={i} delay={i * 0.1}>
+              <div className="text-5xl md:text-7xl font-black text-blue-600 mb-4 italic tabular-nums">
+                <Counter to={stat.val} suffix={stat.suffix} />
+              </div>
+              <div className="text-[10px] font-bold uppercase tracking-[0.5em] text-white/20">
+                {stat.label}
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* ==========================================
+          6. FAQ (Technical Buffer)
+          ========================================== */}
+      <section className="py-32 bg-[#030712]">
+        <div className="max-w-3xl mx-auto px-6">
+          <Reveal className="text-center mb-24">
+            <h2 className="text-4xl md:text-5xl font-black tracking-tighter leading-none uppercase italic text-white">
+              Platform_Logic
+            </h2>
+          </Reveal>
+
+          <Accordion type="single" collapsible className="space-y-4">
+            {[
+              {
+                q: "What is your ground sample distance?",
+                a: "APEX-3 delivers 0.47m GSD in panchromatic mode and 2.1m multispectral. Our SAR sensor on APEX-1 achieves 0.5m Stripmap resolution in all weather conditions.",
+              },
+              {
+                q: "What is your tasking latency?",
+                a: "Standard tasking is confirmed within 4 hours. Enterprise priority queue guarantees satellite look-angle confirmation within 45 minutes of request.",
+              },
+              {
+                q: "How do you handle data security?",
+                a: "All data is encrypted via AES-256-GCM in transit and at rest. We operate sovereign data centers and are ITAR/EAR compliant for national security missions.",
+              },
+              {
+                q: "Can I integrate with existing GIS?",
+                a: "Yes. We provide native connectors for ArcGIS, QGIS, Palantir Foundry, and Google Earth Engine via our STAC-compliant REST API.",
+              },
+            ].map((faq, i) => (
+              <AccordionItem
+                key={i}
+                value={`item-${i}`}
+                className="border-b border-white/10"
+              >
+                <AccordionTrigger className="text-left text-sm uppercase font-bold tracking-widest py-8 hover:text-blue-500 hover:no-underline">
                   {faq.q}
                 </AccordionTrigger>
-                <AccordionContent className="text-white/60 pb-5 text-sm leading-[1.75]">
+                <AccordionContent className="text-sm text-white/40 leading-relaxed font-bold uppercase tracking-widest pb-8 italic">
                   {faq.a}
                 </AccordionContent>
               </AccordionItem>
@@ -430,92 +862,270 @@ export default function ApexOrbital() {
         </div>
       </section>
 
-      {/* CTA BANNER */}
-      <section className="py-28 px-6 md:px-14 bg-gradient-to-br from-[#0066ff]/10 to-[#003399]/15 border-t border-[#0066ff]/15 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_60%_at_50%_40%,rgba(0,102,255,0.08)_0%,transparent_70%)]" />
-        <div className="max-w-[800px] mx-auto text-center relative z-10">
-          <Reveal>
-            <Rocket size={52} className="text-[#4d9fff] mx-auto mb-6" />
-            <h2 className="text-[clamp(2rem,7vw,5rem)] font-black tracking-tight mb-5 leading-[0.9]">Ready to Launch?</h2>
-            <p className="text-white/55 text-lg mb-12 max-w-[520px] mx-auto leading-relaxed">Join 23 space agencies and Fortune 500 companies reshaping Earth intelligence with APEX constellation data.</p>
-          </Reveal>
-          <Reveal delay={0.15}>
-            <div className="flex gap-4 justify-center flex-wrap">
-              <MagneticBtn className="px-8 py-4 bg-gradient-to-br from-[#0066ff] to-[#003399] text-white font-bold text-base rounded-xl shadow-[0_8px_32px_rgba(0,102,255,0.5)] hover:shadow-[0_12px_48px_rgba(0,102,255,0.7)] transition-all duration-200 flex items-center gap-2">
-                Request Mission Brief <ArrowRight size={18} />
-              </MagneticBtn>
-              <button className="px-8 py-4 bg-transparent border border-[#0066ff]/40 rounded-xl text-[#4d9fff] font-bold text-base hover:bg-[#0066ff]/10 transition-all duration-200 cursor-pointer flex items-center gap-2">
-                <Database size={16} /> Download Data Catalog
-              </button>
+      {/* ==========================================
+          7. MEGA FOOTER (Cyber-Military)
+          ========================================== */}
+      <footer className="bg-[#050914] pt-32 pb-12 px-6 md:px-12 border-t border-white/5 relative overflow-hidden">
+        <div className="max-w-[1600px] mx-auto relative z-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-16 mb-32">
+            <div className="lg:col-span-5">
+              <Reveal>
+                <div className="flex flex-col mb-10">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.6em] text-white/20 mb-1">
+                    Orbital.
+                  </span>
+                  <span className="text-2xl font-black tracking-tighter uppercase text-white">
+                    APEX<span className="text-blue-500">.</span>
+                  </span>
+                </div>
+                <p className="text-white/20 max-w-sm mb-12 uppercase tracking-widest text-[10px] font-bold leading-relaxed italic">
+                  Strategic satellite intelligence for national security,
+                  climate monitoring, and global commercial infrastructure.
+                </p>
+                <form
+                  className="relative max-w-md"
+                  onSubmit={(e) => e.preventDefault()}
+                >
+                  <input
+                    type="email"
+                    placeholder="AUTHENTICATED_ACCESS_MAIL"
+                    className="w-full bg-white/[0.02] border border-white/5 rounded-none px-6 py-4 text-xs font-bold outline-none focus:border-blue-600 text-white transition-all uppercase tracking-widest"
+                  />
+                  <button
+                    type="submit"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-blue-500 hover:text-white transition-colors uppercase tracking-[0.3em]"
+                  >
+                    SECURE_ENROLL
+                  </button>
+                </form>
+              </Reveal>
             </div>
-          </Reveal>
-        </div>
-      </section>
 
-      {/* FOOTER */}
-      <footer className="py-14 px-6 md:px-14 border-t border-[#0066ff]/10">
-        <div className="max-w-[1400px] mx-auto">
-          <div className="grid md:grid-cols-4 gap-10 mb-12">
-            <div>
-              <div className="flex items-center gap-3 mb-4 cursor-pointer">
-                <Satellite size={18} className="text-[#4d9fff]" />
-                <span className="font-black tracking-tight text-white">APEX <span className="text-[#4d9fff]">ORBITAL</span></span>
-              </div>
-              <p className="text-xs text-white/30 leading-relaxed">Advanced satellite intelligence for Earth observation, defense, and climate science.</p>
+            <div className="lg:col-span-2 lg:col-start-7">
+              <h4 className="text-[10px] font-bold uppercase tracking-widest text-blue-500 mb-10">
+                Constellation
+              </h4>
+              <ul className="space-y-4 text-[10px] font-bold uppercase tracking-widest text-white/20">
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-blue-500 transition-colors"
+                  >
+                    LEO_Tier
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-blue-500 transition-colors"
+                  >
+                    GEO_Stationary
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-blue-500 transition-colors"
+                  >
+                    Payload_Specs
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-blue-500 transition-colors"
+                  >
+                    Launch_Manifest
+                  </Link>
+                </li>
+              </ul>
             </div>
-            {[
-              { title: "Platform", links: ["Constellation", "Data Products", "API Access", "SDK Downloads"] },
-              { title: "Solutions", links: ["Government", "Commercial", "Academic", "Defense"] },
-              { title: "Company", links: ["About", "Missions", "Careers", "Press", "Security"] },
-            ].map(col => (
-              <div key={col.title}>
-                <div className="text-[10px] uppercase tracking-[0.3em] text-[#4d9fff]/50 mb-4 font-bold">{col.title}</div>
-                <ul className="space-y-2.5">
-                  {col.links.map(link => (
-                    <li key={link}><a href="#" className="text-sm text-white/30 hover:text-[#4d9fff] transition-all duration-200 cursor-pointer">{link}</a></li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+
+            <div className="lg:col-span-2">
+              <h4 className="text-[10px] font-bold uppercase tracking-widest text-blue-500 mb-10">
+                Intelligence
+              </h4>
+              <ul className="space-y-4 text-[10px] font-bold uppercase tracking-widest text-white/20">
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-blue-500 transition-colors"
+                  >
+                    SAR_Imaging
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-blue-500 transition-colors"
+                  >
+                    Hyperspectral_Data
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-blue-500 transition-colors"
+                  >
+                    Thermal_Monitoring
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-blue-500 transition-colors"
+                  >
+                    Change_Detection
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            <div className="lg:col-span-2">
+              <h4 className="text-[10px] font-bold uppercase tracking-widest text-blue-500 mb-10">
+                Terminal
+              </h4>
+              <ul className="space-y-4 text-[10px] font-bold uppercase tracking-widest text-white/20">
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-blue-500 transition-colors flex items-center gap-3"
+                  >
+                    <Twitter className="w-3 h-3" /> X_Mission
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-blue-500 transition-colors flex items-center gap-3"
+                  >
+                    <Github className="w-3 h-3" /> API_Docs
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-blue-500 transition-colors flex items-center gap-3"
+                  >
+                    <Mail className="w-3 h-3" /> Contact_Control
+                  </Link>
+                </li>
+              </ul>
+            </div>
           </div>
-          <Separator className="bg-[#0066ff]/10 mb-8" />
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-xs text-white/25">© 2026 Apex Orbital Systems Inc. — ISO 27001 · ITAR Registered · SOC 2 Type II</p>
-            <div className="flex items-center gap-3">
-              {[Twitter, Linkedin, Github, Globe].map((Icon, i) => (
-                <button key={i} className="w-8 h-8 rounded-lg border border-[#0066ff]/15 flex items-center justify-center text-white/30 hover:text-[#4d9fff] hover:border-[#0066ff]/40 transition-all duration-200 cursor-pointer">
-                  <Icon size={14} />
-                </button>
-              ))}
+
+          <div className="flex flex-col md:flex-row justify-between items-center gap-8 pt-10 border-t border-white/5 text-[9px] font-bold uppercase tracking-widest text-white/10">
+            <div className="flex items-center gap-10">
+              <span>
+                &copy; {new Date().getFullYear()} APEX Orbital Systems Inc.
+              </span>
+              <Link href="#" className="hover:text-white transition-colors">
+                Regulatory_Terms
+              </Link>
+              <Link href="#" className="hover:text-white transition-colors">
+                ITAR_Sovereignty
+              </Link>
+            </div>
+            <div className="flex gap-10">
+              <span>ISO 27001 // SOC 2 Type II</span>
+              <span>Orbital OS v4.2</span>
             </div>
           </div>
         </div>
       </footer>
 
-      {/* SATELLITE DIALOG */}
-      <Dialog open={!!selectedSat} onOpenChange={() => setSelectedSat(null)}>
-        <DialogContent className="bg-[#050d1a] border border-[#0066ff]/25 rounded-2xl max-w-[560px] text-white">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-black text-[#4d9fff]">{selectedSat?.id} — Satellite Detail</DialogTitle>
-          </DialogHeader>
-          {selectedSat && (
-            <div className="flex flex-col gap-4 mt-3">
-              <div className="rounded-xl overflow-hidden h-[180px] relative">
-                <Image src={selectedSat.img} alt={selectedSat.id} fill style={{ objectFit: "cover" }} unoptimized />
-              </div>
-              {[{ l: "Orbital Altitude", v: selectedSat.orbit }, { l: "Data Capacity", v: selectedSat.capacity }, { l: "Instruments", v: selectedSat.instruments }, { l: "Launch Date", v: selectedSat.launched }, { l: "System Uptime", v: `${selectedSat.uptime}%` }].map((row, i) => (
-                <div key={i} className="flex justify-between border-b border-[#0066ff]/10 pb-3">
-                  <span className="text-white/40 text-sm">{row.l}</span>
-                  <span className="font-bold text-[#4d9fff] text-sm">{row.v}</span>
-                </div>
-              ))}
-              <button onClick={() => setSelectedSat(null)} className="w-full py-3.5 bg-gradient-to-r from-[#0066ff] to-[#003399] rounded-xl font-bold text-sm cursor-pointer hover:opacity-90 transition-all duration-200">
-                Request Tasking
+      {/* SATELLITE MODAL */}
+      <AnimatePresence>
+        {activeSat !== null && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-xl flex items-center justify-center p-6"
+            onClick={() => setActiveSat(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 30 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 30 }}
+              className="bg-[#0e0f1a] border border-white/10 max-w-4xl w-full grid grid-cols-1 md:grid-cols-2 overflow-hidden rounded-3xl shadow-2xl relative"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setActiveSat(null)}
+                className="absolute top-8 right-8 text-white/20 hover:text-blue-500 transition-colors z-10"
+              >
+                <X className="w-6 h-6" />
               </button>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+              <div className="relative aspect-square md:aspect-auto">
+                <Image
+                  src={CONSTELLATION[activeSat].img}
+                  alt="Satellite"
+                  fill
+                  className="object-cover brightness-50"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0e0f1a] to-transparent" />
+              </div>
+              <div className="p-12 flex flex-col justify-between bg-[#0e0f1a]">
+                <div>
+                  <div className="text-[10px] uppercase tracking-widest text-blue-500 font-black mb-4">
+                    Node detail // {CONSTELLATION[activeSat].id}
+                  </div>
+                  <h3 className="text-4xl font-black uppercase tracking-tighter italic text-white mb-6 leading-none">
+                    {CONSTELLATION[activeSat].instruments}
+                  </h3>
+                  <p className="text-sm text-white/40 leading-relaxed font-bold mb-10 italic">
+                    "{CONSTELLATION[activeSat].desc}"
+                  </p>
+
+                  <div className="grid grid-cols-1 gap-4 mb-10">
+                    {[
+                      {
+                        label: "Orbit Tier",
+                        val: CONSTELLATION[activeSat].orbit,
+                      },
+                      {
+                        label: "Data Pipeline",
+                        val: CONSTELLATION[activeSat].capacity,
+                      },
+                      {
+                        label: "Launch Window",
+                        val: CONSTELLATION[activeSat].launched,
+                      },
+                      {
+                        label: "System Uptime",
+                        val: CONSTELLATION[activeSat].uptime + "%",
+                      },
+                    ].map((s, i) => (
+                      <div
+                        key={i}
+                        className="flex justify-between text-[10px] border-b border-white/5 pb-2 font-mono"
+                      >
+                        <span className="uppercase tracking-widest text-white/20 font-black">
+                          {s.label}
+                        </span>
+                        <span className="font-black text-blue-500 italic">
+                          {s.val}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <button className="w-full py-5 bg-blue-600 text-white text-[10px] font-bold uppercase tracking-widest hover:bg-white hover:text-[#030712] transition-all cursor-pointer shadow-xl shadow-blue-600/10">
+                    REQUEST_PRIORITY_TASKING
+                  </button>
+                  <button className="w-full py-5 border border-white/10 text-white text-[10px] font-bold uppercase tracking-widest hover:bg-blue-600 transition-all cursor-pointer">
+                    VIEW_TELEMETRY_STREAM
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <style>{`::-webkit-scrollbar{width:4px;background:#030712}::-webkit-scrollbar-thumb{background:rgba(59,130,246,0.2)}`}</style>
     </div>
-  )
+  );
 }

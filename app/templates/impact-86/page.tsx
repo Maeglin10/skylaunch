@@ -1,648 +1,638 @@
-"use client"
+"use client";
 
-import { motion, useScroll, useTransform, useInView, AnimatePresence, useMotionValue, useSpring } from "framer-motion"
-import { useState, useRef, useEffect } from "react"
-import Image from "next/image"
-import Link from "next/link"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
-import { Progress } from "@/components/ui/progress"
-import { Separator } from "@/components/ui/separator"
 import {
-  Menu, X, ArrowRight, Check, Star, Leaf, Heart, Award, ShoppingBag,
-  Truck, RotateCcw, Globe, TreePine, Droplets, Wind, Users, Recycle,
-  ChevronRight, Instagram, Twitter
-} from "lucide-react"
+  motion,
+  useScroll,
+  useTransform,
+  useInView,
+  AnimatePresence,
+  useMotionValue,
+  useSpring,
+} from "framer-motion";
+import { useState, useRef, useEffect, useCallback } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
+import {
+  Sparkles,
+  Wand2,
+  Zap,
+  Globe,
+  Activity,
+  Terminal,
+  Box,
+  Share2,
+  Layers,
+  Maximize,
+  Monitor,
+  MousePointer2,
+  Navigation,
+  Wifi,
+  Shield,
+  ShoppingBag,
+  Search,
+  Star,
+  Instagram,
+  Twitter,
+  Mail,
+  Phone,
+  Check,
+  Menu,
+  X,
+  MapPin,
+  Clock,
+  Lock,
+  Plus,
+  Bell,
+  Settings,
+  ArrowRight,
+  ArrowUpRight,
+  ChevronRight,
+  Eye,
+  PenTool,
+  FlaskConical,
+  Droplets,
+  HeartPulse,
+  Microscope,
+  Wind,
+  Trees,
+  Flower2,
+  Heart,
+  Moon,
+  Sun,
+  Waves,
+} from "lucide-react";
 
-function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
-  const ref = useRef(null)
-  const isInView = useInView(ref, { once: true, margin: "-80px" })
+import "../premium.css";
+
+/* ==========================================================================
+   DATA STRUCTURES
+   ========================================================================= */
+
+const TREATMENTS = [
+  {
+    id: "rituals",
+    label: "Signature Rituals",
+    items: [
+      {
+        name: "Celestial Alignment",
+        duration: "120m",
+        price: "$450",
+        desc: "A full-body rejuvenation combining volcanic stone therapy and sound bath immersion.",
+        img: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&q=80",
+      },
+      {
+        name: "Lumina Detox",
+        duration: "90m",
+        price: "$320",
+        desc: "Infrared thermal wrapping followed by botanical lymph drainage.",
+        img: "https://images.unsplash.com/photo-1519823551278-64ac92734fb1?w=800&q=80",
+      },
+      {
+        name: "Oceanic Stillness",
+        duration: "150m",
+        price: "$580",
+        desc: "Cold-pressed algae wrap and marine collagen facial in our private water suite.",
+        img: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=800&q=80",
+      },
+    ],
+  },
+  {
+    id: "facials",
+    label: "Advanced Facials",
+    items: [
+      {
+        name: "Molecular Glow",
+        duration: "60m",
+        price: "$280",
+        desc: "High-frequency ultrasound infusion of bio-identical growth factors.",
+        img: "https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?w=800&q=80",
+      },
+      {
+        name: "Sculpt & Lift",
+        duration: "75m",
+        price: "$350",
+        desc: "Manual buccal massage and micro-current stimulation for instant structural definition.",
+        img: "https://images.unsplash.com/photo-1512290923902-8a9f81dc236c?w=800&q=80",
+      },
+      {
+        name: "Oxygen Infusion",
+        duration: "60m",
+        price: "$240",
+        desc: "Hyperbaric oxygen delivery with customized vitamin cocktails.",
+        img: "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=800&q=80",
+      },
+    ],
+  },
+];
+
+const AMENITIES = [
+  {
+    name: "Therapeutic Garden",
+    desc: "Biophilic meditation spaces.",
+    img: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=800&q=80",
+  },
+  {
+    name: "Hydro Suite",
+    desc: "Vitality pools and thermal circuits.",
+    img: "https://images.unsplash.com/photo-1560750588-73207b1ef5b8?w=800&q=80",
+  },
+  {
+    name: "Oxygen Bar",
+    desc: "Refined respiratory rejuvenation.",
+    img: "https://images.unsplash.com/photo-1527515545081-5db817172677?w=800&q=80",
+  },
+  {
+    name: "Tea Lounge",
+    desc: "Hand-blended botanical infusions.",
+    img: "https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=800&q=80",
+  },
+];
+
+/* ==========================================================================
+   UTILITY COMPONENTS
+   ========================================================================= */
+
+function Reveal({
+  children,
+  delay = 0,
+  y = 40,
+}: {
+  children: React.ReactNode;
+  delay?: number;
+  y?: number;
+}) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-50px" });
   return (
-    <motion.div ref={ref} initial={{ opacity: 0, y: 32 }} animate={isInView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] }}>
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 1.2, delay, ease: [0.25, 0.1, 0.25, 1] }}
+    >
       {children}
     </motion.div>
-  )
+  );
 }
 
-const NAV_LINKS = ["Collections", "Impact", "Materials", "About", "Journal"]
+function MagneticBtn({
+  children,
+  className = "",
+  onClick,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  onClick?: () => void;
+}) {
+  const ref = useRef<HTMLButtonElement>(null);
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const sx = useSpring(x, { stiffness: 150, damping: 15 });
+  const sy = useSpring(y, { stiffness: 150, damping: 15 });
 
-const STATS = [
-  { label: "Carbon Neutral Since", value: "2021", icon: Wind, isText: true },
-  { label: "GOTS-Certified Cotton", value: 100, suffix: "%", icon: Leaf },
-  { label: "Trees Planted", value: 287000, suffix: "", icon: TreePine },
-  { label: "Water Saved vs. Conventional", value: 74, suffix: "% less", icon: Droplets },
-  { label: "B Corp Score", value: 143, suffix: "/200", icon: Award },
-  { label: "Garments Upcycled", value: 52000, suffix: "+", icon: Recycle },
-]
+  const handleMouse = useCallback(
+    (e: React.MouseEvent) => {
+      const rect = ref.current?.getBoundingClientRect();
+      if (!rect) return;
+      x.set((e.clientX - rect.left - rect.width / 2) * 0.4);
+      y.set((e.clientY - rect.top - rect.height / 2) * 0.4);
+    },
+    [x, y],
+  );
 
-const COLLECTIONS = [
-  { id: "essentials", label: "Essentials", icon: ShoppingBag },
-  { id: "outerwear", label: "Outerwear", icon: Wind },
-  { id: "denim", label: "Denim", icon: Leaf },
-  { id: "accessories", label: "Accessories", icon: Heart },
-]
-
-const COLLECTION_DATA: Record<string, { headline: string; description: string; bullets: string[]; products: { name: string; price: string; material: string; img: string }[] }> = {
-  essentials: {
-    headline: "Basics That Outlast Trends",
-    description: "Our Essentials line is built around a radical proposition: buy less, buy better. Each piece is engineered to a 500-wash standard using GOTS-certified organic pima cotton sourced exclusively from Fair Trade farms in Peru.",
-    bullets: [
-      "GOTS-certified organic pima cotton — 40% stronger than conventional",
-      "Natural dye process — zero synthetic chemicals, fully biodegradable",
-      "Reinforced seams with 200% standard thread density",
-      "Lifetime repair guarantee — free mending at any partner tailor",
-    ],
-    products: [
-      { name: "The Foundation Tee", price: "$68", material: "Organic Pima Cotton", img: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800&q=80" },
-      { name: "The Perfect Crew", price: "$95", material: "Merino Wool Blend", img: "https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=800&q=80" },
-      { name: "The Wide Leg Pant", price: "$145", material: "Organic Linen", img: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&q=80" },
-    ],
-  },
-  outerwear: {
-    headline: "Protection. Zero Compromise.",
-    description: "Every Threadline jacket uses recycled post-consumer materials — from the shell to the lining — without sacrificing the performance you'd expect from a $600 technical garment.",
-    bullets: [
-      "Shell: 100% recycled PET from certified ocean plastic partners",
-      "Fill: 650-fill recycled down, traceable to RDS-certified farms",
-      "DWR coating: PFAS-free fluorocarbon alternative, 40-wash rated",
-      "Carbon offset: every jacket plants 3 trees via One Tree Planted",
-    ],
-    products: [
-      { name: "The Commuter Shell", price: "$298", material: "Recycled Ocean Plastic", img: "https://images.unsplash.com/photo-1539533057592-4ee29e8b254e?w=800&q=80" },
-      { name: "The Mountain Puffer", price: "$345", material: "Recycled Down Fill", img: "https://images.unsplash.com/photo-1551028719-00167b16ebc5?w=800&q=80" },
-      { name: "The Trucker Jacket", price: "$225", material: "Hemp-Cotton Canvas", img: "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&q=80" },
-    ],
-  },
-  denim: {
-    headline: "Denim That Doesn't Cost the Earth",
-    description: "Traditional denim production uses 3,781 liters of water per pair of jeans. Ours uses 312 — a 92% reduction — achieved through our waterless dyeing partnership with Archroma.",
-    bullets: [
-      "Archroma Earth Colors waterless dyeing — 92% water reduction vs. conventional",
-      "Organic cotton blended with hemp for natural stretch without elastane",
-      "Ozone-finished washes — replaces 85% of traditional chemical processes",
-      "End-of-life take-back: return worn jeans for 20% off your next pair",
-    ],
-    products: [
-      { name: "The Selvedge Straight", price: "$195", material: "Japanese Selvedge Denim", img: "https://images.unsplash.com/photo-1542272604-787c62d465d1?w=800&q=80" },
-      { name: "The Wide Leg Jean", price: "$175", material: "Organic Hemp-Cotton", img: "https://images.unsplash.com/photo-1604176354204-9268737828e4?w=800&q=80" },
-      { name: "The Denim Jacket", price: "$215", material: "Deadstock Denim", img: "https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=800&q=80" },
-    ],
-  },
-  accessories: {
-    headline: "Every Detail. Every Intention.",
-    description: "Our accessories are made from forgotten materials — deadstock leather, reclaimed cork, and plant-tanned hides from tanneries with zero wastewater discharge.",
-    bullets: [
-      "Vegetable-tanned leather: chromium-free, biodegradable after 10 years",
-      "Cork accessories: annually harvested without felling the tree",
-      "Deadstock fabrics: rescued from fashion industry overproduction",
-      "Packaging: 100% recycled kraft paper, zero plastic fill",
-    ],
-    products: [
-      { name: "The Cork Tote", price: "$165", material: "Harvested Cork", img: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800&q=80" },
-      { name: "The Veg-Tan Belt", price: "$95", material: "Vegetable-Tanned Leather", img: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&q=80" },
-      { name: "The Canvas Bucket Hat", price: "$72", material: "Organic Canvas", img: "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=800&q=80" },
-    ],
-  },
-}
-
-const TESTIMONIALS = [
-  {
-    name: "Emma Rodriguez",
-    role: "Creative Director, Studio Nine",
-    avatar: "ER",
-    rating: 5,
-    quote: "I've spent $3,000 on 'sustainable' fashion that fell apart in two seasons. The Foundation Tee is the first piece I've bought in years that I'm confident will outlive my other clothes.",
-    img: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&q=80",
-  },
-  {
-    name: "James Park",
-    role: "Environmental Policy Advisor",
-    avatar: "JP",
-    rating: 5,
-    quote: "I review sustainability claims for a living. Threadline is one of maybe four brands in the world where the supply chain transparency lives up to the marketing. The B Corp score is real.",
-    img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&q=80",
-  },
-  {
-    name: "Naomi Asante",
-    role: "Fashion Editor, Le Magazine",
-    avatar: "NA",
-    rating: 5,
-    quote: "The Commuter Shell has been on my body through Paris, Tokyo, and three film festivals. It still looks like I just bought it. That's not fashion — that's engineering.",
-    img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&q=80",
-  },
-  {
-    name: "Dr. Marcus Chen",
-    role: "Marine Biologist, Scripps Institute",
-    avatar: "MC",
-    rating: 5,
-    quote: "The Mountain Puffer uses plastic from beaches we've studied. It's not performative — Threadline publishes the GPS coordinates of their collection points. That's integrity.",
-    img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&q=80",
-  },
-  {
-    name: "Léa Fontaine",
-    role: "Architect & Slow Fashion Advocate",
-    avatar: "LF",
-    rating: 5,
-    quote: "The sizing is generous without being vague, and the natural dyes age with absolute grace. My harvest-dyed crewneck looks better at 18 months than the day I bought it.",
-    img: "https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?w=100&q=80",
-  },
-]
-
-const PLANS = [
-  {
-    name: "Pay-As-You-Go",
-    price: "Free",
-    period: "",
-    badge: null,
-    description: "Shop individual pieces with standard free shipping on orders over $150.",
-    features: [
-      "Free shipping on orders over $150",
-      "30-day returns on unworn items",
-      "Access to all collections",
-      "Digital impact report per order",
-    ],
-    cta: "Shop Now",
-    highlighted: false,
-  },
-  {
-    name: "Threadline Circle",
-    price: "$12",
-    period: "/mo",
-    badge: "Most Value",
-    description: "For the conscious wardrobe builder. Exclusive access, early drops, and 20% off every order.",
-    features: [
-      "20% off every order, forever",
-      "Early access to new collections (48h)",
-      "Free express shipping, always",
-      "Free lifetime repairs",
-      "Quarterly impact report with your name",
-      "Access to sample sales and archive drops",
-      "One free styling consultation/year",
-    ],
-    cta: "Join Circle",
-    highlighted: true,
-  },
-  {
-    name: "Wardrobe Curation",
-    price: "$49",
-    period: "/mo",
-    badge: null,
-    description: "A seasonal capsule wardrobe curated by our stylists, delivered to your door.",
-    features: [
-      "Everything in Circle",
-      "Quarterly seasonal box (5–7 pieces)",
-      "Personal stylist assigned",
-      "Bespoke tailoring on 2 items/year",
-      "VIP access to runway previews",
-      "Carbon offset certificate (framed)",
-    ],
-    cta: "Apply for Curation",
-    highlighted: false,
-  },
-]
-
-const MATERIALS = [
-  { name: "Organic Pima Cotton", cert: "GOTS Certified", progress: 100, color: "#2d5a3d", desc: "Grown in Peru under Fair Trade standards. No synthetic pesticides. Farmer wages 40% above local average." },
-  { name: "Recycled Ocean Plastic", cert: "GRS Certified", progress: 94, color: "#2d5a3d", desc: "HDPE recovered from coastal communities in Indonesia and the Philippines via Plastic Bank partnerships." },
-  { name: "Hemp Fiber", cert: "Oeko-Tex 100", progress: 97, color: "#2d5a3d", desc: "EU-grown industrial hemp. Sequesters 1.6 tonnes of CO₂ per hectare. Requires zero irrigation." },
-  { name: "Vegetable-Tanned Leather", cert: "LWG Gold", progress: 88, color: "#2d5a3d", desc: "Chromium-free. Tanned using chestnut oak and mimosa bark. Fully biodegradable after product end-of-life." },
-]
-
-const FAQS = [
-  {
-    q: "What certifications does Threadline hold?",
-    a: "We hold GOTS (Global Organic Textile Standard) certification for our cotton, GRS (Global Recycled Standard) for recycled materials, B Corp certification with a score of 143.2, and LWG Gold for our leather. All certifications are independently audited annually and available on our Transparency Portal.",
-  },
-  {
-    q: "How does your carbon neutrality work?",
-    a: "We first reduce emissions at source — our supply chain has cut Scope 3 emissions by 62% since 2019 through renewable energy partnerships and logistical optimization. Residual emissions are offset via Gold Standard-certified reforestation projects in Madagascar and Costa Rica. We publish our full carbon accounting annually.",
-  },
-  {
-    q: "What is your return and repair policy?",
-    a: "We offer 30-day free returns on unworn items. More importantly, we offer a Lifetime Repair Guarantee: if any Threadline garment develops a defect from normal wear, bring it to any of our 40+ partner tailors globally for free repair. Our Circle members also receive free shipping on all repairs.",
-  },
-  {
-    q: "How do you ensure fair wages in your supply chain?",
-    a: "All tier-1 manufacturing partners (the factories making your clothes) are Fair Trade certified and subject to annual third-party audits by Bureau Veritas. We publish the name and location of every tier-1 and tier-2 supplier on our Supply Chain Map, updated quarterly.",
-  },
-  {
-    q: "What happens to my clothes at end of life?",
-    a: "We run a free take-back program. Return any worn Threadline garment and receive 20% off your next purchase. Items in good condition are donated to partner nonprofits. Those beyond repair are mechanically shredded and re-spun into yarn via our partner Recover Brands — zero to landfill.",
-  },
-  {
-    q: "How is Threadline different from other 'sustainable' brands?",
-    a: "Most sustainable fashion brands optimize one or two dimensions — organic cotton or recycled materials. We operate across all five: materials sourcing, manufacturing conditions, dyeing processes, logistics, and end-of-life. Our Transparency Portal publishes the environmental data behind every product SKU. We don't do greenwashing — we do accounting.",
-  },
-  {
-    q: "Do you offer international shipping?",
-    a: "Yes. We ship to 68 countries. For Circle members, international shipping is always free. For standard orders, we partner with DHL GoGreen for carbon-neutral international shipping. Duties and taxes are calculated at checkout with no surprises on delivery.",
-  },
-]
-
-export default function ThreadlineSustainable() {
-  const [mobileOpen, setMobileOpen] = useState(false)
-  const [activeTab, setActiveTab] = useState("essentials")
-  const [wishlist, setWishlist] = useState<string[]>([])
-  const [quickViewProduct, setQuickViewProduct] = useState<null | { name: string; price: string; material: string; img: string }>(null)
-  const { scrollY } = useScroll()
-  const heroParallaxY = useTransform(scrollY, [0, 700], [0, 200])
-  const heroOpacity = useTransform(scrollY, [0, 400], [1, 0.5])
-
-  const toggleWishlist = (name: string) =>
-    setWishlist(prev => prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name])
+  const reset = useCallback(() => {
+    x.set(0);
+    y.set(0);
+  }, [x, y]);
 
   return (
-    <div style={{ backgroundColor: "#f5f0e6", color: "#1a1a1a", minHeight: "100vh", overflowX: "hidden", scrollBehavior: "smooth" }}>
+    <motion.button
+      ref={ref}
+      style={{ x: sx, y: sy }}
+      onMouseMove={handleMouse}
+      onMouseLeave={reset}
+      onClick={onClick}
+      className={className}
+    >
+      {children}
+    </motion.button>
+  );
+}
 
-      {/* ── NAVBAR ── */}
-      <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 50, backgroundColor: "rgba(245,240,230,0.96)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(45,90,61,0.12)" }}>
-        <div style={{ maxWidth: 1320, margin: "0 auto", padding: "0 2rem", height: 70, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Link href="/" style={{ display: "flex", alignItems: "center", gap: "0.5rem", textDecoration: "none" }}>
-            <Leaf size={22} color="#2d5a3d" />
-            <span style={{ fontSize: "1.25rem", fontWeight: 900, color: "#1a1a1a", letterSpacing: "-0.03em" }}>THREADLINE</span>
+/* ==========================================================================
+   MAIN PAGE COMPONENT
+   ========================================================================= */
+
+export default function AuraWellnessPage() {
+  const [scrolled, setScrolled] = useState(false);
+  const [activeTreatment, setActiveTreatment] = useState<any>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const heroRef = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"],
+  });
+  const heroScale = useTransform(scrollYProgress, [0, 1], [1, 1.1]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 50);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  return (
+    <div className="premium-theme min-h-screen bg-[#fdfcf9] text-[#2a2a2a] font-sans selection:bg-[#c9b7a2] selection:text-white overflow-x-hidden">
+      {/* ==========================================
+          NAVIGATION
+          ========================================== */}
+      <nav
+        className={`fixed top-0 left-0 w-full z-50 transition-all duration-1000 ${scrolled ? "bg-white/90 backdrop-blur-xl py-4 border-b border-[#c9b7a2]/20" : "bg-transparent py-10"}`}
+      >
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12 flex items-center justify-between">
+          <Link href="/" className="group flex flex-col">
+            <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-[#c9b7a2] mb-0.5">
+              Sanctuary.
+            </span>
+            <span className="text-xl md:text-2xl font-serif italic tracking-tighter text-[#2a2a2a]">
+              AURA<span className="text-[#c9b7a2]">WELLNESS</span>
+            </span>
           </Link>
 
-          <div className="hidden md:flex" style={{ gap: "2.5rem", alignItems: "center" }}>
-            {NAV_LINKS.map(l => (
-              <a key={l} href={`#${l.toLowerCase()}`} style={{ fontSize: "0.85rem", fontWeight: 600, color: "rgba(26,26,26,0.6)", textDecoration: "none" }}
-                className="transition-all duration-200 hover:text-[#2d5a3d] cursor-pointer">{l}</a>
-            ))}
-            <motion.button
-              whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
-              style={{ padding: "0.55rem 1.4rem", background: "#2d5a3d", border: "none", borderRadius: 8, color: "#f5f0e6", fontWeight: 700, fontSize: "0.85rem", cursor: "pointer" }}
-              className="transition-all duration-200"
-            >
-              Shop Now
-            </motion.button>
+          <div className="hidden lg:flex items-center gap-12 text-[10px] font-bold uppercase tracking-[0.3em] text-[#2a2a2a]/40">
+            {["The Experience", "Treatments", "Amenities", "About"].map(
+              (link) => (
+                <Link
+                  key={link}
+                  href={`#${link.toLowerCase().replace(" ", "-")}`}
+                  className="hover:text-[#c9b7a2] transition-colors"
+                >
+                  {link}
+                </Link>
+              ),
+            )}
           </div>
 
-          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-            <SheetTrigger asChild>
-              <button className="md:hidden cursor-pointer" style={{ background: "none", border: "none", color: "#2d5a3d" }}>
-                <Menu size={24} />
-              </button>
-            </SheetTrigger>
-            <SheetContent side="right" style={{ backgroundColor: "#f5f0e6", borderLeft: "1px solid rgba(45,90,61,0.12)" }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: "2rem", marginTop: "3rem", padding: "0 1rem" }}>
-                {NAV_LINKS.map(l => (
-                  <a key={l} href={`#${l.toLowerCase()}`} onClick={() => setMobileOpen(false)}
-                    style={{ fontSize: "1.1rem", fontWeight: 700, color: "#2d5a3d", textDecoration: "none" }} className="cursor-pointer">{l}</a>
-                ))}
-                <button style={{ padding: "0.8rem 1.5rem", background: "#2d5a3d", border: "none", borderRadius: 8, color: "#f5f0e6", fontWeight: 700, cursor: "pointer" }}>
-                  Shop Now
-                </button>
-              </div>
-            </SheetContent>
-          </Sheet>
+          <div className="flex items-center gap-8">
+            <MagneticBtn className="px-8 py-3 bg-[#c9b7a2] text-white text-[10px] font-bold uppercase tracking-widest rounded-full hover:bg-[#b8a691] transition-all shadow-lg shadow-[#c9b7a2]/20">
+              RESERVE_RITUAL
+            </MagneticBtn>
+            <button
+              onClick={() => setMenuOpen(true)}
+              className="lg:hidden text-[#c9b7a2]"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+          </div>
         </div>
       </nav>
 
-      {/* ── HERO ── */}
-      <section style={{ minHeight: "100vh", position: "relative", overflow: "hidden", display: "flex", alignItems: "flex-end", paddingTop: 70 }}>
-        <motion.div style={{ position: "absolute", inset: 0, y: heroParallaxY, opacity: heroOpacity }}>
+      {/* MOBILE MENU */}
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div
+            initial={{ opacity: 0, x: "100%" }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: "100%" }}
+            className="fixed inset-0 z-[100] bg-[#fdfcf9] p-12 flex flex-col justify-center"
+          >
+            <button
+              onClick={() => setMenuOpen(false)}
+              className="absolute top-10 right-8 text-[#c9b7a2]"
+            >
+              <X className="w-8 h-8" />
+            </button>
+            <div className="flex flex-col gap-8 text-5xl font-serif italic text-[#c9b7a2]">
+              <Link href="#" onClick={() => setMenuOpen(false)}>
+                Experience
+              </Link>
+              <Link href="#" onClick={() => setMenuOpen(false)}>
+                Treatments
+              </Link>
+              <Link href="#" onClick={() => setMenuOpen(false)}>
+                Amenities
+              </Link>
+              <Link href="#" onClick={() => setMenuOpen(false)}>
+                Contact
+              </Link>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ==========================================
+          1. HERO (Atmospheric)
+          ========================================== */}
+      <section
+        ref={heroRef}
+        className="relative w-full h-[100svh] flex flex-col justify-center overflow-hidden"
+      >
+        <motion.div
+          style={{ scale: heroScale, opacity: heroOpacity }}
+          className="absolute inset-0 z-0"
+        >
           <Image
-            src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80"
-            alt="Sustainable fashion"
+            src="https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=1600&q=80"
+            alt="Spa Sanctuary"
             fill
-            style={{ objectFit: "cover" }}
+            className="object-cover brightness-95"
             priority
           />
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(245,240,230,1) 0%, rgba(245,240,230,0.4) 50%, transparent 100%)" }} />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-[#fdfcf9]" />
         </motion.div>
 
-        <div style={{ position: "relative", maxWidth: 1320, margin: "0 auto", padding: "0 2rem 8rem", width: "100%" }}>
+        <div className="relative z-10 max-w-[1400px] mx-auto px-6 md:px-12 w-full text-center">
           <Reveal>
-            <Badge style={{ backgroundColor: "#2d5a3d", color: "#f5f0e6", border: "none", fontWeight: 700, letterSpacing: "0.06em", marginBottom: "1.5rem" }}>
-              B Corp Certified · Carbon Neutral Since 2021
-            </Badge>
-          </Reveal>
-          <Reveal delay={0.1}>
-            <h1 style={{ fontSize: "clamp(3rem,8vw,6.5rem)", fontWeight: 900, lineHeight: 1.05, letterSpacing: "-0.04em", marginBottom: "1.5rem", maxWidth: 800 }}>
-              Wear what<br />
-              <span style={{ color: "#2d5a3d" }}>the planet</span><br />
-              approves of.
+            <span className="inline-block px-4 py-1.5 rounded-full border border-white/30 text-white text-[10px] font-bold uppercase tracking-[0.4em] mb-10 backdrop-blur-sm">
+              Quietude // Restoration // Flow
+            </span>
+            <h1 className="text-7xl md:text-9xl lg:text-[10rem] font-serif italic leading-[0.9] tracking-tighter mb-12 text-white">
+              The Art <br />{" "}
+              <span className="not-italic font-sans font-thin tracking-[0.2em] uppercase opacity-80">
+                of Being.
+              </span>
             </h1>
-          </Reveal>
-          <Reveal delay={0.2}>
-            <p style={{ fontSize: "1.15rem", color: "rgba(26,26,26,0.65)", lineHeight: 1.7, marginBottom: "2.5rem", maxWidth: 540 }}>
-              Threadline makes the clothes you'll own for a decade — from organic materials, by fairly paid people, verified at every step. No greenwash. Just evidence.
+            <p className="max-w-2xl mx-auto text-lg md:text-xl text-white/70 leading-relaxed font-light mb-12 italic">
+              A high-fidelity sanctuary designed for the profound restoration of
+              the human spirit. Experience the confluence of botanical
+              intelligence and scientific precision.
             </p>
-          </Reveal>
-          <Reveal delay={0.3}>
-            <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
-              <motion.button
-                whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
-                style={{ display: "inline-flex", alignItems: "center", gap: "0.6rem", padding: "0.9rem 2rem", background: "#2d5a3d", border: "none", borderRadius: 10, color: "#f5f0e6", fontWeight: 800, fontSize: "0.95rem", cursor: "pointer" }}
-                className="transition-all duration-200"
-              >
-                Explore Collections <ArrowRight size={18} />
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
-                style={{ display: "inline-flex", alignItems: "center", gap: "0.6rem", padding: "0.9rem 2rem", background: "transparent", border: "1.5px solid rgba(45,90,61,0.4)", borderRadius: 10, color: "#2d5a3d", fontWeight: 700, fontSize: "0.95rem", cursor: "pointer" }}
-                className="transition-all duration-200 hover:border-[#2d5a3d]"
-              >
-                Our Impact Report
-              </motion.button>
+            <div className="flex flex-col sm:flex-row gap-6 justify-center">
+              <MagneticBtn className="px-12 py-5 bg-white text-[#2a2a2a] text-[10px] font-bold uppercase tracking-[0.3em] rounded-full hover:bg-[#c9b7a2] hover:text-white transition-all cursor-pointer">
+                Explore Rituals
+              </MagneticBtn>
             </div>
           </Reveal>
         </div>
-      </section>
 
-      {/* ── STATS BAR ── */}
-      <section id="impact" style={{ background: "#2d5a3d", padding: "3.5rem 2rem" }}>
-        <div style={{ maxWidth: 1320, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(160px,1fr))", gap: "2rem" }}>
-          {STATS.map((stat, i) => {
-            const Icon = stat.icon
-            return (
-              <Reveal key={i} delay={i * 0.07}>
-                <div style={{ textAlign: "center" }}>
-                  <Icon size={20} style={{ color: "rgba(245,240,230,0.6)", margin: "0 auto 0.6rem" }} />
-                  <div style={{ fontSize: "1.75rem", fontWeight: 900, color: "#f5f0e6", letterSpacing: "-0.02em", lineHeight: 1 }}>
-                    {stat.isText ? stat.value : (
-                      <>
-                        <span>{stat.value as number}</span>
-                        {stat.suffix && <span style={{ fontSize: "1.1rem" }}>{stat.suffix}</span>}
-                      </>
-                    )}
-                  </div>
-                  <p style={{ fontSize: "0.73rem", color: "rgba(245,240,230,0.55)", marginTop: "0.4rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                    {stat.label}
-                  </p>
-                </div>
-              </Reveal>
-            )
-          })}
+        <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 text-white/40">
+          <span className="text-[9px] font-bold uppercase tracking-widest">
+            Discover Stillness
+          </span>
+          <div className="w-[1px] h-12 bg-white/20" />
         </div>
       </section>
 
-      {/* ── COLLECTIONS TABS ── */}
-      <section id="collections" style={{ padding: "8rem 2rem" }}>
-        <div style={{ maxWidth: 1320, margin: "0 auto" }}>
-          <Reveal>
-            <p style={{ fontSize: "0.78rem", fontWeight: 800, color: "#2d5a3d", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "1rem" }}>Collections</p>
-          </Reveal>
-          <Reveal delay={0.1}>
-            <h2 style={{ fontSize: "clamp(2rem,4vw,3.2rem)", fontWeight: 900, letterSpacing: "-0.03em", marginBottom: "0.75rem" }}>
-              Four reasons to stop buying fast fashion.
+      {/* ==========================================
+          2. THE EXPERIENCE (Intro)
+          ========================================== */}
+      <section id="the-experience" className="py-32 bg-[#fdfcf9]">
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
+            <Reveal>
+              <div className="relative aspect-[4/5] overflow-hidden group">
+                <Image
+                  src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=1000&q=80"
+                  alt="Experience"
+                  fill
+                  className="object-cover transition-transform duration-[3s] group-hover:scale-110"
+                />
+                <div className="absolute inset-0 border-[20px] border-[#fdfcf9]/30" />
+              </div>
+            </Reveal>
+
+            <div className="space-y-12">
+              <Reveal delay={0.2}>
+                <h2 className="text-5xl md:text-7xl font-serif italic tracking-tighter leading-[1.1] text-[#2a2a2a]">
+                  A Confluence of <br />{" "}
+                  <span className="not-italic font-sans font-thin text-[#c9b7a2] uppercase tracking-widest">
+                    Earth & Mind.
+                  </span>
+                </h2>
+                <p className="text-lg text-[#2a2a2a]/60 leading-relaxed font-light">
+                  At Aura, we believe wellness is a technical discipline as much
+                  as a spiritual one. Our sanctuary integrates ancient
+                  hydrotherapy circuits with state-of-the-art molecular skincare
+                  protocols.
+                </p>
+              </Reveal>
+
+              <Reveal delay={0.3}>
+                <div className="grid grid-cols-2 gap-12 pt-12 border-t border-[#c9b7a2]/20">
+                  {[
+                    { val: "15+", label: "Ritual Specialists" },
+                    { val: "24k", label: "Monthly Restoration" },
+                    { val: "100%", label: "Botanical Sourcing" },
+                    { val: "3", label: "Michelin Wellness Awards" },
+                  ].map((stat, i) => (
+                    <div key={i} className="flex flex-col">
+                      <span className="text-4xl font-serif italic text-[#c9b7a2] mb-2">
+                        {stat.val}
+                      </span>
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-[#2a2a2a]/40">
+                        {stat.label}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </Reveal>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ==========================================
+          3. TREATMENT MENU (Interactive Tabs)
+          ========================================== */}
+      <section id="treatments" className="py-32 bg-[#faf7f2]">
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12">
+          <Reveal className="text-center mb-24">
+            <h2 className="text-6xl md:text-8xl font-serif italic tracking-tighter text-[#2a2a2a] mb-6">
+              The Ritual{" "}
+              <span className="not-italic font-sans font-thin text-[#c9b7a2] uppercase tracking-widest">
+                Menu.
+              </span>
             </h2>
-          </Reveal>
-          <Reveal delay={0.15}>
-            <p style={{ fontSize: "1.05rem", color: "rgba(26,26,26,0.55)", marginBottom: "3.5rem", maxWidth: 560 }}>
-              Each collection is built around a single obsession: making the best version of that garment that also happens to be the most responsible.
+            <p className="text-[#2a2a2a]/40 text-[11px] font-bold uppercase tracking-[0.4em]">
+              Precision Restorative Protocols
             </p>
           </Reveal>
 
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList style={{ background: "rgba(45,90,61,0.07)", border: "1px solid rgba(45,90,61,0.12)", borderRadius: 12, padding: "0.3rem", display: "flex", gap: "0.25rem", flexWrap: "wrap", marginBottom: "3rem" }}>
-              {COLLECTIONS.map(col => {
-                const Icon = col.icon
-                return (
+          <Tabs defaultValue="rituals" className="w-full">
+            <div className="flex justify-center mb-16">
+              <TabsList className="bg-transparent border-b border-[#c9b7a2]/20 rounded-none w-full max-w-lg flex justify-center gap-12">
+                {TREATMENTS.map((cat) => (
                   <TabsTrigger
-                    key={col.id} value={col.id}
-                    className="transition-all duration-200 cursor-pointer"
-                    style={{ borderRadius: 8, padding: "0.6rem 1.2rem", fontWeight: 700, fontSize: "0.85rem", display: "flex", gap: "0.4rem", alignItems: "center" }}
+                    key={cat.id}
+                    value={cat.id}
+                    className="pb-4 text-[10px] font-bold uppercase tracking-[0.3em] data-[state=active]:text-[#c9b7a2] data-[state=active]:border-b-2 data-[state=active]:border-[#c9b7a2] rounded-none bg-transparent"
                   >
-                    <Icon size={15} />{col.label}
+                    {cat.label}
                   </TabsTrigger>
-                )
-              })}
-            </TabsList>
+                ))}
+              </TabsList>
+            </div>
 
-            {Object.entries(COLLECTION_DATA).map(([key, data]) => (
-              <TabsContent key={key} value={key}>
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "4rem", alignItems: "start", marginBottom: "3rem" }} className="grid-cols-1 md:grid-cols-[1fr_2fr]">
-                    <div>
-                      <h3 style={{ fontSize: "clamp(1.5rem,3vw,2rem)", fontWeight: 900, letterSpacing: "-0.03em", marginBottom: "1rem", color: "#1a1a1a" }}>
-                        {data.headline}
-                      </h3>
-                      <p style={{ fontSize: "0.93rem", color: "rgba(26,26,26,0.6)", lineHeight: 1.75, marginBottom: "2rem" }}>
-                        {data.description}
-                      </p>
-                      <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
-                        {data.bullets.map((b, i) => (
-                          <div key={i} style={{ display: "flex", gap: "0.75rem", alignItems: "flex-start" }}>
-                            <div style={{ width: 20, height: 20, borderRadius: "50%", background: "#2d5a3d20", border: "1px solid #2d5a3d40", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 2 }}>
-                              <Check size={11} color="#2d5a3d" />
-                            </div>
-                            <p style={{ fontSize: "0.87rem", color: "rgba(26,26,26,0.72)", lineHeight: 1.55 }}>{b}</p>
-                          </div>
-                        ))}
+            {TREATMENTS.map((cat) => (
+              <TabsContent key={cat.id} value={cat.id}>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
+                  {cat.items.map((item, i) => (
+                    <Reveal key={item.name} delay={i * 0.1}>
+                      <div
+                        onClick={() => setActiveTreatment(item)}
+                        className="group cursor-pointer bg-white p-8 rounded-[2rem] border border-[#c9b7a2]/10 hover:border-[#c9b7a2] transition-all shadow-sm"
+                      >
+                        <div className="relative aspect-video mb-8 rounded-[1.5rem] overflow-hidden">
+                          <Image
+                            src={item.img}
+                            alt={item.name}
+                            fill
+                            className="object-cover grayscale-[0.2] group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700"
+                          />
+                          <div className="absolute inset-0 bg-[#c9b7a2]/10 mix-blend-overlay" />
+                        </div>
+                        <div className="flex justify-between items-start mb-4">
+                          <h3 className="text-2xl font-serif italic text-[#2a2a2a]">
+                            {item.name}
+                          </h3>
+                          <span className="text-[10px] font-bold text-[#c9b7a2]">
+                            {item.price}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-4 text-[10px] font-bold uppercase tracking-widest text-[#2a2a2a]/30 mb-6">
+                          <Clock className="w-3.5 h-3.5" /> {item.duration}
+                          <div className="w-1 h-1 rounded-full bg-[#c9b7a2]" />
+                          Protocol_Verified
+                        </div>
+                        <p className="text-xs text-[#2a2a2a]/50 leading-relaxed font-light mb-8 italic">
+                          {item.desc}
+                        </p>
+                        <button className="flex items-center gap-3 text-[9px] font-bold uppercase tracking-widest text-[#c9b7a2] group-hover:gap-5 transition-all">
+                          View_Clinical_Summary{" "}
+                          <ArrowRight className="w-4 h-4" />
+                        </button>
                       </div>
-                    </div>
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "1.25rem" }}>
-                      {data.products.map((product, i) => (
-                        <motion.div
-                          key={i}
-                          whileHover={{ y: -6 }}
-                          className="cursor-pointer transition-all duration-200"
-                          style={{ background: "#fff", borderRadius: 14, overflow: "hidden", border: "1px solid rgba(45,90,61,0.1)", boxShadow: "0 2px 12px rgba(45,90,61,0.06)" }}
-                        >
-                          <div style={{ position: "relative", aspectRatio: "4/5", overflow: "hidden" }}>
-                            <Image src={product.img} alt={product.name} fill style={{ objectFit: "cover" }} />
-                            <motion.button
-                              whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.9 }}
-                              onClick={() => toggleWishlist(product.name)}
-                              className="cursor-pointer transition-all duration-200"
-                              style={{ position: "absolute", top: "0.75rem", right: "0.75rem", width: 34, height: 34, borderRadius: "50%", background: "rgba(255,255,255,0.9)", border: "none", display: "flex", alignItems: "center", justifyContent: "center" }}
-                            >
-                              <Heart size={15} fill={wishlist.includes(product.name) ? "#2d5a3d" : "none"} color="#2d5a3d" />
-                            </motion.button>
-                          </div>
-                          <div style={{ padding: "1rem" }}>
-                            <p style={{ fontSize: "0.7rem", fontWeight: 700, color: "#2d5a3d", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "0.25rem" }}>{product.material}</p>
-                            <p style={{ fontWeight: 800, fontSize: "0.9rem", marginBottom: "0.4rem", color: "#1a1a1a" }}>{product.name}</p>
-                            <p style={{ fontWeight: 700, fontSize: "1.05rem", color: "#2d5a3d" }}>{product.price}</p>
-                            <motion.button
-                              whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-                              onClick={() => setQuickViewProduct(product)}
-                              className="cursor-pointer transition-all duration-200"
-                              style={{ width: "100%", marginTop: "0.75rem", padding: "0.55rem", background: "#2d5a3d", border: "none", borderRadius: 8, color: "#f5f0e6", fontWeight: 700, fontSize: "0.8rem" }}
-                            >
-                              Quick View
-                            </motion.button>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </div>
-                </motion.div>
+                    </Reveal>
+                  ))}
+                </div>
               </TabsContent>
             ))}
           </Tabs>
         </div>
       </section>
 
-      {/* ── MATERIALS ── */}
-      <section id="materials" style={{ padding: "8rem 2rem", background: "#ede8dc" }}>
-        <div style={{ maxWidth: 1320, margin: "0 auto" }}>
+      {/* ==========================================
+          4. AMENITIES (Carousel)
+          ========================================== */}
+      <section id="amenities" className="py-32 bg-[#fdfcf9] overflow-hidden">
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12 mb-20">
           <Reveal>
-            <div style={{ marginBottom: "4rem" }}>
-              <p style={{ fontSize: "0.78rem", fontWeight: 800, color: "#2d5a3d", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "1rem" }}>Materials Transparency</p>
-              <h2 style={{ fontSize: "clamp(2rem,4vw,3.2rem)", fontWeight: 900, letterSpacing: "-0.03em", marginBottom: "0.75rem" }}>
-                Know exactly what's in your clothes.
-              </h2>
-              <p style={{ fontSize: "1.05rem", color: "rgba(26,26,26,0.55)", maxWidth: 560 }}>
-                Every material Threadline uses is published with its origin, certification, and environmental impact score. No mystery fabrics.
-              </p>
-            </div>
+            <h2 className="text-5xl md:text-7xl font-serif italic tracking-tighter text-[#2a2a2a]">
+              Institutional <br />{" "}
+              <span className="not-italic font-sans font-thin text-[#c9b7a2] uppercase tracking-widest">
+                Grounds.
+              </span>
+            </h2>
           </Reveal>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: "1.5rem" }}>
-            {MATERIALS.map((mat, i) => (
-              <Reveal key={i} delay={i * 0.1}>
-                <Card className="transition-all duration-200 cursor-pointer" style={{ background: "#fff", border: "1px solid rgba(45,90,61,0.1)", borderRadius: 16 }}>
-                  <CardContent style={{ padding: "2rem" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1rem" }}>
-                      <div>
-                        <h3 style={{ fontWeight: 800, fontSize: "1.05rem", marginBottom: "0.3rem" }}>{mat.name}</h3>
-                        <Badge style={{ background: "#2d5a3d15", color: "#2d5a3d", border: "1px solid #2d5a3d30", fontSize: "0.7rem", fontWeight: 700 }}>{mat.cert}</Badge>
-                      </div>
-                      <Leaf size={24} style={{ color: "#2d5a3d", flexShrink: 0 }} />
-                    </div>
-                    <p style={{ fontSize: "0.85rem", color: "rgba(26,26,26,0.6)", lineHeight: 1.65, marginBottom: "1.5rem" }}>{mat.desc}</p>
-                    <div>
-                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-                        <p style={{ fontSize: "0.75rem", fontWeight: 600, color: "rgba(26,26,26,0.5)" }}>Sustainability Score</p>
-                        <p style={{ fontSize: "0.75rem", fontWeight: 800, color: "#2d5a3d" }}>{mat.progress}%</p>
-                      </div>
-                      <Progress value={mat.progress} style={{ height: 6 }} />
-                    </div>
-                  </CardContent>
-                </Card>
-              </Reveal>
-            ))}
-          </div>
         </div>
-      </section>
 
-      {/* ── TESTIMONIALS CAROUSEL ── */}
-      <section style={{ padding: "8rem 2rem" }}>
-        <div style={{ maxWidth: 1320, margin: "0 auto" }}>
-          <Reveal>
-            <div style={{ textAlign: "center", marginBottom: "4rem" }}>
-              <p style={{ fontSize: "0.78rem", fontWeight: 800, color: "#2d5a3d", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "1rem" }}>Customer Stories</p>
-              <h2 style={{ fontSize: "clamp(2rem,4vw,3.2rem)", fontWeight: 900, letterSpacing: "-0.03em" }}>
-                They checked the certifications. Then they bought the jacket.
-              </h2>
-            </div>
-          </Reveal>
-          <Carousel opts={{ align: "start", loop: true }}>
-            <CarouselContent style={{ padding: "0 0.5rem" }}>
-              {TESTIMONIALS.map((t, i) => (
-                <CarouselItem key={i} style={{ paddingLeft: "1.5rem", flex: "0 0 380px" }}>
-                  <Card style={{ background: "#fff", border: "1px solid rgba(45,90,61,0.1)", borderRadius: 16, height: "100%", boxShadow: "0 4px 24px rgba(45,90,61,0.06)" }}>
-                    <CardContent style={{ padding: "2rem", display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-                      <div style={{ display: "flex", gap: "0.25rem" }}>
-                        {[...Array(t.rating)].map((_, j) => <Star key={j} size={14} fill="#2d5a3d" color="#2d5a3d" />)}
+        <div className="px-6 md:px-12">
+          <Carousel opts={{ align: "start", loop: true }} className="w-full">
+            <CarouselContent className="-ml-8">
+              {AMENITIES.map((amenity, i) => (
+                <CarouselItem
+                  key={i}
+                  className="pl-8 basis-full md:basis-1/2 lg:basis-1/3 xl:basis-1/4"
+                >
+                  <Reveal delay={i * 0.1}>
+                    <div className="group relative aspect-[4/5] rounded-[3rem] overflow-hidden">
+                      <Image
+                        src={amenity.img}
+                        alt={amenity.name}
+                        fill
+                        className="object-cover group-hover:scale-110 transition-transform duration-[4s]"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#2a2a2a]/80 via-transparent to-transparent" />
+                      <div className="absolute bottom-10 left-10 text-white">
+                        <h4 className="text-2xl font-serif italic mb-2">
+                          {amenity.name}
+                        </h4>
+                        <p className="text-[10px] font-bold uppercase tracking-widest opacity-60">
+                          {amenity.desc}
+                        </p>
                       </div>
-                      <p style={{ fontSize: "0.93rem", color: "rgba(26,26,26,0.75)", lineHeight: 1.75, flex: 1 }}>"{t.quote}"</p>
-                      <div style={{ display: "flex", alignItems: "center", gap: "0.85rem" }}>
-                        <Avatar>
-                          <AvatarImage src={t.img} alt={t.name} />
-                          <AvatarFallback style={{ background: "#2d5a3d", color: "#f5f0e6", fontWeight: 700 }}>{t.avatar}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p style={{ fontWeight: 800, fontSize: "0.9rem", color: "#1a1a1a" }}>{t.name}</p>
-                          <p style={{ fontSize: "0.78rem", color: "rgba(26,26,26,0.45)" }}>{t.role}</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                    </div>
+                  </Reveal>
                 </CarouselItem>
               ))}
             </CarouselContent>
-            <div style={{ display: "flex", justifyContent: "center", gap: "1rem", marginTop: "2.5rem" }}>
-              <CarouselPrevious className="cursor-pointer" style={{ position: "static", transform: "none", background: "rgba(45,90,61,0.08)", border: "1px solid rgba(45,90,61,0.15)", color: "#2d5a3d" }} />
-              <CarouselNext className="cursor-pointer" style={{ position: "static", transform: "none", background: "rgba(45,90,61,0.08)", border: "1px solid rgba(45,90,61,0.15)", color: "#2d5a3d" }} />
+            <div className="flex gap-4 mt-12 justify-center">
+              <CarouselPrevious className="static translate-y-0 border-[#c9b7a2]/30 text-[#c9b7a2]" />
+              <CarouselNext className="static translate-y-0 border-[#c9b7a2]/30 text-[#c9b7a2]" />
             </div>
           </Carousel>
         </div>
       </section>
 
-      {/* ── PRICING ── */}
-      <section id="pricing" style={{ padding: "8rem 2rem", background: "#ede8dc" }}>
-        <div style={{ maxWidth: 1320, margin: "0 auto" }}>
-          <Reveal>
-            <div style={{ textAlign: "center", marginBottom: "4rem" }}>
-              <p style={{ fontSize: "0.78rem", fontWeight: 800, color: "#2d5a3d", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "1rem" }}>Membership</p>
-              <h2 style={{ fontSize: "clamp(2rem,4vw,3.2rem)", fontWeight: 900, letterSpacing: "-0.03em", marginBottom: "1rem" }}>
-                The more you invest in quality,<br />the more you save.
-              </h2>
-            </div>
+      {/* ==========================================
+          5. BOTANICAL AUDIT (FAQ)
+          ========================================== */}
+      <section className="py-32 bg-[#faf7f2]">
+        <div className="max-w-3xl mx-auto px-6">
+          <Reveal className="text-center mb-24">
+            <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#c9b7a2] mb-6 block">
+              Sourcing & Ethics
+            </span>
+            <h2 className="text-4xl md:text-5xl font-serif italic text-[#2a2a2a]">
+              Botanical_Audit
+            </h2>
           </Reveal>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(300px,1fr))", gap: "1.5rem" }}>
-            {PLANS.map((plan, i) => (
-              <Reveal key={i} delay={i * 0.1}>
-                <motion.div
-                  whileHover={{ y: -6 }}
-                  className="transition-all duration-200 cursor-pointer"
-                  style={{
-                    padding: "2.5rem",
-                    borderRadius: 18,
-                    border: plan.highlighted ? "2px solid #2d5a3d" : "1px solid rgba(45,90,61,0.12)",
-                    background: plan.highlighted ? "#2d5a3d" : "#fff",
-                    position: "relative",
-                  }}
-                >
-                  {plan.badge && (
-                    <Badge style={{ position: "absolute", top: "-0.75rem", right: "1.5rem", background: "#f5f0e6", color: "#2d5a3d", fontWeight: 700, border: "none" }}>
-                      {plan.badge}
-                    </Badge>
-                  )}
-                  <p style={{ fontSize: "0.78rem", fontWeight: 700, color: plan.highlighted ? "rgba(245,240,230,0.6)" : "rgba(26,26,26,0.5)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "1rem" }}>{plan.name}</p>
-                  <div style={{ display: "flex", alignItems: "flex-end", gap: "0.25rem", marginBottom: "0.5rem" }}>
-                    <span style={{ fontSize: "3rem", fontWeight: 900, lineHeight: 1, color: plan.highlighted ? "#f5f0e6" : "#1a1a1a" }}>{plan.price}</span>
-                    {plan.period && <span style={{ fontSize: "0.9rem", color: plan.highlighted ? "rgba(245,240,230,0.5)" : "rgba(26,26,26,0.4)", marginBottom: "0.4rem" }}>{plan.period}</span>}
-                  </div>
-                  <p style={{ fontSize: "0.87rem", color: plan.highlighted ? "rgba(245,240,230,0.65)" : "rgba(26,26,26,0.5)", marginBottom: "2rem", lineHeight: 1.55 }}>{plan.description}</p>
-                  <Separator style={{ borderColor: plan.highlighted ? "rgba(245,240,230,0.15)" : "rgba(45,90,61,0.1)", marginBottom: "2rem" }} />
-                  <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem", marginBottom: "2.5rem" }}>
-                    {plan.features.map((f, j) => (
-                      <div key={j} style={{ display: "flex", gap: "0.75rem", alignItems: "flex-start" }}>
-                        <Check size={15} style={{ color: plan.highlighted ? "#f5f0e6" : "#2d5a3d", flexShrink: 0, marginTop: 3 }} />
-                        <span style={{ fontSize: "0.88rem", color: plan.highlighted ? "rgba(245,240,230,0.8)" : "rgba(26,26,26,0.7)" }}>{f}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <motion.button
-                    whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-                    className="transition-all duration-200 cursor-pointer"
-                    style={{ width: "100%", padding: "0.85rem", background: plan.highlighted ? "#f5f0e6" : "#2d5a3d", border: "none", borderRadius: 10, color: plan.highlighted ? "#2d5a3d" : "#f5f0e6", fontWeight: 800, fontSize: "0.88rem", cursor: "pointer" }}
-                  >
-                    {plan.cta}
-                  </motion.button>
-                </motion.div>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      {/* ── FAQ ── */}
-      <section id="faq" style={{ padding: "8rem 2rem" }}>
-        <div style={{ maxWidth: 760, margin: "0 auto" }}>
-          <Reveal>
-            <div style={{ textAlign: "center", marginBottom: "4rem" }}>
-              <p style={{ fontSize: "0.78rem", fontWeight: 800, color: "#2d5a3d", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "1rem" }}>Transparency</p>
-              <h2 style={{ fontSize: "clamp(2rem,4vw,3.2rem)", fontWeight: 900, letterSpacing: "-0.03em" }}>
-                Ask us anything. We'll answer honestly.
-              </h2>
-            </div>
-          </Reveal>
-          <Accordion type="single" collapsible>
-            {FAQS.map((faq, i) => (
-              <AccordionItem key={i} value={`item-${i}`} style={{ borderBottom: "1px solid rgba(45,90,61,0.12)" }}>
-                <AccordionTrigger className="cursor-pointer transition-all duration-200" style={{ fontSize: "1rem", fontWeight: 700, padding: "1.5rem 0", color: "#1a1a1a", textAlign: "left" }}>
+          <Accordion type="single" collapsible className="space-y-6">
+            {[
+              {
+                q: "How are your essential oils verified?",
+                a: "Every batch undergoes Gas Chromatography (GC-MS) testing to ensure 100% purity. We source exclusively from high-altitude estates in Grasse and the Bulgarian Valley.",
+              },
+              {
+                q: "What is your water filtration protocol?",
+                a: "Our hydrotherapy circuits utilize a 7-stage proprietary filtration system, including molecular restructuring and crystalline mineralization, replicating high-altitude spring water.",
+              },
+              {
+                q: "Are treatments customized to my skin type?",
+                a: "Yes. Every Aura ritual begins with a molecular dermal analysis. We adjust formulation ratios and mechanical intensity based on your cellular data.",
+              },
+              {
+                q: "What is the Aura noise protocol?",
+                a: "Our sanctuary is a verified 'Zero Decibel' zone. All architectural elements are acoustic-grade, and we utilize active noise neutralization in private suites.",
+              },
+            ].map((faq, i) => (
+              <AccordionItem
+                key={i}
+                value={`item-${i}`}
+                className="border-b border-[#c9b7a2]/20 px-4"
+              >
+                <AccordionTrigger className="text-left font-sans font-bold uppercase tracking-widest text-[11px] text-[#2a2a2a] py-8 hover:text-[#c9b7a2] hover:no-underline">
                   {faq.q}
                 </AccordionTrigger>
-                <AccordionContent style={{ fontSize: "0.93rem", color: "rgba(26,26,26,0.6)", lineHeight: 1.75, paddingBottom: "1.5rem" }}>
+                <AccordionContent className="text-sm font-light text-[#2a2a2a]/60 leading-relaxed pb-8 italic">
                   {faq.a}
                 </AccordionContent>
               </AccordionItem>
@@ -651,116 +641,259 @@ export default function ThreadlineSustainable() {
         </div>
       </section>
 
-      {/* ── CTA BANNER ── */}
-      <section style={{ padding: "6rem 2rem" }}>
-        <div style={{ maxWidth: 1320, margin: "0 auto" }}>
-          <Reveal>
-            <div style={{ padding: "5rem 4rem", borderRadius: 24, background: "#2d5a3d", textAlign: "center", position: "relative", overflow: "hidden" }}>
-              <div style={{ position: "absolute", top: -80, right: -80, width: 320, height: 320, borderRadius: "50%", background: "radial-gradient(circle,rgba(255,255,255,0.07),transparent)", pointerEvents: "none" }} />
-              <p style={{ fontSize: "0.78rem", fontWeight: 800, color: "rgba(245,240,230,0.6)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "1.25rem" }}>Join the Movement</p>
-              <h2 style={{ fontSize: "clamp(2rem,5vw,3.5rem)", fontWeight: 900, letterSpacing: "-0.03em", color: "#f5f0e6", marginBottom: "1.25rem" }}>
-                287,000 trees planted.<br />52,000 garments rescued.<br />You're next.
-              </h2>
-              <p style={{ fontSize: "1.05rem", color: "rgba(245,240,230,0.65)", marginBottom: "3rem", maxWidth: 520, margin: "0 auto 3rem" }}>
-                Every Threadline purchase plants 3 trees, offsets your shipping carbon, and supports Fair Trade farmers. Shop better. Feel it.
-              </p>
-              <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
-                <motion.button
-                  whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
-                  style={{ display: "inline-flex", alignItems: "center", gap: "0.6rem", padding: "0.95rem 2.25rem", background: "#f5f0e6", border: "none", borderRadius: 10, color: "#2d5a3d", fontWeight: 800, fontSize: "1rem", cursor: "pointer" }}
-                  className="transition-all duration-200"
-                >
-                  Shop Collections <ArrowRight size={18} />
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
-                  style={{ display: "inline-flex", alignItems: "center", gap: "0.6rem", padding: "0.95rem 2.25rem", background: "transparent", border: "1.5px solid rgba(245,240,230,0.3)", borderRadius: 10, color: "#f5f0e6", fontWeight: 700, fontSize: "1rem", cursor: "pointer" }}
-                  className="transition-all duration-200"
-                >
-                  Join Circle — $12/mo
-                </motion.button>
+      {/* ==========================================
+          6. MEGA FOOTER (Luxury Minimal)
+          ========================================== */}
+      <footer className="bg-white pt-32 pb-12 px-6 md:px-12 border-t border-[#c9b7a2]/10 relative">
+        <div className="max-w-[1400px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-24 mb-32">
+          <div className="lg:col-span-5">
+            <Reveal>
+              <div className="flex flex-col mb-10">
+                <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-[#c9b7a2] mb-1">
+                  Sanctuary.
+                </span>
+                <span className="text-3xl font-serif italic text-[#2a2a2a]">
+                  Aura Wellness
+                </span>
               </div>
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* ── FOOTER ── */}
-      <footer style={{ borderTop: "1px solid rgba(45,90,61,0.12)", padding: "5rem 2rem 3rem", background: "#1a1a1a", color: "#f5f0e6" }}>
-        <div style={{ maxWidth: 1320, margin: "0 auto" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "2fr repeat(3,1fr)", gap: "4rem", marginBottom: "4rem" }} className="grid-cols-1 md:grid-cols-4">
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1.25rem" }}>
-                <Leaf size={22} color="#6dbb8a" />
-                <span style={{ fontSize: "1.25rem", fontWeight: 900, letterSpacing: "-0.03em" }}>THREADLINE</span>
-              </div>
-              <p style={{ fontSize: "0.87rem", color: "rgba(245,240,230,0.45)", lineHeight: 1.7, maxWidth: 280 }}>
-                B Corp Certified. Carbon Neutral Since 2021. GOTS, GRS, and Fair Trade certified supply chain.
+              <p className="text-[#2a2a2a]/40 max-w-sm mb-12 text-[11px] font-bold uppercase tracking-widest leading-loose italic">
+                The intersection of deep botanical wisdom and institutional
+                medical precision. Est. 2026. A global sanctuary for the
+                restored mind.
               </p>
-              <div style={{ display: "flex", gap: "0.75rem", marginTop: "1.5rem" }}>
-                {[Instagram, Twitter, Globe].map((Icon, j) => (
-                  <div key={j} className="cursor-pointer transition-all duration-200 hover:opacity-100" style={{ width: 36, height: 36, borderRadius: 8, background: "rgba(245,240,230,0.06)", border: "1px solid rgba(245,240,230,0.1)", display: "flex", alignItems: "center", justifyContent: "center", opacity: 0.6 }}>
-                    <Icon size={16} color="#f5f0e6" />
-                  </div>
+              <div className="flex gap-4">
+                {[Instagram, Twitter, Mail].map((Icon, i) => (
+                  <button
+                    key={i}
+                    className="w-12 h-12 rounded-full border border-[#c9b7a2]/20 flex items-center justify-center text-[#c9b7a2] hover:bg-[#c9b7a2] hover:text-white transition-all"
+                  >
+                    <Icon className="w-4 h-4" />
+                  </button>
                 ))}
               </div>
-            </div>
-            {[
-              { heading: "Shop", links: ["Essentials", "Outerwear", "Denim", "Accessories", "Sale"] },
-              { heading: "Company", links: ["About", "Impact", "Supply Chain", "Careers", "Press"] },
-              { heading: "Help", links: ["Sizing Guide", "Shipping", "Returns & Repairs", "Circle Membership", "Contact"] },
-            ].map(col => (
-              <div key={col.heading}>
-                <p style={{ fontWeight: 700, fontSize: "0.82rem", color: "rgba(245,240,230,0.9)", marginBottom: "1.25rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>{col.heading}</p>
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.7rem" }}>
-                  {col.links.map(l => (
-                    <a key={l} href="#" className="cursor-pointer transition-all duration-200 hover:text-white" style={{ fontSize: "0.87rem", color: "rgba(245,240,230,0.4)", textDecoration: "none" }}>{l}</a>
-                  ))}
-                </div>
-              </div>
-            ))}
+            </Reveal>
           </div>
-          <Separator style={{ borderColor: "rgba(245,240,230,0.08)", marginBottom: "1.5rem" }} />
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
-            <p style={{ fontSize: "0.8rem", color: "rgba(245,240,230,0.3)" }}>© 2026 Threadline Inc. All rights reserved.</p>
-            <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-              {["B Corp", "GOTS", "Fair Trade", "1% Planet"].map(badge => (
-                <Badge key={badge} style={{ background: "rgba(109,187,138,0.12)", color: "#6dbb8a", border: "1px solid rgba(109,187,138,0.2)", fontSize: "0.65rem", fontWeight: 700 }}>{badge}</Badge>
-              ))}
-            </div>
+
+          <div className="lg:col-span-2 lg:col-start-7">
+            <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#2a2a2a] mb-10">
+              Experience
+            </h4>
+            <ul className="space-y-4 text-[10px] font-bold uppercase tracking-widest text-[#2a2a2a]/30">
+              <li>
+                <Link
+                  href="#"
+                  className="hover:text-[#c9b7a2] transition-colors"
+                >
+                  The_Sanctuary
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="#"
+                  className="hover:text-[#c9b7a2] transition-colors"
+                >
+                  Hydro_Circuit
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="#"
+                  className="hover:text-[#c9b7a2] transition-colors"
+                >
+                  Tea_Library
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="#"
+                  className="hover:text-[#c9b7a2] transition-colors"
+                >
+                  Garden_Gallery
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div className="lg:col-span-2">
+            <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#2a2a2a] mb-10">
+              Rituals
+            </h4>
+            <ul className="space-y-4 text-[10px] font-bold uppercase tracking-widest text-[#2a2a2a]/30">
+              <li>
+                <Link
+                  href="#"
+                  className="hover:text-[#c9b7a2] transition-colors"
+                >
+                  Facial_Science
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="#"
+                  className="hover:text-[#c9b7a2] transition-colors"
+                >
+                  Body_Alchemy
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="#"
+                  className="hover:text-[#c9b7a2] transition-colors"
+                >
+                  Sound_Baths
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="#"
+                  className="hover:text-[#c9b7a2] transition-colors"
+                >
+                  Seasonal_Detox
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div className="lg:col-span-2">
+            <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#2a2a2a] mb-10">
+              Legal
+            </h4>
+            <ul className="space-y-4 text-[10px] font-bold uppercase tracking-widest text-[#2a2a2a]/30">
+              <li>
+                <Link
+                  href="#"
+                  className="hover:text-[#c9b7a2] transition-colors"
+                >
+                  Privacy_Buffer
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="#"
+                  className="hover:text-[#c9b7a2] transition-colors"
+                >
+                  Terms_of_Being
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="#"
+                  className="hover:text-[#c9b7a2] transition-colors"
+                >
+                  Medical_Disclaimer
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="#"
+                  className="hover:text-[#c9b7a2] transition-colors"
+                >
+                  Institutional_Ops
+                </Link>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="max-w-[1400px] mx-auto pt-10 border-t border-[#c9b7a2]/10 flex flex-col md:flex-row justify-between items-center gap-8 text-[9px] font-bold uppercase tracking-widest text-[#2a2a2a]/10">
+          <div className="flex items-center gap-10">
+            <span>&copy; {new Date().getFullYear()} AURA WELLNESS GROUP.</span>
+            <span>Geneva // Aspen // Kyoto</span>
+          </div>
+          <div className="flex gap-10">
+            <span>Verified Sanctuary</span>
+            <span>Restoration as Standard</span>
           </div>
         </div>
       </footer>
 
-      {/* ── QUICK VIEW DIALOG ── */}
-      <Dialog open={!!quickViewProduct} onOpenChange={() => setQuickViewProduct(null)}>
-        <DialogContent style={{ background: "#fff", border: "1px solid rgba(45,90,61,0.15)", borderRadius: 16, maxWidth: 580 }}>
-          {quickViewProduct && (
-            <>
-              <DialogHeader>
-                <DialogTitle style={{ color: "#1a1a1a", fontSize: "1.4rem", fontWeight: 900 }}>{quickViewProduct.name}</DialogTitle>
-              </DialogHeader>
-              <div style={{ position: "relative", aspectRatio: "16/9", borderRadius: 12, overflow: "hidden", marginBottom: "1.5rem" }}>
-                <Image src={quickViewProduct.img} alt={quickViewProduct.name} fill style={{ objectFit: "cover" }} />
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
-                <div>
-                  <p style={{ fontSize: "0.72rem", fontWeight: 700, color: "#2d5a3d", letterSpacing: "0.06em", textTransform: "uppercase" }}>{quickViewProduct.material}</p>
-                  <p style={{ fontSize: "1.75rem", fontWeight: 900, color: "#1a1a1a" }}>{quickViewProduct.price}</p>
-                </div>
-                <Badge style={{ background: "#2d5a3d15", color: "#2d5a3d", border: "1px solid #2d5a3d30", fontWeight: 700 }}>Lifetime Repair Guarantee</Badge>
-              </div>
-              <motion.button
-                whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-                style={{ width: "100%", padding: "0.9rem", background: "#2d5a3d", border: "none", borderRadius: 10, color: "#f5f0e6", fontWeight: 800, cursor: "pointer", fontSize: "0.95rem" }}
-                className="transition-all duration-200"
+      {/* TREATMENT DETAIL MODAL */}
+      <AnimatePresence>
+        {activeTreatment && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] bg-[#fdfcf9]/98 backdrop-blur-xl flex items-center justify-center p-6"
+            onClick={() => setActiveTreatment(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 30 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 30 }}
+              className="bg-white border border-[#c9b7a2]/20 max-w-5xl w-full grid grid-cols-1 lg:grid-cols-2 overflow-hidden rounded-[3rem] shadow-2xl relative"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setActiveTreatment(null)}
+                className="absolute top-10 right-10 text-[#c9b7a2] hover:text-[#2a2a2a] transition-colors z-10"
               >
-                Add to Bag <ArrowRight size={16} style={{ display: "inline", marginLeft: 6 }} />
-              </motion.button>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+                <X className="w-8 h-8" />
+              </button>
+
+              <div className="relative aspect-square lg:aspect-auto">
+                <Image
+                  src={activeTreatment.img}
+                  alt={activeTreatment.name}
+                  fill
+                  className="object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                <div className="absolute bottom-12 left-12 text-white">
+                  <h3 className="text-5xl font-serif italic">
+                    {activeTreatment.name}
+                  </h3>
+                </div>
+              </div>
+
+              <div className="p-16 flex flex-col justify-between">
+                <div className="space-y-10">
+                  <div className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#c9b7a2] flex items-center gap-3">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#c9b7a2]" />
+                    Protocol Specification
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="flex justify-between items-center border-b border-[#c9b7a2]/10 pb-4">
+                      <span className="text-[10px] font-bold text-[#2a2a2a]/30 uppercase tracking-widest">
+                        Duration
+                      </span>
+                      <span className="text-xl font-serif italic text-[#c9b7a2]">
+                        {activeTreatment.duration}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center border-b border-[#c9b7a2]/10 pb-4">
+                      <span className="text-[10px] font-bold text-[#2a2a2a]/30 uppercase tracking-widest">
+                        Investment
+                      </span>
+                      <span className="text-xl font-serif italic text-[#c9b7a2]">
+                        {activeTreatment.price}
+                      </span>
+                    </div>
+                  </div>
+
+                  <p className="text-sm font-light text-[#2a2a2a]/60 leading-relaxed italic">
+                    {activeTreatment.desc} Our signature protocol includes a
+                    personalized botanical blend and a synchronized vibrational
+                    sound bath for total dermal and cognitive restoration.
+                  </p>
+                </div>
+
+                <MagneticBtn className="w-full py-6 bg-[#c9b7a2] text-white text-[11px] font-bold uppercase tracking-[0.4em] rounded-full hover:bg-[#b8a691] transition-all shadow-xl mt-12">
+                  REQUEST_RITUAL
+                </MagneticBtn>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <style>{`
+        ::-webkit-scrollbar{width:4px;background:#fdfcf9}
+        ::-webkit-scrollbar-thumb{background:#c9b7a2}
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
+        .font-serif { font-family: 'Playfair Display', serif; }
+      `}</style>
     </div>
-  )
+  );
 }

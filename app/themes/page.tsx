@@ -18,7 +18,6 @@ const HIDDEN_IMPACT = new Set([
   "impact-30","impact-31","impact-32","impact-33","impact-34","impact-35","impact-36","impact-37","impact-38","impact-39",
   "impact-40","impact-41","impact-42","impact-43","impact-44","impact-45","impact-46","impact-47","impact-48","impact-49",
   "impact-50","impact-51","impact-52","impact-53","impact-54",
-  "impact-67","impact-71","impact-73","impact-74","impact-76","impact-77","impact-78","impact-79",
   "impact-92","impact-93","impact-97","impact-98","impact-99",
   "impact-100","impact-101","impact-102","impact-103","impact-104","impact-105","impact-106","impact-107","impact-108","impact-109","impact-110","impact-111",
   "impact-117","impact-118","impact-119","impact-120","impact-121","impact-122","impact-123","impact-124","impact-125",
@@ -29,16 +28,15 @@ const HIDDEN_IMPACT = new Set([
   "impact-177","impact-178","impact-179","impact-180","impact-181","impact-182","impact-183","impact-184","impact-185","impact-186",
   "impact-187","impact-188","impact-189","impact-190","impact-191","impact-192","impact-193","impact-194","impact-195","impact-196",
   // ── Below quality bar (400–549 lines, pending elevation) ────────────────
-  "impact-70",
-  "impact-72",
-  "impact-75",
-  "impact-87","impact-88","impact-91","impact-95",
+
+  "impact-91","impact-95",
   
 ]);
 
 // ─── Featured (hand-picked best) ─────────────────────────────────────────────
 const FEATURED = new Set([
   "impact-01","impact-03",
+  "impact-81","impact-82","impact-83","impact-84","impact-85","impact-86","impact-87","impact-88","impact-89","impact-90",
   "impact-157","impact-158","impact-159","impact-161","impact-163","impact-166","impact-167","impact-176",
   "luxury","aurora","3d-tech","minimal-pro","saas",
 ]);

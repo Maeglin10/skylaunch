@@ -1,840 +1,1098 @@
-"use client"
-import { motion, useScroll, useTransform, useInView, AnimatePresence, useMotionValue, useSpring } from "framer-motion"
-import { useState, useRef, useEffect } from "react"
-import Image from "next/image"
-import Link from "next/link"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
-import { Progress } from "@/components/ui/progress"
-import { Separator } from "@/components/ui/separator"
-import {
-  Beer, Menu, X, Star, MapPin, Clock, Phone, Award, Leaf, Flame, Droplets,
-  Instagram, Twitter, Facebook, Youtube, ChevronRight, Medal, Wheat, ThumbsUp
-} from "lucide-react"
+"use client";
 
-function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
-  const ref = useRef(null)
-  const isInView = useInView(ref, { once: true, margin: "-80px" })
+import {
+  motion,
+  useScroll,
+  useTransform,
+  useInView,
+  AnimatePresence,
+  useMotionValue,
+  useSpring,
+} from "framer-motion";
+import { useState, useRef, useEffect, useCallback } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
+import {
+  Wallet,
+  Landmark,
+  ArrowUpRight,
+  ArrowDownRight,
+  Activity,
+  ShieldCheck,
+  Globe,
+  Zap,
+  PieChart,
+  CreditCard,
+  Layers,
+  BarChart3,
+  Check,
+  Menu,
+  X,
+  Star,
+  MapPin,
+  Clock,
+  Smartphone,
+  Instagram,
+  Twitter,
+  Mail,
+  Phone,
+  Lock,
+  Plus,
+  Terminal,
+  Cpu,
+  Box,
+  Share2,
+  Maximize,
+  Monitor,
+  MousePointer2,
+  Navigation,
+  Wifi,
+} from "lucide-react";
+
+import "../premium.css";
+
+/* ==========================================================================
+   DATA STRUCTURES
+   ========================================================================= */
+
+const ASSETS = [
+  {
+    id: "BTC",
+    name: "Bitcoin",
+    price: "64,281.00",
+    change: "+2.4%",
+    trend: "up",
+    color: "#F7931A",
+  },
+  {
+    id: "ETH",
+    name: "Ethereum",
+    price: "3,452.12",
+    change: "+1.8%",
+    trend: "up",
+    color: "#627EEA",
+  },
+  {
+    id: "SOL",
+    name: "Solana",
+    price: "142.85",
+    change: "-0.4%",
+    trend: "down",
+    color: "#14F195",
+  },
+  {
+    id: "AAPL",
+    name: "Apple Inc.",
+    price: "189.43",
+    change: "+0.8%",
+    trend: "up",
+    color: "#A2AAAD",
+  },
+];
+
+const TRANSACTIONS = [
+  {
+    id: "tx_9482",
+    type: "OUT",
+    label: "Amazon Web Services",
+    date: "14:22:01",
+    amount: "-$1,240.00",
+    status: "CLEARED",
+  },
+  {
+    id: "tx_9483",
+    type: "IN",
+    label: "Stripe Payout",
+    date: "14:22:15",
+    amount: "+$42,850.00",
+    status: "CLEARED",
+  },
+  {
+    id: "tx_9484",
+    type: "OUT",
+    label: "Apple Store",
+    date: "14:22:42",
+    amount: "-$3,499.00",
+    status: "PENDING",
+  },
+  {
+    id: "tx_9485",
+    type: "OUT",
+    label: "Equinox Gym",
+    date: "14:23:10",
+    amount: "-$250.00",
+    status: "CLEARED",
+  },
+];
+
+const SECURITY_NODES = [
+  {
+    title: "AES-256-GCM",
+    desc: "Military-grade encryption for all data at rest.",
+    icon: <Lock className="w-4 h-4" />,
+  },
+  {
+    title: "MPC Wallets",
+    desc: "Multi-party computation for institutional security.",
+    icon: <ShieldCheck className="w-4 h-4" />,
+  },
+  {
+    title: "Zero Knowledge",
+    desc: "Verify transactions without revealing metadata.",
+    icon: <Cpu className="w-4 h-4" />,
+  },
+  {
+    title: "Cold Storage",
+    desc: "98% of assets stored in offline air-gapped vaults.",
+    icon: <Box className="w-4 h-4" />,
+  },
+];
+
+/* ==========================================================================
+   UTILITY COMPONENTS
+   ========================================================================= */
+
+function Reveal({
+  children,
+  delay = 0,
+  y = 30,
+}: {
+  children: React.ReactNode;
+  delay?: number;
+  y?: number;
+}) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-50px" });
   return (
-    <motion.div ref={ref} initial={{ opacity: 0, y: 32 }} animate={isInView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] }}>
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 1, delay, ease: [0.25, 0.1, 0.25, 1] }}
+    >
       {children}
     </motion.div>
-  )
+  );
 }
 
-function StarRating({ rating }: { rating: number }) {
-  return (
-    <div className="flex gap-1">
-      {[1,2,3,4,5].map((i) => (
-        <Star key={i} className={`w-4 h-4 ${i <= rating ? "fill-[#d4890a] text-[#d4890a]" : "text-[#d4890a]/30"}`} />
-      ))}
-    </div>
-  )
-}
-
-function AnimatedCounter({ target, suffix = "" }: { target: number; suffix?: string }) {
-  const [count, setCount] = useState(0)
-  const ref = useRef(null)
-  const isInView = useInView(ref, { once: true, margin: "-60px" })
+function Counter({
+  to,
+  prefix = "",
+  suffix = "",
+}: {
+  to: number;
+  prefix?: string;
+  suffix?: string;
+}) {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true });
+  const [count, setCount] = useState(0);
   useEffect(() => {
-    if (!isInView) return
-    let current = 0
-    const step = Math.ceil(target / 60)
-    const interval = setInterval(() => {
-      current = Math.min(current + step, target)
-      setCount(current)
-      if (current >= target) clearInterval(interval)
-    }, 25)
-    return () => clearInterval(interval)
-  }, [isInView, target])
-  return <span ref={ref}>{count.toLocaleString()}{suffix}</span>
+    if (!isInView) return;
+    let cur = 0;
+    const step = to / 70;
+    const t = setInterval(() => {
+      cur += step;
+      if (cur >= to) {
+        setCount(to);
+        clearInterval(t);
+      } else {
+        setCount(Math.floor(cur));
+      }
+    }, 16);
+    return () => clearInterval(t);
+  }, [isInView, to]);
+  return (
+    <span ref={ref}>
+      {prefix}
+      {count.toLocaleString()}
+      {suffix}
+    </span>
+  );
 }
 
-export default function GoldenRidgeBrewing() {
-  const [mobileOpen, setMobileOpen] = useState(false)
-  const [tourDialogOpen, setTourDialogOpen] = useState(false)
-  const heroRef = useRef(null)
-  const { scrollY } = useScroll()
-  const backgroundY = useTransform(scrollY, [0, 600], [0, 180])
-  const heroOpacity = useTransform(scrollY, [0, 400], [1, 0])
+function MagneticBtn({
+  children,
+  className = "",
+  onClick,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  onClick?: () => void;
+}) {
+  const ref = useRef<HTMLButtonElement>(null);
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const sx = useSpring(x, { stiffness: 200, damping: 20 });
+  const sy = useSpring(y, { stiffness: 200, damping: 20 });
 
-  const navLinks = ["Our Beers", "Tap Rooms", "Brewery", "Events", "Shop"]
+  const handleMouse = useCallback(
+    (e: React.MouseEvent) => {
+      const rect = ref.current?.getBoundingClientRect();
+      if (!rect) return;
+      x.set((e.clientX - rect.left - rect.width / 2) * 0.35);
+      y.set((e.clientY - rect.top - rect.height / 2) * 0.35);
+    },
+    [x, y],
+  );
 
-  const stats = [
-    { value: 2012, suffix: "", label: "Founded" },
-    { value: 47, suffix: "+", label: "Unique Beers Brewed" },
-    { value: 8, suffix: "", label: "Competition Medals" },
-    { value: 3, suffix: "", label: "Tap Room Locations" },
-    { value: 12000, suffix: "+", label: "Barrels Produced / Year" },
-    { value: 96, suffix: "%", label: "Local Ingredients" },
-  ]
-
-  const tabFeatures = [
-    {
-      value: "ipa",
-      label: "IPA & Hoppy",
-      icon: Flame,
-      title: "West Coast & New England IPAs",
-      description: "Our hop-forward lineup showcases the finest Pacific Northwest hops, dry-hopped to peak aromatic intensity.",
-      bullets: [
-        "Ridge Hopper IPA — 6.8% ABV, 65 IBU, mosaic & citra hops",
-        "Hazy Valley NEIPA — 7.1% ABV, 45 IBU, soft tropical finish",
-        "Double Ridgeline DIPA — 8.4% ABV, 85 IBU, resinous pine backbone",
-        "Session Hop — 4.2% ABV, 35 IBU, all-day crushability",
-      ],
-    },
-    {
-      value: "dark",
-      label: "Dark & Roasted",
-      icon: Beer,
-      title: "Stouts, Porters & Dark Ales",
-      description: "Barrel-aged complexity meets artisanal roasting. Each dark beer is a story told in chocolate, coffee, and vanilla.",
-      bullets: [
-        "Midnight Ridge Imperial Stout — 10.2% ABV, aged 12 months in bourbon barrels",
-        "Cold Brew Coffee Porter — 6.4% ABV, brewed with Ecuadorian single-origin beans",
-        "Velvet Brown Ale — 5.3% ABV, English-style with toffee and caramel notes",
-        "Smoked Barleywine — 11.8% ABV, limited seasonal release each November",
-      ],
-    },
-    {
-      value: "lager",
-      label: "Lagers & Wheat",
-      icon: Wheat,
-      title: "Crisp, Clean & Refreshing",
-      description: "Traditional European brewing methods applied to California terroir. Cold-conditioned for minimum 6 weeks.",
-      bullets: [
-        "Golden Pils — 5.2% ABV, Bohemian-style with Saaz hops, noble and dry",
-        "Ridge Hefeweizen — 5.5% ABV, Bavarian yeast, banana and clove aromatics",
-        "Kölsch Collection — 4.8% ABV, served unfiltered in traditional 0.2L Stangen",
-        "Mexican-Style Lager — 4.4% ABV, light, bright, pairs with everything",
-      ],
-    },
-    {
-      value: "sour",
-      label: "Sours & Wild Ales",
-      icon: Droplets,
-      title: "Spontaneous & Kettle-Soured",
-      description: "Our wild fermentation program features locally foraged fruits and cultures captured from the valley itself.",
-      bullets: [
-        "Sour Sunset Gose — 5.8% ABV, tart raspberry, sea salt balance",
-        "Valley Lambic — 6.1% ABV, spontaneous fermentation, 18-month aging",
-        "Peach Berliner Weisse — 4.0% ABV, refreshing, low-ABV summer sipper",
-        "Blackberry Wild Ale — 6.6% ABV, foraged local berries, funky complexity",
-      ],
-    },
-  ]
-
-  const testimonials = [
-    {
-      name: "Marcus Thornton",
-      role: "Beer Judge, Pacific Coast Homebrew Competition",
-      avatar: "MT",
-      rating: 5,
-      text: "Golden Ridge's barrel program is among the finest I've evaluated in 12 years of judging. The Midnight Ridge Imperial Stout genuinely rivals output from nationally recognized craft breweries.",
-    },
-    {
-      name: "Sofia Reyes",
-      role: "Food & Beverage Director, The Grand Cliff Hotel",
-      avatar: "SR",
-      rating: 5,
-      text: "We've featured Golden Ridge on our craft beer menu exclusively for two years. Our guests constantly ask about the Ridge Hopper — it outsells every other beer we carry by 3 to 1.",
-    },
-    {
-      name: "Daniel Park",
-      role: "Certified Cicerone, Regional Beer Educator",
-      avatar: "DP",
-      rating: 5,
-      text: "I take every brewing course cohort I teach on a visit to Golden Ridge. The fermentation facility and their commitment to water chemistry education is unmatched in the region.",
-    },
-    {
-      name: "Annika Johansson",
-      role: "Travel Writer, Craft Beer Enthusiast",
-      avatar: "AJ",
-      rating: 5,
-      text: "Flew in specifically for the Autumn Harvest Festival and stayed three days. The barrel-aged tasting flight alone was worth the trip. Golden Ridge is a legitimate beer destination.",
-    },
-    {
-      name: "Robert Callahan",
-      role: "Local Restaurateur, Owner of Callahan's Kitchen",
-      avatar: "RC",
-      rating: 4,
-      text: "We've partnered with Golden Ridge for tap takeovers every quarter. Their team brings incredible knowledge and the customer response has been phenomenal every single time.",
-    },
-  ]
-
-  const pricingTiers = [
-    {
-      name: "Explorer",
-      price: "$15",
-      period: "/ tasting flight",
-      description: "Perfect for first-time visitors",
-      features: [
-        "5-beer curated flight",
-        "Printed tasting notes",
-        "Guided pour explanation",
-        "Souvenir tasting glass",
-        "10% merch discount same day",
-      ],
-      cta: "Book Tasting",
-      highlighted: false,
-    },
-    {
-      name: "Enthusiast",
-      price: "$89",
-      period: "/ month",
-      description: "Our most popular membership",
-      features: [
-        "2 x 6-pack monthly allocation",
-        "Early access to seasonal releases",
-        "1 free brewery tour per month",
-        "20% off all tap room purchases",
-        "Member-only Discord community",
-        "Quarterly barrel-aged exclusive",
-      ],
-      cta: "Join Club",
-      highlighted: true,
-    },
-    {
-      name: "Connoisseur",
-      price: "$199",
-      period: "/ month",
-      description: "For the serious beer devotee",
-      features: [
-        "Full case monthly allocation",
-        "First access to limited & barrel-aged",
-        "Private blending session (1x / quarter)",
-        "30% off all tap room purchases",
-        "Name on Founder's Wall",
-        "Annual harvest experience invitation",
-        "Priority event reservations",
-      ],
-      cta: "Apply Now",
-      highlighted: false,
-    },
-  ]
-
-  const faqs = [
-    {
-      q: "What makes Golden Ridge different from other craft breweries?",
-      a: "We operate our own 40-acre hop farm just 8 miles from the brewery, meaning we control quality from rhizome to pint. Our head brewer Callum Hester has 18 years of experience across Germany, Belgium, and California, bringing a genuinely international perspective to every recipe.",
-    },
-    {
-      q: "Do you offer brewery tours and how do I book?",
-      a: "Yes — we run guided tours every Saturday at 1 PM and 3 PM, and Sundays at 2 PM. Tours include the full production floor, fermentation tanks, barrel room, and canning line, followed by a 4-sample tasting flight. Tickets are $25/person and sell out 2–3 weeks in advance. Book online or call any tap room directly.",
-    },
-    {
-      q: "Where can I buy Golden Ridge beer outside your tap rooms?",
-      a: "Our canned beers are distributed to 340+ retail locations across California, Oregon, and Nevada. Use the store locator on our website to find the closest retailer. We also ship nationwide through our online store (select states only). Our most limited releases are tap room and members-club exclusive.",
-    },
-    {
-      q: "Do you accommodate large groups and private events?",
-      a: "Absolutely. Our Barrel Room can be reserved for private events of up to 80 guests and includes dedicated staff, customizable tasting menus, and AV setup. Our Hayfield Terrace accommodates up to 200 for outdoor events. Contact our events team at least 6 weeks in advance for availability.",
-    },
-    {
-      q: "Are your ingredients organic and locally sourced?",
-      a: "96% of our barley, hops, and adjuncts are sourced within 200 miles of the brewery. Our Cascade and Centennial hops are estate-grown. We use a certified organic grain bill for our Heritage Series. We publish a full sourcing report annually on our website.",
-    },
-    {
-      q: "What food is available at the tap rooms?",
-      a: "All three locations serve a rotating kitchen menu developed by Chef Mara Vincenti, focused on beer-forward pairings — think pretzel boards with beer-cheese fondue, smash burgers on brioche, and seasonal flatbreads. The Riverside location has a full kitchen open daily until 9 PM.",
-    },
-    {
-      q: "Do you have non-alcoholic options?",
-      a: "Yes — we brew a rotating NA lineup under our 'Calm Ridge' series, currently including a craft-hopped sparkling water, a malt-forward NA amber, and a tart NA Berliner Weisse. All available on tap and in 4-packs.",
-    },
-  ]
+  const reset = useCallback(() => {
+    x.set(0);
+    y.set(0);
+  }, [x, y]);
 
   return (
-    <div style={{ overflowX: "hidden", scrollBehavior: "smooth" }} className="bg-[#1a1209] text-[#f5f0e8] min-h-screen">
+    <motion.button
+      ref={ref}
+      style={{ x: sx, y: sy }}
+      onMouseMove={handleMouse}
+      onMouseLeave={reset}
+      onClick={onClick}
+      className={className}
+    >
+      {children}
+    </motion.button>
+  );
+}
 
-      {/* ===== NAVBAR ===== */}
-      <motion.nav
-        initial={{ y: -80, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-        className="fixed top-0 left-0 right-0 z-50 bg-[#1a1209]/80 backdrop-blur-xl border-b border-[#d4890a]/15"
+/* ==========================================================================
+   MAIN PAGE COMPONENT
+   ========================================================================= */
+
+export default function FinTechPage() {
+  const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("assets");
+  const [tickerOffset, setTickerOffset] = useState(0);
+
+  const heroRef = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"],
+  });
+  const heroY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 50);
+    window.addEventListener("scroll", handleScroll);
+    const t = setInterval(() => setTickerOffset((prev) => prev - 1), 50);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      clearInterval(t);
+    };
+  }, []);
+
+  return (
+    <div
+      className="premium-theme min-h-screen bg-[#05060a] text-white font-sans selection:bg-[#3b82f6] selection:text-white overflow-x-hidden"
+      style={{ scrollBehavior: "smooth" }}
+    >
+      {/* ==========================================
+          NAVIGATION
+          ========================================== */}
+      <nav
+        className={`fixed top-0 left-0 w-full z-50 transition-all duration-1000 ${scrolled ? "bg-[#05060a]/95 backdrop-blur-md py-4 border-b border-white/5" : "bg-transparent py-10"}`}
       >
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 cursor-pointer group">
-            <div className="w-9 h-9 rounded-full bg-[#d4890a] flex items-center justify-center group-hover:scale-110 transition-all duration-200">
-              <Beer className="w-5 h-5 text-[#1a1209]" />
-            </div>
-            <span className="font-black text-xl tracking-tight text-[#f5f0e8] group-hover:text-[#d4890a] transition-all duration-200">
-              GoldenRidge
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12 flex items-center justify-between">
+          <Link href="/" className="flex flex-col items-start">
+            <span className="text-[10px] font-bold uppercase tracking-[0.6em] text-blue-500/40 mb-1">
+              Institutional.
+            </span>
+            <span className="text-xl md:text-2xl font-black tracking-tighter uppercase text-white">
+              QUANTUM<span className="text-blue-500">PAY.</span>
             </span>
           </Link>
 
-          <div className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) => (
-              <a key={link} href={`#${link.toLowerCase().replace(" ", "-")}`}
-                className="text-sm font-medium text-[#f5f0e8]/70 hover:text-[#d4890a] transition-all duration-200 cursor-pointer">
-                {link}
-              </a>
-            ))}
+          <div className="hidden lg:flex items-center gap-12 text-[10px] font-bold uppercase tracking-[0.3em] text-white/30">
+            <Link
+              href="#market"
+              className="hover:text-blue-400 transition-colors"
+            >
+              Market
+            </Link>
+            <Link
+              href="#security"
+              className="hover:text-blue-400 transition-colors"
+            >
+              Security
+            </Link>
+            <Link
+              href="#cards"
+              className="hover:text-blue-400 transition-colors"
+            >
+              Cards
+            </Link>
+            <Link
+              href="#pricing"
+              className="hover:text-blue-400 transition-colors"
+            >
+              Pricing
+            </Link>
           </div>
 
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setTourDialogOpen(true)}
-              className="hidden md:block px-5 py-2.5 bg-[#d4890a] text-[#1a1209] font-bold text-sm rounded-full hover:bg-[#e8a020] hover:scale-105 hover:shadow-[0_0_24px_rgba(212,137,10,0.4)] transition-all duration-200 cursor-pointer">
-              Book Tour
+          <div className="flex items-center gap-8">
+            <div className="hidden xl:flex flex-col items-end">
+              <span className="text-[9px] font-bold text-white/10 uppercase tracking-widest">
+                Global Liquidity
+              </span>
+              <span className="text-[11px] font-black text-emerald-500 flex items-center gap-1">
+                $4.2T VOLUME <Activity className="w-3 h-3" />
+              </span>
+            </div>
+            <MagneticBtn className="px-8 py-3 bg-blue-600 text-white text-[10px] font-bold uppercase tracking-widest rounded-md hover:bg-blue-500 transition-all shadow-xl shadow-blue-600/20">
+              OPEN_ACCOUNT
+            </MagneticBtn>
+            <button onClick={() => setMenuOpen(true)} className="lg:hidden">
+              <Menu className="w-6 h-6" />
             </button>
-            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-              <SheetTrigger asChild>
-                <button className="md:hidden p-2 text-[#f5f0e8] hover:text-[#d4890a] transition-all duration-200 cursor-pointer">
-                  {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-                </button>
-              </SheetTrigger>
-              <SheetContent side="right" className="bg-[#1a1209] border-[#d4890a]/20 text-[#f5f0e8] w-72">
-                <div className="flex flex-col gap-6 mt-12">
-                  {navLinks.map((link) => (
-                    <a key={link} href={`#${link.toLowerCase().replace(" ", "-")}`}
-                      onClick={() => setMobileOpen(false)}
-                      className="text-lg font-semibold hover:text-[#d4890a] transition-all duration-200 cursor-pointer">
-                      {link}
-                    </a>
-                  ))}
-                  <button
-                    onClick={() => { setTourDialogOpen(true); setMobileOpen(false) }}
-                    className="mt-4 px-6 py-3 bg-[#d4890a] text-[#1a1209] font-bold rounded-full hover:bg-[#e8a020] transition-all duration-200 cursor-pointer">
-                    Book Tour
-                  </button>
-                </div>
-              </SheetContent>
-            </Sheet>
           </div>
         </div>
-      </motion.nav>
+      </nav>
 
-      {/* ===== HERO WITH PARALLAX ===== */}
-      <section ref={heroRef} className="relative h-screen w-full overflow-hidden">
-        <motion.div style={{ y: backgroundY }} className="absolute inset-0">
+      {/* MOBILE MENU */}
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div
+            initial={{ opacity: 0, x: "100%" }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: "100%" }}
+            transition={{ type: "tween", duration: 0.5 }}
+            className="fixed inset-0 z-[100] bg-[#05060a] p-8 pt-32 flex flex-col border-l border-white/5"
+          >
+            <button
+              onClick={() => setMenuOpen(false)}
+              className="absolute top-10 right-8 text-white/20"
+            >
+              <X className="w-8 h-8" />
+            </button>
+            <div className="flex flex-col gap-10 text-5xl font-black tracking-tighter uppercase italic text-blue-500">
+              <Link href="#market" onClick={() => setMenuOpen(false)}>
+                Market
+              </Link>
+              <Link href="#security" onClick={() => setMenuOpen(false)}>
+                Security
+              </Link>
+              <Link href="#cards" onClick={() => setMenuOpen(false)}>
+                Cards
+              </Link>
+              <Link href="#pricing" onClick={() => setMenuOpen(false)}>
+                Pricing
+              </Link>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ==========================================
+          1. HERO (Cyber-Finance)
+          ========================================== */}
+      <section
+        ref={heroRef}
+        className="relative w-full h-[100svh] flex flex-col justify-center overflow-hidden"
+      >
+        <motion.div
+          style={{ y: heroY, opacity: heroOpacity }}
+          className="absolute inset-0 z-0"
+        >
           <Image
-            src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80"
-            alt="GoldenRidge Brewing — craft beer taproom"
+            src="https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=1600&q=80"
+            alt="FinTech Hero"
             fill
-            className="object-cover"
+            className="object-cover brightness-[0.2] opacity-40"
             priority
-            unoptimized
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#1a1209]/50 via-[#1a1209]/20 to-[#1a1209]" />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#1a1209]/60 via-transparent to-[#1a1209]/30" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#05060a] via-[#05060a]/40 to-transparent" />
         </motion.div>
 
-        <motion.div style={{ opacity: heroOpacity }}
-          className="relative h-full flex flex-col items-center justify-center px-6 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.6 }}>
-            <Badge className="mb-6 bg-[#d4890a]/20 text-[#d4890a] border border-[#d4890a]/30 backdrop-blur-sm px-4 py-1.5 text-xs font-bold tracking-widest uppercase">
-              Est. 2012 · Craft Brewery
-            </Badge>
-          </motion.div>
+        {/* BLUE GRID OVERLAY */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.05)_1px,transparent_1px)] bg-[size:60px_60px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_80%)]" />
 
-          <motion.h1
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.35, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-            className="text-6xl md:text-8xl lg:text-9xl font-black uppercase tracking-tighter leading-none mb-6 text-[#f5f0e8]">
-            Golden
-            <br />
-            <span className="text-[#d4890a]">Ridge</span>
-          </motion.h1>
+        <div className="relative z-10 max-w-[1400px] mx-auto px-6 md:px-12 w-full">
+          <Reveal>
+            <div className="inline-flex items-center gap-3 px-4 py-2 bg-blue-600/10 rounded-md border border-blue-600/30 text-blue-400 text-[10px] font-bold uppercase tracking-widest mb-10 shadow-sm">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              SIPC & FDIC Insured up to $5M
+            </div>
+            <h1 className="text-7xl md:text-9xl lg:text-[11rem] font-black leading-[0.85] tracking-tighter mb-12 uppercase">
+              The Future <br />{" "}
+              <span className="text-blue-500 italic">Of Capital.</span>
+            </h1>
+            <p className="max-w-xl text-lg md:text-xl text-white/30 leading-relaxed font-bold mb-12 uppercase tracking-tight italic">
+              Unified banking, crypto, and stocks for the institutional era.
+              Instant settlement. Zero fees. Real-time auditing.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-6">
+              <MagneticBtn className="px-12 py-5 bg-blue-600 text-white text-[10px] font-bold uppercase tracking-[0.4em] rounded-md hover:bg-blue-500 transition-all cursor-pointer shadow-2xl shadow-blue-600/20">
+                Open Private Account
+              </MagneticBtn>
+              <button className="px-12 py-5 border border-white/10 text-white text-[10px] font-bold uppercase tracking-[0.4em] rounded-md hover:bg-white hover:text-black transition-all cursor-pointer">
+                Institutional_Deck
+              </button>
+            </div>
+          </Reveal>
+        </div>
 
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.6 }}
-            className="text-xl md:text-2xl text-[#f5f0e8]/70 font-light max-w-2xl mb-10 leading-relaxed">
-            47 handcrafted beers. Estate-grown hops. Three tap rooms where every pint tells a story of the valley.
-          </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.65, duration: 0.6 }}
-            className="flex flex-wrap items-center justify-center gap-4">
-            <button
-              onClick={() => setTourDialogOpen(true)}
-              className="px-8 py-4 bg-[#d4890a] text-[#1a1209] font-black uppercase text-sm tracking-widest rounded-full hover:bg-[#e8a020] hover:scale-105 hover:shadow-[0_0_40px_rgba(212,137,10,0.5)] transition-all duration-200 cursor-pointer">
-              Book a Tour
-            </button>
-            <a href="#our-beers"
-              className="px-8 py-4 border-2 border-[#f5f0e8]/30 text-[#f5f0e8] font-bold uppercase text-sm tracking-widest rounded-full hover:border-[#d4890a] hover:text-[#d4890a] hover:scale-105 transition-all duration-200 cursor-pointer flex items-center gap-2">
-              Explore Beers <ChevronRight className="w-4 h-4" />
-            </a>
-          </motion.div>
-
-          {/* Glassmorphism stat cards */}
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.85, duration: 0.7 }}
-            className="absolute bottom-12 left-1/2 -translate-x-1/2 flex gap-4 flex-wrap justify-center px-6">
-            {[
-              { label: "Beers on Tap", value: "24+" },
-              { label: "Gold Medals", value: "8" },
-              { label: "Est.", value: "2012" },
-            ].map((card, i) => (
-              <div key={i}
-                className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl px-6 py-4 text-center hover:bg-white/15 hover:scale-105 transition-all duration-200 cursor-default">
-                <div className="text-2xl font-black text-[#d4890a]">{card.value}</div>
-                <div className="text-xs text-[#f5f0e8]/60 uppercase tracking-widest mt-0.5">{card.label}</div>
-              </div>
-            ))}
-          </motion.div>
+        <motion.div
+          style={{ opacity: heroOpacity }}
+          className="absolute bottom-10 left-12 hidden md:block"
+        >
+          <div className="flex flex-col items-start gap-3">
+            <span className="text-[9px] font-bold text-white/10 uppercase tracking-[0.5em]">
+              QUANTUM_OS // BUILD_2026.04
+            </span>
+            <div className="w-32 h-[1px] bg-blue-500/40" />
+          </div>
         </motion.div>
       </section>
 
-      {/* ===== STATS BAR ===== */}
-      <section className="py-16 bg-[#d4890a]">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
-            {stats.map((stat, i) => (
-              <Reveal key={i} delay={i * 0.08}>
-                <div className="text-center cursor-default">
-                  <div className="text-3xl md:text-4xl font-black text-[#1a1209]">
-                    <AnimatedCounter target={stat.value} suffix={stat.suffix} />
-                  </div>
-                  <div className="text-xs font-bold text-[#1a1209]/60 uppercase tracking-widest mt-1">{stat.label}</div>
+      {/* ==========================================
+          2. TICKER (Live Data)
+          ========================================== */}
+      <div
+        id="market"
+        className="bg-[#0a0c14] border-y border-white/5 py-4 overflow-hidden"
+      >
+        <motion.div
+          animate={{ x: [0, -2000] }}
+          transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
+          className="flex gap-20 whitespace-nowrap px-10"
+        >
+          {[...ASSETS, ...ASSETS, ...ASSETS].map((asset, i) => (
+            <div key={i} className="flex items-center gap-4">
+              <span className="text-[10px] font-black text-white/20 uppercase tracking-widest">
+                {asset.id}
+              </span>
+              <span className="text-sm font-black text-white tabular-nums">
+                ${asset.price}
+              </span>
+              <span
+                className={`text-[10px] font-bold ${asset.trend === "up" ? "text-emerald-500" : "text-red-500"}`}
+              >
+                {asset.change}
+              </span>
+              <div className="w-1 h-1 bg-white/5 rounded-full mx-4" />
+            </div>
+          ))}
+        </motion.div>
+      </div>
+
+      {/* ==========================================
+          3. DASHBOARD PREVIEW (Modular UI)
+          ========================================== */}
+      <section className="py-32 bg-[#05060a]">
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 md:gap-32 items-center">
+            <div className="lg:col-span-5">
+              <Reveal>
+                <span className="text-[10px] uppercase tracking-[0.4em] font-bold text-blue-500 mb-6 block">
+                  Unified Console
+                </span>
+                <h2 className="text-5xl md:text-7xl font-black tracking-tighter leading-tight mb-12 text-white uppercase italic">
+                  Wealth <br />{" "}
+                  <span className="text-blue-500">Engineering.</span>
+                </h2>
+                <p className="text-lg text-white/20 leading-relaxed font-bold mb-16 uppercase tracking-tight italic">
+                  Manage multiple asset classes from a single high-performance
+                  interface designed for speed and clarity.
+                </p>
+
+                <div className="space-y-6">
+                  {[
+                    {
+                      label: "Execution Speed",
+                      val: 14,
+                      suffix: "ms",
+                      desc: "Proprietary HFT engine with direct exchange connectivity.",
+                    },
+                    {
+                      label: "Assets Under Custody",
+                      val: 42,
+                      suffix: "B+",
+                      desc: "Bespoke security for the world's largest family offices.",
+                    },
+                    {
+                      label: "Global Coverage",
+                      val: 180,
+                      suffix: "+",
+                      desc: "Full banking support in 180 countries and 40 currencies.",
+                    },
+                  ].map((item, i) => (
+                    <div
+                      key={i}
+                      className="group border-l border-blue-500/20 pl-8 hover:border-blue-500 transition-all"
+                    >
+                      <h4 className="text-sm font-bold uppercase tracking-tight mb-2 text-white/60">
+                        {item.label}
+                      </h4>
+                      <div className="text-3xl font-black text-blue-500 mb-2 uppercase italic tabular-nums">
+                        <Counter to={item.val} suffix={item.suffix} />
+                      </div>
+                      <p className="text-[10px] text-white/10 leading-relaxed font-bold uppercase tracking-widest">
+                        {item.desc}
+                      </p>
+                    </div>
+                  ))}
                 </div>
               </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ===== FEATURES WITH TABS ===== */}
-      <section id="our-beers" className="py-24 px-6">
-        <div className="max-w-7xl mx-auto">
-          <Reveal>
-            <div className="text-center mb-16">
-              <Badge className="mb-4 bg-[#d4890a]/15 text-[#d4890a] border border-[#d4890a]/25 px-4 py-1 text-xs tracking-widest uppercase">
-                The Lineup
-              </Badge>
-              <h2 className="text-5xl md:text-6xl font-black uppercase tracking-tighter text-[#f5f0e8] mb-4">
-                Our Beer <span className="text-[#d4890a]">Styles</span>
-              </h2>
-              <p className="text-[#f5f0e8]/60 max-w-xl mx-auto text-lg">
-                From estate-hopped IPAs to spontaneously fermented wild ales — there's a GoldenRidge beer for every palate and every moment.
-              </p>
             </div>
-          </Reveal>
 
-          <Reveal delay={0.2}>
-            <Tabs defaultValue="ipa" className="w-full">
-              <TabsList className="w-full flex flex-wrap h-auto bg-[#2a2015] border border-[#d4890a]/20 rounded-2xl p-2 gap-2 mb-12">
-                {tabFeatures.map((tab) => {
-                  const Icon = tab.icon
-                  return (
-                    <TabsTrigger key={tab.value} value={tab.value}
-                      className="flex-1 min-w-[120px] flex items-center justify-center gap-2 py-3 rounded-xl text-[#f5f0e8]/50 data-[state=active]:bg-[#d4890a] data-[state=active]:text-[#1a1209] data-[state=active]:font-black transition-all duration-200 cursor-pointer hover:text-[#d4890a]">
-                      <Icon className="w-4 h-4" />
-                      <span className="text-sm font-semibold">{tab.label}</span>
-                    </TabsTrigger>
-                  )
-                })}
-              </TabsList>
-
-              {tabFeatures.map((tab) => {
-                const Icon = tab.icon
-                return (
-                  <TabsContent key={tab.value} value={tab.value}>
-                    <motion.div
-                      initial={{ opacity: 0, y: 16 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.4 }}
-                      className="grid md:grid-cols-2 gap-10 items-start">
-                      <div>
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className="w-12 h-12 rounded-2xl bg-[#d4890a]/15 flex items-center justify-center">
-                            <Icon className="w-6 h-6 text-[#d4890a]" />
-                          </div>
-                          <h3 className="text-2xl font-black text-[#f5f0e8]">{tab.title}</h3>
-                        </div>
-                        <p className="text-[#f5f0e8]/60 text-lg leading-relaxed mb-8">{tab.description}</p>
-                        <div className="space-y-3">
-                          {tab.bullets.map((bullet, bi) => (
-                            <div key={bi} className="flex items-start gap-3 p-4 bg-[#2a2015] rounded-xl border border-[#d4890a]/10 hover:border-[#d4890a]/30 hover:bg-[#2a2015]/80 transition-all duration-200 cursor-default">
-                              <Beer className="w-4 h-4 text-[#d4890a] mt-0.5 flex-shrink-0" />
-                              <span className="text-[#f5f0e8]/80 text-sm leading-relaxed">{bullet}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                      <div className="relative aspect-[4/3] rounded-3xl overflow-hidden border border-[#d4890a]/20">
-                        <Image
-                          src={`https://images.unsplash.com/photo-${tab.value === "ipa" ? "1558618666-fcd25c85cd64" : tab.value === "dark" ? "1467226912746-c3dbf2e1f584" : tab.value === "lager" ? "1532634993-15f421e8d6b0" : "1558618666-fcd25c85cd64"}?w=800&q=80`}
-                          alt={tab.title}
-                          fill
-                          className="object-cover hover:scale-105 transition-all duration-500"
-                          unoptimized
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-[#1a1209]/60 via-transparent to-transparent" />
-                        <div className="absolute bottom-6 left-6">
-                          <Badge className="bg-[#d4890a] text-[#1a1209] font-black px-3 py-1">{tab.label}</Badge>
-                        </div>
-                      </div>
-                    </motion.div>
-                  </TabsContent>
-                )
-              })}
-            </Tabs>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* ===== TESTIMONIALS CAROUSEL ===== */}
-      <section className="py-24 px-6 bg-[#2a2015]">
-        <div className="max-w-7xl mx-auto">
-          <Reveal>
-            <div className="text-center mb-16">
-              <Badge className="mb-4 bg-[#d4890a]/15 text-[#d4890a] border border-[#d4890a]/25 px-4 py-1 text-xs tracking-widest uppercase">
-                What People Say
-              </Badge>
-              <h2 className="text-5xl md:text-6xl font-black uppercase tracking-tighter text-[#f5f0e8] mb-4">
-                Trusted by <span className="text-[#d4890a]">Beer Lovers</span>
-              </h2>
-            </div>
-          </Reveal>
-          <Reveal delay={0.2}>
-            <Carousel className="w-full">
-              <CarouselContent className="-ml-4">
-                {testimonials.map((t, i) => (
-                  <CarouselItem key={i} className="pl-4 md:basis-1/2 lg:basis-1/3">
-                    <Card className="bg-[#1a1209] border-[#d4890a]/20 hover:border-[#d4890a]/50 transition-all duration-200 cursor-default h-full">
-                      <CardContent className="p-8 flex flex-col h-full">
-                        <StarRating rating={t.rating} />
-                        <p className="text-[#f5f0e8]/75 mt-4 mb-6 leading-relaxed text-sm flex-1 italic">
-                          &ldquo;{t.text}&rdquo;
-                        </p>
-                        <div className="flex items-center gap-3 mt-auto">
-                          <Avatar className="w-10 h-10 border-2 border-[#d4890a]/30">
-                            <AvatarFallback className="bg-[#d4890a]/20 text-[#d4890a] text-xs font-bold">
-                              {t.avatar}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <div className="font-bold text-[#f5f0e8] text-sm">{t.name}</div>
-                            <div className="text-[#f5f0e8]/45 text-xs">{t.role}</div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              <CarouselPrevious className="bg-[#d4890a] border-none text-[#1a1209] hover:bg-[#e8a020] hover:scale-110 transition-all duration-200 cursor-pointer -left-5" />
-              <CarouselNext className="bg-[#d4890a] border-none text-[#1a1209] hover:bg-[#e8a020] hover:scale-110 transition-all duration-200 cursor-pointer -right-5" />
-            </Carousel>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* ===== BREWERY SECTION ===== */}
-      <section id="brewery" className="py-24 px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-16 items-center">
-            <Reveal>
-              <div>
-                <Badge className="mb-4 bg-[#d4890a]/15 text-[#d4890a] border border-[#d4890a]/25 px-4 py-1 text-xs tracking-widest uppercase">
-                  Our Story
-                </Badge>
-                <h2 className="text-5xl font-black uppercase tracking-tighter text-[#f5f0e8] mb-6 leading-tight">
-                  Brewed From the <span className="text-[#d4890a]">Ground Up</span>
-                </h2>
-                <p className="text-[#f5f0e8]/65 text-lg leading-relaxed mb-8">
-                  In 2012, head brewer Callum Hester left a career in commercial brewing to pursue something truer — a brewery rooted in one place, one valley, one set of ingredients grown with intention. Today GoldenRidge farms 40 acres of Cascade and Centennial hops, mills its own grain, and sources water from the same underground aquifer that carved the valley over 10,000 years.
-                </p>
-                <div className="grid grid-cols-2 gap-4">
-                  {[
-                    { icon: Leaf, label: "Estate Hops", value: "40 acres" },
-                    { icon: Award, label: "GABF Medals", value: "8 awards" },
-                    { icon: Medal, label: "Craft Beer Rank", value: "Top 50 US" },
-                    { icon: ThumbsUp, label: "Untappd Rating", value: "4.31 avg" },
-                  ].map((item, i) => {
-                    const Icon = item.icon
-                    return (
-                      <div key={i} className="flex items-center gap-3 p-4 bg-[#2a2015] rounded-xl border border-[#d4890a]/15 hover:border-[#d4890a]/35 hover:scale-[1.02] transition-all duration-200 cursor-default">
-                        <div className="w-9 h-9 rounded-lg bg-[#d4890a]/15 flex items-center justify-center flex-shrink-0">
-                          <Icon className="w-4 h-4 text-[#d4890a]" />
-                        </div>
-                        <div>
-                          <div className="text-[#d4890a] font-black text-sm">{item.value}</div>
-                          <div className="text-[#f5f0e8]/45 text-xs">{item.label}</div>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            </Reveal>
-            <Reveal delay={0.2}>
-              <div className="relative">
-                <div className="relative aspect-[4/5] rounded-3xl overflow-hidden border border-[#d4890a]/20">
-                  <Image
-                    src="https://images.unsplash.com/photo-1467226912746-c3dbf2e1f584?w=800&q=80"
-                    alt="GoldenRidge Brewing — production facility"
-                    fill
-                    className="object-cover hover:scale-105 transition-all duration-700"
-                    unoptimized
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#1a1209]/40 to-transparent" />
-                </div>
-                <div className="absolute -bottom-6 -left-6 bg-[#d4890a] rounded-2xl p-5 shadow-2xl">
-                  <div className="text-[#1a1209] font-black text-2xl">18+</div>
-                  <div className="text-[#1a1209]/70 text-xs font-bold uppercase tracking-wider">Years Brewing</div>
-                </div>
-              </div>
-            </Reveal>
-          </div>
-        </div>
-      </section>
-
-      {/* ===== PRICING ===== */}
-      <section className="py-24 px-6 bg-[#2a2015]">
-        <div className="max-w-7xl mx-auto">
-          <Reveal>
-            <div className="text-center mb-16">
-              <Badge className="mb-4 bg-[#d4890a]/15 text-[#d4890a] border border-[#d4890a]/25 px-4 py-1 text-xs tracking-widest uppercase">
-                Membership & Experiences
-              </Badge>
-              <h2 className="text-5xl md:text-6xl font-black uppercase tracking-tighter text-[#f5f0e8] mb-4">
-                Join the <span className="text-[#d4890a]">Ridge Club</span>
-              </h2>
-              <p className="text-[#f5f0e8]/60 max-w-xl mx-auto text-lg">
-                From single tasting visits to full connoisseur memberships — find the level of access that's right for you.
-              </p>
-            </div>
-          </Reveal>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {pricingTiers.map((tier, i) => (
-              <Reveal key={i} delay={i * 0.12}>
-                <motion.div
-                  whileHover={{ y: -8, scale: tier.highlighted ? 1.02 : 1.01 }}
-                  transition={{ duration: 0.2 }}
-                  className={`relative rounded-3xl p-8 border cursor-pointer h-full flex flex-col ${
-                    tier.highlighted
-                      ? "bg-[#d4890a] border-[#d4890a] text-[#1a1209] shadow-[0_0_60px_rgba(212,137,10,0.3)]"
-                      : "bg-[#1a1209] border-[#d4890a]/20 hover:border-[#d4890a]/50 text-[#f5f0e8]"
-                  }`}>
-                  {tier.highlighted && (
-                    <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                      <Badge className="bg-[#1a1209] text-[#d4890a] border border-[#d4890a] font-black px-4 py-1">
-                        Most Popular
-                      </Badge>
+            <div className="lg:col-span-7">
+              <Reveal className="relative aspect-video rounded-3xl overflow-hidden shadow-2xl border border-white/5 bg-[#0a0c14] p-1 group">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.1)_0%,transparent_70%)] animate-pulse" />
+                <div className="relative h-full w-full border border-white/5 bg-[#05060a] p-8 flex flex-col justify-between overflow-hidden">
+                  <div className="flex items-center justify-between mb-10 pb-6 border-b border-white/5">
+                    <div className="flex items-center gap-4">
+                      <Wallet className="w-5 h-5 text-blue-500" />
+                      <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-blue-500">
+                        PORTFOLIO_DASHBOARD_LIVE
+                      </span>
                     </div>
-                  )}
-                  <div className="mb-6">
-                    <h3 className={`text-lg font-black uppercase tracking-widest mb-1 ${tier.highlighted ? "text-[#1a1209]" : "text-[#d4890a]"}`}>
-                      {tier.name}
-                    </h3>
-                    <p className={`text-sm mb-4 ${tier.highlighted ? "text-[#1a1209]/70" : "text-[#f5f0e8]/50"}`}>
-                      {tier.description}
-                    </p>
-                    <div className="flex items-baseline gap-1">
-                      <span className={`text-5xl font-black ${tier.highlighted ? "text-[#1a1209]" : "text-[#f5f0e8]"}`}>
-                        {tier.price}
-                      </span>
-                      <span className={`text-sm ${tier.highlighted ? "text-[#1a1209]/60" : "text-[#f5f0e8]/40"}`}>
-                        {tier.period}
-                      </span>
+                    <div className="flex gap-2">
+                      <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
+                      <div className="w-1.5 h-1.5 bg-blue-500/30 rounded-full" />
                     </div>
                   </div>
-                  <Separator className={`mb-6 ${tier.highlighted ? "bg-[#1a1209]/20" : "bg-[#d4890a]/15"}`} />
-                  <div className="space-y-3 mb-8 flex-1">
-                    {tier.features.map((feature, fi) => (
-                      <div key={fi} className="flex items-start gap-3">
-                        <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${tier.highlighted ? "bg-[#1a1209]/15" : "bg-[#d4890a]/15"}`}>
-                          <Beer className={`w-3 h-3 ${tier.highlighted ? "text-[#1a1209]" : "text-[#d4890a]"}`} />
+
+                  <div className="space-y-6">
+                    {TRANSACTIONS.map((tx, i) => (
+                      <div
+                        key={i}
+                        className="flex items-center justify-between p-4 bg-white/[0.02] border border-white/[0.03] rounded-xl hover:bg-white/[0.04] transition-all cursor-pointer"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div
+                            className={`w-8 h-8 rounded-lg flex items-center justify-center ${tx.type === "IN" ? "bg-emerald-500/10 text-emerald-500" : "bg-red-500/10 text-red-500"}`}
+                          >
+                            {tx.type === "IN" ? (
+                              <ArrowDownRight className="w-4 h-4" />
+                            ) : (
+                              <ArrowUpRight className="w-4 h-4" />
+                            )}
+                          </div>
+                          <div>
+                            <h4 className="text-[10px] font-black uppercase text-white">
+                              {tx.label}
+                            </h4>
+                            <span className="text-[8px] font-bold text-white/20 uppercase">
+                              {tx.date} // {tx.id}
+                            </span>
+                          </div>
                         </div>
-                        <span className={`text-sm leading-relaxed ${tier.highlighted ? "text-[#1a1209]/80" : "text-[#f5f0e8]/65"}`}>
-                          {feature}
-                        </span>
+                        <div className="text-right">
+                          <div
+                            className={`text-xs font-black ${tx.type === "IN" ? "text-emerald-500" : "text-white"}`}
+                          >
+                            {tx.amount}
+                          </div>
+                          <span className="text-[8px] font-bold text-white/10 uppercase">
+                            {tx.status}
+                          </span>
+                        </div>
                       </div>
                     ))}
                   </div>
-                  <button className={`w-full py-4 rounded-2xl font-black uppercase text-sm tracking-widest transition-all duration-200 hover:scale-[1.02] cursor-pointer ${
-                    tier.highlighted
-                      ? "bg-[#1a1209] text-[#d4890a] hover:bg-[#0e0905] hover:shadow-[0_0_20px_rgba(0,0,0,0.4)]"
-                      : "bg-[#d4890a] text-[#1a1209] hover:bg-[#e8a020] hover:shadow-[0_0_24px_rgba(212,137,10,0.3)]"
-                  }`}>
-                    {tier.cta}
-                  </button>
-                </motion.div>
+
+                  <div className="mt-12 flex justify-between items-end">
+                    <div className="space-y-1">
+                      <span className="text-[9px] font-bold text-white/20 uppercase tracking-widest">
+                        Total Asset Value
+                      </span>
+                      <div className="text-4xl font-black text-white italic tabular-nums">
+                        $2,847,293.00
+                      </div>
+                    </div>
+                    <div className="flex gap-4">
+                      <div className="w-10 h-10 rounded-lg bg-blue-600/10 border border-blue-500/20 flex items-center justify-center">
+                        <PieChart className="w-5 h-5 text-blue-500" />
+                      </div>
+                      <div className="w-10 h-10 rounded-lg bg-blue-600/10 border border-blue-500/20 flex items-center justify-center">
+                        <Layers className="w-5 h-5 text-blue-500" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Reveal>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ==========================================
+          4. SECURITY (Node Architecture)
+          ========================================== */}
+      <section
+        id="security"
+        className="py-32 bg-[#05060a] border-y border-white/5"
+      >
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12">
+          <div className="flex flex-col md:flex-row justify-between items-end mb-24 gap-12">
+            <Reveal>
+              <h2 className="text-5xl md:text-8xl font-black tracking-tighter uppercase leading-[0.9] text-white">
+                Zero <br /> <span className="text-blue-500 italic">Trust.</span>
+              </h2>
+            </Reveal>
+            <p className="max-w-sm text-sm text-white/20 leading-relaxed font-bold uppercase tracking-widest italic text-right">
+              Our infrastructure is built on the most advanced security
+              protocols ever deployed in commercial finance.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {SECURITY_NODES.map((node, i) => (
+              <Reveal key={i} delay={i * 0.1}>
+                <div className="group bg-white/[0.02] border border-white/5 hover:border-blue-500/40 transition-all rounded-2xl p-8 shadow-sm">
+                  <div className="w-12 h-12 rounded-xl bg-blue-600/10 border border-blue-600/20 flex items-center justify-center mb-8 group-hover:scale-110 transition-transform">
+                    <div className="text-blue-500">{node.icon}</div>
+                  </div>
+                  <h3 className="text-xl font-black uppercase tracking-tight mb-4 text-white italic">
+                    {node.title}
+                  </h3>
+                  <p className="text-[10px] font-bold text-white/20 uppercase tracking-widest leading-relaxed">
+                    {node.desc}
+                  </p>
+                </div>
               </Reveal>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ===== FAQ ACCORDION ===== */}
-      <section className="py-24 px-6">
-        <div className="max-w-3xl mx-auto">
-          <Reveal>
-            <div className="text-center mb-16">
-              <Badge className="mb-4 bg-[#d4890a]/15 text-[#d4890a] border border-[#d4890a]/25 px-4 py-1 text-xs tracking-widest uppercase">
-                FAQ
-              </Badge>
-              <h2 className="text-5xl font-black uppercase tracking-tighter text-[#f5f0e8] mb-4">
-                Common <span className="text-[#d4890a]">Questions</span>
-              </h2>
+      {/* ==========================================
+          5. CARDS (Customizer)
+          ========================================== */}
+      <section id="cards" className="py-32 bg-[#05060a]">
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 md:gap-32 items-center">
+            <div className="lg:col-span-7 order-2 lg:order-1">
+              <Reveal className="relative aspect-video rounded-3xl overflow-hidden shadow-2xl border border-white/5 bg-[#0a0c14] p-1 group">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.1)_0%,transparent_70%)] animate-pulse" />
+                <div className="relative h-full w-full border border-white/5 bg-[#05060a] p-8 flex items-center justify-center overflow-hidden">
+                  {/* CARD PREVIEW */}
+                  <motion.div
+                    initial={{ rotateY: 0 }}
+                    whileHover={{ rotateY: 180 }}
+                    transition={{ duration: 1.5 }}
+                    className="relative w-[400px] h-[250px] preserve-3d"
+                  >
+                    {/* FRONT */}
+                    <div className="absolute inset-0 backface-hidden bg-gradient-to-br from-stone-300 to-stone-500 rounded-2xl p-8 flex flex-col justify-between shadow-2xl border border-white/20">
+                      <div className="flex justify-between items-start">
+                        <div className="text-[10px] font-black uppercase tracking-widest text-black/40">
+                          QUANTUM_PRESTIGE
+                        </div>
+                        <Zap className="w-6 h-6 text-black/60" />
+                      </div>
+                      <div>
+                        <div className="text-xl font-mono text-black/80 tracking-widest mb-2">
+                          •••• •••• •••• 9482
+                        </div>
+                        <div className="flex justify-between items-end">
+                          <div>
+                            <div className="text-[8px] font-black uppercase tracking-widest text-black/40">
+                              CARDHOLDER
+                            </div>
+                            <div className="text-xs font-black text-black/80 uppercase">
+                              MARCUS_STERLING
+                            </div>
+                          </div>
+                          <div className="w-12 h-8 bg-black/10 rounded-md backdrop-blur-sm" />
+                        </div>
+                      </div>
+                    </div>
+                    {/* BACK (HIDDEN) */}
+                    <div className="absolute inset-0 backface-hidden rotate-y-180 bg-stone-500 rounded-2xl p-8 flex flex-col justify-between shadow-2xl border border-white/20">
+                      <div className="w-full h-12 bg-black/80 mt-4" />
+                      <div className="text-right">
+                        <div className="text-[8px] font-black text-black/40 uppercase mb-1">
+                          CVV
+                        </div>
+                        <div className="text-xs font-mono text-black/80 tracking-widest">
+                          •••
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+
+                  {/* DECORATIVE ELEMENTS */}
+                  <div className="absolute top-8 right-8 flex flex-col items-end">
+                    <span className="text-[9px] font-bold text-blue-500 uppercase tracking-widest">
+                      Material: Brushed Titanium
+                    </span>
+                    <span className="text-[9px] font-bold text-white/10 uppercase tracking-widest italic">
+                      Weight: 22g Precision Weighted
+                    </span>
+                  </div>
+                </div>
+              </Reveal>
             </div>
-          </Reveal>
-          <Reveal delay={0.15}>
-            <Accordion type="single" collapsible className="space-y-3">
-              {faqs.map((faq, i) => (
-                <AccordionItem key={i} value={`item-${i}`}
-                  className="border border-[#d4890a]/15 rounded-2xl overflow-hidden bg-[#2a2015] px-2 hover:border-[#d4890a]/35 transition-all duration-200">
-                  <AccordionTrigger className="text-left font-bold text-[#f5f0e8] hover:text-[#d4890a] px-4 py-5 transition-all duration-200 cursor-pointer hover:no-underline">
-                    {faq.q}
-                  </AccordionTrigger>
-                  <AccordionContent className="px-4 pb-5 text-[#f5f0e8]/65 leading-relaxed">
-                    {faq.a}
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          </Reveal>
+
+            <div className="lg:col-span-5 order-1 lg:order-2 text-right lg:text-left">
+              <Reveal>
+                <span className="text-[10px] uppercase tracking-[0.4em] font-bold text-blue-500 mb-6 block">
+                  Physical Asset
+                </span>
+                <h2 className="text-5xl md:text-7xl font-black tracking-tighter leading-tight mb-12 text-white uppercase italic">
+                  Bespoke <br /> <span className="text-blue-500">Metal.</span>
+                </h2>
+                <p className="text-lg text-white/20 leading-relaxed font-bold mb-16 uppercase tracking-tight italic">
+                  Your card is more than a tool. It's a statement. Crafted from
+                  solid brushed titanium, laser-engraved with your unique
+                  digital signature.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-6 justify-end lg:justify-start">
+                  <MagneticBtn className="px-12 py-5 bg-white text-black text-[10px] font-bold uppercase tracking-[0.4em] rounded-md hover:bg-blue-500 hover:text-white transition-all cursor-pointer shadow-2xl">
+                    Customize Card
+                  </MagneticBtn>
+                </div>
+              </Reveal>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* ===== CTA BANNER ===== */}
-      <section className="py-24 px-6 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#d4890a] via-[#c47a00] to-[#8b5500]" />
-        <div className="absolute inset-0 opacity-10"
-          style={{ backgroundImage: "radial-gradient(circle at 30% 50%, #fff 0%, transparent 60%), radial-gradient(circle at 70% 50%, #fff 0%, transparent 60%)" }} />
-        <div className="relative max-w-4xl mx-auto text-center">
-          <Reveal>
-            <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tighter text-[#1a1209] mb-6 leading-tight">
-              Your Next Great
-              <br />
-              <span className="italic">Pint Awaits</span>
+      {/* ==========================================
+          6. PRICING (SaaS Tiers)
+          ========================================== */}
+      <section
+        id="pricing"
+        className="py-32 bg-[#05060a] border-y border-white/5"
+      >
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12">
+          <Reveal className="text-center mb-24 max-w-2xl mx-auto">
+            <span className="text-[10px] uppercase tracking-[0.5em] font-black text-blue-500 mb-6 block">
+              Service Tiers
+            </span>
+            <h2 className="text-5xl md:text-7xl font-black tracking-tighter uppercase italic text-white">
+              Tier_Select.
             </h2>
           </Reveal>
-          <Reveal delay={0.15}>
-            <p className="text-[#1a1209]/70 text-xl mb-10 max-w-xl mx-auto leading-relaxed">
-              47 beers on rotation, 3 tap room locations, and tours every weekend. Come see how the valley tastes.
-            </p>
-          </Reveal>
-          <Reveal delay={0.25}>
-            <div className="flex flex-wrap gap-4 justify-center">
-              <button
-                onClick={() => setTourDialogOpen(true)}
-                className="px-10 py-5 bg-[#1a1209] text-[#d4890a] font-black uppercase text-sm tracking-widest rounded-full hover:bg-[#0e0905] hover:scale-105 hover:shadow-2xl transition-all duration-200 cursor-pointer">
-                Book Your Tour
-              </button>
-              <a href="#our-beers"
-                className="px-10 py-5 border-2 border-[#1a1209]/30 text-[#1a1209] font-black uppercase text-sm tracking-widest rounded-full hover:bg-[#1a1209]/10 hover:scale-105 transition-all duration-200 cursor-pointer">
-                View Beer Menu
-              </a>
-            </div>
-          </Reveal>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              {
+                title: "Standard",
+                price: "$0",
+                desc: "For individual traders and hobbyists.",
+                features: [
+                  "Global Banking",
+                  "Standard Metal Card",
+                  "2.5% FX Fee",
+                  "SIPC Coverage",
+                ],
+              },
+              {
+                title: "Quantum",
+                price: "$99",
+                desc: "For professional traders and family offices.",
+                features: [
+                  "Direct HFT Access",
+                  "Titanium Card",
+                  "0% FX Fee",
+                  "24/7 Dedicated Rep",
+                  "MPC Wallet Suite",
+                ],
+              },
+              {
+                title: "Black",
+                price: "INVITE",
+                desc: "For institutional liquidity and sovereign funds.",
+                features: [
+                  "OTC Desk Access",
+                  "24K Gold Card",
+                  "Custom Risk Engine",
+                  "Global Concierge",
+                  "White-glove Custody",
+                ],
+              },
+            ].map((tier, i) => (
+              <Reveal key={i} delay={i * 0.1}>
+                <div
+                  className={`p-12 border ${tier.title === "Quantum" ? "bg-blue-600/5 border-blue-500/40 shadow-2xl shadow-blue-500/5" : "bg-white/[0.02] border-white/5"} rounded-3xl flex flex-col h-full hover:border-blue-500/20 transition-all`}
+                >
+                  <div className="text-3xl font-black text-blue-500 mb-6 italic tabular-nums">
+                    {tier.price}
+                  </div>
+                  <h4 className="text-lg font-black uppercase tracking-widest text-white mb-6 italic">
+                    {tier.title}
+                  </h4>
+                  <p className="text-[11px] text-white/20 leading-relaxed font-bold uppercase tracking-widest italic mb-10 flex-1">
+                    {tier.desc}
+                  </p>
+                  <ul className="space-y-4 mb-12">
+                    {tier.features.map((f, j) => (
+                      <li
+                        key={j}
+                        className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest text-white/40"
+                      >
+                        <Check className="w-3.5 h-3.5 text-blue-500" /> {f}
+                      </li>
+                    ))}
+                  </ul>
+                  <button
+                    className={`w-full py-5 text-[10px] font-bold uppercase tracking-widest transition-all cursor-pointer ${tier.title === "Quantum" ? "bg-blue-600 text-white hover:bg-blue-500 shadow-xl shadow-blue-600/20" : "border border-white/10 text-white hover:bg-white hover:text-black"}`}
+                  >
+                    {tier.title === "Black" ? "REQUEST_INVITE" : "GET_STARTED"}
+                  </button>
+                </div>
+              </Reveal>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* ===== FOOTER ===== */}
-      <footer className="bg-[#0e0905] border-t border-[#d4890a]/10 py-16 px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-4 gap-12 mb-12">
-            <div className="md:col-span-1">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-9 h-9 rounded-full bg-[#d4890a] flex items-center justify-center">
-                  <Beer className="w-5 h-5 text-[#1a1209]" />
-                </div>
-                <span className="font-black text-xl tracking-tight text-[#f5f0e8]">GoldenRidge</span>
-              </div>
-              <p className="text-[#f5f0e8]/45 text-sm leading-relaxed mb-6">
-                Craft brewery rooted in the valley since 2012. Estate-grown hops, artisanal technique, zero shortcuts.
-              </p>
-              <div className="flex gap-3">
-                {[Instagram, Twitter, Facebook, Youtube].map((Icon, i) => (
-                  <a key={i} href="#" className="w-9 h-9 rounded-full bg-[#2a2015] flex items-center justify-center text-[#f5f0e8]/40 hover:bg-[#d4890a] hover:text-[#1a1209] hover:scale-110 transition-all duration-200 cursor-pointer">
-                    <Icon className="w-4 h-4" />
-                  </a>
-                ))}
-              </div>
-            </div>
+      {/* ==========================================
+          7. FAQ (The Buffer)
+          ========================================== */}
+      <section className="py-32 bg-[#05060a]">
+        <div className="max-w-3xl mx-auto px-6">
+          <Reveal className="text-center mb-24">
+            <h2 className="text-4xl md:text-5xl font-black tracking-tighter leading-none uppercase italic text-white">
+              Quantum_Buffer
+            </h2>
+          </Reveal>
 
+          <Accordion type="single" collapsible className="space-y-4">
             {[
               {
-                title: "Visit Us",
-                links: ["Riverside Tap Room", "Downtown Tap Room", "Hillside Tap Room", "Book a Tour", "Events Calendar"],
+                q: "Is QuantumPay a bank?",
+                a: "QuantumPay is a financial technology company, not a bank. Banking services provided by our global network of regulated banking partners.",
               },
               {
-                title: "Our Beers",
-                links: ["IPA & Hoppy", "Dark & Roasted", "Lagers & Wheat", "Sours & Wild Ales", "Seasonal & Limited"],
+                q: "How secure is my data?",
+                a: "We use AES-256-GCM encryption for all data at rest and TLS 1.3 for data in transit. We are SOC 2 Type II compliant and PCI-DSS Level 1 certified.",
               },
               {
-                title: "Company",
-                links: ["Our Story", "Sustainability", "Careers", "Wholesale", "Press & Media"],
+                q: "What assets can I trade?",
+                a: "You can trade over 10,000 stocks, ETFs, options, and a curated selection of 50+ institutional-grade cryptocurrencies.",
               },
-            ].map((col, i) => (
-              <div key={i}>
-                <h4 className="font-black text-[#f5f0e8] text-sm uppercase tracking-widest mb-4">{col.title}</h4>
-                <ul className="space-y-2.5">
-                  {col.links.map((link) => (
-                    <li key={link}>
-                      <a href="#" className="text-[#f5f0e8]/45 text-sm hover:text-[#d4890a] transition-all duration-200 cursor-pointer">
-                        {link}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              {
+                q: "Are there any hidden fees?",
+                a: "No. Our pricing is transparent. Standard accounts pay zero commission on US stocks. Quantum and Black tiers pay a fixed monthly fee with zero hidden spreads.",
+              },
+            ].map((faq, i) => (
+              <AccordionItem
+                key={i}
+                value={`item-${i}`}
+                className="border-b border-white/5"
+              >
+                <AccordionTrigger className="text-left text-sm uppercase font-bold tracking-widest py-8 hover:text-blue-500 hover:no-underline">
+                  {faq.q}
+                </AccordionTrigger>
+                <AccordionContent className="text-sm text-white/20 leading-relaxed font-bold uppercase tracking-widest pb-8 italic">
+                  {faq.a}
+                </AccordionContent>
+              </AccordionItem>
             ))}
+          </Accordion>
+        </div>
+      </section>
+
+      {/* ==========================================
+          8. MEGA FOOTER (Premium Tech)
+          ========================================== */}
+      <footer className="bg-[#0a0c14] pt-32 pb-12 px-6 md:px-12 border-t border-white/5 relative overflow-hidden">
+        <div className="max-w-[1600px] mx-auto relative z-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-16 mb-32">
+            <div className="lg:col-span-5">
+              <Reveal>
+                <div className="flex flex-col mb-10">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.6em] text-white/20 mb-1">
+                    Institutional.
+                  </span>
+                  <span className="text-2xl font-black tracking-tighter uppercase text-white">
+                    QUANTUM<span className="text-blue-500">PAY.</span>
+                  </span>
+                </div>
+                <p className="text-white/20 max-w-sm mb-12 uppercase tracking-widest text-[10px] font-bold leading-relaxed italic">
+                  Unified financial engineering for the digital age. Est. 2026.
+                  Member of the Global FinTech Council.
+                </p>
+                <form
+                  className="relative max-w-md"
+                  onSubmit={(e) => e.preventDefault()}
+                >
+                  <input
+                    type="email"
+                    placeholder="ENROLL_IN_THE_TERMINAL"
+                    className="w-full bg-white/[0.02] border border-white/5 rounded-none px-6 py-4 text-xs font-bold outline-none focus:border-blue-600 text-white transition-all uppercase tracking-widest"
+                  />
+                  <button
+                    type="submit"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-blue-500 hover:text-white transition-colors uppercase tracking-[0.3em]"
+                  >
+                    SECURE_ENROLL
+                  </button>
+                </form>
+              </Reveal>
+            </div>
+
+            <div className="lg:col-span-2 lg:col-start-7">
+              <h4 className="text-[10px] font-bold uppercase tracking-widest text-blue-500 mb-10">
+                Terminal
+              </h4>
+              <ul className="space-y-4 text-[10px] font-bold uppercase tracking-widest text-white/20">
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-blue-500 transition-colors"
+                  >
+                    Market_Pulse
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-blue-500 transition-colors"
+                  >
+                    Wealth_Portal
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-blue-500 transition-colors"
+                  >
+                    API_Reference
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-blue-500 transition-colors"
+                  >
+                    Security_Vault
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            <div className="lg:col-span-2">
+              <h4 className="text-[10px] font-bold uppercase tracking-widest text-blue-500 mb-10">
+                Resources
+              </h4>
+              <ul className="space-y-4 text-[10px] font-bold uppercase tracking-widest text-white/20">
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-blue-500 transition-colors"
+                  >
+                    Whitepapers
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-blue-500 transition-colors"
+                  >
+                    Help_Center
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-blue-500 transition-colors"
+                  >
+                    Fee_Schedule
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-blue-500 transition-colors"
+                  >
+                    Legal_Audit
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            <div className="lg:col-span-2">
+              <h4 className="text-[10px] font-bold uppercase tracking-widest text-blue-500 mb-10">
+                Network
+              </h4>
+              <ul className="space-y-4 text-[10px] font-bold uppercase tracking-widest text-white/20">
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-blue-500 transition-colors flex items-center gap-3"
+                  >
+                    <Instagram className="w-3 h-3" /> Instagram
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-blue-500 transition-colors flex items-center gap-3"
+                  >
+                    <Twitter className="w-3 h-3" /> X_Mission
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-blue-500 transition-colors flex items-center gap-3"
+                  >
+                    <Mail className="w-3 h-3" /> Contact_Control
+                  </Link>
+                </li>
+              </ul>
+            </div>
           </div>
 
-          <Separator className="bg-[#d4890a]/10 mb-8" />
-
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-6 text-[#f5f0e8]/30 text-xs">
-              <span>© 2026 GoldenRidge Brewing Co. All rights reserved.</span>
+          <div className="flex flex-col md:flex-row justify-between items-center gap-8 pt-10 border-t border-white/5 text-[9px] font-bold uppercase tracking-widest text-white/10">
+            <div className="flex items-center gap-10">
+              <span>
+                &copy; {new Date().getFullYear()} QUANTUM PAY Financial Inc.
+              </span>
+              <Link href="#" className="hover:text-white transition-colors">
+                Privacy_Protocol
+              </Link>
+              <Link href="#" className="hover:text-white transition-colors">
+                Sovereign_Terms
+              </Link>
             </div>
-            <div className="flex gap-6">
-              {["Privacy Policy", "Terms of Use", "Accessibility"].map((link) => (
-                <a key={link} href="#" className="text-[#f5f0e8]/30 text-xs hover:text-[#d4890a] transition-all duration-200 cursor-pointer">
-                  {link}
-                </a>
-              ))}
+            <div className="flex gap-10">
+              <span>London // New York // Singapore</span>
+              <span>Quantum OS v4.2</span>
             </div>
           </div>
         </div>
       </footer>
 
-      {/* ===== TOUR DIALOG ===== */}
-      <Dialog open={tourDialogOpen} onOpenChange={setTourDialogOpen}>
-        <DialogContent className="bg-[#1a1209] border border-[#d4890a]/20 text-[#f5f0e8] max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-[#d4890a] font-black text-2xl">Book a Brewery Tour</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 mt-4">
-            <p className="text-[#f5f0e8]/65 text-sm leading-relaxed">
-              Tours run every Saturday at 1 PM & 3 PM, and Sundays at 2 PM. Each tour includes a full production walk-through and a 4-sample tasting flight.
-            </p>
-            <div className="grid grid-cols-2 gap-3">
-              {["Sat · 1 PM", "Sat · 3 PM", "Sun · 2 PM", "Private Group"].map((slot) => (
-                <button key={slot}
-                  className="p-3 border border-[#d4890a]/25 rounded-xl text-sm font-semibold hover:bg-[#d4890a] hover:text-[#1a1209] hover:border-[#d4890a] transition-all duration-200 cursor-pointer">
-                  {slot}
-                </button>
-              ))}
-            </div>
-            <button className="w-full py-4 bg-[#d4890a] text-[#1a1209] font-black uppercase text-sm tracking-widest rounded-2xl hover:bg-[#e8a020] transition-all duration-200 cursor-pointer">
-              Confirm Reservation
-            </button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <style>{`
+        .preserve-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+        ::-webkit-scrollbar{width:4px;background:#05060a}
+        ::-webkit-scrollbar-thumb{background:rgba(59,130,246,0.2)}
+      `}</style>
     </div>
-  )
+  );
 }
