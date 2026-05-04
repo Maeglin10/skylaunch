@@ -1,339 +1,348 @@
-'use client';
+"use client";
 
-import { motion, AnimatePresence, useScroll, useTransform, useMotionValue, useSpring, useInView } from 'framer-motion';
-import { useState, useRef, useEffect } from 'react';
-import Image from 'next/image';
-import { Menu, X, Sun, Zap, ChevronDown, Leaf, TrendingUp } from 'lucide-react';
-import Link from 'next/link';
+import {
+  motion,
+  useScroll,
+  useTransform,
+  useInView,
+  AnimatePresence,
+  useMotionValue,
+  useSpring,
+} from "framer-motion";
+import { useState, useRef, useEffect, useCallback } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Separator } from "@/components/ui/separator";
+import {
+  Sparkles,
+  Heart,
+  ShieldCheck,
+  Zap,
+  Star,
+  Instagram,
+  Facebook,
+  Mail,
+  Phone,
+  ChevronRight,
+  ArrowRight,
+  X,
+  Menu,
+  Stethoscope,
+  Microscope,
+  Droplets,
+  Users,
+  Award,
+  Clock,
+  MapPin,
+  Search,
+  Calendar,
+  Activity,
+  ZapIcon,
+  Scan,
+} from "lucide-react";
 
-/* === UTILITY COMPONENTS === */
+import "../premium.css";
 
-const Reveal = ({ children, delay = 0 }) => {
+/* ==========================================================================
+   DATA STRUCTURES
+   ========================================================================= */
+
+const TREATMENTS = [
+  {
+    id: 1,
+    name: "Cellular Rejuvenation",
+    category: "Longevity",
+    price: "From $1,200",
+    desc: "Exosome therapy combined with hyperbaric oxygen to trigger deep tissue repair at a DNA level.",
+    img: "https://images.unsplash.com/photo-1579152276506-5d5ef7ac9875?w=800&q=80",
+  },
+  {
+    id: 2,
+    name: "Architectural Sculpting",
+    category: "Aesthetics",
+    price: "From $850",
+    desc: "A multi-modal approach using high-intensity ultrasound and targeted dermal fillers.",
+    img: "https://images.unsplash.com/photo-1512290923902-8a9f81dc236c?w=800&q=80",
+  },
+  {
+    id: 3,
+    name: "Lumière Glow Protocol",
+    category: "Dermatology",
+    price: "From $450",
+    desc: "Our signature laser resurfacing combined with bespoke nutrient infusion for glass-like skin.",
+    img: "https://images.unsplash.com/photo-1616391182219-e080b4d1043a?w=800&q=80",
+  },
+];
+
+const SPECIALTIES = [
+  {
+    title: "Precision Diagnostics",
+    desc: "AI-driven skin analysis and epigenetic profiling to build your biological blueprint.",
+    icon: Scan,
+  },
+  {
+    title: "Longevity Medicine",
+    desc: "Biological age reversal through NAD+ infusion and customized peptide protocols.",
+    icon: Activity,
+  },
+  {
+    title: "Aesthetic Synergy",
+    desc: "Combining clinical excellence with the art of subtle, natural enhancement.",
+    icon: Sparkles,
+  },
+];
+
+const STATS = [
+  { label: "Successful Procedures", value: "15k+" },
+  { label: "Clinical Specialists", value: "12" },
+  { label: "Scientific Patents", value: "4" },
+  { label: "Patient Satisfaction", value: "99%" },
+];
+
+/* ==========================================================================
+   UTILITY COMPONENTS
+   ========================================================================= */
+
+function Reveal({
+  children,
+  delay = 0,
+}: {
+  children: React.ReactNode;
+  delay?: number;
+}) {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: '-60px' });
+  const inView = useInView(ref, { once: true, margin: "-50px" });
   return (
-    <motion.div ref={ref} initial={{ opacity: 0, y: 30 }} animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }} transition={{ duration: 0.6, delay }}>
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 30 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 1, delay, ease: [0.22, 1, 0.36, 1] }}
+    >
       {children}
     </motion.div>
   );
-};
+}
 
-const Counter = ({ target, label, suffix = '' }) => {
-  const [count, setCount] = useState(0);
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: '-60px' });
-
-  useEffect(() => {
-    if (!isInView) return;
-    let start = 0;
-    const timer = setInterval(() => {
-      start += target / 30;
-      if (start >= target) {
-        setCount(target);
-        clearInterval(timer);
-      } else {
-        setCount(Math.floor(start));
-      }
-    }, 30);
-    return () => clearInterval(timer);
-  }, [isInView, target]);
-
-  return (
-    <div ref={ref} className="text-center">
-      <div className="text-5xl font-black" style={{ color: '#f59e0b' }}>
-        {count}{suffix}
-      </div>
-      <p className="text-sm uppercase tracking-widest mt-2 text-[#0ea5e9]" style={{ letterSpacing: '2px' }}>
-        {label}
-      </p>
-    </div>
-  );
-};
-
-const MagneticBtn = ({ children, onClick }) => {
-  const ref = useRef(null);
+function MagneticBtn({
+  children,
+  className = "",
+  onClick,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  onClick?: () => void;
+}) {
+  const ref = useRef<HTMLButtonElement>(null);
   const x = useMotionValue(0);
   const y = useMotionValue(0);
-  const xSpring = useSpring(x, { stiffness: 200, damping: 20 });
-  const ySpring = useSpring(y, { stiffness: 200, damping: 20 });
+  const sx = useSpring(x, { stiffness: 150, damping: 20 });
+  const sy = useSpring(y, { stiffness: 150, damping: 20 });
 
-  const handleMouse = (e) => {
-    if (!ref.current) return;
-    const rect = ref.current.getBoundingClientRect();
-    x.set(e.clientX - (rect.left + rect.width / 2));
-    y.set(e.clientY - (rect.top + rect.height / 2));
-  };
-
-  const handleMouseLeave = () => {
-    x.set(0);
-    y.set(0);
-  };
+  const handleMouse = useCallback(
+    (e: React.MouseEvent) => {
+      const rect = ref.current?.getBoundingClientRect();
+      if (!rect) return;
+      x.set((e.clientX - rect.left - rect.width / 2) * 0.35);
+      y.set((e.clientY - rect.top - rect.height / 2) * 0.35);
+    },
+    [x, y],
+  );
 
   return (
     <motion.button
       ref={ref}
+      style={{ x: sx, y: sy }}
       onMouseMove={handleMouse}
-      onMouseLeave={handleMouseLeave}
-      style={{ x: xSpring, y: ySpring }}
+      onMouseLeave={() => {
+        x.set(0);
+        y.set(0);
+      }}
       onClick={onClick}
-      className="px-8 py-3 rounded-lg font-black uppercase text-sm transition-all bg-[#f59e0b] text-[#060a0f] hover:bg-[#fbbf24] tracking-widest"
+      className={className}
     >
       {children}
     </motion.button>
   );
-};
+}
 
-const Accordion = ({ title, content, isOpen, onClick }) => (
-  <div style={{ borderBottom: '1px solid #f59e0b40' }}>
-    <button onClick={onClick} className="w-full py-4 px-6 flex justify-between items-center hover:bg-white/5">
-      <span className="font-bold text-white uppercase text-sm tracking-wide">{title}</span>
-      <ChevronDown style={{ color: '#f59e0b', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s' }} />
-    </button>
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden">
-          <p className="px-6 pb-4 text-white/70">{content}</p>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  </div>
-);
+/* ==========================================================================
+   MAIN PAGE COMPONENT
+   ========================================================================= */
 
-const Marquee = ({ items }) => (
-  <div style={{ overflow: 'hidden', display: 'flex', width: '100%' }}>
-    <motion.div animate={{ x: [0, -1400] }} transition={{ duration: 30, repeat: Infinity, ease: 'linear' }} className="flex gap-12 whitespace-nowrap">
-      {[...items, ...items].map((item, i) => (
-        <span key={i} className="text-lg font-black uppercase tracking-wider text-[#f59e0b]">
-          {item} •
-        </span>
-      ))}
-    </motion.div>
-  </div>
-);
+export default function LumiereClinicPage() {
+  const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [activeTreatment, setActiveTreatment] = useState<number | null>(null);
 
-/* === MAIN COMPONENT === */
-
-export default function SolarisEnergy() {
-  const containerRef = useRef(null);
-  const { scrollYProgress } = useScroll({ target: containerRef });
-  const parallaxY = useTransform(scrollYProgress, [0, 1], ['0%', '40%']);
-  const rotateZ = useTransform(scrollYProgress, [0, 1], [0, 360]);
-
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('Residential');
-  const [openAccordion, setOpenAccordion] = useState(null);
-  const [sliderValue, setSliderValue] = useState(250);
-  const [showQuoteDialog, setShowQuoteDialog] = useState(false);
-
-  const solutions = {
-    Residential: { desc: 'Perfect for homes. Average 25-year savings: $25,000+', savings: '$25K+', co2: '500K lbs' },
-    Commercial: { desc: 'Scale for businesses. Immediate ROI and tax credits.', savings: '$150K+', co2: '3M lbs' },
-    Industrial: { desc: 'Heavy-duty systems for manufacturers and warehouses.', savings: '$500K+', co2: '10M lbs' },
-    'Utility-Scale': { desc: 'Mega farms powering entire communities with clean energy.', savings: '2M+', co2: '50M lbs' },
-  };
-
-  const timeline = [
-    { step: 1, title: 'Site Assessment', desc: 'Solar analysis and energy audit' },
-    { step: 2, title: 'Design', desc: 'Custom system layout' },
-    { step: 3, title: 'Permitting', desc: 'All government approvals' },
-    { step: 4, title: 'Installation', desc: 'Professional installation' },
-    { step: 5, title: 'Activation', desc: 'System goes live' },
-  ];
-
-  const incentives = [
-    { title: 'Federal Tax Credit', content: '30% ITC federal tax credit on all eligible equipment and installation costs.' },
-    { title: 'State Rebates', content: 'Additional state-level rebates vary by location. Up to $10K in some states.' },
-    { title: 'Net Metering', content: 'Sell excess power back to the grid. Many utilities offer full retail rates.' },
-    { title: 'Financing Options', content: 'Zero-down loans, PPAs, and lease options make solar accessible to everyone.' },
-  ];
-
-  const caseStudies = [
-    { name: 'Family Home, CA', savings: '$28,000', co2: '480,000 lbs', kw: '8.5 kW' },
-    { name: 'Tech Campus, TX', savings: '$450,000', co2: '6.2M lbs', kw: '150 kW' },
-    { name: 'Manufacturing, OH', savings: '$1.2M', co2: '15M lbs', kw: '400 kW' },
-  ];
-
-  const testimonials = [
-    { name: 'John Smith', quote: 'Solaris made going solar so easy. My electric bill dropped 90%.' },
-    { name: 'Sarah Chen', quote: 'Best investment we ever made for our business. Paying for itself in 5 years.' },
-    { name: 'Mike Torres', quote: 'Professional, efficient, and they explained everything clearly.' },
-    { name: 'Emma Davis', quote: 'Helping the planet while saving money. Win-win!' },
-  ];
-
-  const faqs = [
-    { title: 'How much can I save with solar?', content: 'Most residential customers save $10K-40K over 25 years. Commercial systems save 30-50% on energy costs.' },
-    { title: 'What is the 30% federal tax credit?', content: 'The Investment Tax Credit (ITC) allows you to deduct 30% of installation costs from your federal taxes.' },
-    { title: 'How does net metering work?', content: 'Excess power flows back to the grid, spinning your meter backward and earning bill credits.' },
-    { title: 'Do I need a battery system?', content: 'Batteries are optional. Most homeowners rely on grid connection for reliability and cost savings.' },
-  ];
-
-  const annualSavings = (sliderValue / 100) * 1200; // Approximate savings calculation
+  useEffect(() => {
+    const h = () => setScrolled(window.scrollY > 50);
+    window.addEventListener("scroll", h);
+    return () => window.removeEventListener("scroll", h);
+  }, []);
 
   return (
-    <div ref={containerRef} style={{ backgroundColor: '#060a0f', color: '#ffffff', minHeight: '100vh' }}>
-      {/* HEADER */}
-      <header style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, backgroundColor: '#060a0fdd', backdropFilter: 'blur(10px)', borderBottom: '1px solid #f59e0b30' }} className="py-4 px-6 md:px-12 flex justify-between items-center">
-        <h1 style={{ color: '#f59e0b', fontSize: '1.5rem', fontWeight: 'black', letterSpacing: '2px' }} className="uppercase">
-          SOLARIS
-        </h1>
-        <nav className="hidden md:flex gap-8">
-          {['Solutions', 'Savings', 'Incentives', 'FAQ'].map((item) => (
-            <Link key={item} href="#" className="hover:text-[#f59e0b] transition-colors uppercase font-bold text-xs tracking-wide">
-              {item}
-            </Link>
-          ))}
-        </nav>
-        <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden">
-          {mobileOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
-      </header>
+    <div className="premium-theme min-h-screen bg-[#fdfdfd] text-[#2c3e50] font-sans selection:bg-[#9db2bf] selection:text-white overflow-x-hidden">
+      {/* ── NAVIGATION ── */}
+      <nav
+        className={`fixed top-0 left-0 w-full z-50 transition-all duration-700 ${scrolled ? "bg-white/90 backdrop-blur-xl py-4 border-b border-[#9db2bf]/10" : "bg-transparent py-8"}`}
+      >
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12 flex items-center justify-between">
+          <Link href="/" className="group flex items-center gap-3">
+            <div className="w-10 h-10 border-2 border-[#9db2bf] rounded-full flex items-center justify-center text-[#9db2bf] group-hover:bg-[#9db2bf] group-hover:text-white transition-all duration-500">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xl font-black tracking-tighter uppercase leading-none">
+                Lumière
+              </span>
+              <span className="text-[8px] font-bold uppercase tracking-[0.4em] text-[#9db2bf] -mt-1">
+                Clinical Excellence
+              </span>
+            </div>
+          </Link>
 
+          <div className="hidden lg:flex items-center gap-12 text-[10px] font-bold uppercase tracking-[0.3em] text-[#2c3e50]/40">
+            {["Treatments", "Longevity", "Science", "Atelier", "Consult"].map(
+              (link) => (
+                <Link
+                  key={link}
+                  href="#"
+                  className="hover:text-[#9db2bf] transition-colors cursor-pointer"
+                >
+                  {link}
+                </Link>
+              ),
+            )}
+          </div>
+
+          <div className="flex items-center gap-8">
+            <button className="hidden md:flex items-center gap-3 group">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[#2c3e50]/60 group-hover:text-[#9db2bf] transition-colors">
+                Patient_Portal
+              </span>
+              <div className="w-8 h-8 rounded-full border border-[#9db2bf]/20 flex items-center justify-center text-[#9db2bf] group-hover:bg-[#9db2bf] group-hover:text-white transition-all">
+                <ShieldCheck className="w-4 h-4" />
+              </div>
+            </button>
+            <button
+              onClick={() => setMenuOpen(true)}
+              className="lg:hidden text-[#9db2bf]"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      {/* MOBILE MENU */}
       <AnimatePresence>
-        {mobileOpen && (
-          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} style={{ backgroundColor: '#060a0f', zIndex: 40, marginTop: '60px' }} className="md:hidden py-4 px-6 border-b border-[#f59e0b30]">
-            {['Solutions', 'Savings', 'Incentives', 'FAQ'].map((item) => (
-              <p key={item} className="py-2 text-white uppercase font-bold text-xs tracking-wide">
-                {item}
-              </p>
-            ))}
+        {menuOpen && (
+          <motion.div
+            initial={{ opacity: 0, x: "100%" }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: "100%" }}
+            className="fixed inset-0 z-[100] bg-[#fdfdfd] p-12 flex flex-col justify-center gap-10"
+          >
+            <button
+              onClick={() => setMenuOpen(false)}
+              className="absolute top-10 right-8 text-[#9db2bf]"
+            >
+              <X className="w-8 h-8" />
+            </button>
+            <div className="flex flex-col gap-6 text-5xl font-black italic uppercase text-[#2c3e50]/10">
+              {["Treatments", "Longevity", "Science", "Consult", "Contact"].map(
+                (l) => (
+                  <Link
+                    key={l}
+                    href="#"
+                    onClick={() => setMenuOpen(false)}
+                    className="hover:text-[#9db2bf] transition-colors"
+                  >
+                    {l}
+                  </Link>
+                ),
+              )}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* HERO WITH ROTATING SUN */}
-      <section style={{ position: 'relative', height: '100vh', overflow: 'hidden', marginTop: '60px', background: 'linear-gradient(135deg, #060a0f, #0a0f1a)' }}>
-        <motion.div style={{ y: parallaxY }}>
-          <Image src="https://images.unsplash.com/photo-1109543?w=800&q=80" alt="Solar Farm" fill unoptimized style={{ objectFit: 'cover', opacity: 0.15 }} />
-        </motion.div>
-        {/* Rotating Sun */}
-        <motion.div style={{ position: 'absolute', top: '5%', right: '10%', zIndex: 5, rotateZ }} className="w-32 h-32 md:w-48 md:h-48">
-          <Sun size={200} color="#f59e0b" strokeWidth={0.5} />
-        </motion.div>
-        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', zIndex: 10 }}>
-          <Reveal delay={0.1}>
-            <h2 style={{ fontSize: 'clamp(2.5rem, 10vw, 6rem)', fontWeight: 'black', marginBottom: '1rem', color: '#ffffff', letterSpacing: '-2px' }}>
-              HARNESS THE SUN
-            </h2>
-          </Reveal>
-          <Reveal delay={0.2}>
-            <p style={{ fontSize: '1.25rem', marginBottom: '2rem', color: '#0ea5e9', fontWeight: 'bold' }}>Clean Energy. Massive Savings. 25-Year Guarantee.</p>
-          </Reveal>
-          <Reveal delay={0.3}>
-            <motion.div className="flex gap-4">
-              <MagneticBtn onClick={() => setShowQuoteDialog(true)}>Get Quote</MagneticBtn>
-              <motion.button whileHover={{ scale: 1.05 }} style={{ padding: '0.75rem 2rem', border: '2px solid #f59e0b', color: '#f59e0b', backgroundColor: 'transparent', borderRadius: '0.5rem', fontWeight: 'black', letterSpacing: '1px' }}>
-                Learn More
-              </motion.button>
-            </motion.div>
-          </Reveal>
+      {/* ── HERO ── */}
+      <section className="relative h-[100svh] flex items-center overflow-hidden">
+        <div className="absolute inset-0">
+          <Image
+            src="https://images.unsplash.com/photo-1579152276506-5d5ef7ac9875?w=1600&q=80"
+            alt="Clinical Precision"
+            fill
+            className="object-cover opacity-10 grayscale"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#fdfdfd] via-[#fdfdfd]/40 to-transparent" />
         </div>
-      </section>
 
-      {/* SOLUTIONS - TABS */}
-      <section style={{ padding: '6rem 1.5rem', maxWidth: '1200px', margin: '0 auto' }}>
-        <Reveal>
-          <h3 style={{ fontSize: '2.5rem', fontWeight: 'black', marginBottom: '3rem', textAlign: 'center', color: '#f59e0b', letterSpacing: '1px' }}>
-            TAILORED SOLUTIONS
-          </h3>
-        </Reveal>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '3rem', flexWrap: 'wrap' }}>
-          {Object.keys(solutions).map((sol) => (
-            <motion.button
-              key={sol}
-              whileHover={{ scale: 1.05 }}
-              onClick={() => setActiveTab(sol)}
-              style={{
-                padding: '0.75rem 1.5rem',
-                backgroundColor: activeTab === sol ? '#f59e0b' : 'transparent',
-                color: activeTab === sol ? '#060a0f' : '#f59e0b',
-                border: `2px solid ${activeTab === sol ? '#f59e0b' : '#f59e0b40'}`,
-                borderRadius: '0.5rem',
-                fontWeight: 'black',
-                cursor: 'pointer',
-              }}
-            >
-              {sol}
-            </motion.button>
-          ))}
-        </div>
-        <Reveal>
-          <div style={{ backgroundColor: '#0f1419', padding: '3rem', borderRadius: '1rem', border: '1px solid #f59e0b30', textAlign: 'center' }}>
-            <p style={{ fontSize: '1.25rem', marginBottom: '2rem', color: '#ffffff' }}>{solutions[activeTab].desc}</p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '2rem' }}>
-              <div>
-                <p style={{ fontSize: '2.5rem', fontWeight: 'black', color: '#f59e0b' }}>{solutions[activeTab].savings}</p>
-                <p style={{ color: '#0ea5e9', fontWeight: 'bold' }}>25-Year Savings</p>
-              </div>
-              <div>
-                <p style={{ fontSize: '2.5rem', fontWeight: 'black', color: '#0ea5e9' }}>{solutions[activeTab].co2}</p>
-                <p style={{ color: '#f59e0b', fontWeight: 'bold' }}>CO2 Eliminated</p>
-              </div>
-            </div>
-          </div>
-        </Reveal>
-      </section>
-
-      {/* SAVINGS CALCULATOR - SLIDER */}
-      <section style={{ padding: '6rem 1.5rem', backgroundColor: '#0f1419', maxWidth: '900px', margin: '0 auto' }}>
-        <Reveal>
-          <h3 style={{ fontSize: '2.5rem', fontWeight: 'black', marginBottom: '3rem', textAlign: 'center', color: '#f59e0b' }}>
-            CALCULATE YOUR SAVINGS
-          </h3>
-        </Reveal>
-        <div style={{ backgroundColor: '#060a0f', padding: '3rem', borderRadius: '1rem', border: '1px solid #f59e0b30' }}>
-          <Reveal delay={0.1}>
-            <div style={{ marginBottom: '2rem' }}>
-              <label style={{ display: 'block', marginBottom: '1rem', fontWeight: 'black', color: 'white' }}>
-                Home Size: {sliderValue} m²
-              </label>
-              <input
-                type="range"
-                min="50"
-                max="500"
-                value={sliderValue}
-                onChange={(e) => setSliderValue(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '10px',
-                  background: `linear-gradient(to right, #f59e0b 0%, #f59e0b ${(sliderValue / 500) * 100}%, #f59e0b30 ${(sliderValue / 500) * 100}%, #f59e0b30 100%)`,
-                  outline: 'none',
-                  cursor: 'pointer',
-                }}
-              />
+        <div className="relative z-10 max-w-[1400px] mx-auto px-6 md:px-12 w-full">
+          <Reveal>
+            <Badge className="bg-[#9db2bf]/10 text-[#9db2bf] border border-[#9db2bf]/20 text-[10px] font-bold uppercase tracking-[0.5em] mb-10 px-4 py-1.5 rounded-sm">
+              Next-Gen Longevity // Aesthetic Mastery
+            </Badge>
+            <h1 className="text-7xl md:text-[9rem] font-black leading-[0.85] tracking-tighter mb-12 uppercase text-[#2c3e50]">
+              The Science of <br />{" "}
+              <span className="text-[#9db2bf] font-thin tracking-widest italic lowercase">
+                Eternal.
+              </span>
+            </h1>
+            <p className="max-w-xl text-lg text-[#2c3e50]/50 leading-relaxed font-light mb-12">
+              Bridging the gap between clinical dermatology and biological
+              longevity. A medical sanctuary dedicated to your absolute
+              preservation.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-6">
+              <MagneticBtn className="px-12 py-5 bg-[#2c3e50] text-white text-[10px] font-bold uppercase tracking-[0.3em] rounded-sm hover:bg-[#9db2bf] transition-all cursor-pointer">
+                Request Private Consult
+              </MagneticBtn>
+              <Link
+                href="#treatments"
+                className="px-12 py-5 border border-[#2c3e50]/10 text-[#2c3e50] text-[10px] font-bold uppercase tracking-[0.3em] rounded-sm hover:bg-white transition-all flex items-center justify-center gap-3"
+              >
+                Explore Protocols <ArrowRight className="w-4 h-4" />
+              </Link>
             </div>
           </Reveal>
-          <Reveal delay={0.2}>
-            <motion.div initial={{ scale: 0.8, opacity: 0 }} whileInView={{ scale: 1, opacity: 1 }} transition={{ duration: 0.3 }}>
-              <p style={{ fontSize: '1rem', color: '#ffffff80', marginBottom: '1rem' }}>Annual Savings</p>
-              <div style={{ fontSize: '3rem', fontWeight: 'black', color: '#f59e0b', marginBottom: '1rem' }}>
-                ${annualSavings.toLocaleString()}
-              </div>
-              <p style={{ fontSize: '0.9rem', color: '#ffffff80' }}>Over 25 years: ${(annualSavings * 25).toLocaleString()}</p>
-            </motion.div>
-          </Reveal>
+        </div>
+
+        <div className="absolute bottom-12 right-12 hidden lg:flex flex-col items-end gap-2 text-[#2c3e50]/20">
+          <span className="text-[10px] font-bold uppercase tracking-widest">
+            Swiss Research Partnership
+          </span>
+          <span className="text-[10px] font-bold uppercase tracking-widest">
+            FDA Approved Protocols
+          </span>
         </div>
       </section>
 
-      {/* INSTALLATION TIMELINE - PROGRESS */}
-      <section style={{ padding: '6rem 1.5rem', maxWidth: '1000px', margin: '0 auto' }}>
-        <Reveal>
-          <h3 style={{ fontSize: '2.5rem', fontWeight: 'black', marginBottom: '3rem', textAlign: 'center', color: '#f59e0b' }}>
-            INSTALLATION PROCESS
-          </h3>
-        </Reveal>
-        <div style={{ position: 'relative' }}>
-          {/* Progress Bar */}
-          <motion.div initial={{ width: 0 }} whileInView={{ width: '100%' }} transition={{ duration: 1 }} style={{ position: 'absolute', top: '24px', left: '0', height: '4px', backgroundColor: '#f59e0b', borderRadius: '2px', zIndex: 0 }} />
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '2rem', position: 'relative', zIndex: 1 }}>
-            {timeline.map((item, idx) => (
-              <Reveal key={idx} delay={idx * 0.1}>
-                <div style={{ backgroundColor: '#0f1419', padding: '2rem', borderRadius: '1rem', textAlign: 'center', border: '1px solid #f59e0b30' }}>
-                  <div style={{ width: '50px', height: '50px', backgroundColor: '#f59e0b', borderRadius: '50%', margin: '0 auto 1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#060a0f', fontWeight: 'black', fontSize: '1.5rem', border: '4px solid #0f1419' }}>
-                    {item.step}
+      {/* ── STATS SECTION ── */}
+      <section className="py-20 border-y border-[#9db2bf]/10 bg-white">
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-12">
+            {STATS.map((stat, i) => (
+              <Reveal key={i} delay={i * 0.1}>
+                <div className="text-center md:text-left">
+                  <div className="text-[9px] font-bold uppercase tracking-[0.3em] text-[#9db2bf] mb-2">
+                    {stat.label}
                   </div>
-                  <h4 style={{ fontWeight: 'black', marginBottom: '0.5rem', color: 'white' }}>{item.title}</h4>
-                  <p style={{ color: '#ffffff60', fontSize: '0.9rem' }}>{item.desc}</p>
+                  <div className="text-4xl font-black text-[#2c3e50]">
+                    {stat.value}
+                  </div>
                 </div>
               </Reveal>
             ))}
@@ -341,139 +350,387 @@ export default function SolarisEnergy() {
         </div>
       </section>
 
-      {/* STATS COUNTER */}
-      <section style={{ padding: '6rem 1.5rem', backgroundColor: '#0f1419' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '3rem' }}>
-          <Counter target={10} label="GW Installed" suffix="+" />
-          <Counter target={500} label="Thousand Homes" suffix="K+" />
-          <Counter target={2} label="Million Tons CO2" suffix="M" />
-          <Counter target={98} label="Uptime Guarantee" suffix="%" />
+      {/* ── TREATMENT PROTOCOLS ── */}
+      <section id="treatments" className="py-32 px-6 md:px-12">
+        <div className="max-w-[1400px] mx-auto">
+          <Reveal>
+            <div className="flex flex-col md:flex-row justify-between items-end mb-24 gap-12">
+              <div>
+                <h2 className="text-6xl md:text-8xl font-black tracking-tighter leading-none mb-6 uppercase text-[#2c3e50]">
+                  Preservation <br />{" "}
+                  <span className="text-[#9db2bf] italic lowercase font-thin">
+                    Protocols.
+                  </span>
+                </h2>
+                <p className="text-[#2c3e50]/30 text-[10px] font-bold uppercase tracking-[0.4em]">
+                  Clinical Case Logs // 2024 Edition
+                </p>
+              </div>
+              <Link
+                href="#"
+                className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#9db2bf] border-b border-[#9db2bf] pb-2 hover:text-[#2c3e50] hover:border-[#2c3e50] transition-all"
+              >
+                View Scientific Library
+              </Link>
+            </div>
+          </Reveal>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {TREATMENTS.map((item, i) => (
+              <Reveal key={item.id} delay={i * 0.1}>
+                <div
+                  className="group space-y-8 cursor-pointer"
+                  onMouseEnter={() => setActiveTreatment(item.id)}
+                  onMouseLeave={() => setActiveTreatment(null)}
+                >
+                  <div className="relative aspect-[3/4] overflow-hidden rounded-sm grayscale group-hover:grayscale-0 transition-all duration-700">
+                    <Image
+                      src={item.img}
+                      alt={item.name}
+                      fill
+                      className="object-cover transition-transform duration-1000 group-hover:scale-110"
+                    />
+                    <div className="absolute inset-0 bg-[#2c3e50]/5 group-hover:bg-transparent transition-colors" />
+
+                    <AnimatePresence>
+                      {activeTreatment === item.id && (
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="absolute inset-0 flex items-center justify-center bg-white/20 backdrop-blur-sm"
+                        >
+                          <button className="px-8 py-3 bg-[#2c3e50] text-white text-[9px] font-black uppercase tracking-widest">
+                            Protocol Detail
+                          </button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-baseline">
+                      <h3 className="text-3xl font-black uppercase tracking-tighter text-[#2c3e50]">
+                        {item.name}
+                      </h3>
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-[#9db2bf]">
+                        {item.price}
+                      </span>
+                    </div>
+                    <p className="text-sm text-[#2c3e50]/40 font-light leading-relaxed italic">
+                      {item.desc}
+                    </p>
+                    <div className="flex items-center gap-6">
+                      <span className="text-[9px] font-bold uppercase tracking-widest text-[#9db2bf]">
+                        {item.category} Module
+                      </span>
+                      <div className="h-[1px] flex-1 bg-[#9db2bf]/10" />
+                    </div>
+                  </div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* MARQUEE */}
-      <section style={{ padding: '3rem 0', backgroundColor: '#060a0f', overflow: 'hidden' }}>
-        <Marquee items={['25-Year Warranty', '30% Tax Credit', 'Zero Installation Cost', 'Grid-Tied Systems', 'Battery Backup']} />
-      </section>
-
-      {/* GOVERNMENT INCENTIVES - ACCORDION */}
-      <section style={{ padding: '6rem 1.5rem', maxWidth: '900px', margin: '0 auto' }}>
-        <Reveal>
-          <h3 style={{ fontSize: '2.5rem', fontWeight: 'black', marginBottom: '2rem', textAlign: 'center', color: '#f59e0b' }}>
-            GOVERNMENT INCENTIVES
-          </h3>
-        </Reveal>
-        {incentives.map((incentive, idx) => (
-          <Reveal key={idx} delay={idx * 0.1}>
-            <Accordion
-              title={incentive.title}
-              content={incentive.content}
-              isOpen={openAccordion === `incentive-${idx}`}
-              onClick={() => setOpenAccordion(openAccordion === `incentive-${idx}` ? null : `incentive-${idx}`)}
-            />
+      {/* ── THE SCIENTIFIC FOUNDATION ── */}
+      <section className="py-32 bg-[#1e293b] text-white overflow-hidden relative">
+        <div className="absolute top-0 right-0 p-32 opacity-5">
+          <Microscope className="w-[30rem] h-[30rem]" />
+        </div>
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12">
+          <Reveal>
+            <div className="text-center mb-24">
+              <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-[#9db2bf] mb-8 block">
+                Scientific Foundation
+              </span>
+              <h2 className="text-5xl md:text-7xl font-black tracking-tighter uppercase italic">
+                Precision{" "}
+                <span className="text-[#9db2bf] not-italic font-thin">
+                  Biologicals.
+                </span>
+              </h2>
+            </div>
           </Reveal>
-        ))}
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+            {SPECIALTIES.map((s, i) => (
+              <Reveal key={i} delay={i * 0.1}>
+                <div className="p-12 border border-white/5 bg-white/[0.02] hover:border-[#9db2bf]/30 transition-all group h-full flex flex-col">
+                  <div className="w-14 h-14 rounded-full border border-[#9db2bf]/20 flex items-center justify-center text-[#9db2bf] mb-8 group-hover:bg-[#9db2bf] group-hover:text-white transition-all">
+                    <s.icon className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-2xl font-black uppercase mb-4 tracking-tighter text-white/90">
+                    {s.title}
+                  </h3>
+                  <p className="text-sm text-white/30 font-light leading-relaxed mb-10 flex-1">
+                    {s.desc}
+                  </p>
+                  <button className="flex items-center gap-3 text-[9px] font-bold uppercase tracking-widest text-[#9db2bf] group-hover:gap-5 transition-all">
+                    Read Abstract <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
       </section>
 
-      {/* CASE STUDIES - CAROUSEL */}
-      <section style={{ padding: '6rem 1.5rem', backgroundColor: '#0f1419', maxWidth: '1000px', margin: '0 auto' }}>
-        <Reveal>
-          <h3 style={{ fontSize: '2.5rem', fontWeight: 'black', marginBottom: '3rem', textAlign: 'center', color: '#f59e0b' }}>
-            REAL RESULTS
-          </h3>
-        </Reveal>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem' }}>
-          {caseStudies.map((study, idx) => (
-            <Reveal key={idx} delay={idx * 0.1}>
-              <div style={{ backgroundColor: '#060a0f', padding: '2rem', borderRadius: '1rem', border: '1px solid #f59e0b30' }}>
-                <h4 style={{ fontWeight: 'black', marginBottom: '1.5rem', color: '#f59e0b' }}>{study.name}</h4>
-                <div style={{ marginBottom: '1rem' }}>
-                  <p style={{ color: '#ffffff80', fontSize: '0.9rem', marginBottom: '0.5rem' }}>System Size</p>
-                  <p style={{ color: 'white', fontWeight: 'bold', fontSize: '1.25rem' }}>{study.kw}</p>
+      {/* ── DIAGNOSTIC SUITE ── */}
+      <section className="py-32 px-6 md:px-12 bg-white">
+        <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
+          <Reveal>
+            <div className="relative aspect-[4/5] rounded-sm overflow-hidden group">
+              <Image
+                src="https://images.unsplash.com/photo-1512290923902-8a9f81dc236c?w=800&q=80"
+                alt="Laboratory"
+                fill
+                className="object-cover group-hover:scale-105 transition-all duration-1000 grayscale"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#2c3e50]/40 to-transparent" />
+              <div className="absolute bottom-10 left-10 text-white">
+                <span className="text-[10px] font-bold uppercase tracking-[0.4em] mb-2 block text-[#9db2bf]">
+                  AI Diagnostics
+                </span>
+                <h4 className="text-3xl font-black uppercase tracking-tighter">
+                  Visualizing Biomechanics.
+                </h4>
+              </div>
+            </div>
+          </Reveal>
+
+          <Reveal delay={0.2}>
+            <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-[#9db2bf] mb-8 block">
+              Diagnostic Excellence
+            </span>
+            <h2 className="text-5xl md:text-8xl font-black tracking-tighter leading-none mb-10 uppercase text-[#2c3e50]">
+              Blueprint <br />{" "}
+              <span className="text-[#9db2bf] italic lowercase font-thin">
+                Prescription.
+              </span>
+            </h2>
+            <p className="text-[#2c3e50]/40 text-lg leading-relaxed mb-12 font-light">
+              We eliminate the guesswork through spectral imaging and epigenetic
+              testing. Every treatment is backed by hard biological data.
+            </p>
+            <div className="grid grid-cols-2 gap-8">
+              {[
+                {
+                  icon: Scan,
+                  label: "Spectral_Mapping",
+                  desc: "Dermal layer depth",
+                },
+                {
+                  icon: Droplets,
+                  label: "Biomarker_Sync",
+                  desc: "Epigenetic analysis",
+                },
+                {
+                  icon: ShieldCheck,
+                  label: "Safety_Verified",
+                  desc: "Clinical validation",
+                },
+                {
+                  icon: Search,
+                  label: "AI_Simulation",
+                  desc: "Predictive results",
+                },
+              ].map((val, i) => (
+                <div key={i} className="space-y-2">
+                  <val.icon className="w-5 h-5 text-[#9db2bf] mb-4" />
+                  <h4 className="text-[10px] font-black uppercase tracking-widest text-[#2c3e50]">
+                    {val.label}
+                  </h4>
+                  <p className="text-[10px] font-light text-[#2c3e50]/40 uppercase tracking-widest">
+                    {val.desc}
+                  </p>
                 </div>
-                <div style={{ marginBottom: '1rem' }}>
-                  <p style={{ color: '#ffffff80', fontSize: '0.9rem', marginBottom: '0.5rem' }}>25-Year Savings</p>
-                  <p style={{ color: '#f59e0b', fontWeight: 'black', fontSize: '1.5rem' }}>{study.savings}</p>
+              ))}
+            </div>
+            <MagneticBtn className="mt-16 px-12 py-5 border border-[#9db2bf] text-[#9db2bf] text-[10px] font-bold uppercase tracking-widest rounded-sm hover:bg-[#9db2bf] hover:text-white transition-all">
+              Book Initial Assessment
+            </MagneticBtn>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ── FOOTER ── */}
+      <footer className="bg-[#fdfdfd] pt-32 pb-12 px-6 md:px-12 border-t border-[#9db2bf]/10">
+        <div className="max-w-[1400px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-24 mb-32">
+          <div className="lg:col-span-5">
+            <Reveal>
+              <div className="flex items-center gap-3 mb-10">
+                <div className="w-10 h-10 border-2 border-[#9db2bf] rounded-full flex items-center justify-center text-[#9db2bf]">
+                  <Sparkles className="w-5 h-5" />
                 </div>
-                <div>
-                  <p style={{ color: '#ffffff80', fontSize: '0.9rem', marginBottom: '0.5rem' }}>CO2 Eliminated</p>
-                  <p style={{ color: '#0ea5e9', fontWeight: 'bold' }}>{study.co2}</p>
+                <div className="flex flex-col">
+                  <span className="text-xl font-black tracking-tighter uppercase leading-none">
+                    Lumière
+                  </span>
+                  <span className="text-[8px] font-bold uppercase tracking-[0.4em] text-[#9db2bf] -mt-1">
+                    Clinical Excellence
+                  </span>
                 </div>
+              </div>
+              <p className="text-[#2c3e50]/30 max-w-sm mb-12 text-[10px] font-bold uppercase tracking-widest leading-loose italic">
+                Pioneering aesthetic medicine through biological integration.
+                Private consultations in London, Zürich & New York.
+              </p>
+              <div className="flex gap-4">
+                {[Instagram, Facebook, Mail].map((Icon, i) => (
+                  <button
+                    key={i}
+                    className="w-12 h-12 rounded-full border border-[#9db2bf]/20 flex items-center justify-center text-[#9db2bf] hover:bg-[#9db2bf] hover:text-white transition-all"
+                  >
+                    <Icon className="w-4 h-4" />
+                  </button>
+                ))}
               </div>
             </Reveal>
-          ))}
+          </div>
+
+          <div className="lg:col-span-2 lg:col-start-7">
+            <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#9db2bf] mb-10">
+              Treatments
+            </h4>
+            <ul className="space-y-4 text-[10px] font-bold uppercase tracking-widest text-[#2c3e50]/30">
+              <li>
+                <Link
+                  href="#"
+                  className="hover:text-[#9db2bf] transition-colors"
+                >
+                  Longevity_Lab
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="#"
+                  className="hover:text-[#9db2bf] transition-colors"
+                >
+                  Dermal_Sculpt
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="#"
+                  className="hover:text-[#9db2bf] transition-colors"
+                >
+                  Laser_Refinement
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="#"
+                  className="hover:text-[#9db2bf] transition-colors"
+                >
+                  Nutrient_Sync
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div className="lg:col-span-2">
+            <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#9db2bf] mb-10">
+              Diagnostics
+            </h4>
+            <ul className="space-y-4 text-[10px] font-bold uppercase tracking-widest text-[#2c3e50]/30">
+              <li>
+                <Link
+                  href="#"
+                  className="hover:text-[#9db2bf] transition-colors"
+                >
+                  Spectral_Analysis
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="#"
+                  className="hover:text-[#9db2bf] transition-colors"
+                >
+                  Epigenetic_Testing
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="#"
+                  className="hover:text-[#9db2bf] transition-colors"
+                >
+                  Bio_Blueprint
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="#"
+                  className="hover:text-[#9db2bf] transition-colors"
+                >
+                  Risk_Assessment
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div className="lg:col-span-2">
+            <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#9db2bf] mb-10">
+              Clinic
+            </h4>
+            <ul className="space-y-4 text-[10px] font-bold uppercase tracking-widest text-[#2c3e50]/30">
+              <li>
+                <Link
+                  href="#"
+                  className="hover:text-[#9db2bf] transition-colors"
+                >
+                  Our_Specialists
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="#"
+                  className="hover:text-[#9db2bf] transition-colors"
+                >
+                  Scientific_Ethics
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="#"
+                  className="hover:text-[#9db2bf] transition-colors"
+                >
+                  Global_Ateliers
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="#"
+                  className="hover:text-[#9db2bf] transition-colors"
+                >
+                  Consultation
+                </Link>
+              </li>
+            </ul>
+          </div>
         </div>
-      </section>
 
-      {/* TESTIMONIALS */}
-      <section style={{ padding: '6rem 1.5rem', maxWidth: '1000px', margin: '0 auto' }}>
-        <Reveal>
-          <h3 style={{ fontSize: '2.5rem', fontWeight: 'black', marginBottom: '3rem', textAlign: 'center', color: '#f59e0b' }}>
-            WHAT OUR CUSTOMERS SAY
-          </h3>
-        </Reveal>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '2rem' }}>
-          {testimonials.map((testimonial, idx) => (
-            <Reveal key={idx} delay={idx * 0.1}>
-              <div style={{ backgroundColor: '#0f1419', padding: '2rem', borderRadius: '1rem', border: '1px solid #f59e0b30' }}>
-                <p style={{ color: '#f59e0b', marginBottom: '1rem', fontStyle: 'italic', fontWeight: 'bold' }}>"{testimonial.quote}"</p>
-                <p style={{ fontWeight: 'black', color: 'white' }}>{testimonial.name}</p>
-              </div>
-            </Reveal>
-          ))}
+        <div className="max-w-[1400px] mx-auto pt-10 border-t border-[#9db2bf]/10 flex flex-col md:flex-row justify-between items-center gap-8 text-[9px] font-bold uppercase tracking-widest text-[#2c3e50]/20">
+          <div className="flex items-center gap-10">
+            <span>
+              &copy; {new Date().getFullYear()} LUMIÈRE CLINICAL GROUP.
+            </span>
+            <div className="flex gap-6">
+              <span>GMC_REGULATED_CLINIC</span>
+              <span>ISO_9001_CERTIFIED</span>
+            </div>
+          </div>
+          <div className="flex gap-10 font-mono">
+            <span>L_OS_V2.9_STABLE</span>
+            <span>SECURE_PATIENT_DATA</span>
+          </div>
         </div>
-      </section>
+      </footer>
 
-      {/* FAQ */}
-      <section style={{ padding: '6rem 1.5rem', maxWidth: '800px', margin: '0 auto' }}>
-        <Reveal>
-          <h3 style={{ fontSize: '2.5rem', fontWeight: 'black', marginBottom: '2rem', textAlign: 'center', color: '#f59e0b' }}>
-            FAQ
-          </h3>
-        </Reveal>
-        {faqs.map((faq, idx) => (
-          <Reveal key={idx} delay={idx * 0.1}>
-            <Accordion title={faq.title} content={faq.content} isOpen={openAccordion === `faq-${idx}`} onClick={() => setOpenAccordion(openAccordion === `faq-${idx}` ? null : `faq-${idx}`)} />
-          </Reveal>
-        ))}
-      </section>
-
-      {/* CTA */}
-      <section style={{ padding: '6rem 1.5rem', backgroundColor: '#0f1419', color: '#060a0f', textAlign: 'center' }}>
-        <Reveal>
-          <h3 style={{ fontSize: '2.5rem', fontWeight: 'black', marginBottom: '1rem', letterSpacing: '1px', color: '#f59e0b' }}>READY TO GO SOLAR?</h3>
-        </Reveal>
-        <Reveal delay={0.1}>
-          <p style={{ marginBottom: '2rem', fontSize: '1.1rem', fontWeight: 'bold', color: 'white' }}>Join 500K+ homeowners saving thousands with Solaris Energy</p>
-        </Reveal>
-        <Reveal delay={0.2}>
-          <MagneticBtn onClick={() => setShowQuoteDialog(true)}>Get Your Quote Today</MagneticBtn>
-        </Reveal>
-      </section>
-
-      {/* QUOTE DIALOG */}
-      <AnimatePresence>
-        {showQuoteDialog && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowQuoteDialog(false)} style={{ position: 'fixed', inset: 0, backgroundColor: '#00000080', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 60 }}>
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} onClick={(e) => e.stopPropagation()} style={{ backgroundColor: '#0f1419', padding: '2rem', borderRadius: '1rem', maxWidth: '400px', width: '90%', border: '1px solid #f59e0b30' }}>
-              <h4 style={{ fontSize: '1.5rem', fontWeight: 'black', marginBottom: '1.5rem', color: '#f59e0b' }}>Get Your Free Quote</h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}>
-                <input type="text" placeholder="Full Name" style={{ padding: '0.75rem', backgroundColor: '#060a0f', color: 'white', borderRadius: '0.5rem', border: '1px solid #f59e0b30' }} />
-                <input type="email" placeholder="Email Address" style={{ padding: '0.75rem', backgroundColor: '#060a0f', color: 'white', borderRadius: '0.5rem', border: '1px solid #f59e0b30' }} />
-                <input type="tel" placeholder="Phone Number" style={{ padding: '0.75rem', backgroundColor: '#060a0f', color: 'white', borderRadius: '0.5rem', border: '1px solid #f59e0b30' }} />
-              </div>
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <motion.button whileHover={{ scale: 1.05 }} onClick={() => setShowQuoteDialog(false)} style={{ flex: 1, padding: '0.75rem', backgroundColor: '#f59e0b', color: '#060a0f', borderRadius: '0.5rem', fontWeight: 'black', cursor: 'pointer' }}>
-                  Get Quote
-                </motion.button>
-                <motion.button whileHover={{ scale: 1.05 }} onClick={() => setShowQuoteDialog(false)} style={{ flex: 1, padding: '0.75rem', backgroundColor: 'transparent', border: '2px solid #f59e0b', color: '#f59e0b', borderRadius: '0.5rem', fontWeight: 'black', cursor: 'pointer' }}>
-                  Close
-                </motion.button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <style>{`
+        ::-webkit-scrollbar{width:4px;background:#fdfdfd}
+        ::-webkit-scrollbar-thumb{background:#9db2bf}
+      `}</style>
     </div>
   );
 }
