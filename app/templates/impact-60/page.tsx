@@ -2,19 +2,74 @@
 
 import {
   motion,
-  AnimatePresence,
   useScroll,
   useTransform,
   useInView,
+  AnimatePresence,
   useMotionValue,
   useSpring,
 } from "framer-motion";
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import Image from "next/image";
-import { ArrowRight, X, Menu, ChevronDown, ArrowUpRight, MapPin, Phone, Mail } from "lucide-react";
+import Link from "next/link";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
+import {
+  ArrowRight,
+  ArrowUpRight,
+  Star,
+  Check,
+  Menu,
+  X,
+  MapPin,
+  Phone,
+  Mail,
+  ChevronDown,
+  ChevronRight,
+  ShieldCheck,
+  Globe,
+  Clock,
+  Quote,
+  Search,
+  ShoppingBag,
+  Building2,
+  Camera,
+  Palette,
+  Ruler,
+  Layers,
+  Activity,
+} from "lucide-react";
+
 import "../premium.css";
 
-/* ─── DATA ─────────────────────────────────────────────── */
+/* ==========================================================================
+   DATA STRUCTURES
+   ========================================================================= */
+
 const PROPERTIES = [
   {
     id: 1,
@@ -22,9 +77,15 @@ const PROPERTIES = [
     type: "Private Villa",
     location: "Saint-Tropez, Côte d'Azur",
     price: "€ 8,400,000",
-    img: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=1400&auto=format&fit=crop",
+    img: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&q=80",
     sqm: "680 m²",
     rooms: "7 rooms",
+    features: [
+      "Infinity Pool",
+      "Private Beach Access",
+      "Wine Cellar",
+      "Heliport",
+    ],
   },
   {
     id: 2,
@@ -32,9 +93,15 @@ const PROPERTIES = [
     type: "Penthouse",
     location: "Monaco, Fontvieille",
     price: "€ 14,200,000",
-    img: "https://images.unsplash.com/photo-1613490493576-7fde63acd811?q=80&w=1400&auto=format&fit=crop",
+    img: "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=1200&q=80",
     sqm: "420 m²",
     rooms: "5 rooms",
+    features: [
+      "Panoramic Terrace",
+      "Smart Home OS",
+      "24/7 Concierge",
+      "Private Lift",
+    ],
   },
   {
     id: 3,
@@ -42,95 +109,155 @@ const PROPERTIES = [
     type: "Historic Estate",
     location: "Bordeaux, Aquitaine",
     price: "€ 22,800,000",
-    img: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=1400&auto=format&fit=crop",
+    img: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1200&q=80",
     sqm: "1,240 m²",
     rooms: "18 rooms",
+    features: ["Vineyard", "Equestrian Center", "Guest Wing", "Art Gallery"],
+  },
+];
+
+const ATELIER_PROCESS = [
+  {
+    step: "01",
+    title: "Mandate Scoping",
+    desc: "We define the architectural, geographical, and fiscal boundaries of your search or sale.",
   },
   {
-    id: 4,
-    name: "Villa Ossidiana",
-    type: "Contemporary",
-    location: "Positano, Amalfi Coast",
-    price: "€ 6,100,000",
-    img: "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?q=80&w=1400&auto=format&fit=crop",
-    sqm: "390 m²",
-    rooms: "6 rooms",
+    step: "02",
+    title: "Off-Market Sourcing",
+    desc: "Accessing 65% of ultra-prime inventory that never hits public portals.",
+  },
+  {
+    step: "03",
+    title: "Architectural Audit",
+    desc: "A full structural and aesthetic assessment by our partner design studios.",
+  },
+  {
+    step: "04",
+    title: "Fiscal Navigation",
+    desc: "Coordinating with tax and legal specialists across multiple jurisdictions.",
   },
 ];
 
-const FAQS = [
-  { q: "What markets do you specialize in?", a: "We specialize in ultra-prime residential markets across the French Riviera, Monaco, Tuscany, and select Swiss Alpine destinations, focusing exclusively on properties above €3M." },
-  { q: "How do you ensure privacy for high-profile clients?", a: "All transactions are handled with full NDA coverage. We maintain a private off-market portfolio accessible only to vetted clients, ensuring absolute discretion from initial inquiry through completion." },
-  { q: "Do you offer architectural visualization services?", a: "Our atelier partners with leading architectural studios to provide photorealistic renders, VR walkthroughs, and bespoke interior design consultations for every acquisition." },
-  { q: "What is your typical transaction timeline?", a: "For off-market properties, the process typically spans 60–90 days from initial viewing to notarial signing. We manage every legal, fiscal, and logistical dimension end-to-end." },
+const GLOBAL_HUBS = [
+  {
+    city: "Paris",
+    region: "Western Europe",
+    status: "Active",
+    lead: "Jean-Luc Moreau",
+  },
+  {
+    city: "Monaco",
+    region: "Mediterranean",
+    status: "Active",
+    lead: "Sasha Volkov",
+  },
+  {
+    city: "New York",
+    region: "North America",
+    status: "Active",
+    lead: "Elena Vance",
+  },
+  {
+    city: "Tokyo",
+    region: "Asia Pacific",
+    status: "Active",
+    lead: "Kenji Sato",
+  },
 ];
 
-const STATS = [
-  { value: 340, label: "Properties Sold", suffix: "+" },
-  { value: 2, label: "Billion in Transactions", prefix: "€", suffix: "B+" },
-  { value: 18, label: "Years of Excellence", suffix: "" },
-  { value: 97, label: "Client Satisfaction", suffix: "%" },
-];
+/* ==========================================================================
+   UTILITY COMPONENTS
+   ========================================================================= */
 
-const MARQUEE_ITEMS = [
-  "Saint-Tropez", "Monaco", "Cannes", "Côte d'Azur", "Tuscany", "Positano",
-  "Lake Como", "Geneva", "Courchevel", "Marbella", "Ibiza", "Capri",
-  "Saint-Tropez", "Monaco", "Cannes", "Côte d'Azur", "Tuscany", "Positano",
-  "Lake Como", "Geneva", "Courchevel", "Marbella", "Ibiza", "Capri",
-];
-
-/* ─── SHARED COMPONENTS ─────────────────────────────────── */
-function Reveal({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) {
+function Reveal({
+  children,
+  delay = 0,
+  y = 30,
+}: {
+  children: React.ReactNode;
+  delay?: number;
+  y?: number;
+}) {
   const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-80px" });
+  const inView = useInView(ref, { once: true, margin: "-50px" });
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 40 }}
+      initial={{ opacity: 0, y }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.8, delay, ease: [0.22, 1, 0.36, 1] }}
-      className={className}
+      transition={{ duration: 1, delay, ease: [0.25, 0.1, 0.25, 1] }}
     >
       {children}
     </motion.div>
   );
 }
 
-function Counter({ target, prefix = "", suffix = "" }: { target: number; prefix?: string; suffix?: string }) {
+function Counter({
+  to,
+  prefix = "",
+  suffix = "",
+}: {
+  to: number;
+  prefix?: string;
+  suffix?: string;
+}) {
   const ref = useRef(null);
-  const inView = useInView(ref, { once: true });
+  const isInView = useInView(ref, { once: true });
   const [count, setCount] = useState(0);
-
   useEffect(() => {
-    if (!inView) return;
-    let start = 0;
-    const step = Math.ceil(target / 60);
-    const id = setInterval(() => {
-      start += step;
-      if (start >= target) { setCount(target); clearInterval(id); }
-      else setCount(start);
-    }, 24);
-    return () => clearInterval(id);
-  }, [inView, target]);
-
-  return <span ref={ref}>{prefix}{count.toLocaleString()}{suffix}</span>;
+    if (!isInView) return;
+    let cur = 0;
+    const step = to / 70;
+    const t = setInterval(() => {
+      cur += step;
+      if (cur >= to) {
+        setCount(to);
+        clearInterval(t);
+      } else {
+        setCount(Math.floor(cur));
+      }
+    }, 16);
+    return () => clearInterval(t);
+  }, [isInView, to]);
+  return (
+    <span ref={ref}>
+      {prefix}
+      {count.toLocaleString()}
+      {suffix}
+    </span>
+  );
 }
 
-function MagneticBtn({ children, className = "", onClick }: { children: React.ReactNode; className?: string; onClick?: () => void }) {
+function MagneticBtn({
+  children,
+  className = "",
+  onClick,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  onClick?: () => void;
+}) {
   const ref = useRef<HTMLButtonElement>(null);
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const sx = useSpring(x, { stiffness: 200, damping: 20 });
   const sy = useSpring(y, { stiffness: 200, damping: 20 });
 
-  const handleMouse = useCallback((e: React.MouseEvent) => {
-    const rect = ref.current?.getBoundingClientRect();
-    if (!rect) return;
-    x.set((e.clientX - rect.left - rect.width / 2) * 0.35);
-    y.set((e.clientY - rect.top - rect.height / 2) * 0.35);
-  }, [x, y]);
+  const handleMouse = useCallback(
+    (e: React.MouseEvent) => {
+      const rect = ref.current?.getBoundingClientRect();
+      if (!rect) return;
+      x.set((e.clientX - rect.left - rect.width / 2) * 0.35);
+      y.set((e.clientY - rect.top - rect.height / 2) * 0.35);
+    },
+    [x, y],
+  );
 
-  const reset = useCallback(() => { x.set(0); y.set(0); }, [x, y]);
+  const reset = useCallback(() => {
+    x.set(0);
+    y.set(0);
+  }, [x, y]);
 
   return (
     <motion.button
@@ -146,406 +273,753 @@ function MagneticBtn({ children, className = "", onClick }: { children: React.Re
   );
 }
 
-/* ─── MAIN PAGE ──────────────────────────────────────────── */
-export default function PhotographyArchiveSPA() {
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [activeModal, setActiveModal] = useState<number | null>(null);
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const heroRef = useRef(null);
-  const { scrollY } = useScroll();
-  const heroY = useTransform(scrollY, [0, 600], [0, 200]);
-  const heroOpacity = useTransform(scrollY, [0, 400], [1, 0]);
+/* ==========================================================================
+   MAIN PAGE COMPONENT
+   ========================================================================= */
 
-  const activeProperty = activeModal !== null ? PROPERTIES[activeModal] : null;
+export default function LumiereEstatesPage() {
+  const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [activeProperty, setActiveProperty] = useState<number | null>(null);
+
+  const heroRef = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"],
+  });
+  const heroY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 50);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
-    <div className="premium-theme bg-[#f5f0e8] text-[#1a1614] min-h-screen font-sans overflow-x-hidden selection:bg-[#c9a96e] selection:text-white">
+    <div
+      className="premium-theme min-h-screen bg-[#fcfbf9] text-[#1a1a1a] font-serif selection:bg-[#c9a96e] selection:text-white overflow-x-hidden"
+      style={{ scrollBehavior: "smooth" }}
+    >
+      {/* ==========================================
+          NAVIGATION
+          ========================================== */}
+      <nav
+        className={`fixed top-0 left-0 w-full z-50 transition-all duration-700 ${scrolled ? "bg-white/90 backdrop-blur-md py-4 border-b border-black/5" : "bg-transparent py-10"}`}
+      >
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12 flex items-center justify-between">
+          <Link
+            href="/"
+            className="text-xl md:text-2xl font-bold tracking-[0.2em] uppercase flex items-center gap-4"
+          >
+            <div className="w-8 h-8 bg-[#c9a96e] flex items-center justify-center text-white">
+              <Building2 className="w-4 h-4" />
+            </div>
+            LUMIÈRE
+          </Link>
 
-      {/* ── NAV ───────────────────────────────────────────── */}
-      <nav className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-8 md:px-16 py-6 bg-[#f5f0e8]/80 backdrop-blur-xl border-b border-[#c9a96e]/20">
-        <span className="text-xl font-serif tracking-widest uppercase text-[#1a1614]">Lumière Estates</span>
-        <div className="hidden md:flex gap-10 text-xs uppercase tracking-[0.25em] font-medium text-[#1a1614]/60">
-          {["Portfolio", "Services", "About", "Contact"].map((item) => (
-            <a key={item} href={`#${item.toLowerCase()}`} className="hover:text-[#c9a96e] transition-colors">{item}</a>
-          ))}
+          <div className="hidden lg:flex items-center gap-10 text-[10px] font-bold uppercase tracking-[0.3em] text-black/40">
+            <Link href="#" className="hover:text-[#c9a96e] transition-colors">
+              Portfolio
+            </Link>
+            <Link href="#" className="hover:text-[#c9a96e] transition-colors">
+              Atelier
+            </Link>
+            <Link href="#" className="hover:text-[#c9a96e] transition-colors">
+              Hubs
+            </Link>
+            <Link href="#" className="hover:text-[#c9a96e] transition-colors">
+              Reports
+            </Link>
+          </div>
+
+          <div className="flex items-center gap-8">
+            <button className="hidden md:block hover:text-[#c9a96e] transition-colors text-black/30">
+              <Search className="w-5 h-5" />
+            </button>
+            <button className="px-8 py-3 bg-[#1a1a1a] text-white text-[10px] font-bold uppercase tracking-widest hover:bg-[#c9a96e] transition-all">
+              Private_Access
+            </button>
+            <button onClick={() => setMenuOpen(true)} className="lg:hidden">
+              <Menu className="w-6 h-6" />
+            </button>
+          </div>
         </div>
-        <MagneticBtn className="hidden md:flex items-center gap-2 px-6 py-3 bg-[#1a1614] text-[#f5f0e8] text-xs uppercase tracking-[0.2em] hover:bg-[#c9a96e] transition-colors">
-          Private Access <ArrowRight className="w-3 h-3" />
-        </MagneticBtn>
-        <button className="md:hidden" onClick={() => setMobileOpen(true)}>
-          <Menu className="w-6 h-6 text-[#1a1614]" />
-        </button>
       </nav>
 
-      {/* ── MOBILE NAV ────────────────────────────────────── */}
+      {/* MOBILE MENU */}
       <AnimatePresence>
-        {mobileOpen && (
+        {menuOpen && (
           <motion.div
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
-            transition={{ type: "tween", duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed inset-0 z-[100] bg-[#1a1614] flex flex-col justify-center items-center gap-10"
+            initial={{ opacity: 0, x: "100%" }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: "100%" }}
+            transition={{ type: "tween", duration: 0.5 }}
+            className="fixed inset-0 z-[100] bg-[#fcfbf9] p-8 pt-32 flex flex-col border-l border-black/5"
           >
-            <button className="absolute top-6 right-8" onClick={() => setMobileOpen(false)}>
-              <X className="w-7 h-7 text-[#f5f0e8]" />
+            <button
+              onClick={() => setMenuOpen(false)}
+              className="absolute top-10 right-8"
+            >
+              <X className="w-8 h-8" />
             </button>
-            {["Portfolio", "Services", "About", "Contact"].map((item, i) => (
-              <motion.a
-                key={item}
-                href={`#${item.toLowerCase()}`}
-                initial={{ opacity: 0, x: 40 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.08 + 0.2 }}
-                onClick={() => setMobileOpen(false)}
-                className="text-4xl font-serif text-[#f5f0e8] tracking-widest hover:text-[#c9a96e] transition-colors"
-              >
-                {item}
-              </motion.a>
-            ))}
+            <div className="flex flex-col gap-10 text-5xl font-light italic tracking-tighter uppercase">
+              <Link href="#" onClick={() => setMenuOpen(false)}>
+                Portfolio
+              </Link>
+              <Link href="#" onClick={() => setMenuOpen(false)}>
+                Atelier
+              </Link>
+              <Link href="#" onClick={() => setMenuOpen(false)}>
+                Hubs
+              </Link>
+              <Link href="#" onClick={() => setMenuOpen(false)}>
+                Reports
+              </Link>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* ── HERO ──────────────────────────────────────────── */}
-      <section ref={heroRef} id="hero" className="relative h-screen flex items-end overflow-hidden">
-        <motion.div style={{ y: heroY }} className="absolute inset-0">
+      {/* ==========================================
+          1. HERO (Cinematic)
+          ========================================== */}
+      <section
+        ref={heroRef}
+        className="relative w-full h-[100svh] flex flex-col justify-center overflow-hidden"
+      >
+        <motion.div
+          style={{ y: heroY, opacity: heroOpacity }}
+          className="absolute inset-0 z-0"
+        >
           <Image
-            src="https://images.unsplash.com/photo-1109543?w=800&q=80"
-            alt="Luxury estate"
+            src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1600&q=80"
+            alt="Luxury Real Estate Hero"
             fill
-            unoptimized
-            className="object-cover"
+            className="object-cover grayscale brightness-90"
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#1a1614]/80 via-[#1a1614]/20 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#fcfbf9] via-[#fcfbf9]/20 to-transparent" />
         </motion.div>
-        <motion.div style={{ opacity: heroOpacity }} className="relative z-10 pb-24 px-8 md:px-16 max-w-5xl">
+
+        <div className="relative z-10 max-w-[1400px] mx-auto px-6 md:px-12 w-full">
           <Reveal>
-            <span className="text-xs uppercase tracking-[0.4em] text-[#c9a96e] mb-6 block font-medium">Exclusive Real Estate Atelier</span>
-          </Reveal>
-          <Reveal delay={0.1}>
-            <h1 className="text-6xl md:text-[8vw] font-serif text-white leading-[0.9] mb-8">
-              Architecture<br />
-              <span className="italic text-[#c9a96e]">of Desire.</span>
+            <span className="text-[10px] uppercase tracking-[0.5em] font-bold text-[#c9a96e] mb-8 block">
+              Exclusive Real Estate Atelier
+            </span>
+            <h1 className="text-6xl md:text-8xl lg:text-[9rem] font-bold leading-[0.85] tracking-tighter mb-12">
+              Architecture <br />{" "}
+              <span className="italic font-light text-[#c9a96e]">
+                of Desire.
+              </span>
             </h1>
-          </Reveal>
-          <Reveal delay={0.2}>
-            <p className="text-lg text-white/60 max-w-xl mb-10 leading-relaxed">
-              Ultra-prime properties curated for those who understand that a home is more than an address — it is a declaration.
+            <p className="max-w-xl text-lg md:text-xl text-black/50 leading-relaxed font-light mb-12 italic">
+              Ultra-prime properties curated for those who understand that a
+              home is more than an address — it is a declaration.
             </p>
-          </Reveal>
-          <Reveal delay={0.3}>
-            <div className="flex flex-wrap gap-4">
-              <MagneticBtn className="flex items-center gap-3 px-8 py-4 bg-[#c9a96e] text-[#1a1614] font-semibold text-sm uppercase tracking-[0.2em] hover:bg-[#b8934a] transition-colors">
-                View Portfolio <ArrowRight className="w-4 h-4" />
+            <div className="flex flex-col sm:flex-row gap-6">
+              <MagneticBtn className="px-12 py-5 bg-[#1a1a1a] text-white text-[10px] font-bold uppercase tracking-[0.4em] hover:bg-[#c9a96e] transition-all cursor-pointer shadow-xl">
+                View Portfolio
               </MagneticBtn>
-              <button className="flex items-center gap-3 px-8 py-4 border border-white/30 text-white text-sm uppercase tracking-[0.2em] hover:border-[#c9a96e] hover:text-[#c9a96e] transition-colors">
-                Private Listings
+              <button className="px-12 py-5 border border-black/10 text-black text-[10px] font-bold uppercase tracking-[0.4em] hover:bg-black hover:text-white transition-all cursor-pointer">
+                Private Mandates
               </button>
             </div>
           </Reveal>
-        </motion.div>
+        </div>
+
         <motion.div
-          animate={{ y: [0, 10, 0] }}
-          transition={{ duration: 2, repeat: Infinity }}
-          className="absolute bottom-8 right-8 z-10 flex flex-col items-center gap-2 text-white/40"
+          style={{ opacity: heroOpacity }}
+          className="absolute bottom-10 right-12 hidden md:block"
         >
-          <ChevronDown className="w-5 h-5" />
-          <span className="text-[9px] uppercase tracking-[0.3em]">Scroll</span>
+          <div className="flex items-center gap-8 text-[9px] font-bold uppercase tracking-[0.3em] text-black/30">
+            <span>Saint-Tropez</span>
+            <span>•</span>
+            <span>Monaco</span>
+            <span>•</span>
+            <span>Positano</span>
+          </div>
         </motion.div>
       </section>
 
-      {/* ── MARQUEE ───────────────────────────────────────── */}
-      <div className="overflow-hidden bg-[#1a1614] py-5 border-y border-[#c9a96e]/20">
-        <motion.div
-          animate={{ x: [0, -2400] }}
-          transition={{ duration: 35, repeat: Infinity, ease: "linear" }}
-          className="flex gap-16 whitespace-nowrap"
-        >
-          {MARQUEE_ITEMS.map((item, i) => (
-            <span key={i} className="text-xs font-medium uppercase tracking-[0.4em] text-[#c9a96e]/60 flex-shrink-0">
-              {item} <span className="text-[#c9a96e]/30 mx-4">◆</span>
-            </span>
-          ))}
-        </motion.div>
-      </div>
+      {/* ==========================================
+          2. THE ATELIER (Process)
+          ========================================== */}
+      <section className="py-32 bg-[#fcfbf9] border-y border-black/5">
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 md:gap-32 items-center">
+            <div className="lg:col-span-5">
+              <Reveal>
+                <span className="text-[10px] uppercase tracking-[0.4em] font-bold text-[#c9a96e] mb-6 block">
+                  Our Approach
+                </span>
+                <h2 className="text-5xl md:text-7xl font-light tracking-tighter leading-tight mb-12 uppercase">
+                  The <br />{" "}
+                  <span className="italic font-normal text-[#c9a96e]">
+                    Protocol.
+                  </span>
+                </h2>
+                <p className="text-lg text-black/50 leading-relaxed font-light mb-16">
+                  We operate with the silence and precision of a Swiss watch.
+                  Our atelier doesn't just list properties; we manage the entire
+                  architectural and fiscal lifecycle of a mandate.
+                </p>
 
-      {/* ── PORTFOLIO ─────────────────────────────────────── */}
-      <section id="portfolio" className="px-8 md:px-16 py-32">
-        <Reveal className="mb-20">
-          <span className="text-xs uppercase tracking-[0.4em] text-[#c9a96e] block mb-4">Curated Selection</span>
-          <h2 className="text-5xl md:text-7xl font-serif leading-tight">
-            Exceptional<br /><em>Properties.</em>
-          </h2>
-        </Reveal>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {PROPERTIES.map((p, i) => (
-            <Reveal key={p.id} delay={i * 0.1}>
-              <motion.div
-                whileHover={{ y: -8 }}
-                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                className="group relative rounded-2xl overflow-hidden bg-white shadow-[0_8px_40px_rgba(0,0,0,0.08)] cursor-pointer"
-                onClick={() => setActiveModal(i)}
-              >
-                <div className="relative h-80 overflow-hidden">
-                  <Image
-                    src={p.img}
-                    alt={p.name}
-                    fill
-                    unoptimized
-                    className="object-cover group-hover:scale-105 transition-transform duration-700"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                  <div className="absolute top-4 left-4 px-3 py-1 bg-[#c9a96e] text-[#1a1614] text-[10px] uppercase tracking-[0.2em] font-semibold">
-                    {p.type}
-                  </div>
+                <div className="space-y-12">
+                  {ATELIER_PROCESS.map((item, i) => (
+                    <div key={i} className="group flex gap-8">
+                      <div className="text-4xl font-light italic text-[#c9a96e]/20 group-hover:text-[#c9a96e] transition-colors">
+                        {item.step}
+                      </div>
+                      <div className="border-b border-black/5 pb-8 flex-1 group-last:border-0">
+                        <h4 className="text-lg font-bold uppercase tracking-tight mb-2">
+                          {item.title}
+                        </h4>
+                        <p className="text-sm text-black/40 leading-relaxed font-light italic">
+                          {item.desc}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <div className="p-8 flex justify-between items-end">
-                  <div>
-                    <h3 className="text-2xl font-serif mb-1">{p.name}</h3>
-                    <p className="text-sm text-[#1a1614]/50 flex items-center gap-1"><MapPin className="w-3 h-3" />{p.location}</p>
-                    <p className="text-xs text-[#1a1614]/40 mt-1">{p.sqm} · {p.rooms}</p>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-2xl font-serif text-[#c9a96e]">{p.price}</div>
-                    <div className="mt-2 w-10 h-10 rounded-full border border-[#c9a96e] flex items-center justify-center group-hover:bg-[#c9a96e] transition-colors ml-auto">
-                      <ArrowUpRight className="w-4 h-4 text-[#c9a96e] group-hover:text-white transition-colors" />
+              </Reveal>
+            </div>
+
+            <div className="lg:col-span-7">
+              <Reveal className="relative aspect-square md:aspect-[4/5] rounded-sm overflow-hidden shadow-2xl">
+                <Image
+                  src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1200&q=80"
+                  alt="Estates Detail"
+                  fill
+                  className="object-cover grayscale hover:grayscale-0 transition-all duration-1000"
+                />
+                <div className="absolute inset-0 bg-[#c9a96e]/5 mix-blend-multiply" />
+                <div className="absolute bottom-10 left-10 right-10">
+                  <div className="bg-white/95 backdrop-blur-md p-10 border border-black/5">
+                    <Quote className="w-8 h-8 text-[#c9a96e] mb-6" />
+                    <p className="text-2xl italic text-black/70 leading-relaxed font-light">
+                      "Every mandate is handled with absolute discretion. We
+                      specialize in the properties that the world never sees."
+                    </p>
+                    <div className="mt-8 flex items-center justify-between">
+                      <div className="text-[10px] font-bold uppercase tracking-widest text-[#c9a96e]">
+                        Lumière Estates // Est. 2006
+                      </div>
+                      <div className="flex gap-2">
+                        <div className="w-1.5 h-1.5 bg-[#c9a96e] rounded-full" />
+                        <div className="w-1.5 h-1.5 bg-[#c9a96e]/30 rounded-full" />
+                        <div className="w-1.5 h-1.5 bg-[#c9a96e]/30 rounded-full" />
+                      </div>
                     </div>
                   </div>
                 </div>
-              </motion.div>
+              </Reveal>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ==========================================
+          3. FEATURED PORTFOLIO
+          ========================================== */}
+      <section className="py-32 bg-white">
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12">
+          <div className="flex flex-col md:flex-row justify-between items-end mb-24 gap-12">
+            <Reveal>
+              <h2 className="text-5xl md:text-8xl font-light tracking-tighter uppercase leading-[0.9]">
+                Exceptional <br /> <span className="italic">Inventory.</span>
+              </h2>
+            </Reveal>
+            <p className="max-w-sm text-sm text-black/40 leading-relaxed italic font-light">
+              A hand-picked selection of estates representing the pinnacle of
+              architectural achievement across Europe and the Americas.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+            {PROPERTIES.map((p, i) => (
+              <Reveal key={p.id} delay={i * 0.1}>
+                <div
+                  onClick={() => setActiveProperty(i)}
+                  className="group cursor-pointer bg-[#fcfbf9] border border-black/5 hover:border-[#c9a96e]/40 transition-all p-1"
+                >
+                  <div className="relative aspect-[4/5] overflow-hidden mb-8">
+                    <Image
+                      src={p.img}
+                      alt={p.name}
+                      fill
+                      className="object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#fcfbf9] via-transparent to-transparent" />
+                    <div className="absolute top-6 left-6">
+                      <Badge className="bg-[#c9a96e] text-white rounded-none px-4 py-1 text-[9px] font-bold uppercase tracking-widest">
+                        {p.type}
+                      </Badge>
+                    </div>
+                    <div className="absolute bottom-6 left-6 right-6">
+                      <div className="text-[9px] uppercase tracking-[0.4em] text-black/40 mb-2">
+                        {p.location}
+                      </div>
+                      <h3 className="text-3xl font-bold uppercase tracking-tighter group-hover:text-[#c9a96e] transition-colors">
+                        {p.name}
+                      </h3>
+                    </div>
+                  </div>
+                  <div className="p-8 pt-0">
+                    <div className="flex items-center gap-6 mb-8 overflow-x-auto no-scrollbar">
+                      {p.features.slice(0, 3).map((f, idx) => (
+                        <span
+                          key={idx}
+                          className="text-[8px] uppercase tracking-widest text-black/30 font-bold whitespace-nowrap"
+                        >
+                          • {f}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="flex items-center justify-between border-t border-black/5 pt-6">
+                      <span className="text-xl font-bold text-black italic">
+                        {p.price}
+                      </span>
+                      <button className="w-10 h-10 rounded-full border border-black/10 flex items-center justify-center group-hover:bg-[#c9a96e] group-hover:border-[#c9a96e] transition-all">
+                        <ArrowUpRight className="w-4 h-4 group-hover:text-white transition-colors" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ==========================================
+          4. GLOBAL HUBS (Locations)
+          ========================================== */}
+      <section className="py-32 bg-[#fcfbf9] border-y border-black/5">
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12">
+          <Reveal className="text-center max-w-2xl mx-auto mb-20">
+            <span className="text-[10px] uppercase tracking-[0.5em] font-black text-[#c9a96e] mb-6 block">
+              Our Network
+            </span>
+            <h2 className="text-5xl md:text-7xl font-light tracking-tighter uppercase italic">
+              Global Hubs.
+            </h2>
+          </Reveal>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {GLOBAL_HUBS.map((hub, i) => (
+              <Reveal key={i} delay={i * 0.1}>
+                <div className="p-10 bg-white border border-black/5 hover:border-[#c9a96e]/30 transition-all group">
+                  <div className="flex items-center justify-between mb-10">
+                    <h4 className="text-2xl font-bold uppercase tracking-tighter italic">
+                      {hub.city}
+                    </h4>
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                  </div>
+                  <p className="text-[10px] uppercase tracking-widest text-black/40 font-bold mb-8">
+                    {hub.region}
+                  </p>
+                  <div className="border-t border-black/5 pt-8">
+                    <span className="text-[9px] uppercase tracking-[0.2em] text-black/30 block mb-1">
+                      Regional Lead
+                    </span>
+                    <span className="text-xs font-bold uppercase tracking-widest group-hover:text-[#c9a96e] transition-colors">
+                      {hub.lead}
+                    </span>
+                  </div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ==========================================
+          5. ARTISAN PARTNERSHIPS
+          ========================================== */}
+      <section className="py-32 bg-white">
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
+            <div>
+              <Reveal>
+                <span className="text-[10px] uppercase tracking-[0.5em] font-black text-[#c9a96e] mb-6 block">
+                  The Collective
+                </span>
+                <h2 className="text-5xl md:text-7xl font-light tracking-tighter leading-tight mb-12 uppercase">
+                  Beyond <br /> <span className="italic">Transaction.</span>
+                </h2>
+                <p className="text-lg text-black/50 leading-relaxed font-light mb-16 max-w-lg">
+                  We partner with the world's most innovative architectural
+                  studios and interior artisans to ensure that your acquisition
+                  is optimized for its future potential.
+                </p>
+
+                <div className="grid grid-cols-2 gap-8">
+                  {[
+                    {
+                      label: "Structural Audit",
+                      icon: <Ruler className="w-5 h-5" />,
+                    },
+                    {
+                      label: "Interior Curation",
+                      icon: <Palette className="w-5 h-5" />,
+                    },
+                    {
+                      label: "Aerial Survey",
+                      icon: <Camera className="w-5 h-5" />,
+                    },
+                    {
+                      label: "Legal Buffer",
+                      icon: <ShieldCheck className="w-5 h-5" />,
+                    },
+                  ].map((feat, i) => (
+                    <div
+                      key={i}
+                      className="flex flex-col gap-4 p-6 bg-[#fcfbf9] border border-black/5 hover:border-[#c9a96e]/30 transition-all"
+                    >
+                      <div className="text-[#c9a96e]">{feat.icon}</div>
+                      <span className="text-[10px] font-bold uppercase tracking-[0.2em]">
+                        {feat.label}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </Reveal>
+            </div>
+
+            <Reveal className="relative aspect-square rounded-sm overflow-hidden shadow-2xl group">
+              <Image
+                src="https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=1200&q=80"
+                alt="Partnerships"
+                fill
+                className="object-cover"
+              />
+              <div className="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-all duration-700" />
+              <div className="absolute inset-0 p-12 flex flex-col justify-end">
+                <div className="bg-white/10 backdrop-blur-lg p-10 border border-white/20 text-white">
+                  <h3 className="text-3xl font-light uppercase tracking-tighter italic mb-4">
+                    Market Intelligence.
+                  </h3>
+                  <p className="text-sm font-light leading-relaxed mb-8 opacity-70">
+                    Access our quarterly H1 2026 report on ultra-prime European
+                    residential trends.
+                  </p>
+                  <button className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest hover:text-[#c9a96e] transition-colors">
+                    Download_Report <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </Reveal>
+          </div>
+        </div>
+      </section>
+
+      {/* ==========================================
+          6. STATS (Counter)
+          ========================================== */}
+      <section className="py-24 bg-[#1a1a1a] text-white">
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12 grid grid-cols-2 lg:grid-cols-4 gap-16 text-center">
+          {[
+            { label: "Properties_Sold", val: 340, suffix: "+" },
+            { label: "Transactions", val: 2, prefix: "€", suffix: "B+" },
+            { label: "Years_Excellence", val: 18, suffix: "" },
+            { label: "Client_Retention", val: 97, suffix: "%" },
+          ].map((stat, i) => (
+            <Reveal key={i} delay={i * 0.1}>
+              <div className="text-5xl md:text-7xl font-bold text-[#c9a96e] mb-4">
+                <Counter
+                  to={stat.val}
+                  prefix={stat.prefix}
+                  suffix={stat.suffix}
+                />
+              </div>
+              <div className="text-[10px] font-bold uppercase tracking-[0.5em] text-white/40">
+                {stat.label}
+              </div>
             </Reveal>
           ))}
         </div>
       </section>
 
-      {/* ── PROPERTY MODAL ────────────────────────────────── */}
+      {/* ==========================================
+          7. FAQ (Accordion)
+          ========================================== */}
+      <section className="py-32 bg-[#fcfbf9]">
+        <div className="max-w-3xl mx-auto px-6">
+          <Reveal className="text-center mb-24">
+            <h2 className="text-4xl md:text-5xl font-light tracking-tighter leading-none uppercase italic">
+              Intel_Buffer
+            </h2>
+          </Reveal>
+
+          <Accordion type="single" collapsible className="space-y-4">
+            {[
+              {
+                q: "What markets do you specialize in?",
+                a: "We specialize in ultra-prime residential markets across the French Riviera, Monaco, Tuscany, and select Swiss Alpine destinations.",
+              },
+              {
+                q: "How do you ensure privacy for high-profile clients?",
+                a: "All transactions are handled with full NDA coverage and handled through our private off-market portfolio.",
+              },
+              {
+                q: "Do you offer architectural visualization?",
+                a: "Our atelier partners with leading studios to provide photorealistic renders and bespoke interior design consultations.",
+              },
+              {
+                q: "What is your transaction timeline?",
+                a: "For off-market properties, the process typically spans 60–90 days from initial inquiry to notarial signing.",
+              },
+            ].map((faq, i) => (
+              <AccordionItem
+                key={i}
+                value={`item-${i}`}
+                className="border-b border-black/5"
+              >
+                <AccordionTrigger className="text-left text-sm uppercase font-bold tracking-widest py-8 hover:text-[#c9a96e] hover:no-underline">
+                  {faq.q}
+                </AccordionTrigger>
+                <AccordionContent className="text-sm text-black/40 leading-relaxed font-light italic pb-8">
+                  {faq.a}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
+      </section>
+
+      {/* ==========================================
+          8. MEGA FOOTER (Premium)
+          ========================================== */}
+      <footer className="bg-white pt-32 pb-12 px-6 md:px-12 border-t border-black/5 relative overflow-hidden">
+        <div className="max-w-[1600px] mx-auto relative z-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-16 mb-32">
+            <div className="lg:col-span-5">
+              <Reveal>
+                <div className="text-2xl font-bold tracking-[0.2em] uppercase mb-10 flex items-center gap-4">
+                  <div className="w-7 h-7 bg-[#c9a96e] flex items-center justify-center text-white">
+                    <Building2 className="w-3.5 h-3.5" />
+                  </div>
+                  LUMIÈRE
+                </div>
+                <p className="text-black/40 max-w-sm mb-12 uppercase tracking-[0.2em] text-[10px] font-bold leading-relaxed italic">
+                  Exclusive Real Estate Atelier specializing in ultra-prime
+                  properties and architectural mandates.
+                </p>
+                <form
+                  className="relative max-w-md"
+                  onSubmit={(e) => e.preventDefault()}
+                >
+                  <input
+                    type="email"
+                    placeholder="AUTHENTICATED_EMAIL"
+                    className="w-full bg-[#fcfbf9] border border-black/5 rounded-none px-6 py-4 text-xs font-bold outline-none focus:border-[#c9a96e] text-black transition-all uppercase tracking-widest"
+                  />
+                  <button
+                    type="submit"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-[#c9a96e] hover:text-black transition-colors uppercase tracking-[0.3em]"
+                  >
+                    CONNECT
+                  </button>
+                </form>
+              </Reveal>
+            </div>
+
+            <div className="lg:col-span-2 lg:col-start-7">
+              <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#c9a96e] mb-10">
+                Inventory
+              </h4>
+              <ul className="space-y-4 text-[10px] font-bold uppercase tracking-widest text-black/30">
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-[#c9a96e] transition-colors"
+                  >
+                    Villas_Collection
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-[#c9a96e] transition-colors"
+                  >
+                    Penthouses_Luxury
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-[#c9a96e] transition-colors"
+                  >
+                    Historic_Estates
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-[#c9a96e] transition-colors"
+                  >
+                    Off_Market_Atlas
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            <div className="lg:col-span-2">
+              <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#c9a96e] mb-10">
+                Atelier
+              </h4>
+              <ul className="space-y-4 text-[10px] font-bold uppercase tracking-widest text-black/30">
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-[#c9a96e] transition-colors"
+                  >
+                    Our_Protocol
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-[#c9a96e] transition-colors"
+                  >
+                    Artisan_Network
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-[#c9a96e] transition-colors"
+                  >
+                    Market_Intel
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-[#c9a96e] transition-colors"
+                  >
+                    Privacy_Buffer
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            <div className="lg:col-span-2">
+              <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#c9a96e] mb-10">
+                Connect
+              </h4>
+              <ul className="space-y-4 text-[10px] font-bold uppercase tracking-widest text-black/30">
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-[#c9a96e] transition-colors flex items-center gap-3"
+                  >
+                    <Mail className="w-3 h-3" /> Paris_Studio
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-[#c9a96e] transition-colors flex items-center gap-3"
+                  >
+                    <Phone className="w-3 h-3" /> Monaco_Hub
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-[#c9a96e] transition-colors flex items-center gap-3"
+                  >
+                    <Globe className="w-3 h-3" /> NY_Gateway
+                  </Link>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="flex flex-col md:flex-row justify-between items-center gap-8 pt-10 border-t border-black/5 text-[9px] font-bold uppercase tracking-widest text-black/20">
+            <div className="flex items-center gap-10">
+              <span>&copy; {new Date().getFullYear()} Lumière Estates SA.</span>
+              <Link href="#" className="hover:text-black transition-colors">
+                Legal_Protocols
+              </Link>
+              <Link href="#" className="hover:text-black transition-colors">
+                Mandate_Terms
+              </Link>
+            </div>
+            <div className="flex gap-10">
+              <span>Paris // Monaco // NY // Tokyo</span>
+              <span>Crafted with Precision</span>
+            </div>
+          </div>
+        </div>
+      </footer>
+
+      {/* PROPERTY MODAL */}
       <AnimatePresence>
-        {activeProperty && (
+        {activeProperty !== null && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[200] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 md:p-12"
-            onClick={() => setActiveModal(null)}
+            className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-md flex items-center justify-center p-6"
+            onClick={() => setActiveProperty(null)}
           >
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 200, damping: 25 }}
-              className="bg-[#f5f0e8] rounded-3xl overflow-hidden max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+              initial={{ scale: 0.9, y: 30 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 30 }}
+              className="bg-[#fcfbf9] border border-black/10 max-w-4xl w-full grid grid-cols-1 md:grid-cols-2 overflow-hidden rounded-sm shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="relative h-80">
-                <Image src={activeProperty.img} alt={activeProperty.name} fill unoptimized className="object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#1a1614]/80 to-transparent" />
-                <button
-                  onClick={() => setActiveModal(null)}
-                  className="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/40 transition-colors"
-                >
-                  <X className="w-5 h-5 text-white" />
-                </button>
-                <div className="absolute bottom-6 left-8">
-                  <span className="text-[10px] uppercase tracking-[0.3em] text-[#c9a96e]">{activeProperty.type}</span>
-                  <h2 className="text-4xl font-serif text-white mt-1">{activeProperty.name}</h2>
-                </div>
+              <div className="relative aspect-square md:aspect-auto">
+                <Image
+                  src={PROPERTIES[activeProperty].img}
+                  alt="Property"
+                  fill
+                  className="object-cover grayscale brightness-75 hover:grayscale-0 transition-all duration-700"
+                />
               </div>
-              <div className="p-8 grid md:grid-cols-2 gap-8">
+              <div className="p-12 flex flex-col justify-between">
                 <div>
-                  <p className="flex items-center gap-2 text-[#1a1614]/60 mb-6"><MapPin className="w-4 h-4 text-[#c9a96e]" />{activeProperty.location}</p>
-                  <div className="grid grid-cols-2 gap-4 mb-8">
-                    {[["Surface", activeProperty.sqm], ["Rooms", activeProperty.rooms], ["Status", "Available"], ["Year", "2024"]].map(([l, v]) => (
-                      <div key={l} className="p-4 bg-white rounded-xl">
-                        <div className="text-[10px] uppercase tracking-[0.2em] text-[#1a1614]/40 mb-1">{l}</div>
-                        <div className="font-semibold text-[#1a1614]">{v}</div>
+                  <div className="text-[10px] uppercase tracking-widest text-[#c9a96e] font-bold mb-4">
+                    {PROPERTIES[activeProperty].location} //{" "}
+                    {PROPERTIES[activeProperty].type}
+                  </div>
+                  <h3 className="text-4xl font-bold uppercase tracking-tighter text-black mb-6 leading-none">
+                    {PROPERTIES[activeProperty].name}
+                  </h3>
+                  <p className="text-sm text-black/40 leading-relaxed font-light mb-10 italic">
+                    "An exceptional architectural statement offering
+                    unparalleled views and the finest finishes by partner
+                    artisans."
+                  </p>
+
+                  <div className="grid grid-cols-1 gap-4 mb-10">
+                    {PROPERTIES[activeProperty].features.map((f, i) => (
+                      <div
+                        key={i}
+                        className="flex justify-between text-xs border-b border-black/5 pb-2"
+                      >
+                        <span className="uppercase tracking-widest text-black/20 font-bold">
+                          SPEC_0{i + 1}
+                        </span>
+                        <span className="font-bold text-black/60">{f}</span>
                       </div>
                     ))}
                   </div>
-                  <div className="text-3xl font-serif text-[#c9a96e] mb-6">{activeProperty.price}</div>
                 </div>
-                <div className="flex flex-col gap-4">
-                  <p className="text-[#1a1614]/60 leading-relaxed text-sm">
-                    An exceptional property offering unparalleled views, seamless indoor-outdoor living, and the finest finishes by award-winning artisans. Available for private viewing by appointment.
-                  </p>
-                  <MagneticBtn className="w-full py-4 bg-[#1a1614] text-[#f5f0e8] text-sm uppercase tracking-[0.2em] font-medium hover:bg-[#c9a96e] hover:text-[#1a1614] transition-colors">
-                    Request Private Viewing
-                  </MagneticBtn>
-                  <button className="w-full py-4 border border-[#1a1614]/20 text-[#1a1614] text-sm uppercase tracking-[0.2em] hover:border-[#c9a96e] transition-colors">
-                    Download Brochure
-                  </button>
-                </div>
+                <button className="w-full py-5 bg-[#1a1a1a] text-white text-[10px] font-bold uppercase tracking-widest hover:bg-[#c9a96e] transition-all cursor-pointer">
+                  Initialize_Mandate &mdash; {PROPERTIES[activeProperty].price}
+                </button>
               </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* ── STATS ─────────────────────────────────────────── */}
-      <section className="bg-[#1a1614] py-24 px-8 md:px-16">
-        <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-12 text-center">
-          {STATS.map((s, i) => (
-            <Reveal key={i} delay={i * 0.1}>
-              <div className="text-5xl md:text-6xl font-serif text-[#c9a96e] mb-3">
-                <Counter target={s.value} prefix={s.prefix} suffix={s.suffix} />
-              </div>
-              <div className="text-xs uppercase tracking-[0.3em] text-white/40">{s.label}</div>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      {/* ── ABOUT ─────────────────────────────────────────── */}
-      <section id="about" className="px-8 md:px-16 py-32 max-w-7xl mx-auto grid md:grid-cols-2 gap-20 items-center">
-        <Reveal>
-          <div className="relative rounded-2xl overflow-hidden aspect-[4/5]">
-            <Image
-              src="https://images.unsplash.com/photo-733852?w=800&q=80"
-              alt="Architecture studio"
-              fill
-              unoptimized
-              className="object-cover"
-            />
-            <div className="absolute bottom-8 left-8 right-8 p-6 bg-[#f5f0e8]/95 backdrop-blur-sm rounded-xl">
-              <div className="text-[10px] uppercase tracking-[0.3em] text-[#c9a96e] mb-1">Our Commitment</div>
-              <p className="text-sm text-[#1a1614] font-medium leading-relaxed">Every mandate is handled with the silence and precision of a Swiss watch.</p>
-            </div>
-          </div>
-        </Reveal>
-        <div>
-          <Reveal delay={0.1}>
-            <span className="text-xs uppercase tracking-[0.4em] text-[#c9a96e] block mb-6">Est. 2006</span>
-            <h2 className="text-5xl font-serif leading-tight mb-8">Where Vision Meets<br /><em>Architecture.</em></h2>
-            <p className="text-[#1a1614]/60 leading-relaxed mb-6">
-              Lumière Estates was founded on the conviction that true luxury is invisible to the eye but felt in every proportioned space, every material chosen, every view framed with intention.
-            </p>
-            <p className="text-[#1a1614]/60 leading-relaxed mb-10">
-              Our atelier operates on three continents, with a portfolio that reads like a map of desire — from sun-drenched hillside villas to glacial-view chalets.
-            </p>
-          </Reveal>
-          <Reveal delay={0.2}>
-            <div className="grid grid-cols-2 gap-6">
-              {[["Off-Market Access", "Private portfolio of unadvertised mandates"], ["White Glove Service", "Dedicated advisor from search to keys"], ["Legal Mastery", "Full notarial and fiscal management"], ["Design Consulting", "Partner architects and interior designers"]].map(([title, desc]) => (
-                <div key={title} className="p-5 border border-[#c9a96e]/20 rounded-xl hover:border-[#c9a96e]/60 transition-colors">
-                  <div className="w-1 h-6 bg-[#c9a96e] mb-3" />
-                  <h4 className="font-semibold text-sm mb-1">{title}</h4>
-                  <p className="text-[11px] text-[#1a1614]/50 leading-relaxed">{desc}</p>
-                </div>
-              ))}
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* ── TESTIMONIALS ──────────────────────────────────── */}
-      <section className="bg-white px-8 md:px-16 py-24">
-        <Reveal className="text-center mb-16">
-          <span className="text-xs uppercase tracking-[0.4em] text-[#c9a96e] block mb-4">Client Voices</span>
-          <h2 className="text-4xl md:text-5xl font-serif">Those Who Know.</h2>
-        </Reveal>
-        <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-8">
-          {[
-            { quote: "Lumière found us a property we hadn't dared to imagine. The process was seamless, private, and utterly extraordinary.", author: "Madame S.L.", location: "Geneva" },
-            { quote: "Beyond real estate — an atelier that understands architecture as art. Our Côte d'Azur estate is a masterpiece.", author: "Mr. K.A.", location: "Dubai" },
-            { quote: "The level of discretion and attention to our specific vision was unmatched. We found home in the truest sense.", author: "Dr. H.V.", location: "Singapore" },
-          ].map((t, i) => (
-            <Reveal key={i} delay={i * 0.1}>
-              <div className="p-8 bg-[#f5f0e8] rounded-2xl">
-                <div className="text-3xl text-[#c9a96e] font-serif mb-4">"</div>
-                <p className="text-[#1a1614]/70 leading-relaxed mb-6 italic">{t.quote}</p>
-                <div className="border-t border-[#c9a96e]/20 pt-4">
-                  <div className="font-semibold text-sm">{t.author}</div>
-                  <div className="text-xs text-[#1a1614]/40 uppercase tracking-[0.2em]">{t.location}</div>
-                </div>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      {/* ── FAQ ───────────────────────────────────────────── */}
-      <section id="services" className="px-8 md:px-16 py-24 max-w-4xl mx-auto">
-        <Reveal className="mb-16">
-          <span className="text-xs uppercase tracking-[0.4em] text-[#c9a96e] block mb-4">Frequently Asked</span>
-          <h2 className="text-4xl md:text-5xl font-serif">Your Questions,<br /><em>Answered.</em></h2>
-        </Reveal>
-        <div className="space-y-3">
-          {FAQS.map((faq, i) => (
-            <Reveal key={i} delay={i * 0.05}>
-              <div className="border border-[#c9a96e]/20 rounded-xl overflow-hidden">
-                <button
-                  className="w-full flex justify-between items-center px-7 py-5 text-left hover:bg-[#c9a96e]/5 transition-colors"
-                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                >
-                  <span className="font-medium text-[#1a1614] pr-4">{faq.q}</span>
-                  <motion.span animate={{ rotate: openFaq === i ? 45 : 0 }} transition={{ duration: 0.3 }}>
-                    <ChevronDown className="w-5 h-5 text-[#c9a96e] flex-shrink-0" />
-                  </motion.span>
-                </button>
-                <AnimatePresence>
-                  {openFaq === i && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                      className="overflow-hidden"
-                    >
-                      <p className="px-7 pb-6 text-[#1a1614]/60 leading-relaxed text-sm">{faq.a}</p>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      {/* ── CONTACT CTA ───────────────────────────────────── */}
-      <section id="contact" className="relative overflow-hidden px-8 md:px-16 py-32 bg-[#1a1614] text-white text-center">
-        <div className="absolute inset-0 opacity-10">
-          <Image
-            src="https://images.unsplash.com/photo-733852?w=800&q=80"
-            alt="Estate"
-            fill
-            unoptimized
-            className="object-cover"
-          />
-        </div>
-        <div className="relative z-10 max-w-3xl mx-auto">
-          <Reveal>
-            <span className="text-xs uppercase tracking-[0.4em] text-[#c9a96e] block mb-6">Private Consultation</span>
-            <h2 className="text-5xl md:text-7xl font-serif mb-8">Your Next Home<br /><em>Awaits.</em></h2>
-            <p className="text-white/50 mb-12 text-lg leading-relaxed">
-              Begin your journey with a confidential consultation. We will listen, understand, and then — and only then — present.
-            </p>
-          </Reveal>
-          <Reveal delay={0.2}>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
-              <MagneticBtn className="flex items-center justify-center gap-3 px-10 py-5 bg-[#c9a96e] text-[#1a1614] font-semibold text-sm uppercase tracking-[0.2em] hover:bg-white transition-colors">
-                Schedule a Meeting <ArrowRight className="w-4 h-4" />
-              </MagneticBtn>
-              <button className="flex items-center justify-center gap-3 px-10 py-5 border border-white/20 text-white text-sm uppercase tracking-[0.2em] hover:border-[#c9a96e] hover:text-[#c9a96e] transition-colors">
-                <Phone className="w-4 h-4" /> +33 1 42 00 00 00
-              </button>
-            </div>
-            <div className="flex justify-center gap-8 text-sm text-white/30">
-              <span className="flex items-center gap-2"><Mail className="w-4 h-4 text-[#c9a96e]" /> contact@lumiere-estates.com</span>
-              <span className="flex items-center gap-2"><MapPin className="w-4 h-4 text-[#c9a96e]" /> Place Vendôme, Paris</span>
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* ── FOOTER ────────────────────────────────────────── */}
-      <footer className="bg-[#0f0d0b] py-8 px-8 md:px-16 flex flex-col md:flex-row justify-between items-center gap-4 text-[11px] text-white/20 uppercase tracking-[0.2em]">
-        <span>© 2026 Lumière Estates · All Rights Reserved</span>
-        <span>Atelier of Ultra-Prime Real Estate</span>
-        <span>Privacy · Legal · Mandates</span>
-      </footer>
-
-      <style>{`::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: #f5f0e8; } ::-webkit-scrollbar-thumb { background: #c9a96e; border-radius: 3px; }`}</style>
+      <style>{`::-webkit-scrollbar{width:4px;background:#fcfbf9}::-webkit-scrollbar-thumb{background:#c9a96e20}`}</style>
     </div>
   );
 }

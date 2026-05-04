@@ -29,7 +29,9 @@ const HIDDEN_IMPACT = new Set([
   "impact-177","impact-178","impact-179","impact-180","impact-181","impact-182","impact-183","impact-184","impact-185","impact-186",
   "impact-187","impact-188","impact-189","impact-190","impact-191","impact-192","impact-193","impact-194","impact-195","impact-196",
   // ── Below quality bar (400–549 lines, pending elevation) ────────────────
-  "impact-62","impact-63","impact-70","impact-72","impact-75",
+  "impact-70",
+  "impact-72",
+  "impact-75",
   "impact-87","impact-88","impact-91","impact-95",
   
 ]);

@@ -2,22 +2,75 @@
 
 import {
   motion,
-  AnimatePresence,
   useScroll,
   useTransform,
   useInView,
+  AnimatePresence,
   useMotionValue,
   useSpring,
 } from "framer-motion";
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import {
-  ArrowRight, X, Menu, ChevronDown, ArrowUpRight,
-  FlaskConical, Dna, Microscope, Heart, BarChart2, Shield,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
+import {
+  ArrowRight,
+  ArrowUpRight,
+  Star,
+  Check,
+  Menu,
+  X,
+  FlaskConical,
+  Dna,
+  Microscope,
+  Heart,
+  BarChart2,
+  Shield,
+  Globe,
+  Clock,
+  Quote,
+  Search,
+  ShoppingBag,
+  Activity,
+  Zap,
+  BookOpen,
+  UserCheck,
+  TrendingUp,
+  Cpu,
+  Twitter,
 } from "lucide-react";
+
 import "../premium.css";
 
-/* ─── DATA ─────────────────────────────────────────────── */
+/* ==========================================================================
+   DATA STRUCTURES
+   ========================================================================= */
+
 const PIPELINES = [
   {
     id: 1,
@@ -26,8 +79,13 @@ const PIPELINES = [
     indication: "Oncology — NSCLC",
     phase: "Phase III",
     progress: 82,
-    img: "https://images.unsplash.com/photo-1576086213369-97a306d36557?q=80&w=1400&auto=format&fit=crop",
+    img: "https://images.unsplash.com/photo-1576086213369-97a306d36557?w=1200&q=80",
     desc: "Next-generation mRNA immunotherapy targeting PD-L1/CTLA-4 axis in non-small cell lung carcinoma.",
+    milestones: [
+      "Target Identified Q1 2024",
+      "Phase I Safety Cleared Q3 2024",
+      "Phase II Efficacy Confirmed Q2 2025",
+    ],
   },
   {
     id: 2,
@@ -36,8 +94,13 @@ const PIPELINES = [
     indication: "Rare Disease — SMA",
     phase: "Phase II",
     progress: 55,
-    img: "https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?q=80&w=1400&auto=format&fit=crop",
+    img: "https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=1200&q=80",
     desc: "CRISPR-based gene editing platform for spinal muscular atrophy with precision delivery via lipid nanoparticles.",
+    milestones: [
+      "IND Approval Q4 2024",
+      "First Patient Dosed Q1 2025",
+      "Interim Data Q4 2025",
+    ],
   },
   {
     id: 3,
@@ -46,84 +109,152 @@ const PIPELINES = [
     indication: "Cardiovascular — HFrEF",
     phase: "Phase I",
     progress: 28,
-    img: "https://images.unsplash.com/photo-1559757175-0eb30cd8c063?q=80&w=1400&auto=format&fit=crop",
+    img: "https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=1200&q=80",
     desc: "Small molecule ROCK-2 inhibitor addressing cardiac fibrosis in heart failure with reduced ejection fraction.",
+    milestones: [
+      "Lead Optimization 2024",
+      "GLP Tox Complete Q1 2025",
+      "Phase I Launch Q3 2025",
+    ],
   },
 ];
 
-const FAQS = [
-  { q: "What is your primary research focus?", a: "Our research spans three therapeutic areas: oncology, rare genetic diseases, and cardiovascular medicine. We leverage mRNA, gene editing, and precision small molecule platforms." },
-  { q: "How do you approach clinical development?", a: "We design adaptive trials that embed biomarker stratification from Phase I onward, reducing the risk of late-stage failure and accelerating the identification of responding patient populations." },
-  { q: "What is your technology transfer policy?", a: "We maintain an open collaboration model with academic medical centers globally. Our IP strategy prioritizes rapid patient access while protecting core platform innovations." },
-  { q: "How is patient safety monitored?", a: "All trials operate under independent Data Safety Monitoring Boards with real-time pharmacovigilance integration. We have maintained a zero serious unexpected adverse event record to date." },
+const PLATFORM_PILLARS = [
+  {
+    title: "mRNA Dynamics",
+    desc: "Proprietary nucleoside modifications that extend protein expression by 3.4x vs standard mRNA.",
+    icon: <Microscope className="w-5 h-5" />,
+  },
+  {
+    title: "LNP Target-X",
+    desc: "Organ-selective lipid nanoparticles achieving 92% liver bypass for systemic delivery.",
+    icon: <Zap className="w-5 h-5" />,
+  },
+  {
+    title: "CRISPR-Fine",
+    desc: "Single-base resolution editing with zero detectable off-target effects in primary human cells.",
+    icon: <Dna className="w-5 h-5" />,
+  },
+  {
+    title: "Bio-Sim AI",
+    desc: "Machine learning models trained on 12PB of proprietary clinical data to predict phase II success.",
+    icon: <Cpu className="w-5 h-5" />,
+  },
 ];
 
-const STATS = [
-  { value: 12, label: "Clinical Candidates", suffix: "" },
-  { value: 4, label: "Published Studies", suffix: "00+" },
-  { value: 23, label: "Patent Families", suffix: "" },
-  { value: 98, label: "Safety Record", suffix: "%" },
+const BOARD = [
+  {
+    name: "Dr. Elena Vance",
+    role: "Chief Scientific Officer",
+    org: "Ex-Genentech",
+    avatar: "EV",
+  },
+  {
+    name: "Prof. Hans Schmidt",
+    role: "Clinical Lead",
+    org: "Basel University",
+    avatar: "HS",
+  },
+  {
+    name: "Sarah Jenkins",
+    role: "Head of R&D",
+    org: "MIT Whitehead Institute",
+    avatar: "SJ",
+  },
 ];
 
-const MARQUEE_ITEMS = [
-  "Genomics", "mRNA Therapeutics", "CRISPR", "Immunotherapy", "Proteomics",
-  "Cell Therapy", "AI Drug Discovery", "Clinical Trials", "Precision Medicine",
-  "Biomarkers", "Genomics", "mRNA Therapeutics", "CRISPR", "Immunotherapy",
-  "Proteomics", "Cell Therapy", "AI Drug Discovery", "Clinical Trials",
-];
+/* ==========================================================================
+   UTILITY COMPONENTS
+   ========================================================================= */
 
-/* ─── SHARED COMPONENTS ─────────────────────────────────── */
-function Reveal({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) {
+function Reveal({
+  children,
+  delay = 0,
+  y = 30,
+}: {
+  children: React.ReactNode;
+  delay?: number;
+  y?: number;
+}) {
   const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-80px" });
+  const inView = useInView(ref, { once: true, margin: "-50px" });
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 40 }}
+      initial={{ opacity: 0, y }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.8, delay, ease: [0.22, 1, 0.36, 1] }}
-      className={className}
+      transition={{ duration: 1, delay, ease: [0.25, 0.1, 0.25, 1] }}
     >
       {children}
     </motion.div>
   );
 }
 
-function Counter({ target, suffix = "" }: { target: number; suffix?: string }) {
+function Counter({
+  to,
+  prefix = "",
+  suffix = "",
+}: {
+  to: number;
+  prefix?: string;
+  suffix?: string;
+}) {
   const ref = useRef(null);
-  const inView = useInView(ref, { once: true });
+  const isInView = useInView(ref, { once: true });
   const [count, setCount] = useState(0);
-
   useEffect(() => {
-    if (!inView) return;
-    let start = 0;
-    const step = Math.ceil(target / 60);
-    const id = setInterval(() => {
-      start += step;
-      if (start >= target) { setCount(target); clearInterval(id); }
-      else setCount(start);
-    }, 24);
-    return () => clearInterval(id);
-  }, [inView, target]);
-
-  return <span ref={ref}>{count}{suffix}</span>;
+    if (!isInView) return;
+    let cur = 0;
+    const step = to / 70;
+    const t = setInterval(() => {
+      cur += step;
+      if (cur >= to) {
+        setCount(to);
+        clearInterval(t);
+      } else {
+        setCount(Math.floor(cur));
+      }
+    }, 16);
+    return () => clearInterval(t);
+  }, [isInView, to]);
+  return (
+    <span ref={ref}>
+      {prefix}
+      {count.toLocaleString()}
+      {suffix}
+    </span>
+  );
 }
 
-function MagneticBtn({ children, className = "", onClick }: { children: React.ReactNode; className?: string; onClick?: () => void }) {
+function MagneticBtn({
+  children,
+  className = "",
+  onClick,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  onClick?: () => void;
+}) {
   const ref = useRef<HTMLButtonElement>(null);
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const sx = useSpring(x, { stiffness: 200, damping: 20 });
   const sy = useSpring(y, { stiffness: 200, damping: 20 });
 
-  const handleMouse = useCallback((e: React.MouseEvent) => {
-    const rect = ref.current?.getBoundingClientRect();
-    if (!rect) return;
-    x.set((e.clientX - rect.left - rect.width / 2) * 0.35);
-    y.set((e.clientY - rect.top - rect.height / 2) * 0.35);
-  }, [x, y]);
+  const handleMouse = useCallback(
+    (e: React.MouseEvent) => {
+      const rect = ref.current?.getBoundingClientRect();
+      if (!rect) return;
+      x.set((e.clientX - rect.left - rect.width / 2) * 0.35);
+      y.set((e.clientY - rect.top - rect.height / 2) * 0.35);
+    },
+    [x, y],
+  );
 
-  const reset = useCallback(() => { x.set(0); y.set(0); }, [x, y]);
+  const reset = useCallback(() => {
+    x.set(0);
+    y.set(0);
+  }, [x, y]);
 
   return (
     <motion.button
@@ -139,427 +270,773 @@ function MagneticBtn({ children, className = "", onClick }: { children: React.Re
   );
 }
 
-/* ─── MAIN PAGE ──────────────────────────────────────────── */
-export default function OnePageDotNav() {
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [activeModal, setActiveModal] = useState<number | null>(null);
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const heroRef = useRef(null);
-  const { scrollY } = useScroll();
-  const heroY = useTransform(scrollY, [0, 600], [0, 180]);
-  const heroOpacity = useTransform(scrollY, [0, 400], [1, 0]);
+/* ==========================================================================
+   MAIN PAGE COMPONENT
+   ========================================================================= */
 
-  const activePipeline = activeModal !== null ? PIPELINES[activeModal] : null;
+export default function NexavirBioPage() {
+  const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [activePipeline, setActivePipeline] = useState<number | null>(null);
+
+  const heroRef = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"],
+  });
+  const heroY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 50);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
-    <div className="premium-theme bg-white text-[#0a1628] min-h-screen font-sans overflow-x-hidden selection:bg-[#0066cc] selection:text-white">
+    <div
+      className="premium-theme min-h-screen bg-white text-[#0a1a2f] font-sans selection:bg-[#0066cc] selection:text-white overflow-x-hidden"
+      style={{ scrollBehavior: "smooth" }}
+    >
+      {/* ==========================================
+          NAVIGATION
+          ========================================== */}
+      <nav
+        className={`fixed top-0 left-0 w-full z-50 transition-all duration-700 ${scrolled ? "bg-white/95 backdrop-blur-md py-4 border-b border-[#0066cc]/10 shadow-sm" : "bg-transparent py-8"}`}
+      >
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-[#0066cc] flex items-center justify-center text-white">
+              <Dna className="w-4 h-4" />
+            </div>
+            <span className="text-xl font-black tracking-tighter uppercase text-[#0a1a2f]">
+              NEXAVIR<span className="text-[#0066cc]">BIO</span>
+            </span>
+          </Link>
 
-      {/* ── NAV ───────────────────────────────────────────── */}
-      <nav className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-8 md:px-16 py-5 bg-white/90 backdrop-blur-xl border-b border-[#0066cc]/10 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-[#0066cc] flex items-center justify-center">
-            <Dna className="w-4 h-4 text-white" />
+          <div className="hidden lg:flex items-center gap-10 text-[10px] font-bold uppercase tracking-[0.2em] text-[#0a1a2f]/40">
+            <Link href="#" className="hover:text-[#0066cc] transition-colors">
+              Pipeline
+            </Link>
+            <Link href="#" className="hover:text-[#0066cc] transition-colors">
+              Platform
+            </Link>
+            <Link href="#" className="hover:text-[#0066cc] transition-colors">
+              Clinical_Data
+            </Link>
+            <Link href="#" className="hover:text-[#0066cc] transition-colors">
+              Investors
+            </Link>
           </div>
-          <span className="text-lg font-bold tracking-tight text-[#0a1628]">Nexavir<span className="text-[#0066cc]">Bio</span></span>
+
+          <div className="flex items-center gap-6">
+            <div className="hidden xl:flex flex-col items-end">
+              <span className="text-[9px] font-bold text-[#0a1a2f]/30 uppercase tracking-widest">
+                NASDAQ: NXVB
+              </span>
+              <span className="text-[11px] font-bold text-green-600 flex items-center gap-1">
+                142.40 <TrendingUp className="w-3 h-3" />
+              </span>
+            </div>
+            <button className="px-8 py-3 bg-[#0066cc] text-white text-[10px] font-bold uppercase tracking-widest rounded-md hover:bg-[#001a3d] transition-all shadow-lg shadow-[#0066cc]/20">
+              Contact_IR
+            </button>
+            <button onClick={() => setMenuOpen(true)} className="lg:hidden">
+              <Menu className="w-6 h-6" />
+            </button>
+          </div>
         </div>
-        <div className="hidden md:flex gap-10 text-sm text-[#0a1628]/60 font-medium">
-          {["Pipeline", "Platform", "Science", "About", "Investors"].map((item) => (
-            <a key={item} href={`#${item.toLowerCase()}`} className="hover:text-[#0066cc] transition-colors">{item}</a>
-          ))}
-        </div>
-        <MagneticBtn className="hidden md:flex items-center gap-2 px-6 py-2.5 bg-[#0066cc] text-white text-sm font-semibold hover:bg-[#0052a3] transition-colors rounded-lg">
-          Contact Us <ArrowRight className="w-4 h-4" />
-        </MagneticBtn>
-        <button className="md:hidden" onClick={() => setMobileOpen(true)}>
-          <Menu className="w-6 h-6 text-[#0a1628]" />
-        </button>
       </nav>
 
-      {/* ── MOBILE NAV ────────────────────────────────────── */}
+      {/* MOBILE MENU */}
       <AnimatePresence>
-        {mobileOpen && (
+        {menuOpen && (
           <motion.div
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
-            transition={{ type: "tween", duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed inset-0 z-[100] bg-[#0a1628] flex flex-col justify-center items-center gap-8"
+            initial={{ opacity: 0, x: "100%" }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: "100%" }}
+            transition={{ type: "tween", duration: 0.5 }}
+            className="fixed inset-0 z-[100] bg-white p-8 pt-32 flex flex-col border-l border-black/5"
           >
-            <button className="absolute top-6 right-8" onClick={() => setMobileOpen(false)}>
-              <X className="w-7 h-7 text-white" />
+            <button
+              onClick={() => setMenuOpen(false)}
+              className="absolute top-10 right-8"
+            >
+              <X className="w-8 h-8" />
             </button>
-            {["Pipeline", "Platform", "Science", "About", "Investors"].map((item, i) => (
-              <motion.a
-                key={item}
-                href={`#${item.toLowerCase()}`}
-                initial={{ opacity: 0, x: 40 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.08 + 0.2 }}
-                onClick={() => setMobileOpen(false)}
-                className="text-3xl font-bold text-white hover:text-[#0066cc] transition-colors"
-              >
-                {item}
-              </motion.a>
-            ))}
+            <div className="flex flex-col gap-10 text-4xl font-black tracking-tighter uppercase">
+              <Link href="#" onClick={() => setMenuOpen(false)}>
+                Pipeline
+              </Link>
+              <Link href="#" onClick={() => setMenuOpen(false)}>
+                Platform
+              </Link>
+              <Link href="#" onClick={() => setMenuOpen(false)}>
+                Science
+              </Link>
+              <Link href="#" onClick={() => setMenuOpen(false)}>
+                Investors
+              </Link>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* ── HERO ──────────────────────────────────────────── */}
-      <section ref={heroRef} className="relative min-h-screen flex items-center overflow-hidden bg-[#f0f6ff]">
-        <motion.div style={{ y: heroY }} className="absolute inset-0">
+      {/* ==========================================
+          1. HERO (Tech-Scientific)
+          ========================================== */}
+      <section
+        ref={heroRef}
+        className="relative w-full h-[100svh] flex flex-col justify-center overflow-hidden bg-[#f4f7fa]"
+      >
+        <motion.div
+          style={{ y: heroY, opacity: heroOpacity }}
+          className="absolute inset-0 z-0"
+        >
           <Image
-            src="https://images.unsplash.com/photo-196645?w=800&q=80"
-            alt="Biotech lab"
+            src="https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=1600&q=80"
+            alt="Biotech Hero"
             fill
-            unoptimized
-            className="object-cover opacity-20"
+            className="object-cover opacity-10"
             priority
           />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#f4f7fa] via-[#f4f7fa]/80 to-transparent" />
         </motion.div>
-        <div className="absolute inset-0 bg-gradient-to-r from-[#f0f6ff] via-[#f0f6ff]/90 to-transparent" />
-        <motion.div style={{ opacity: heroOpacity }} className="relative z-10 px-8 md:px-16 max-w-3xl pt-32 pb-16">
+
+        <div className="relative z-10 max-w-[1400px] mx-auto px-6 md:px-12 w-full">
           <Reveal>
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#0066cc]/10 rounded-full text-[#0066cc] text-xs font-semibold tracking-wide uppercase mb-8 border border-[#0066cc]/20">
+            <div className="inline-flex items-center gap-3 px-4 py-2 bg-white rounded-full border border-[#0066cc]/20 text-[#0066cc] text-[10px] font-bold uppercase tracking-widest mb-10 shadow-sm">
               <span className="w-2 h-2 bg-[#0066cc] rounded-full animate-pulse" />
-              Advancing Human Health Since 2008
+              Phase III Data Update Released Q2 2026
             </div>
-          </Reveal>
-          <Reveal delay={0.1}>
-            <h1 className="text-5xl md:text-[6vw] font-bold text-[#0a1628] leading-[1.05] mb-8 tracking-tight">
-              Precision Medicine<br />
-              <span className="text-[#0066cc]">Reimagined.</span>
+            <h1 className="text-6xl md:text-8xl lg:text-[7rem] font-black leading-[0.95] tracking-tighter mb-10 text-[#0a1a2f]">
+              Precision Medicine <br />{" "}
+              <span className="text-[#0066cc]">Re-engineered.</span>
             </h1>
-          </Reveal>
-          <Reveal delay={0.2}>
-            <p className="text-lg text-[#0a1628]/60 leading-relaxed mb-10 max-w-xl">
-              We engineer therapeutic candidates that target disease at its molecular origin — with a clinical pipeline spanning oncology, genetic medicine, and cardiovascular science.
+            <p className="max-w-xl text-lg md:text-xl text-[#0a1a2f]/60 leading-relaxed font-medium mb-12">
+              Advancing a deep pipeline of curative mRNA and gene-editing
+              therapies targeting oncology, rare disease, and cardiovascular
+              failure.
             </p>
-          </Reveal>
-          <Reveal delay={0.3}>
-            <div className="flex flex-wrap gap-4">
-              <MagneticBtn className="flex items-center gap-3 px-8 py-4 bg-[#0066cc] text-white font-semibold text-sm rounded-lg hover:bg-[#0052a3] transition-colors shadow-lg shadow-[#0066cc]/25">
-                Explore Pipeline <ArrowRight className="w-4 h-4" />
+            <div className="flex flex-col sm:flex-row gap-6">
+              <MagneticBtn className="px-12 py-5 bg-[#0066cc] text-white text-[10px] font-bold uppercase tracking-[0.3em] rounded-md hover:bg-[#001a3d] transition-all cursor-pointer shadow-2xl">
+                Explore Pipeline
               </MagneticBtn>
-              <button className="flex items-center gap-3 px-8 py-4 border border-[#0a1628]/15 text-[#0a1628] text-sm font-medium rounded-lg hover:border-[#0066cc] hover:text-[#0066cc] transition-colors">
-                <BarChart2 className="w-4 h-4" /> Investor Relations
+              <button className="px-12 py-5 border border-[#0066cc]/20 text-[#0a1a2f] text-[10px] font-bold uppercase tracking-[0.3em] rounded-md hover:bg-white transition-all cursor-pointer">
+                Platform Overview
               </button>
             </div>
           </Reveal>
+        </div>
+
+        <motion.div
+          style={{ opacity: heroOpacity }}
+          className="absolute bottom-10 left-12 hidden md:block"
+        >
+          <div className="flex flex-col gap-2">
+            <span className="text-[9px] font-bold text-[#0a1a2f]/30 uppercase tracking-[0.4em]">
+              Basel // Boston // Singapore
+            </span>
+            <div className="w-32 h-[1px] bg-[#0066cc]/20" />
+          </div>
         </motion.div>
-        <div className="absolute right-0 bottom-0 w-1/2 h-full hidden lg:block">
-          <div className="relative h-full overflow-hidden">
-            <Image
-              src="https://images.unsplash.com/photo-196645?w=800&q=80"
-              alt="Scientist"
-              fill
-              unoptimized
-              className="object-cover object-left"
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-[#f0f6ff] via-transparent to-transparent" />
+      </section>
+
+      {/* ==========================================
+          2. PLATFORM ENGINE (Deeper Dive)
+          ========================================== */}
+      <section className="py-32 bg-white border-y border-black/5">
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 md:gap-32 items-center">
+            <div className="lg:col-span-6">
+              <Reveal>
+                <span className="text-[10px] uppercase tracking-[0.4em] font-bold text-[#0066cc] mb-6 block">
+                  The Discovery Engine
+                </span>
+                <h2 className="text-5xl md:text-7xl font-black tracking-tighter leading-tight mb-12 text-[#0a1a2f] uppercase">
+                  Built on the <br />{" "}
+                  <span className="text-[#0066cc]">Language</span> of Biology.
+                </h2>
+                <p className="text-lg text-[#0a1a2f]/50 leading-relaxed font-medium mb-16 italic">
+                  Our integrated platform compresses the discovery-to-IND
+                  timeline by 40% through AI-guided target identification and
+                  proprietary delivery chemistry.
+                </p>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {PLATFORM_PILLARS.map((pillar, i) => (
+                    <div
+                      key={i}
+                      className="p-8 bg-[#f4f7fa] border border-[#0066cc]/10 hover:border-[#0066cc]/40 transition-all group"
+                    >
+                      <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center text-[#0066cc] mb-6 shadow-sm group-hover:scale-110 transition-transform">
+                        {pillar.icon}
+                      </div>
+                      <h4 className="text-sm font-bold uppercase tracking-tight mb-3">
+                        {pillar.title}
+                      </h4>
+                      <p className="text-xs text-[#0a1a2f]/40 leading-relaxed font-medium">
+                        {pillar.desc}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </Reveal>
+            </div>
+
+            <div className="lg:col-span-6">
+              <Reveal className="relative aspect-square rounded-2xl overflow-hidden shadow-2xl border-8 border-white group">
+                <Image
+                  src="https://images.unsplash.com/photo-1576086213369-97a306d36557?w=1200&q=80"
+                  alt="Science Detail"
+                  fill
+                  className="object-cover group-hover:scale-105 transition-transform duration-1000"
+                />
+                <div className="absolute inset-0 bg-[#0066cc]/10 mix-blend-multiply" />
+                <div className="absolute inset-0 p-12 flex flex-col justify-end">
+                  <div className="bg-white/95 backdrop-blur-md p-10 shadow-2xl border border-black/5">
+                    <h3 className="text-3xl font-black uppercase tracking-tighter mb-6 text-[#0a1a2f]">
+                      Target Identified.
+                    </h3>
+                    <div className="space-y-4 mb-8">
+                      {[
+                        { label: "Molecular Fidelity", val: 99.8 },
+                        { label: "LNP Encapsulation", val: 95.4 },
+                        { label: "Cellular Uptake", val: 88.2 },
+                      ].map((stat, i) => (
+                        <div key={i}>
+                          <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-[#0a1a2f]/40 mb-2">
+                            <span>{stat.label}</span>
+                            <span className="text-[#0066cc]">{stat.val}%</span>
+                          </div>
+                          <Progress
+                            value={stat.val}
+                            className="h-1 bg-[#0066cc]/10 [&>div]:bg-[#0066cc]"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    <button className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest text-[#0066cc] hover:text-[#0a1a2f] transition-colors">
+                      View_Structural_Reports <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </Reveal>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ── MARQUEE ───────────────────────────────────────── */}
-      <div className="overflow-hidden bg-[#0a1628] py-4">
-        <motion.div
-          animate={{ x: [0, -2400] }}
-          transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
-          className="flex gap-12 whitespace-nowrap"
-        >
-          {MARQUEE_ITEMS.map((item, i) => (
-            <span key={i} className="text-xs font-semibold uppercase tracking-[0.35em] text-white/30 flex-shrink-0">
-              {item} <span className="text-[#0066cc]/50 mx-3">·</span>
-            </span>
-          ))}
-        </motion.div>
-      </div>
+      {/* ==========================================
+          3. CLINICAL PIPELINE
+          ========================================== */}
+      <section className="py-32 bg-[#f4f7fa]">
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12">
+          <div className="flex flex-col md:flex-row justify-between items-end mb-24 gap-12">
+            <Reveal>
+              <h2 className="text-5xl md:text-8xl font-black tracking-tighter uppercase leading-[0.9] text-[#0a1a2f]">
+                Clinical <br />{" "}
+                <span className="text-[#0066cc]">Pipeline.</span>
+              </h2>
+            </Reveal>
+            <p className="max-w-sm text-sm text-[#0a1a2f]/40 leading-relaxed font-bold uppercase tracking-widest italic">
+              Advancing three lead candidates through adaptive clinical trials
+              with embedded biomarker stratification.
+            </p>
+          </div>
 
-      {/* ── PIPELINE ──────────────────────────────────────── */}
-      <section id="pipeline" className="px-8 md:px-16 py-28 bg-white">
-        <Reveal className="mb-16">
-          <span className="text-xs uppercase tracking-[0.3em] text-[#0066cc] block mb-4 font-semibold">Clinical Pipeline</span>
-          <h2 className="text-4xl md:text-6xl font-bold text-[#0a1628] leading-tight">
-            Candidates in<br /><span className="text-[#0066cc]">Development.</span>
-          </h2>
-        </Reveal>
-        <div className="space-y-6 max-w-5xl">
-          {PIPELINES.map((p, i) => (
-            <Reveal key={p.id} delay={i * 0.1}>
-              <motion.div
-                whileHover={{ x: 6 }}
-                transition={{ duration: 0.3 }}
-                className="group border border-[#0a1628]/8 rounded-2xl p-6 md:p-8 hover:border-[#0066cc]/30 hover:shadow-lg hover:shadow-[#0066cc]/5 transition-all cursor-pointer bg-white"
-                onClick={() => setActiveModal(i)}
-              >
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                  <div className="flex items-start gap-6">
-                    <div className="w-14 h-14 rounded-xl bg-[#f0f6ff] flex items-center justify-center flex-shrink-0 group-hover:bg-[#0066cc] transition-colors">
-                      <FlaskConical className="w-6 h-6 text-[#0066cc] group-hover:text-white transition-colors" />
-                    </div>
+          <div className="space-y-6">
+            {PIPELINES.map((pipeline, i) => (
+              <Reveal key={pipeline.id} delay={i * 0.1}>
+                <div
+                  onClick={() => setActivePipeline(i)}
+                  className="group cursor-pointer bg-white border border-[#0066cc]/10 hover:border-[#0066cc]/40 transition-all p-8 flex flex-col lg:flex-row items-center gap-12 rounded-xl shadow-sm"
+                >
+                  <div className="w-32 h-32 bg-[#f4f7fa] rounded-xl flex items-center justify-center text-[#0066cc] flex-shrink-0 group-hover:scale-110 transition-transform">
+                    <FlaskConical className="w-12 h-12" />
+                  </div>
+                  <div className="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
                     <div>
-                      <div className="flex items-center gap-3 mb-1">
-                        <span className="text-xs font-mono text-[#0a1628]/40 uppercase tracking-[0.2em]">{p.code}</span>
-                        <span className="px-2.5 py-0.5 bg-[#0066cc]/10 text-[#0066cc] text-[10px] font-bold uppercase tracking-wider rounded-full">{p.phase}</span>
+                      <div className="text-[10px] uppercase tracking-[0.4em] font-bold text-[#0066cc] mb-2">
+                        {pipeline.code} // {pipeline.phase}
                       </div>
-                      <h3 className="text-2xl font-bold text-[#0a1628] mb-1">{p.name}</h3>
-                      <p className="text-sm text-[#0a1628]/50">{p.indication}</p>
+                      <h3 className="text-3xl font-black uppercase tracking-tighter text-[#0a1a2f]">
+                        {pipeline.name}
+                      </h3>
+                      <span className="text-xs font-bold text-[#0a1a2f]/40">
+                        {pipeline.indication}
+                      </span>
+                    </div>
+                    <div className="hidden md:block">
+                      <span className="text-[9px] uppercase tracking-widest text-[#0a1a2f]/30 block mb-4">
+                        Pipeline Status
+                      </span>
+                      <div className="flex items-center gap-4">
+                        <div className="flex-1 h-2 bg-[#f4f7fa] rounded-full overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            whileInView={{ width: `${pipeline.progress}%` }}
+                            transition={{ duration: 1.5, delay: 0.5 }}
+                            className="h-full bg-[#0066cc]"
+                          />
+                        </div>
+                        <span className="text-xs font-bold text-[#0a1a2f]">
+                          {pipeline.progress}%
+                        </span>
+                      </div>
+                    </div>
+                    <div className="hidden lg:block">
+                      <span className="text-[9px] uppercase tracking-widest text-[#0a1a2f]/30 block mb-4">
+                        Latest Milestones
+                      </span>
+                      <div className="flex flex-col gap-1">
+                        {pipeline.milestones.slice(0, 2).map((m, idx) => (
+                          <span
+                            key={idx}
+                            className="text-[10px] font-bold text-[#0a1a2f]/60 flex items-center gap-2"
+                          >
+                            <Check className="w-3 h-3 text-green-500" /> {m}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-6 md:gap-10">
-                    <div className="flex-1 md:w-48">
-                      <div className="flex justify-between text-[11px] text-[#0a1628]/40 mb-2 font-semibold uppercase tracking-wider">
-                        <span>Progress</span><span>{p.progress}%</span>
-                      </div>
-                      <div className="h-1.5 bg-[#0a1628]/8 rounded-full overflow-hidden">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          whileInView={{ width: `${p.progress}%` }}
-                          transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
-                          viewport={{ once: true }}
-                          className="h-full bg-[#0066cc] rounded-full"
-                        />
-                      </div>
-                    </div>
-                    <ArrowUpRight className="w-5 h-5 text-[#0a1628]/20 group-hover:text-[#0066cc] group-hover:translate-x-1 group-hover:-translate-y-1 transition-all flex-shrink-0" />
+                  <div className="flex-shrink-0">
+                    <button className="w-14 h-14 rounded-full border border-[#0066cc]/20 flex items-center justify-center group-hover:bg-[#0066cc] group-hover:border-[#0066cc] transition-all">
+                      <ArrowUpRight className="w-6 h-6 group-hover:text-white transition-colors" />
+                    </button>
                   </div>
                 </div>
-              </motion.div>
-            </Reveal>
-          ))}
+              </Reveal>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* ── PIPELINE MODAL ────────────────────────────────── */}
+      {/* ==========================================
+          4. SCIENTIFIC GOVERNANCE (Board)
+          ========================================== */}
+      <section className="py-32 bg-white">
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12">
+          <Reveal className="text-center max-w-2xl mx-auto mb-24">
+            <span className="text-[10px] uppercase tracking-[0.5em] font-black text-[#0066cc] mb-6 block">
+              The Custodians
+            </span>
+            <h2 className="text-5xl md:text-7xl font-black tracking-tighter uppercase italic text-[#0a1a2f]">
+              Board of Inquiry.
+            </h2>
+          </Reveal>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
+            {BOARD.map((member, i) => (
+              <Reveal key={i} delay={i * 0.1}>
+                <div className="group p-10 bg-[#f4f7fa] border border-[#0066cc]/10 hover:border-[#0066cc]/40 transition-all text-center">
+                  <div className="relative w-32 h-32 rounded-full overflow-hidden mx-auto mb-8 shadow-xl border-4 border-white">
+                    <div className="absolute inset-0 bg-[#0066cc] flex items-center justify-center text-3xl font-black text-white italic">
+                      {member.avatar}
+                    </div>
+                  </div>
+                  <h4 className="text-2xl font-black uppercase tracking-tight mb-2 text-[#0a1a2f]">
+                    {member.name}
+                  </h4>
+                  <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-[#0066cc] mb-6 block">
+                    {member.role}
+                  </span>
+                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full text-[9px] font-bold uppercase tracking-widest text-[#0a1a2f]/40 border border-black/5">
+                    {member.org}
+                  </div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ==========================================
+          5. INVESTOR HUB (Financials)
+          ========================================== */}
+      <section className="py-32 bg-[#0a1a2f] text-white overflow-hidden relative">
+        <div className="absolute inset-0 opacity-10">
+          <Image
+            src="https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=1600&q=80"
+            alt="Financials"
+            fill
+            className="object-cover"
+          />
+        </div>
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
+            <div>
+              <Reveal>
+                <span className="text-[10px] uppercase tracking-[0.5em] font-black text-[#0066cc] mb-6 block">
+                  Market Position
+                </span>
+                <h2 className="text-5xl md:text-7xl font-black tracking-tighter leading-tight mb-12 uppercase">
+                  Capital <br />{" "}
+                  <span className="text-[#0066cc]">Efficiency.</span>
+                </h2>
+                <p className="text-lg text-white/40 leading-relaxed font-medium mb-16 max-w-lg italic">
+                  We maintain a robust balance sheet with a multi-year cash
+                  runway, enabling the completion of all lead Phase III trials
+                  without dilutive financing.
+                </p>
+
+                <div className="grid grid-cols-2 gap-8">
+                  {[
+                    { label: "Market_Cap", val: 4.8, prefix: "$", suffix: "B" },
+                    { label: "Cash_Runway", val: 24, suffix: " Mo" },
+                    { label: "Clinical_Candidates", val: 12, suffix: "" },
+                    { label: "Patent_Families", val: 23, suffix: "" },
+                  ].map((stat, i) => (
+                    <div
+                      key={i}
+                      className="p-8 bg-white/5 border border-white/10 hover:border-[#0066cc]/40 transition-all"
+                    >
+                      <div className="text-4xl font-black mb-2 text-white">
+                        <Counter
+                          to={stat.val}
+                          prefix={stat.prefix}
+                          suffix={stat.suffix}
+                        />
+                      </div>
+                      <span className="text-[9px] font-bold uppercase tracking-widest text-[#0066cc]">
+                        {stat.label}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </Reveal>
+            </div>
+
+            <Reveal className="bg-white/5 backdrop-blur-xl p-12 border border-white/10 rounded-2xl">
+              <div className="flex items-center justify-between mb-12">
+                <h3 className="text-2xl font-black uppercase tracking-tighter text-[#0066cc]">
+                  Investor Relations
+                </h3>
+                <div className="px-3 py-1 bg-green-500/20 text-green-500 text-[10px] font-bold uppercase rounded-md tracking-widest">
+                  Market Open
+                </div>
+              </div>
+              <div className="space-y-8 mb-12">
+                {[
+                  { title: "2025 Annual Report", size: "4.2 MB", type: "PDF" },
+                  {
+                    title: "Clinical Update Presentation",
+                    size: "12.8 MB",
+                    type: "PPTX",
+                  },
+                  {
+                    title: "Quarterly Earnings Deck",
+                    size: "2.1 MB",
+                    type: "PDF",
+                  },
+                ].map((file, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center justify-between group cursor-pointer"
+                  >
+                    <div className="flex items-center gap-6">
+                      <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center text-white/40 group-hover:bg-[#0066cc] group-hover:text-white transition-all">
+                        <BookOpen className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold uppercase tracking-tight text-white group-hover:text-[#0066cc] transition-colors">
+                          {file.title}
+                        </h4>
+                        <span className="text-[9px] font-bold text-white/20 uppercase tracking-widest">
+                          {file.size} // {file.type}
+                        </span>
+                      </div>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-white/20 group-hover:text-white transition-all translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-100" />
+                  </div>
+                ))}
+              </div>
+              <button className="w-full py-5 bg-[#0066cc] text-white text-[10px] font-bold uppercase tracking-[0.4em] rounded-md hover:bg-white hover:text-[#0a1a2f] transition-all cursor-pointer">
+                Enter_Investor_Portal
+              </button>
+            </Reveal>
+          </div>
+        </div>
+      </section>
+
+      {/* ==========================================
+          6. FAQ (Accordion)
+          ========================================== */}
+      <section className="py-32 bg-[#f4f7fa]">
+        <div className="max-w-3xl mx-auto px-6">
+          <Reveal className="text-center mb-24">
+            <h2 className="text-4xl md:text-5xl font-black tracking-tighter leading-none uppercase italic text-[#0a1a2f]">
+              Science_Buffer
+            </h2>
+          </Reveal>
+
+          <Accordion type="single" collapsible className="space-y-4">
+            {[
+              {
+                q: "What is your primary research focus?",
+                a: "Our research spans oncology, rare genetic diseases, and cardiovascular medicine, leveraging mRNA and gene-editing platforms.",
+              },
+              {
+                q: "How do you approach clinical trials?",
+                a: "We design adaptive trials that embed biomarker stratification from Phase I onward, reducing late-stage risk.",
+              },
+              {
+                q: "What is your technology transfer policy?",
+                a: "We maintain an open collaboration model with academic centers while protecting core platform innovations.",
+              },
+              {
+                q: "How is patient safety monitored?",
+                a: "All trials operate under independent DSMBs with real-time pharmacovigilance integration.",
+              },
+            ].map((faq, i) => (
+              <AccordionItem
+                key={i}
+                value={`item-${i}`}
+                className="border-b border-[#0066cc]/10"
+              >
+                <AccordionTrigger className="text-left text-sm uppercase font-bold tracking-widest py-8 hover:text-[#0066cc] hover:no-underline">
+                  {faq.q}
+                </AccordionTrigger>
+                <AccordionContent className="text-sm text-[#0a1a2f]/40 leading-relaxed font-bold uppercase tracking-widest pb-8">
+                  {faq.a}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
+      </section>
+
+      {/* ==========================================
+          7. MEGA FOOTER (Structural)
+          ========================================== */}
+      <footer className="bg-white pt-32 pb-12 px-6 md:px-12 border-t border-black/5 relative overflow-hidden">
+        <div className="max-w-[1600px] mx-auto relative z-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-16 mb-32">
+            <div className="lg:col-span-5">
+              <Reveal>
+                <div className="text-xl font-black tracking-tighter uppercase mb-10 flex items-center gap-3">
+                  <div className="w-7 h-7 rounded-lg bg-[#0066cc] flex items-center justify-center text-white">
+                    <Dna className="w-3.5 h-3.5" />
+                  </div>
+                  NEXAVIR<span className="text-[#0066cc]">BIO</span>
+                </div>
+                <p className="text-[#0a1a2f]/40 max-w-sm mb-12 uppercase tracking-widest text-[10px] font-bold leading-relaxed italic">
+                  Advancing the frontier of precision medicine through molecular
+                  engineering and AI-driven clinical development.
+                </p>
+                <form
+                  className="relative max-w-md"
+                  onSubmit={(e) => e.preventDefault()}
+                >
+                  <input
+                    type="email"
+                    placeholder="AUTHENTICATE_IR_EMAIL"
+                    className="w-full bg-[#f4f7fa] border border-black/5 rounded-none px-6 py-4 text-xs font-bold outline-none focus:border-[#0066cc] text-[#0a1a2f] transition-all uppercase tracking-widest"
+                  />
+                  <button
+                    type="submit"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-[#0066cc] hover:text-[#0a1a2f] transition-colors uppercase tracking-[0.3em]"
+                  >
+                    ACCESS
+                  </button>
+                </form>
+              </Reveal>
+            </div>
+
+            <div className="lg:col-span-2 lg:col-start-7">
+              <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#0066cc] mb-10">
+                Pipeline
+              </h4>
+              <ul className="space-y-4 text-[10px] font-bold uppercase tracking-widest text-[#0a1a2f]/30">
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-[#0066cc] transition-colors"
+                  >
+                    Oncology_Assets
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-[#0066cc] transition-colors"
+                  >
+                    Rare_Genetic_Hub
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-[#0066cc] transition-colors"
+                  >
+                    Cardiovascular_Prog
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-[#0066cc] transition-colors"
+                  >
+                    Clinical_Trials_Log
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            <div className="lg:col-span-2">
+              <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#0066cc] mb-10">
+                Platform
+              </h4>
+              <ul className="space-y-4 text-[10px] font-bold uppercase tracking-widest text-[#0a1a2f]/30">
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-[#0066cc] transition-colors"
+                  >
+                    mRNA_Dynamics
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-[#0066cc] transition-colors"
+                  >
+                    Target_X_Delivery
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-[#0066cc] transition-colors"
+                  >
+                    AI_Predictive_Tox
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-[#0066cc] transition-colors"
+                  >
+                    Structural_Biology
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            <div className="lg:col-span-2">
+              <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#0066cc] mb-10">
+                Network
+              </h4>
+              <ul className="space-y-4 text-[10px] font-bold uppercase tracking-widest text-[#0a1a2f]/30">
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-[#0066cc] transition-colors flex items-center gap-3"
+                  >
+                    <Globe className="w-3 h-3" /> Basel_HQ
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-[#0066cc] transition-colors flex items-center gap-3"
+                  >
+                    <Twitter className="w-3 h-3" /> X_Protocol
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="hover:text-[#0066cc] transition-colors flex items-center gap-3"
+                  >
+                    <TrendingUp className="w-3 h-3" /> Investor_Relations
+                  </Link>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="flex flex-col md:flex-row justify-between items-center gap-8 pt-10 border-t border-black/5 text-[9px] font-bold uppercase tracking-widest text-[#0a1a2f]/20">
+            <div className="flex items-center gap-10">
+              <span>&copy; {new Date().getFullYear()} NexavirBio AG.</span>
+              <Link href="#" className="hover:text-[#0a1a2f] transition-colors">
+                Clinical_Protocols
+              </Link>
+              <Link href="#" className="hover:text-[#0a1a2f] transition-colors">
+                Regulatory_Terms
+              </Link>
+            </div>
+            <div className="flex gap-10">
+              <span>Basel // Boston // Singapore</span>
+              <span>Crafted for Humanity</span>
+            </div>
+          </div>
+        </div>
+      </footer>
+
+      {/* PIPELINE MODAL */}
       <AnimatePresence>
-        {activePipeline && (
+        {activePipeline !== null && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[200] bg-[#0a1628]/60 backdrop-blur-sm flex items-center justify-center p-4 md:p-12"
-            onClick={() => setActiveModal(null)}
+            className="fixed inset-0 z-[200] bg-[#0a1a2f]/80 backdrop-blur-md flex items-center justify-center p-6"
+            onClick={() => setActivePipeline(null)}
           >
             <motion.div
-              initial={{ scale: 0.92, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.92, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 200, damping: 25 }}
-              className="bg-white rounded-3xl overflow-hidden max-w-3xl w-full shadow-2xl"
+              initial={{ scale: 0.9, y: 30 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 30 }}
+              className="bg-white border border-[#0066cc]/10 max-w-4xl w-full grid grid-cols-1 md:grid-cols-2 overflow-hidden rounded-md shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="relative h-64">
-                <Image src={activePipeline.img} alt={activePipeline.name} fill unoptimized className="object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0a1628] to-transparent" />
-                <button
-                  onClick={() => setActiveModal(null)}
-                  className="absolute top-5 right-5 w-9 h-9 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/40 transition-colors"
-                >
-                  <X className="w-4 h-4 text-white" />
-                </button>
-                <div className="absolute bottom-6 left-8 flex items-center gap-3">
-                  <span className="text-xs font-mono text-white/50 uppercase tracking-[0.2em]">{activePipeline.code}</span>
-                  <span className="px-3 py-1 bg-[#0066cc] text-white text-[10px] font-bold uppercase tracking-wider rounded-full">{activePipeline.phase}</span>
-                </div>
+              <div className="relative aspect-square md:aspect-auto">
+                <Image
+                  src={PIPELINES[activePipeline].img}
+                  alt="Pipeline"
+                  fill
+                  className="object-cover grayscale brightness-75 hover:grayscale-0 transition-all duration-700"
+                />
               </div>
-              <div className="p-8">
-                <h2 className="text-3xl font-bold text-[#0a1628] mb-2">{activePipeline.name}</h2>
-                <p className="text-sm text-[#0066cc] font-semibold mb-6">{activePipeline.indication}</p>
-                <p className="text-[#0a1628]/60 leading-relaxed mb-8">{activePipeline.desc}</p>
-                <div className="grid grid-cols-3 gap-4 mb-8">
-                  {[["Phase", activePipeline.phase], ["Trial ID", "NCT-" + activePipeline.id * 1234567], ["Sites", "42 Global"]].map(([l, v]) => (
-                    <div key={l} className="p-4 bg-[#f0f6ff] rounded-xl text-center">
-                      <div className="text-[10px] uppercase tracking-[0.2em] text-[#0a1628]/40 mb-1 font-semibold">{l}</div>
-                      <div className="font-bold text-sm text-[#0a1628]">{v}</div>
-                    </div>
-                  ))}
+              <div className="p-12 flex flex-col justify-between">
+                <div>
+                  <div className="text-[10px] uppercase tracking-widest text-[#0066cc] font-bold mb-4">
+                    {PIPELINES[activePipeline].code} //{" "}
+                    {PIPELINES[activePipeline].phase}
+                  </div>
+                  <h3 className="text-4xl font-black uppercase tracking-tighter text-[#0a1a2f] mb-6 leading-none">
+                    {PIPELINES[activePipeline].name}
+                  </h3>
+                  <p className="text-sm text-[#0a1a2f]/40 leading-relaxed font-bold mb-10 italic">
+                    "{PIPELINES[activePipeline].desc}"
+                  </p>
+
+                  <div className="grid grid-cols-1 gap-4 mb-10">
+                    {PIPELINES[activePipeline].milestones.map((m, i) => (
+                      <div
+                        key={i}
+                        className="flex justify-between text-xs border-b border-black/5 pb-2"
+                      >
+                        <span className="uppercase tracking-widest text-[#0a1a2f]/20 font-bold">
+                          MILESTONE_0{i + 1}
+                        </span>
+                        <span className="font-bold text-[#0a1a2f]/60">{m}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div className="flex gap-3">
-                  <MagneticBtn className="flex-1 py-3.5 bg-[#0066cc] text-white font-semibold text-sm rounded-xl hover:bg-[#0052a3] transition-colors">
-                    Download Data Package
-                  </MagneticBtn>
-                  <button onClick={() => setActiveModal(null)} className="flex-1 py-3.5 border border-[#0a1628]/15 text-[#0a1628] text-sm font-medium rounded-xl hover:border-[#0066cc] transition-colors">
-                    Close
-                  </button>
-                </div>
+                <button className="w-full py-5 bg-[#0066cc] text-white text-[10px] font-bold uppercase tracking-widest hover:bg-[#0a1a2f] transition-all cursor-pointer">
+                  Download_Full_Data_Package
+                </button>
               </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* ── STATS ─────────────────────────────────────────── */}
-      <section className="bg-[#f0f6ff] py-20 px-8 md:px-16 border-y border-[#0066cc]/10">
-        <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-10 text-center">
-          {STATS.map((s, i) => (
-            <Reveal key={i} delay={i * 0.1}>
-              <div className="text-5xl font-bold text-[#0066cc] mb-2 tabular-nums">
-                <Counter target={s.value} suffix={s.suffix} />
-              </div>
-              <div className="text-xs uppercase tracking-[0.25em] text-[#0a1628]/40 font-semibold">{s.label}</div>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      {/* ── PLATFORM ──────────────────────────────────────── */}
-      <section id="platform" className="px-8 md:px-16 py-28 bg-white max-w-7xl mx-auto">
-        <div className="grid md:grid-cols-2 gap-20 items-center">
-          <div>
-            <Reveal>
-              <span className="text-xs uppercase tracking-[0.3em] text-[#0066cc] block mb-4 font-semibold">Our Platform</span>
-              <h2 className="text-4xl md:text-5xl font-bold text-[#0a1628] leading-tight mb-8">
-                Built on the Language<br />of <span className="text-[#0066cc]">Biology.</span>
-              </h2>
-              <p className="text-[#0a1628]/60 leading-relaxed mb-8">
-                Our integrated platform combines AI-driven target identification, proprietary delivery chemistry, and a translational biomarker framework — compressing the discovery-to-IND timeline by up to 40%.
-              </p>
-            </Reveal>
-            <Reveal delay={0.15}>
-              <div className="space-y-5">
-                {[
-                  { icon: <Dna className="w-5 h-5" />, title: "Gene Editing Suite", desc: "Next-gen CRISPR-Cas12 platform with single-base resolution" },
-                  { icon: <Microscope className="w-5 h-5" />, title: "mRNA Engineering", desc: "Modified nucleoside chemistry for sustained protein expression" },
-                  { icon: <Shield className="w-5 h-5" />, title: "Delivery Technology", desc: "Organ-selective lipid nanoparticles with 95%+ encapsulation" },
-                  { icon: <Heart className="w-5 h-5" />, title: "Predictive Toxicology", desc: "AI-driven safety profiling across 200+ cell-based assays" },
-                ].map((item) => (
-                  <div key={item.title} className="flex items-start gap-4 p-5 rounded-xl border border-[#0a1628]/6 hover:border-[#0066cc]/25 hover:bg-[#f0f6ff] transition-all group">
-                    <div className="w-10 h-10 rounded-lg bg-[#f0f6ff] flex items-center justify-center flex-shrink-0 group-hover:bg-[#0066cc] transition-colors">
-                      <span className="text-[#0066cc] group-hover:text-white transition-colors">{item.icon}</span>
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-[#0a1628] text-sm mb-1">{item.title}</h4>
-                      <p className="text-[11px] text-[#0a1628]/45 leading-relaxed">{item.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Reveal>
-          </div>
-          <Reveal delay={0.2}>
-            <div className="relative rounded-3xl overflow-hidden aspect-square shadow-2xl shadow-[#0066cc]/10">
-              <Image
-                src="https://images.unsplash.com/photo-1109543?w=800&q=80"
-                alt="Lab platform"
-                fill
-                unoptimized
-                className="object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-br from-[#0066cc]/30 to-transparent mix-blend-multiply" />
-              <div className="absolute bottom-8 left-8 right-8 p-6 bg-white/95 backdrop-blur-sm rounded-2xl">
-                <div className="text-[10px] uppercase tracking-[0.3em] text-[#0066cc] font-semibold mb-2">Research HQ</div>
-                <p className="text-sm font-semibold text-[#0a1628]">24,000 m² Discovery Center · Basel, Switzerland</p>
-              </div>
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* ── TESTIMONIALS ──────────────────────────────────── */}
-      <section className="bg-[#0a1628] px-8 md:px-16 py-24">
-        <Reveal className="text-center mb-16">
-          <span className="text-xs uppercase tracking-[0.3em] text-[#0066cc] block mb-4 font-semibold">Scientific Advisory</span>
-          <h2 className="text-3xl md:text-4xl font-bold text-white">Trusted by the World's<br />Leading Researchers.</h2>
-        </Reveal>
-        <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-6">
-          {[
-            { quote: "The precision of their mRNA chemistry platform is unlike anything we have seen in clinical translation — reproducible, scalable, and genuinely novel.", author: "Prof. E. Müller", role: "Harvard Medical School", img: "https://images.unsplash.com/photo-1537368910025-700350fe46c7?q=80&w=400&auto=format&fit=crop" },
-            { quote: "Their approach to patient stratification using liquid biopsy biomarkers sets a new standard for oncology trial design.", author: "Dr. A. Chen", role: "Memorial Sloan Kettering", img: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?q=80&w=400&auto=format&fit=crop" },
-            { quote: "The AI-guided toxicology screening eliminated four candidates in eight weeks that would have failed in Phase II. Remarkable discipline.", author: "Dr. R. Patel", role: "Karolinska Institutet", img: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?q=80&w=400&auto=format&fit=crop" },
-          ].map((t, i) => (
-            <Reveal key={i} delay={i * 0.1}>
-              <div className="p-7 bg-white/5 border border-white/10 rounded-2xl">
-                <p className="text-white/60 text-sm leading-relaxed mb-6 italic">"{t.quote}"</p>
-                <div className="flex items-center gap-3">
-                  <div className="relative w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
-                    <Image src={t.img} alt={t.author} fill unoptimized className="object-cover" />
-                  </div>
-                  <div>
-                    <div className="font-semibold text-white text-sm">{t.author}</div>
-                    <div className="text-[10px] text-white/30 uppercase tracking-[0.15em]">{t.role}</div>
-                  </div>
-                </div>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      {/* ── FAQ ───────────────────────────────────────────── */}
-      <section id="science" className="px-8 md:px-16 py-24 max-w-4xl mx-auto">
-        <Reveal className="mb-16">
-          <span className="text-xs uppercase tracking-[0.3em] text-[#0066cc] block mb-4 font-semibold">Common Questions</span>
-          <h2 className="text-4xl font-bold text-[#0a1628]">Science & Strategy.</h2>
-        </Reveal>
-        <div className="space-y-3">
-          {FAQS.map((faq, i) => (
-            <Reveal key={i} delay={i * 0.05}>
-              <div className="border border-[#0a1628]/8 rounded-2xl overflow-hidden">
-                <button
-                  className="w-full flex justify-between items-center px-7 py-5 text-left hover:bg-[#f0f6ff] transition-colors"
-                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                >
-                  <span className="font-semibold text-[#0a1628] text-sm pr-4">{faq.q}</span>
-                  <motion.span animate={{ rotate: openFaq === i ? 180 : 0 }} transition={{ duration: 0.3 }}>
-                    <ChevronDown className="w-5 h-5 text-[#0066cc] flex-shrink-0" />
-                  </motion.span>
-                </button>
-                <AnimatePresence>
-                  {openFaq === i && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                      className="overflow-hidden"
-                    >
-                      <p className="px-7 pb-6 text-[#0a1628]/55 leading-relaxed text-sm">{faq.a}</p>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      {/* ── CONTACT CTA ───────────────────────────────────── */}
-      <section id="about" className="px-8 md:px-16 py-24 bg-[#f0f6ff] text-center">
-        <div className="max-w-3xl mx-auto">
-          <Reveal>
-            <div className="w-16 h-16 rounded-2xl bg-[#0066cc] flex items-center justify-center mx-auto mb-8">
-              <FlaskConical className="w-8 h-8 text-white" />
-            </div>
-            <h2 className="text-4xl md:text-5xl font-bold text-[#0a1628] mb-6">Partnering for<br /><span className="text-[#0066cc]">Better Outcomes.</span></h2>
-            <p className="text-[#0a1628]/55 text-lg leading-relaxed mb-10">
-              Whether you are a pharma partner, academic collaborator, or investor — we are building the future of medicine together.
-            </p>
-          </Reveal>
-          <Reveal delay={0.2}>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <MagneticBtn className="flex items-center justify-center gap-3 px-10 py-4 bg-[#0066cc] text-white font-semibold rounded-xl hover:bg-[#0052a3] transition-colors shadow-lg shadow-[#0066cc]/20">
-                Request a Briefing <ArrowRight className="w-4 h-4" />
-              </MagneticBtn>
-              <button className="flex items-center justify-center gap-3 px-10 py-4 border border-[#0a1628]/15 text-[#0a1628] font-medium rounded-xl hover:border-[#0066cc] hover:text-[#0066cc] transition-colors">
-                <BarChart2 className="w-4 h-4" /> Investor Deck
-              </button>
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* ── FOOTER ────────────────────────────────────────── */}
-      <footer className="bg-[#0a1628] py-8 px-8 md:px-16 flex flex-col md:flex-row justify-between items-center gap-4 text-[11px] text-white/25 uppercase tracking-[0.2em] font-medium">
-        <div className="flex items-center gap-2">
-          <div className="w-5 h-5 rounded bg-[#0066cc] flex items-center justify-center"><Dna className="w-3 h-3 text-white" /></div>
-          <span>NexavirBio © 2026</span>
-        </div>
-        <span>Pipeline · Platform · Publications · Careers</span>
-        <span>Nasdaq: NXVB</span>
-      </footer>
-
-      <style>{`::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-track { background: white; } ::-webkit-scrollbar-thumb { background: #0066cc; border-radius: 3px; }`}</style>
+      <style>{`::-webkit-scrollbar{width:4px;background:#f4f7fa}::-webkit-scrollbar-thumb{background:#0066cc20}`}</style>
     </div>
   );
 }
