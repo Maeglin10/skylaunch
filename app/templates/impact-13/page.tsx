@@ -1,274 +1,463 @@
 "use client";
 
-import { motion, useScroll, useTransform, useInView, useMotionValue, useSpring, AnimatePresence } from "framer-motion";
-import { useState, useRef, useEffect, useCallback } from "react";
+import { motion, useScroll, useTransform, useInView, AnimatePresence } from "framer-motion";
+import { useState, useRef, useEffect, Suspense } from "react";
 import Image from "next/image";
-import { Film, Camera, Palette, Monitor, PenTool, Award, ChevronDown, Menu, X, ArrowRight, ArrowUpRight, Play } from "lucide-react";
+import { 
+  ArrowUpRight, 
+  Menu, 
+  X, 
+  Layers, 
+  ShieldCheck,
+  Plus,
+  Play,
+  ArrowRight,
+  ChevronDown,
+  Monitor,
+  LayoutGrid,
+  Clock,
+  Compass,
+  Cpu,
+  Gem
+} from "lucide-react";
 import "../premium.css";
 
-const DISCIPLINES = [
-  { icon: Film, title: "Film Direction", desc: "Narrative shorts, brand films, and documentary work that moves audiences and moves product.", tag: "Film" },
-  { icon: Camera, title: "Photography", desc: "Editorial portraiture and campaign photography at top fashion weeks and cultural moments.", tag: "Photo" },
-  { icon: Palette, title: "Art Direction", desc: "Visual concepts that define the visual language of a brand for a decade.", tag: "Direction" },
-  { icon: Monitor, title: "Digital Creative", desc: "Interactive experiences and generative campaigns with measurable cultural impact.", tag: "Digital" },
-  { icon: PenTool, title: "Creative Strategy", desc: "Strategic creative frameworks that bridge brand positioning and cultural relevance.", tag: "Strategy" },
-  { icon: Award, title: "Installation", desc: "Site-specific physical installations for galleries, brands, and public spaces globally.", tag: "Installation" },
+// ─── DATA ──────────────────────────────────────────────────────────────────
+
+const COLLECTIONS = [
+  { 
+    id: "01",
+    title: "VULCAN_CHRONO", 
+    material: "Forged Carbon & Bronze",
+    caliber: "Calibre V.01 Automatic",
+    img: "https://images.unsplash.com/photo-1524592094714-0f0654e20314?w=1200&q=80",
+    desc: "A high-performance chronograph engineered for extreme thermal environments, featuring an open-heart escapement."
+  },
+  { 
+    id: "02",
+    title: "AETHER_TOURBILLON", 
+    material: "Polished Grade 5 Titanium",
+    caliber: "Calibre A.88 Manual",
+    img: "https://images.unsplash.com/photo-1547996160-81dfa63595aa?w=1200&q=80",
+    desc: "The pinnacle of horological complexity, housed in a near-weightless titanium monoblock case."
+  },
+  { 
+    id: "03",
+    title: "NOIR_GMT", 
+    material: "DLC Coated Steel",
+    caliber: "Calibre N.12 GMT",
+    img: "https://images.unsplash.com/photo-1522337360788-8b13df772650?w=1200&q=80",
+    desc: "A minimalist dual-time masterpiece designed for the global traveler, with 72-hour power reserve."
+  }
 ];
 
-const WORK = [
-  { title: "L'Instant Parfait", client: "Chanel", type: "Short Film", img: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=1200&auto=format&fit=crop" },
-  { title: "Human / Machine", client: "Nike", type: "Campaign", img: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=1200&auto=format&fit=crop" },
-  { title: "Terra Nova", client: "Self-Initiated", type: "Installation", img: "https://images.unsplash.com/photo-1547891654-e66ed7ebb968?q=80&w=1200&auto=format&fit=crop" },
-  { title: "Gravity Series", client: "Vogue", type: "Editorial", img: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=1200&auto=format&fit=crop" },
-  { title: "City Pulse", client: "BMW", type: "Brand Film", img: "https://images.unsplash.com/photo-1616530940355-351fabd9524b?q=80&w=1200&auto=format&fit=crop" },
+const SPECS = [
+  { label: "Precision", val: "+/- 1s", desc: "COSC certified accuracy across all positions." },
+  { label: "Reserve", val: "120h", desc: "Proprietary dual-barrel energy storage system." },
+  { label: "Depth", val: "300m", desc: "Triple-lock crown system for extreme maritime integrity." }
 ];
 
-const STATS = [
-  { value: 22, suffix: "+", label: "Years directing" },
-  { value: 140, suffix: "+", label: "Projects delivered" },
-  { value: 28, suffix: "", label: "Cannes entries" },
-  { value: 6, suffix: "", label: "D&AD Pencils" },
+const HERITAGE = [
+  { year: "1892", event: "Foundation", desc: "The Chronos family establishes its first workshop in Le Locle, Switzerland." },
+  { year: "1944", event: "Military Spec", desc: "Commissioned to build navigational chronometers for trans-Atlantic flight." },
+  { year: "2024", event: "Quantum Era", desc: "Introduction of the first silicon-escpaement with zero friction technology." }
 ];
 
-const TESTIMONIALS = [
-  { name: "Claire Moreau", role: "VP Creative, Chanel", quote: "They don't just execute a brief — they transform it into something you could never have imagined alone.", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop" },
-  { name: "Jordan Blake", role: "Global CD, Nike", quote: "The Human / Machine campaign changed how we think about athlete creative. It became our benchmark.", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop" },
-  { name: "Mei Lin", role: "Editor-in-Chief, Vogue Asia", quote: "Working with them on Gravity was the most creatively expansive shoot I've experienced in 20 years.", avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=200&auto=format&fit=crop" },
-];
+// ─── COMPONENTS ──────────────────────────────────────────────────────────────
 
-const FAQ = [
-  { q: "What scale of project do you take on?", a: "Everything from a short film for a micro-brand to multi-market campaign for a global house. The deciding factor is creative ambition, not budget." },
-  { q: "How do you approach brand collaborations?", a: "We take an immersive briefing period of 2–4 weeks before any creative is presented. We want to understand the brand at a cellular level before making anything." },
-  { q: "Do you work with agencies or direct brands?", a: "Both. We collaborate closely with agencies when they're right for the project, and work direct with brands who want unmediated creative leadership." },
-  { q: "Are you open to self-initiated projects?", a: "Yes — self-initiated work is where some of our most significant work has emerged. We allocate time for these projects every year." },
-];
-
-function Reveal({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
+function Reveal({ children, className = "", delay = 0, y = 30 }: { children: React.ReactNode; className?: string; delay?: number; y?: number }) {
   const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-60px" });
+  const inView = useInView(ref, { once: true, margin: "-100px" });
   return (
-    <motion.div ref={ref} initial={{ opacity: 0, y: 35 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.7, delay, ease: [0.25, 0.1, 0.25, 1] }} className={className}>
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 1, delay, ease: [0.16, 1, 0.3, 1] }}
+      className={className}
+    >
       {children}
     </motion.div>
   );
 }
 
-function Counter({ target, suffix = "", label }: { target: number; suffix?: string; label: string }) {
-  const [count, setCount] = useState(0);
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true });
-  useEffect(() => {
-    if (!inView) return;
-    const steps = 50;
-    let cur = 0;
-    const t = setInterval(() => {
-      cur += target / steps;
-      if (cur >= target) { setCount(target); clearInterval(t); }
-      else setCount(Math.floor(cur));
-    }, 1800 / steps);
-    return () => clearInterval(t);
-  }, [inView, target]);
-  return (
-    <div ref={ref} className="text-center">
-      <div className="text-5xl font-black text-white mb-1">{count}{suffix}</div>
-      <div className="text-sm text-white/40 uppercase tracking-wider">{label}</div>
-    </div>
-  );
-}
+// ─── MAIN SPA ────────────────────────────────────────────────────────────────
 
-export default function CreativeDirectorSPA() {
+export default function ChronosAtelierSPA() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const [activeT, setActiveT] = useState(0);
-  const [hoveredWork, setHoveredWork] = useState<number | null>(null);
+  const [activeCollection, setActiveCollection] = useState(0);
   const { scrollY } = useScroll();
-  const heroY = useTransform(scrollY, [0, 600], [0, 160]);
-  const heroScale = useTransform(scrollY, [0, 600], [1, 1.1]);
-
-  const mx = useMotionValue(0); const my = useMotionValue(0);
-  const sx = useSpring(mx, { stiffness: 120, damping: 20 }); const sy = useSpring(my, { stiffness: 120, damping: 20 });
-
-  useEffect(() => {
-    const t = setInterval(() => setActiveT(p => (p + 1) % TESTIMONIALS.length), 5500);
-    return () => clearInterval(t);
-  }, []);
+  
+  const heroOpacity = useTransform(scrollY, [0, 400], [1, 0]);
+  const heroScale = useTransform(scrollY, [0, 800], [1, 1.1]);
+  const heroRotate = useTransform(scrollY, [0, 800], [0, 5]);
 
   return (
-    <div className="min-h-screen bg-[#0c0c0c] text-white overflow-x-hidden">
-      <motion.nav initial={{ y: -80 }} animate={{ y: 0 }} transition={{ duration: 0.6 }} className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-12 py-5 bg-[#0c0c0c]/90 backdrop-blur-xl border-b border-white/5">
-        <div className="font-black text-lg tracking-tight">MAISON CRÉATIF</div>
-        <div className="hidden md:flex items-center gap-10 text-sm text-white/40">
-          {["Work", "Disciplines", "Studio", "Contact"].map(item => (
-            <a key={item} href="#" className="hover:text-white transition-colors">{item}</a>
+    <div className="min-h-screen bg-[#050505] text-[#d4af37] font-sans selection:bg-[#d4af37] selection:text-black">
+      
+      {/* ── NAVIGATION ── */}
+      <motion.nav 
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 md:px-16 py-10 mix-blend-difference"
+      >
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 border border-[#d4af37]/40 rounded-full flex items-center justify-center relative overflow-hidden group">
+            <Clock className="w-6 h-6 text-[#d4af37] group-hover:rotate-180 transition-transform duration-1000" />
+            <motion.div 
+              animate={{ rotate: 360 }}
+              transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
+              className="absolute inset-0 border-t border-[#d4af37] rounded-full"
+            />
+          </div>
+          <span className="text-2xl font-black tracking-[0.2em] uppercase italic">CHRONOS<span className="text-[#d4af37]/30">//</span>ATELIER</span>
+        </div>
+        
+        <div className="hidden lg:flex items-center gap-16 text-[10px] font-bold uppercase tracking-[0.4em] text-[#d4af37]/40">
+          {["Collections", "Heritage", "Calibre", "Bespoke"].map(item => (
+            <a key={item} href={`#${item.toLowerCase()}`} className="hover:text-[#d4af37] transition-colors tracking-[0.6em]">/{item}</a>
           ))}
         </div>
-        <motion.button style={{ x: sx, y: sy }} onMouseMove={(e) => { const r = e.currentTarget.getBoundingClientRect(); mx.set((e.clientX - r.left - r.width / 2) * 0.3); my.set((e.clientY - r.top - r.height / 2) * 0.3); }} onMouseLeave={() => { mx.set(0); my.set(0); }} className="hidden md:block px-6 py-3 bg-white text-black text-sm font-black rounded-xl hover:bg-gray-100 transition-colors">
-          Brief us
-        </motion.button>
-        <button className="md:hidden text-white" onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}</button>
+
+        <button 
+          onClick={() => setMenuOpen(true)}
+          className="flex items-center gap-4 group"
+        >
+          <div className="w-16 h-1 bg-[#d4af37]/20 relative overflow-hidden">
+            <motion.div 
+              animate={{ x: [-64, 64] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+              className="absolute top-0 left-0 h-full w-1/2 bg-[#d4af37]"
+            />
+          </div>
+        </button>
       </motion.nav>
 
+      {/* ── MOBILE MENU ── */}
       <AnimatePresence>
         {menuOpen && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-40 bg-[#0c0c0c] flex flex-col items-center justify-center gap-8 text-3xl font-black">
-            {["Work", "Disciplines", "Studio", "Contact"].map(item => <a key={item} href="#" onClick={() => setMenuOpen(false)}>{item}</a>)}
+          <motion.div 
+            initial={{ opacity: 0, scale: 1.1 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.1 }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            className="fixed inset-0 z-[60] bg-[#000] text-[#d4af37] p-12 flex flex-col justify-between"
+          >
+            <div className="flex justify-between items-center border-b border-[#d4af37]/10 pb-12">
+              <span className="text-xl font-black uppercase tracking-[0.4em] italic">CHRONOS//ATELIER</span>
+              <button onClick={() => setMenuOpen(false)} className="w-12 h-12 flex items-center justify-center border border-[#d4af37]/20 rounded-full">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="flex flex-col gap-12">
+              {["COLLECTIONS", "HERITAGE", "CALIBRE", "MANUFACTURE", "CONTACT"].map((item, i) => (
+                <motion.a 
+                  key={item}
+                  initial={{ opacity: 0, x: -50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.1 + 0.3 }}
+                  href="#"
+                  className="text-6xl md:text-9xl font-black uppercase italic tracking-tighter hover:text-white transition-all leading-none"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  {item}
+                </motion.a>
+              ))}
+            </div>
+            <div className="flex justify-between text-[10px] font-bold uppercase tracking-[0.5em] border-t border-[#d4af37]/10 pt-12">
+              <span>EST. 1892</span>
+              <span>SWITZERLAND // LE LOCLE</span>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Hero */}
-      <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        <motion.div style={{ y: heroY, scale: heroScale }} className="absolute inset-0">
-          <Image src="https://images.unsplash.com/photo-733852?w=800&q=80" alt="Creative Director" fill className="object-cover opacity-25" unoptimized />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#0c0c0c]/40 via-transparent to-[#0c0c0c]" />
+      {/* ── HERO SECTION ── */}
+      <section className="relative h-screen flex items-center justify-center overflow-hidden border-b border-[#d4af37]/10">
+        <motion.div 
+          style={{ opacity: heroOpacity, scale: heroScale, rotate: heroRotate }}
+          className="absolute inset-0 z-0"
+        >
+          <Image 
+            src="https://images.unsplash.com/photo-1524592094714-0f0654e20314?w=1600&q=80" 
+            alt="Hero Watch" 
+            fill 
+            className="object-cover grayscale opacity-30 brightness-50" 
+            unoptimized 
+          />
         </motion.div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 pt-24 w-full">
-          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="text-white/40 text-xs uppercase tracking-[0.3em] mb-8">
-            Film · Photography · Art Direction · Since 2002
-          </motion.p>
-          <motion.h1 initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.1 }} className="text-[12vw] md:text-[10vw] font-black leading-none tracking-tight mb-12">
-            WE MAKE<br />CULTURE<br /><em className="not-italic text-white/30">MOVE.</em>
-          </motion.h1>
-          <div className="flex items-end justify-between flex-wrap gap-8">
-            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="text-xl text-white/60 max-w-sm leading-relaxed">
-              Award-winning creative studio working at the intersection of film, photography, and cultural strategy.
-            </motion.p>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }} className="flex gap-4">
-              <motion.a href="#" whileHover={{ scale: 1.03 }} className="px-8 py-4 bg-white text-black font-black rounded-xl flex items-center gap-2 hover:bg-gray-100 transition-colors">
-                See work <ArrowRight className="w-4 h-4" />
-              </motion.a>
-              <motion.a href="#" whileHover={{ scale: 1.03 }} className="px-8 py-4 border border-white/10 text-white font-bold rounded-xl hover:bg-white/5 transition-colors flex items-center gap-2">
-                <Play className="w-4 h-4" /> Showreel
-              </motion.a>
-            </motion.div>
-          </div>
-        </div>
-      </div>
-
-      {/* Stats */}
-      <section className="py-20 px-6 bg-white/[0.02] border-y border-white/5">
-        <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-12">
-          {STATS.map((s, i) => <Reveal key={s.label} delay={i * 0.1}><Counter target={s.value} suffix={s.suffix} label={s.label} /></Reveal>)}
-        </div>
-      </section>
-
-      {/* Work */}
-      <section className="py-24 px-6 md:px-12 max-w-7xl mx-auto">
-        <Reveal className="mb-16">
-          <p className="text-white/40 text-xs uppercase tracking-widest mb-3">Selected work</p>
-          <h2 className="text-5xl font-black">The work</h2>
-        </Reveal>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {WORK.map((w, i) => (
-            <Reveal key={w.title} delay={i * 0.08} className={i === 0 ? "md:row-span-2" : ""}>
-              <motion.div
-                className={`relative rounded-2xl overflow-hidden cursor-pointer ${i === 0 ? "h-[580px]" : "h-64"}`}
-                onHoverStart={() => setHoveredWork(i)} onHoverEnd={() => setHoveredWork(null)}
-                whileHover={{ scale: 1.01 }}
-              >
-                <Image src={w.img} alt={w.title} fill className="object-cover transition-transform duration-700" style={{ transform: hoveredWork === i ? "scale(1.05)" : "scale(1)" }} unoptimized />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-                <AnimatePresence>
-                  {hoveredWork === i && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                        <ArrowUpRight className="w-6 h-6 text-white" />
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-                <div className="absolute bottom-6 left-6">
-                  <p className="text-white/50 text-xs mb-1">{w.client} · {w.type}</p>
-                  <p className="font-black text-white text-xl">{w.title}</p>
-                </div>
-              </motion.div>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      {/* Disciplines */}
-      <section className="py-24 px-6 md:px-12 max-w-7xl mx-auto">
-        <Reveal className="mb-16">
-          <p className="text-white/40 text-xs uppercase tracking-widest mb-3">Disciplines</p>
-          <h2 className="text-5xl font-black">What we do</h2>
-        </Reveal>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {DISCIPLINES.map((d, i) => (
-            <Reveal key={d.title} delay={i * 0.07}>
-              <motion.div whileHover={{ y: -6 }} className="p-8 border border-white/5 rounded-2xl hover:border-white/10 transition-colors group">
-                <span className="inline-block px-3 py-1 text-xs font-bold bg-white/10 text-white/60 rounded-full mb-4">{d.tag}</span>
-                <d.icon className="w-6 h-6 text-white mb-4" />
-                <h3 className="font-black text-white text-lg mb-3">{d.title}</h3>
-                <p className="text-white/40 text-sm leading-relaxed">{d.desc}</p>
-                <div className="mt-6 flex items-center gap-1 text-sm text-white/40 group-hover:text-white transition-colors font-bold">Learn more <ArrowUpRight className="w-4 h-4" /></div>
-              </motion.div>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section className="py-24 bg-white text-black px-6">
-        <div className="max-w-3xl mx-auto text-center">
-          <Reveal><h2 className="text-4xl font-black mb-16">Client perspective</h2></Reveal>
-          <AnimatePresence mode="wait">
-            <motion.div key={activeT} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.5 }}>
-              <p className="text-2xl font-black leading-tight mb-8">"{TESTIMONIALS[activeT].quote}"</p>
-              <div className="flex items-center justify-center gap-3">
-                <Image src={TESTIMONIALS[activeT].avatar} alt={TESTIMONIALS[activeT].name} width={48} height={48} className="rounded-full object-cover" unoptimized />
-                <div className="text-left">
-                  <p className="font-bold">{TESTIMONIALS[activeT].name}</p>
-                  <p className="text-gray-500 text-sm">{TESTIMONIALS[activeT].role}</p>
-                </div>
-              </div>
-            </motion.div>
-          </AnimatePresence>
-          <div className="flex justify-center gap-2 mt-8">
-            {TESTIMONIALS.map((_, i) => <button key={i} onClick={() => setActiveT(i)} className={`w-2 h-2 rounded-full transition-colors ${i === activeT ? "bg-black" : "bg-black/20"}`} />)}
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ */}
-      <section className="py-24 px-6 max-w-3xl mx-auto">
-        <Reveal className="mb-12"><h2 className="text-4xl font-black">How we work</h2></Reveal>
-        <div className="space-y-4">
-          {FAQ.map((f, i) => (
-            <Reveal key={i} delay={i * 0.05}>
-              <div className="border-b border-white/10">
-                <button onClick={() => setOpenFaq(openFaq === i ? null : i)} className="w-full flex items-center justify-between py-6 text-left">
-                  <span className="font-bold">{f.q}</span>
-                  <motion.div animate={{ rotate: openFaq === i ? 180 : 0 }}><ChevronDown className="w-5 h-5 text-white/40 shrink-0" /></motion.div>
+        <div className="relative z-10 text-center px-6">
+          <Reveal>
+            <span className="text-[10px] font-bold uppercase tracking-[1.5em] text-[#d4af37]/60 mb-12 block">Absolute Chronometry</span>
+          </Reveal>
+          <Reveal delay={0.2}>
+            <h1 className="text-8xl md:text-[16rem] font-black tracking-tighter leading-[0.75] uppercase italic text-white mb-20">
+              TIME <br/> <span className="not-italic text-[#d4af37]">CAPTURED.</span>
+            </h1>
+          </Reveal>
+          <Reveal delay={0.4}>
+            <div className="max-w-2xl mx-auto flex flex-col items-center gap-16 border-t border-[#d4af37]/10 pt-20">
+              <p className="text-white/40 text-xl leading-relaxed font-light uppercase tracking-[0.2em] italic leading-loose text-center">
+                Engineering precision that transcends generations. A symphony of high-tech materials and ancestral Swiss craftsmanship.
+              </p>
+              <div className="flex gap-8">
+                <button className="px-16 py-6 bg-[#d4af37] text-black font-black uppercase text-xs tracking-[0.4em] hover:bg-white transition-colors">
+                  Explore_Atelier
                 </button>
-                <AnimatePresence>
-                  {openFaq === i && (
-                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}>
-                      <p className="pb-6 text-white/50 text-sm leading-relaxed">{f.a}</p>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                <button className="px-16 py-6 border border-[#d4af37]/20 text-[#d4af37] font-black uppercase text-xs tracking-[0.4em] hover:bg-[#d4af37]/5 transition-colors">
+                  Technical_Vault
+                </button>
               </div>
-            </Reveal>
-          ))}
+            </div>
+          </Reveal>
+        </div>
+
+        <div className="absolute bottom-12 left-12 right-12 flex justify-between items-end text-[10px] font-bold uppercase tracking-[0.5em] text-[#d4af37]/20">
+          <div className="flex flex-col gap-2">
+            <span>GMT_+1_LE_LOCLE</span>
+            <div className="w-48 h-[1px] bg-[#d4af37]/20" />
+          </div>
+          <div className="flex items-center gap-4">
+             <span className="animate-pulse">●</span> LIVE_DIAGNOSTICS: NOMINAL
+          </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-32 px-6 bg-white text-black">
-        <Reveal className="max-w-4xl mx-auto text-center">
-          <h2 className="text-6xl md:text-8xl font-black leading-none mb-8">Let's make<br />something<br />unforgettable.</h2>
-          <motion.a href="#" whileHover={{ scale: 1.03 }} className="inline-flex items-center gap-2 px-10 py-5 bg-black text-white font-black text-lg rounded-2xl hover:bg-gray-900 transition-colors">
-            Start a conversation <ArrowRight className="w-5 h-5" />
-          </motion.a>
-        </Reveal>
+      {/* ── SPECS GRID ── */}
+      <section className="py-40 bg-[#080808]">
+        <div className="max-w-[1600px] mx-auto px-8 md:px-16">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-1px bg-[#d4af37]/10 border border-[#d4af37]/10">
+            {SPECS.map((s, i) => (
+              <Reveal key={s.label} delay={i * 0.1} className="bg-[#050505] p-24 group hover:bg-[#d4af37]/5 transition-colors">
+                <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-[#d4af37]/30 mb-12 block">{s.label}</span>
+                <h3 className="text-7xl font-black italic text-white mb-8 group-hover:text-[#d4af37] transition-colors">{s.val}</h3>
+                <p className="text-xs text-white/30 font-light tracking-widest uppercase italic leading-loose">
+                  {s.desc}
+                </p>
+              </Reveal>
+            ))}
+          </div>
+        </div>
       </section>
 
-      <footer className="py-12 px-6 max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-white/30 border-t border-white/5">
-        <div className="font-black text-white">MAISON CRÉATIF</div>
-        <p>© 2026 Maison Créatif. All rights reserved.</p>
-        <div className="flex gap-6">{["Privacy", "Terms", "Instagram"].map(l => <a key={l} href="#" className="hover:text-white transition-colors">{l}</a>)}</div>
+      {/* ── COLLECTIONS SLIDER ── */}
+      <section className="py-40 bg-black relative overflow-hidden">
+        <div className="max-w-[1600px] mx-auto px-8 md:px-16">
+          <Reveal className="mb-32">
+             <div className="flex flex-col lg:flex-row justify-between items-end gap-12 border-b border-[#d4af37]/10 pb-12">
+               <h2 className="text-7xl md:text-[10rem] font-black italic tracking-tighter leading-[0.8] uppercase text-white">
+                 Selected <br/> <span className="text-[#d4af37] not-italic">Atoms.</span>
+               </h2>
+               <div className="text-right">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-[#d4af37]/40 mb-4 block italic">Curated_Manifest_2024</span>
+                  <div className="flex gap-4">
+                    {COLLECTIONS.map((_, i) => (
+                      <button 
+                        key={i} 
+                        onClick={() => setActiveCollection(i)}
+                        className={`w-16 h-2 transition-all ${activeCollection === i ? "bg-[#d4af37] w-32" : "bg-[#d4af37]/10"}`}
+                      />
+                    ))}
+                  </div>
+               </div>
+             </div>
+          </Reveal>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-24 items-center">
+            <div className="lg:col-span-7 relative aspect-[4/5] lg:aspect-video rounded-sm overflow-hidden border border-[#d4af37]/10 group">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeCollection}
+                  initial={{ opacity: 0, scale: 1.1 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 1.1 }}
+                  transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+                  className="absolute inset-0"
+                >
+                  <Image src={COLLECTIONS[activeCollection].img} alt={COLLECTIONS[activeCollection].title} fill className="object-cover brightness-75 group-hover:scale-105 transition-transform duration-[3s]" unoptimized />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-90" />
+                </motion.div>
+              </AnimatePresence>
+              <div className="absolute top-12 left-12 flex gap-4">
+                 <span className="px-4 py-1 bg-[#d4af37] text-black text-[10px] font-black uppercase tracking-widest">{COLLECTIONS[activeCollection].id}</span>
+              </div>
+            </div>
+
+            <div className="lg:col-span-5 space-y-12">
+               <motion.div
+                  key={activeCollection}
+                  initial={{ opacity: 0, x: 50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.8 }}
+                  className="space-y-12"
+               >
+                 <h3 className="text-6xl md:text-8xl font-black italic uppercase text-white tracking-tighter">{COLLECTIONS[activeCollection].title}</h3>
+                 <div className="grid grid-cols-2 gap-12 border-y border-[#d4af37]/10 py-12">
+                    <div className="space-y-2">
+                       <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#d4af37]/30">Material_Logic</span>
+                       <span className="text-sm font-black text-white uppercase tracking-widest block">{COLLECTIONS[activeCollection].material}</span>
+                    </div>
+                    <div className="space-y-2">
+                       <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#d4af37]/30">Heart_Calibre</span>
+                       <span className="text-sm font-black text-white uppercase tracking-widest block">{COLLECTIONS[activeCollection].caliber}</span>
+                    </div>
+                 </div>
+                 <p className="text-white/40 text-xl font-light italic leading-loose uppercase tracking-wide">
+                   {COLLECTIONS[activeCollection].desc}
+                 </p>
+                 <button className="flex items-center gap-6 group">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.8em] text-[#d4af37]">Inquire_Collection</span>
+                    <div className="w-16 h-16 border border-[#d4af37]/20 rounded-full flex items-center justify-center group-hover:bg-[#d4af37] transition-all">
+                       <ArrowUpRight className="w-6 h-6 text-[#d4af37] group-hover:text-black transition-colors" />
+                    </div>
+                 </button>
+               </motion.div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── CALIBRE / MOVEMENT ── */}
+      <section className="py-40 bg-[#080808] border-y border-[#d4af37]/10">
+        <div className="max-w-[1600px] mx-auto px-8 md:px-16 grid grid-cols-1 lg:grid-cols-2 gap-32 items-center">
+          <div className="order-2 lg:order-1 space-y-24">
+             <Reveal>
+                <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-[#d4af37]/40 mb-8 block">Mechanical Heart</span>
+                <h2 className="text-7xl md:text-[10rem] font-black italic tracking-tighter leading-[0.8] uppercase text-white">
+                   The Kinetic <br/> <span className="text-[#d4af37] not-italic">Calibre.</span>
+                </h2>
+             </Reveal>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                {[
+                  { icon: Cpu, title: "Silicon Logic", desc: "Anti-magnetic escapement utilizing proprietary silicon crystal synthesis." },
+                  { icon: Gem, title: "Jewelled Integrity", desc: "48 functional rubies ensuring zero-friction energy transfer." },
+                  { icon: Layers, title: "Modular Architecture", desc: "Easily serviceable sub-plates designed for millimetric precision." },
+                  { icon: ShieldCheck, title: "Stress Audited", desc: "5000G shock resistance rating via orbital-dampening cage." }
+                ].map((item, i) => (
+                  <Reveal key={item.title} delay={i * 0.1} className="p-12 bg-[#050505] border border-[#d4af37]/5 hover:border-[#d4af37]/20 transition-all group">
+                     <item.icon className="w-10 h-10 text-[#d4af37] mb-8 group-hover:scale-110 transition-transform" />
+                     <h3 className="text-xl font-black italic uppercase text-white mb-4">{item.title}</h3>
+                     <p className="text-[10px] text-white/30 font-bold uppercase tracking-[0.2em] leading-loose italic">{item.desc}</p>
+                  </Reveal>
+                ))}
+             </div>
+          </div>
+          <Reveal className="order-1 lg:order-2">
+             <div className="relative aspect-square bg-[#0a0a0a] border border-[#d4af37]/10 p-24 flex items-center justify-center overflow-hidden">
+                <div className="absolute inset-0 opacity-5 pointer-events-none">
+                   <div className="absolute inset-0" style={{ backgroundImage: "radial-gradient(circle, #d4af37 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
+                </div>
+                <div className="relative z-10 w-full h-full border-2 border-[#d4af37]/20 rounded-full flex items-center justify-center">
+                   <div className="w-3/4 h-3/4 border border-[#d4af37]/40 rounded-full animate-spin-slow flex items-center justify-center">
+                      <Compass className="w-16 h-16 text-[#d4af37]" />
+                   </div>
+                </div>
+                <div className="absolute bottom-12 right-12 text-right">
+                   <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-[#d4af37]/20 block mb-2 italic">Calibre_V.01_Render</span>
+                   <span className="text-4xl font-black text-white italic">28,800 VPH</span>
+                </div>
+             </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ── HERITAGE TIMELINE ── */}
+      <section className="py-40 bg-black">
+        <div className="max-w-[1200px] mx-auto px-8 md:px-16">
+          <Reveal className="text-center mb-40">
+             <span className="text-[10px] font-bold uppercase tracking-[1em] text-[#d4af37]/40 mb-12 block">Ancestral Roots</span>
+             <h2 className="text-7xl md:text-9xl font-black italic tracking-tighter leading-[0.8] uppercase text-white">Heritage <br/> <span className="text-[#d4af37] not-italic">Ledger.</span></h2>
+          </Reveal>
+
+          <div className="space-y-px bg-[#d4af37]/10 border border-[#d4af37]/10">
+             {HERITAGE.map((item, i) => (
+               <Reveal key={item.year} delay={i * 0.1} className="bg-[#050505] p-16 grid grid-cols-1 md:grid-cols-12 gap-12 items-center group hover:bg-[#d4af37]/5 transition-colors">
+                  <div className="md:col-span-3">
+                     <span className="text-6xl font-black italic text-white group-hover:text-[#d4af37] transition-colors">{item.year}</span>
+                  </div>
+                  <div className="md:col-span-4">
+                     <h3 className="text-xl font-black uppercase tracking-[0.2em] italic text-white">{item.event}</h3>
+                  </div>
+                  <div className="md:col-span-5">
+                     <p className="text-white/40 text-sm font-light italic leading-loose uppercase tracking-widest">{item.desc}</p>
+                  </div>
+               </Reveal>
+             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── BESPOKE PORTAL / CTA ── */}
+      <section className="py-40 bg-[#080808] relative">
+         <div className="max-w-[1600px] mx-auto px-8 md:px-16">
+            <div className="bg-[#d4af37] text-black p-24 lg:p-40 relative overflow-hidden flex flex-col items-center text-center">
+               <div className="absolute inset-0 opacity-10 grayscale brightness-50">
+                  <Image src="https://images.unsplash.com/photo-1522337360788-8b13df772650?w=1600&q=80" alt="CTA Watch" fill className="object-cover" />
+               </div>
+               <Reveal>
+                  <span className="text-[10px] font-bold uppercase tracking-[1em] text-black/50 mb-12 block italic">One of One</span>
+                  <h2 className="text-7xl md:text-[12rem] font-black italic tracking-tighter leading-[0.8] uppercase mb-16">
+                     Bespoke <br/> <span className="text-black/30 not-italic">Atelier.</span>
+                  </h2>
+                  <div className="flex flex-wrap justify-center gap-12">
+                     <button className="px-20 py-8 bg-black text-white font-black uppercase text-sm tracking-[0.4em] hover:italic transition-all">
+                        Initiate_Inquiry
+                     </button>
+                     <button className="px-20 py-8 border border-black/20 text-black font-black uppercase text-sm tracking-[0.4em] hover:bg-black/5 transition-all">
+                        Visit_Manifacture
+                     </button>
+                  </div>
+               </Reveal>
+            </div>
+         </div>
+      </section>
+
+      {/* ── FOOTER ── */}
+      <footer className="bg-black pt-40 pb-20 px-8 md:px-16 border-t border-[#d4af37]/10">
+         <div className="max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-32 mb-40">
+            <div className="lg:col-span-6">
+               <div className="flex items-center gap-4 mb-12">
+                 <Clock className="w-10 h-10 text-[#d4af37]" />
+                 <span className="text-3xl font-black tracking-[0.2em] uppercase italic">CHRONOS<span className="text-[#d4af37]/30">//</span>ATELIER</span>
+               </div>
+               <p className="text-[#d4af37]/30 text-sm font-light leading-relaxed uppercase tracking-[0.3em] mb-12 italic max-w-md">
+                 Preserving the art of mechanical timekeeping through ancestral craftsmanship and high-tech material logic.
+               </p>
+               <div className="flex gap-12">
+                 {["INSTAGRAM", "TWITTER", "YOUTUBE", "LINKEDIN"].map(s => (
+                   <a key={s} href="#" className="text-[10px] font-bold hover:text-white text-[#d4af37]/30 transition-colors tracking-[0.4em]">[{s}]</a>
+                 ))}
+               </div>
+            </div>
+            
+            <div className="lg:col-span-2">
+               <h4 className="text-[10px] font-bold uppercase tracking-[0.5em] text-[#d4af37]/40 mb-12">Manifacture</h4>
+               <ul className="space-y-6 text-xs font-bold uppercase tracking-[0.4em]">
+                 {["Collections", "Calibre", "Heritage", "Bespoke"].map(item => (
+                   <li key={item}><a href="#" className="hover:text-white transition-colors">{item}</a></li>
+                 ))}
+               </ul>
+            </div>
+
+            <div className="lg:col-span-4">
+               <h4 className="text-[10px] font-bold uppercase tracking-[0.5em] text-[#d4af37]/40 mb-12">Atelier Inquiry</h4>
+               <p className="text-sm text-[#d4af37]/20 font-light mb-12 italic uppercase tracking-[0.2em] leading-loose">
+                 For acquisitions of our limited editions or to start a bespoke commission, contact our lead curator.
+               </p>
+               <a href="mailto:curator@chronos.ch" className="text-3xl font-black italic hover:text-white transition-colors block border-b border-[#d4af37]/10 pb-8 uppercase tracking-tighter">
+                  curator@chronos.atelier
+               </a>
+            </div>
+         </div>
+
+         <div className="max-w-[1600px] mx-auto flex flex-col md:row items-center justify-between gap-12 text-[9px] font-bold uppercase tracking-[0.8em] text-[#d4af37]/10 border-t border-[#d4af37]/5 pt-20">
+            <p>© 2024 CHRONOS ATELIER SA. ALL RIGHTS RESERVED. SWISS MADE.</p>
+            <div className="flex gap-16">
+               <a href="#" className="hover:text-white transition-colors">[Privacy_Vault]</a>
+               <a href="#" className="hover:text-white transition-colors">[Terms_of_Sale]</a>
+            </div>
+         </div>
       </footer>
     </div>
   );

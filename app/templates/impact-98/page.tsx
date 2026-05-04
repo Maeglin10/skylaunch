@@ -1,213 +1,363 @@
-"use client"
-import { motion, useScroll, useTransform, useInView, AnimatePresence, useMotionValue, useSpring } from "framer-motion"
-import { useState, useRef, useEffect } from "react"
-import Image from "next/image"
-import Link from "next/link"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
-import { Progress } from "@/components/ui/progress"
+"use client";
+
+import {
+  motion,
+  useScroll,
+  useTransform,
+  useInView,
+  AnimatePresence,
+  useMotionValue,
+  useSpring,
+} from "framer-motion";
+import { useState, useRef, useEffect, useCallback } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Separator } from "@/components/ui/separator";
+import {
+  Watch,
+  Zap,
+  Diamond,
+  ShieldCheck,
+  Star,
+  Instagram,
+  Twitter,
+  Mail,
+  MapPin,
+  ChevronRight,
+  ArrowRight,
+  X,
+  Menu,
+  Clock,
+  Activity,
+  Maximize,
+  Settings,
+  Compass,
+  Globe,
+  Shield,
+  Award,
+  Focus,
+  Frame,
+  Monitor,
+  Share2,
+  Lock,
+  Search,
+  ShoppingBag,
+} from "lucide-react";
+
+import "../premium.css";
+
+/* ==========================================================================
+   DATA STRUCTURES
+   ========================================================================= */
 
 const COLLECTIONS = [
-  { id: 1, name: "Rings", image: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?q=80&w=500&auto=format&fit=crop", pieces: [{ title: "Solitaire Diamond", carat: "1.5ct", material: "18k Gold" }] },
-  { id: 2, name: "Necklaces", image: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?q=80&w=500&auto=format&fit=crop", pieces: [{ title: "Heritage Pendant", carat: "Multi-gemstone", material: "Platinum" }] },
-  { id: 3, name: "Bracelets", image: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?q=80&w=500&auto=format&fit=crop", pieces: [{ title: "Tennis Bracelet", carat: "5ct", material: "Platinum" }] },
-  { id: 4, name: "Earrings", image: "https://images.unsplash.com/photo-1599551419256-ca3be0dbec37?q=80&w=500&auto=format&fit=crop", pieces: [{ title: "Pearl Drops", carat: "Natural Pearl", material: "18k Gold" }] },
-  { id: 5, name: "Bespoke", image: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?q=80&w=500&auto=format&fit=crop", pieces: [{ title: "Custom Creation", carat: "Bespoke", material: "Your Choice" }] },
-]
+  {
+    id: 1,
+    name: "Astra Chrono",
+    category: "Complications",
+    price: "From CHF 125,000",
+    desc: "A tourbillon masterpiece featuring a hand-finished skeleton dial and 72-hour power reserve.",
+    img: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=1200&q=80",
+  },
+  {
+    id: 2,
+    name: "Deep Horizon",
+    category: "Professional",
+    price: "From CHF 18,500",
+    desc: "Titanium grade 5 case, water-resistant to 1000m with a helium escape valve and ceramic bezel.",
+    img: "https://images.unsplash.com/photo-1524592094714-0f0654e20314?w=1200&q=80",
+  },
+  {
+    id: 3,
+    name: "Legacy Perpetual",
+    category: "Heritage",
+    price: "From CHF 85,000",
+    desc: "Rose gold moonphase calendar that requires no adjustment for the next 122 years.",
+    img: "https://images.unsplash.com/photo-1547996160-81dfa63595aa?w=1200&q=80",
+  },
+];
 
-const MATERIALS = [
-  { title: "18k Gold", desc: "Pure and timeless, refined for elegance.", certs: ["Hallmark", "Assay"] },
-  { title: "Platinum", desc: "Ultimate luxury, 95% pure. Hypoallergenic.", certs: ["GIA", "Purity"] },
-  { title: "Ethically Sourced Gems", desc: "Diamonds, rubies, sapphires. Certified origin.", certs: ["GIA", "Origin", "Treatment"] },
-]
+const CRAFTSMANSHIP = [
+  {
+    title: "Hand-Finished Calibers",
+    desc: "Every bridge is beveled by hand and every gear is polished to a mirror finish in our Swiss workshops.",
+    icon: Settings,
+  },
+  {
+    title: "Metallurgical Mastery",
+    desc: "Our proprietary gold and titanium alloys are engineered for eternal luster and scratch resistance.",
+    icon: Diamond,
+  },
+  {
+    title: "Chronometric Precision",
+    desc: "Testing standards that exceed COSC certification by 300% for absolute timekeeping integrity.",
+    icon: Clock,
+  },
+];
 
-const ARTISANS = [
-  { name: "Isabelle Fontaine", role: "Master Craftsperson", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop", bio: "40 years excellence" },
-  { name: "Henri Beaumont", role: "Gemstone Curator", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop", bio: "Ethical sourcing pioneer" },
-  { name: "Claire Moreau", role: "Design Director", image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=200&auto=format&fit=crop", bio: "Contemporary legacy" },
-  { name: "Michel Rousseau", role: "Finishing Master", image: "https://images.unsplash.com/photo-1517849845537-1d51a20414de?q=80&w=200&auto=format&fit=crop", bio: "Precision perfectionist" },
-]
+const STATS = [
+  { label: "Components Per Watch", value: "320+" },
+  { label: "Master Watchmakers", value: "14" },
+  { label: "Hours of Testing", value: "800" },
+  { label: "Heritage Years", value: "125" },
+];
 
-const TESTIMONIALS = [
-  { text: "The most exquisite engagement ring. Worth every moment of anticipation.", author: "Sophie, Client" },
-  { text: "Lumière Bijoux doesn't just craft jewelry—they craft memories.", author: "Antoine, Client" },
-]
+/* ==========================================================================
+   UTILITY COMPONENTS
+   ========================================================================= */
 
-const STATS = [{ value: 1978, label: "Est." }, { value: 12000, label: "Pieces" }, { value: 45, label: "Countries" }, { value: 4.9, label: "Rating" }]
-
-const FAQ_ITEMS = [
-  { q: "Can I customize my piece?", a: "Absolutely. Full bespoke design services tailored to your exact vision and preferences." },
-  { q: "What sizing options?", a: "Ring sizing for all collections. Expert resizing and adjustments guaranteed." },
-  { q: "Do you provide certificates?", a: "Yes. All pieces include official hallmark certification and authenticity documentation." },
-  { q: "Shipping process?", a: "Insured international shipping with white-glove delivery and full insurance." },
-]
-
-function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true, margin: "-60px" })
-  return <motion.div ref={ref} initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, delay }}>{children}</motion.div>
+function Reveal({
+  children,
+  delay = 0,
+}: {
+  children: React.ReactNode;
+  delay?: number;
+}) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-50px" });
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 30 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 1, delay, ease: [0.22, 1, 0.36, 1] }}
+    >
+      {children}
+    </motion.div>
+  );
 }
 
-function Counter({ target, suffix = "" }: { target: number; suffix?: string }) {
-  const [count, setCount] = useState(0)
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true })
-  useEffect(() => {
-    if (!inView) return
-    const step = Math.ceil(target / 60)
-    const t = setInterval(() => setCount(c => Math.min(c + step, target)), 16)
-    return () => clearInterval(t)
-  }, [inView, target])
-  return <span ref={ref}>{count}{suffix}</span>
-}
+function MagneticBtn({
+  children,
+  className = "",
+  onClick,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  onClick?: () => void;
+}) {
+  const ref = useRef<HTMLButtonElement>(null);
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const sx = useSpring(x, { stiffness: 150, damping: 20 });
+  const sy = useSpring(y, { stiffness: 150, damping: 20 });
 
-function MagneticBtn({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  const x = useMotionValue(0); const y = useMotionValue(0)
-  const sx = useSpring(x, { stiffness: 500, damping: 25 })
-  const sy = useSpring(y, { stiffness: 500, damping: 25 })
-  const ref = useRef<HTMLButtonElement>(null)
-  const handleMouse = (e: React.MouseEvent) => {
-    const r = ref.current!.getBoundingClientRect()
-    x.set((e.clientX - r.left - r.width/2) * 0.35)
-    y.set((e.clientY - r.top - r.height/2) * 0.35)
-  }
-  return <motion.button ref={ref} style={{ x: sx, y: sy }} onMouseMove={handleMouse} onMouseLeave={() => { x.set(0); y.set(0) }} className={className}>{children}</motion.button>
-}
-
-export default function LumiereBijoux() {
-  const [selectedTab, setSelectedTab] = useState("Rings")
-  const { scrollY } = useScroll()
-  const heroOpacity = useTransform(scrollY, [0, 400], [1, 0])
-  const heroY = useTransform(scrollY, [0, 400], [0, 100])
+  const handleMouse = useCallback(
+    (e: React.MouseEvent) => {
+      const rect = ref.current?.getBoundingClientRect();
+      if (!rect) return;
+      x.set((e.clientX - rect.left - rect.width / 2) * 0.35);
+      y.set((e.clientY - rect.top - rect.height / 2) * 0.35);
+    },
+    [x, y],
+  );
 
   return (
-    <div className="bg-[#fdf8f0] text-[#080808] overflow-hidden">
-      <nav className="fixed top-0 left-0 right-0 h-16 bg-white/60 backdrop-blur-md border-b border-[#d4af37]/10 z-50 flex items-center justify-between px-6">
-        <div className="text-2xl font-bold tracking-wider text-[#d4af37]">LUMIÈRE BIJOUX</div>
-        <div className="hidden md:flex gap-8 text-sm text-[#080808]">
-          <Link href="#collections" className="hover:text-[#d4af37] transition">Collections</Link>
-          <Link href="#bespoke" className="hover:text-[#d4af37] transition">Bespoke</Link>
-          <Link href="#heritage" className="hover:text-[#d4af37] transition">Artisans</Link>
+    <motion.button
+      ref={ref}
+      style={{ x: sx, y: sy }}
+      onMouseMove={handleMouse}
+      onMouseLeave={() => {
+        x.set(0);
+        y.set(0);
+      }}
+      onClick={onClick}
+      className={className}
+    >
+      {children}
+    </motion.button>
+  );
+}
+
+/* ==========================================================================
+   MAIN PAGE COMPONENT
+   ========================================================================= */
+
+export default function ZenithWatchesPage() {
+  const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [activeWatch, setActiveWatch] = useState<number | null>(null);
+
+  useEffect(() => {
+    const h = () => setScrolled(window.scrollY > 50);
+    window.addEventListener("scroll", h);
+    return () => window.removeEventListener("scroll", h);
+  }, []);
+
+  return (
+    <div className="premium-theme min-h-screen bg-[#0a0a0a] text-[#e5e5e5] font-sans selection:bg-[#d4af37] selection:text-white overflow-x-hidden">
+      {/* ── NAVIGATION ── */}
+      <nav
+        className={`fixed top-0 left-0 w-full z-50 transition-all duration-700 ${scrolled ? "bg-black/90 backdrop-blur-2xl py-4 border-b border-white/5" : "bg-transparent py-8"}`}
+      >
+        <div className="max-w-[1600px] mx-auto px-6 md:px-12 flex items-center justify-between">
+          <Link href="/" className="group flex flex-col items-center">
+            <span className="text-3xl font-black tracking-[0.2em] uppercase leading-none italic">
+              Zenith
+            </span>
+            <span className="text-[8px] font-bold uppercase tracking-[0.6em] text-[#d4af37] -mt-1 ml-1">
+              Swiss Horology
+            </span>
+          </Link>
+
+          <div className="hidden lg:flex items-center gap-12 text-[10px] font-bold uppercase tracking-[0.3em] text-white/40">
+            {[
+              "Collections",
+              "Grand_Complications",
+              "Savoir-Faire",
+              "Heritage",
+              "Concierge",
+            ].map((link) => (
+              <Link
+                key={link}
+                href="#"
+                className="hover:text-[#d4af37] transition-colors cursor-pointer"
+              >
+                {link}
+              </Link>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-8">
+            <button className="hidden md:flex items-center gap-3 group">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-white/60 group-hover:text-[#d4af37] transition-colors">
+                Ownership_Portal
+              </span>
+              <div className="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center text-white/40 group-hover:bg-[#d4af37] group-hover:text-black group-hover:border-[#d4af37] transition-all">
+                <ShieldCheck className="w-4 h-4" />
+              </div>
+            </button>
+            <button
+              onClick={() => setMenuOpen(true)}
+              className="lg:hidden text-[#d4af37]"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+          </div>
         </div>
       </nav>
 
-      <motion.section style={{ opacity: heroOpacity, y: heroY }} className="relative h-screen flex items-center justify-center overflow-hidden pt-16">
-        <div className="absolute inset-0">
-          <Image src="https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?q=80&w=1600&auto=format&fit=crop" alt="Jewelry" fill className="object-cover" unoptimized />
-          <div className="absolute inset-0 bg-black/30" />
-        </div>
-        <div className="relative z-10 text-center max-w-4xl px-4">
-          <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2 }} className="text-6xl md:text-7xl font-bold mb-6 tracking-tight text-white">
-            FINE JEWELRY ATELIER
-          </motion.h1>
-          <motion.p initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.4 }} className="text-xl text-gray-200 mb-8 max-w-2xl mx-auto">
-            Timeless elegance crafted by master artisans since 1978.
-          </motion.p>
-          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.6 }}>
-            <Dialog>
-              <DialogTrigger asChild>
-                <MagneticBtn className="px-8 py-4 bg-[#d4af37] text-[#080808] font-bold rounded-full hover:bg-[#c99d2f] transition">
-                  Explore Collections
-                </MagneticBtn>
-              </DialogTrigger>
-              <DialogContent className="bg-[#fdf8f0] border-[#d4af37]/20 max-w-md">
-                <DialogTitle>Discover Collections</DialogTitle>
-                <form className="space-y-4">
-                  <input type="text" placeholder="Your Name" className="w-full px-4 py-2 bg-white border border-[#d4af37]/30 rounded text-[#080808]" />
-                  <input type="email" placeholder="Your Email" className="w-full px-4 py-2 bg-white border border-[#d4af37]/30 rounded text-[#080808]" />
-                  <input type="text" placeholder="Collection Interest" className="w-full px-4 py-2 bg-white border border-[#d4af37]/30 rounded text-[#080808]" />
-                  <button type="submit" className="w-full px-4 py-3 bg-[#d4af37] text-[#080808] font-bold rounded hover:bg-[#c99d2f] transition">
-                    Request Consultation
-                  </button>
-                </form>
-              </DialogContent>
-            </Dialog>
+      {/* MOBILE MENU */}
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="fixed inset-0 z-[100] bg-black p-12 flex flex-col justify-center gap-10"
+          >
+            <button
+              onClick={() => setMenuOpen(false)}
+              className="absolute top-10 right-8 text-white/40 hover:text-[#d4af37]"
+            >
+              <X className="w-10 h-10" />
+            </button>
+            <div className="flex flex-col gap-4 text-7xl font-black uppercase text-white/10">
+              {["Collections", "Complications", "Atelier", "Contact"].map(
+                (l) => (
+                  <Link
+                    key={l}
+                    href="#"
+                    onClick={() => setMenuOpen(false)}
+                    className="hover:text-[#d4af37] hover:translate-x-4 transition-all"
+                  >
+                    {l}
+                  </Link>
+                ),
+              )}
+            </div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── HERO ── */}
+      <section className="relative h-[100svh] flex items-center overflow-hidden">
+        <div className="absolute inset-0">
+          <Image
+            src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=1600&q=80"
+            alt="Watch Movement"
+            fill
+            className="object-cover opacity-40 mix-blend-luminosity grayscale contrast-150"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent" />
         </div>
-      </motion.section>
 
-      <section id="collections" className="py-24 px-6 max-w-7xl mx-auto">
-        <Reveal delay={0.1}>
-          <h2 className="text-5xl font-bold mb-4 text-center text-[#080808]">Collections</h2>
-          <p className="text-gray-600 text-center mb-12 max-w-2xl mx-auto">Curated selections of timeless pieces for every occasion and dream.</p>
-        </Reveal>
-
-        <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-          <TabsList className="grid w-full grid-cols-5 bg-white border border-[#d4af37]/20 mb-8">
-            {["Rings", "Necklaces", "Bracelets", "Earrings", "Bespoke"].map((type) => (
-              <TabsTrigger key={type} value={type} className="data-[state=active]:bg-[#d4af37] data-[state=active]:text-[#080808]">
-                {type}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-
-          {COLLECTIONS.map((collection) => (
-            <TabsContent key={collection.id} value={collection.name} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[collection].map((col, idx) => (
-                <Reveal key={idx} delay={idx * 0.1}>
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Card className="bg-white border-[#d4af37]/20 cursor-pointer hover:border-[#d4af37]/50 transition overflow-hidden group">
-                        <div className="relative h-72 overflow-hidden">
-                          <Image src={col.image} alt={col.name} fill className="object-cover group-hover:scale-105 transition" unoptimized />
-                        </div>
-                        <CardContent className="p-6">
-                          <h3 className="font-bold text-xl mb-2 text-[#080808]">{col.name}</h3>
-                          <Badge className="bg-[#d4af37] text-[#080808]">{col.pieces[0].title}</Badge>
-                        </CardContent>
-                      </Card>
-                    </DialogTrigger>
-                    <DialogContent className="bg-[#fdf8f0] border-[#d4af37]/20 max-w-2xl">
-                      <div className="space-y-4">
-                        <h2 className="text-3xl font-bold text-[#080808]">{col.pieces[0].title}</h2>
-                        <div className="aspect-video bg-gray-200 rounded overflow-hidden">
-                          <Image src={col.image} alt={col.pieces[0].title} width={500} height={280} className="w-full h-full object-cover" unoptimized />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <p className="text-gray-600 text-sm">Material</p>
-                            <p className="font-bold text-[#080808]">{col.pieces[0].material}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-600 text-sm">Carat/Weight</p>
-                            <p className="font-bold text-[#d4af37]">{col.pieces[0].carat}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                </Reveal>
-              ))}
-            </TabsContent>
-          ))}
-        </Tabs>
-      </section>
-
-      <section id="bespoke" className="py-24 px-6 bg-white">
-        <div className="max-w-7xl mx-auto">
-          <Reveal delay={0.1} className="mb-16">
-            <h2 className="text-5xl font-bold text-center mb-4 text-[#080808]">Bespoke Experience</h2>
-            <p className="text-gray-600 text-center max-w-2xl mx-auto">Our 4-step design process brings your dream piece to life.</p>
+        <div className="relative z-10 max-w-[1600px] mx-auto px-6 md:px-12 w-full grid grid-cols-1 lg:grid-cols-2 items-center">
+          <Reveal>
+            <Badge className="bg-[#d4af37]/10 text-[#d4af37] border border-[#d4af37]/30 text-[10px] font-bold uppercase tracking-[0.5em] mb-10 px-4 py-1.5 rounded-full">
+              Le Locle, Switzerland // Since 1899
+            </Badge>
+            <h1 className="text-8xl md:text-[14rem] font-black leading-[0.75] tracking-tighter mb-12 uppercase text-white italic">
+              Taming <br />{" "}
+              <span className="text-[#d4af37] not-italic">Entropy.</span>
+            </h1>
+            <p className="max-w-md text-xl text-white/50 leading-relaxed font-light mb-12 uppercase tracking-wide italic">
+              The absolute mechanical mastery of time. Engineered for the next
+              millennium.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-6">
+              <MagneticBtn className="px-12 py-5 bg-[#d4af37] text-black text-[10px] font-black uppercase tracking-[0.3em] rounded-full hover:scale-105 transition-all cursor-pointer shadow-[0_0_40px_rgba(212,175,55,0.3)]">
+                The Masterpiece Archive
+              </MagneticBtn>
+              <Link
+                href="#collections"
+                className="px-12 py-5 border border-white/20 text-white text-[10px] font-bold uppercase tracking-[0.3em] rounded-full hover:bg-white hover:text-black transition-all flex items-center justify-center gap-3"
+              >
+                Current Collection <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
           </Reveal>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            {[
-              { step: 1, title: "Consultation", desc: "Discuss vision with master designer" },
-              { step: 2, title: "Design Sketches", desc: "Detailed drawings and material selection" },
-              { step: 3, title: "Craftsmanship", desc: "Expert artisans create your piece" },
-              { step: 4, title: "Delivery", desc: "White-glove handoff and certification" },
-            ].map((item, idx) => (
-              <Reveal key={idx} delay={idx * 0.1}>
+          <div className="hidden lg:flex justify-end pr-12 relative">
+            <Reveal delay={0.4}>
+              <div className="relative w-96 h-96 rounded-full border border-white/5 flex items-center justify-center">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{
+                    duration: 60,
+                    repeat: Infinity,
+                    ease: "linear",
+                  }}
+                  className="absolute inset-0 border-t-2 border-[#d4af37] rounded-full"
+                />
                 <div className="text-center">
-                  <div className="w-16 h-16 rounded-full bg-[#d4af37] text-white font-bold text-2xl flex items-center justify-center mx-auto mb-4">{item.step}</div>
-                  <h3 className="font-bold text-lg mb-2 text-[#080808]">{item.title}</h3>
-                  <p className="text-gray-600">{item.desc}</p>
+                  <span className="text-5xl font-black italic block text-[#d4af37]">
+                    VHP
+                  </span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-white/30">
+                    Vertical High Precision
+                  </span>
+                </div>
+              </div>
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-[#d4af37] rounded-full blur-2xl opacity-20 animate-pulse" />
+            </Reveal>
+          </div>
+        </div>
+      </section>
+
+      {/* ── STATS SECTION ── */}
+      <section className="py-24 border-y border-white/5 bg-[#0d0d0d]">
+        <div className="max-w-[1600px] mx-auto px-6 md:px-12">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-12">
+            {STATS.map((stat, i) => (
+              <Reveal key={i} delay={i * 0.1}>
+                <div className="text-center md:text-left">
+                  <div className="text-[9px] font-bold uppercase tracking-[0.3em] text-[#d4af37] mb-2">
+                    {stat.label}
+                  </div>
+                  <div className="text-5xl font-black italic text-white">
+                    {stat.value}
+                  </div>
                 </div>
               </Reveal>
             ))}
@@ -215,117 +365,329 @@ export default function LumiereBijoux() {
         </div>
       </section>
 
-      <section className="py-24 px-6 max-w-7xl mx-auto">
-        <Reveal delay={0.1} className="mb-16">
-          <h2 className="text-5xl font-bold text-center mb-4 text-[#080808]">Materials & Certifications</h2>
-        </Reveal>
+      {/* ── COLLECTIONS ── */}
+      <section id="collections" className="py-32 px-6 md:px-12">
+        <div className="max-w-[1600px] mx-auto">
+          <Reveal>
+            <div className="flex flex-col md:flex-row justify-between items-end mb-24 gap-12">
+              <div>
+                <h2 className="text-7xl md:text-[10rem] font-black italic tracking-tighter leading-none mb-6 uppercase text-white">
+                  The <br /> <span className="text-[#d4af37]">Archive.</span>
+                </h2>
+                <p className="text-white/20 text-[10px] font-bold uppercase tracking-[0.4em]">
+                  Internal Reference // Swiss Quality Index // 2024
+                </p>
+              </div>
+              <Link
+                href="#"
+                className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#d4af37] border-b border-[#d4af37] pb-2 hover:text-white hover:border-white transition-all"
+              >
+                Download Technical Deck
+              </Link>
+            </div>
+          </Reveal>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {MATERIALS.map((mat, idx) => (
-            <Reveal key={idx} delay={idx * 0.1}>
-              <Card className="bg-white border-[#d4af37]/20">
-                <CardContent className="p-8">
-                  <h3 className="text-2xl font-bold mb-4 text-[#d4af37]">{mat.title}</h3>
-                  <p className="text-gray-600 mb-6">{mat.desc}</p>
-                  <div className="space-y-2">
-                    {mat.certs.map((cert, i) => (
-                      <Badge key={i} variant="outline" className="border-[#d4af37]/30 text-[#d4af37]">{cert}</Badge>
-                    ))}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+            {COLLECTIONS.map((item, i) => (
+              <Reveal key={item.id} delay={i * 0.1}>
+                <div
+                  className="group space-y-10 cursor-pointer"
+                  onMouseEnter={() => setActiveWatch(item.id)}
+                  onMouseLeave={() => setActiveWatch(null)}
+                >
+                  <div className="relative aspect-square overflow-hidden rounded-sm grayscale group-hover:grayscale-0 transition-all duration-[1s]">
+                    <Image
+                      src={item.img}
+                      alt={item.name}
+                      fill
+                      className="object-cover transition-transform duration-[2s] group-hover:scale-125"
+                    />
+                    <div className="absolute inset-0 bg-black/40 group-hover:bg-transparent transition-colors duration-700" />
+
+                    <div className="absolute top-6 left-6">
+                      <Badge className="bg-black/50 backdrop-blur-md text-white border-white/10 text-[9px] font-bold uppercase tracking-widest px-3 py-1">
+                        {item.category}
+                      </Badge>
+                    </div>
+
+                    <AnimatePresence>
+                      {activeWatch === item.id && (
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="absolute inset-0 flex items-center justify-center bg-[#d4af37]/10 backdrop-blur-[2px]"
+                        >
+                          <button className="px-10 py-4 bg-white text-black text-[10px] font-black uppercase tracking-widest hover:scale-110 transition-all shadow-2xl">
+                            Caliber Specs
+                          </button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
-                </CardContent>
-              </Card>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      <section id="heritage" className="py-24 px-6 bg-white">
-        <div className="max-w-7xl mx-auto">
-          <Reveal delay={0.1} className="mb-16">
-            <h2 className="text-5xl font-bold text-center mb-4 text-[#080808]">Artisan Masters</h2>
-            <p className="text-gray-600 text-center">Generations of excellence at your service.</p>
-          </Reveal>
-
-          <Carousel className="w-full max-w-4xl mx-auto">
-            <CarouselContent>
-              {ARTISANS.map((artisan) => (
-                <CarouselItem key={artisan.name} className="basis-full md:basis-1/2">
-                  <Card className="bg-[#fdf8f0] border-[#d4af37]/20 text-center">
-                    <CardContent className="p-6">
-                      <Avatar className="w-20 h-20 mx-auto mb-4">
-                        <AvatarImage src={artisan.image} alt={artisan.name} />
-                        <AvatarFallback>{artisan.name[0]}</AvatarFallback>
-                      </Avatar>
-                      <h3 className="font-bold text-lg text-[#080808]">{artisan.name}</h3>
-                      <p className="text-sm text-[#d4af37] mb-2">{artisan.role}</p>
-                      <p className="text-sm text-gray-600">{artisan.bio}</p>
-                    </CardContent>
-                  </Card>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious className="border-[#d4af37]/30" />
-            <CarouselNext className="border-[#d4af37]/30" />
-          </Carousel>
-        </div>
-      </section>
-
-      <section className="py-24 px-6 bg-[#fdf8f0]">
-        <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
-          {STATS.map((stat, idx) => (
-            <Reveal key={idx} delay={idx * 0.1} className="text-center">
-              <div className="text-4xl font-bold text-[#d4af37] mb-2"><Counter target={stat.value} /></div>
-              <div className="text-sm text-gray-600">{stat.label}</div>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      <section className="py-24 px-6 bg-white">
-        <div className="max-w-3xl mx-auto">
-          <Reveal delay={0.1} className="mb-12">
-            <h2 className="text-5xl font-bold text-center mb-4 text-[#080808]">Customer Care</h2>
-          </Reveal>
-
-          <Accordion type="single" collapsible className="space-y-4">
-            {FAQ_ITEMS.map((item, idx) => (
-              <AccordionItem key={idx} value={`item-${idx}`} className="border-[#d4af37]/20">
-                <AccordionTrigger className="text-lg font-semibold text-[#080808] hover:text-[#d4af37] transition">
-                  {item.q}
-                </AccordionTrigger>
-                <AccordionContent className="text-gray-600">
-                  {item.a}
-                </AccordionContent>
-              </AccordionItem>
+                  <div className="space-y-6">
+                    <div className="flex justify-between items-baseline">
+                      <h3 className="text-4xl font-black uppercase tracking-tighter text-white italic group-hover:text-[#d4af37] transition-colors">
+                        {item.name}
+                      </h3>
+                      <span className="text-lg font-black text-[#d4af37] tracking-tighter">
+                        {item.price}
+                      </span>
+                    </div>
+                    <p className="text-sm text-white/30 font-light leading-relaxed uppercase tracking-widest italic">
+                      {item.desc}
+                    </p>
+                    <div className="flex items-center gap-4">
+                      <div className="h-[1px] flex-1 bg-white/5 group-hover:bg-[#d4af37]/20 transition-all" />
+                      <Settings className="w-5 h-5 text-white/10 group-hover:text-[#d4af37] transition-all" />
+                    </div>
+                  </div>
+                </div>
+              </Reveal>
             ))}
-          </Accordion>
+          </div>
         </div>
       </section>
 
-      <section className="py-24 px-6 text-center bg-[#fdf8f0]">
-        <Reveal>
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-[#080808]">Begin Your Bespoke Journey</h2>
-          <p className="text-gray-600 mb-8 max-w-2xl mx-auto">Schedule a private consultation with our master designers.</p>
-          <Dialog>
-            <DialogTrigger asChild>
-              <MagneticBtn className="px-8 py-4 bg-[#d4af37] text-[#080808] font-bold rounded-full hover:bg-[#c99d2f] transition">
-                Request Consultation
-              </MagneticBtn>
-            </DialogTrigger>
-            <DialogContent className="bg-[#fdf8f0] border-[#d4af37]/20">
-              <DialogTitle>Bespoke Consultation</DialogTitle>
-              <form className="space-y-4">
-                <input type="text" placeholder="Full Name" className="w-full px-4 py-2 bg-white border border-[#d4af37]/30 rounded text-[#080808]" />
-                <input type="email" placeholder="Email Address" className="w-full px-4 py-2 bg-white border border-[#d4af37]/30 rounded text-[#080808]" />
-                <textarea placeholder="Describe your vision..." className="w-full px-4 py-2 bg-white border border-[#d4af37]/30 rounded text-[#080808] h-24" />
-                <button type="submit" className="w-full px-4 py-3 bg-[#d4af37] text-[#080808] font-bold rounded hover:bg-[#c99d2f] transition">
-                  Book Consultation
-                </button>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </Reveal>
+      {/* ── SAVOIR-FAIRE ── */}
+      <section className="py-40 bg-[#0d0d0d] overflow-hidden relative">
+        <div className="absolute top-0 right-0 w-[40rem] h-[40rem] bg-[#d4af37]/5 blur-[120px] rounded-full" />
+        <div className="max-w-[1600px] mx-auto px-6 md:px-12">
+          <Reveal>
+            <div className="text-center mb-32">
+              <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-[#d4af37] mb-8 block">
+                Atelier Excellence
+              </span>
+              <h2 className="text-6xl md:text-8xl font-black italic tracking-tighter uppercase">
+                Swiss{" "}
+                <span className="text-[#d4af37] not-italic">Savoir-Faire.</span>
+              </h2>
+            </div>
+          </Reveal>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-16">
+            {CRAFTSMANSHIP.map((s, i) => (
+              <Reveal key={i} delay={i * 0.1}>
+                <div className="p-16 border border-white/5 bg-white/[0.01] hover:border-[#d4af37]/30 transition-all group h-full flex flex-col relative overflow-hidden">
+                  <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center text-[#d4af37] mb-10 group-hover:bg-[#d4af37] group-hover:text-black transition-all duration-500">
+                    <s.icon className="w-8 h-8" />
+                  </div>
+                  <h3 className="text-3xl font-black uppercase italic mb-6 tracking-tighter text-white group-hover:translate-x-2 transition-transform">
+                    {s.title}
+                  </h3>
+                  <p className="text-sm text-white/30 font-light leading-relaxed mb-12 flex-1 tracking-wide uppercase italic leading-loose">
+                    {s.desc}
+                  </p>
+                  <button className="flex items-center gap-4 text-[9px] font-bold uppercase tracking-[0.3em] text-[#d4af37] group-hover:gap-6 transition-all">
+                    Read Case Study <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
       </section>
+
+      {/* ── THE HERITAGE ── */}
+      <section className="py-40 px-6 md:px-12 bg-black">
+        <div className="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-32 items-center">
+          <Reveal>
+            <div className="relative aspect-square rounded-sm overflow-hidden group border border-white/5">
+              <Image
+                src="https://images.unsplash.com/photo-1547996160-81dfa63595aa?w=1200&q=80"
+                alt="Vintage Heritage"
+                fill
+                className="object-cover group-hover:scale-110 transition-all duration-[2s] mix-blend-luminosity grayscale group-hover:grayscale-0"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+              <div className="absolute bottom-16 left-16 text-white">
+                <span className="text-[10px] font-bold uppercase tracking-[0.4em] mb-4 block text-[#d4af37]">
+                  Since 1899
+                </span>
+                <h4 className="text-5xl font-black italic uppercase tracking-tighter leading-none text-[#d4af37]">
+                  A Legacy <br /> In Gold.
+                </h4>
+              </div>
+            </div>
+          </Reveal>
+
+          <Reveal delay={0.2}>
+            <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-[#d4af37] mb-8 block">
+              The Philosophy
+            </span>
+            <h2 className="text-6xl md:text-9xl font-black italic tracking-tighter leading-[0.8] mb-12 uppercase text-white">
+              Eternal <br />{" "}
+              <span className="text-[#d4af37] not-italic">Rhythm.</span>
+            </h2>
+            <p className="text-white/40 text-xl leading-relaxed mb-16 font-light uppercase tracking-wide italic">
+              We don't sell watches. We sell the mastery over the fourth
+              dimension. A Zenith is a perpetual heartbeat on your wrist.
+            </p>
+            <div className="grid grid-cols-2 gap-12">
+              {[
+                {
+                  icon: Compass,
+                  label: "Navigation",
+                  desc: "Marine chronometer",
+                },
+                { icon: Shield, label: "Armored", desc: "Durability v2.0" },
+                { icon: Globe, label: "Global_Time", desc: "Multi-timezone" },
+                { icon: Award, label: "Certified", desc: "METAS/COSC+" },
+              ].map((val, i) => (
+                <div key={i} className="space-y-4">
+                  <val.icon className="w-6 h-6 text-[#d4af37]" />
+                  <h4 className="text-[11px] font-black uppercase tracking-widest text-white">
+                    {val.label}
+                  </h4>
+                  <p className="text-[10px] font-light text-white/30 uppercase tracking-widest leading-loose">
+                    {val.desc}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <MagneticBtn className="mt-20 px-14 py-6 bg-white text-black text-[10px] font-black uppercase tracking-[0.4em] rounded-full hover:bg-[#d4af37] hover:text-white transition-all shadow-2xl">
+              Private Boutique Appointment
+            </MagneticBtn>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ── FOOTER ── */}
+      <footer className="bg-[#050505] pt-40 pb-16 px-6 md:px-12 border-t border-white/5">
+        <div className="max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-32 mb-40">
+          <div className="lg:col-span-6">
+            <Reveal>
+              <div className="flex flex-col mb-12">
+                <span className="text-5xl font-black tracking-[0.2em] uppercase leading-none italic">
+                  Zenith
+                </span>
+                <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-[#d4af37] -mt-1 ml-1">
+                  Swiss Horology
+                </span>
+              </div>
+              <p className="text-white/20 max-w-md mb-16 text-[11px] font-bold uppercase tracking-[0.2em] leading-loose italic">
+                The absolute mechanical mastery of time. Engineered for the next
+                millennium in our Le Locle sanctuary.
+              </p>
+              <div className="flex gap-6">
+                {[Instagram, Twitter, Mail].map((Icon, i) => (
+                  <button
+                    key={i}
+                    className="w-14 h-14 rounded-full border border-white/10 flex items-center justify-center text-white/40 hover:bg-[#d4af37] hover:text-black hover:border-[#d4af37] transition-all"
+                  >
+                    <Icon className="w-5 h-5" />
+                  </button>
+                ))}
+              </div>
+            </Reveal>
+          </div>
+
+          <div className="lg:col-span-2">
+            <h4 className="text-[11px] font-black uppercase tracking-widest text-[#d4af37] mb-12">
+              Collection
+            </h4>
+            <ul className="space-y-6 text-[10px] font-bold uppercase tracking-widest text-white/30">
+              <li>
+                <Link href="#" className="hover:text-white transition-colors">
+                  Astra_Series
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="hover:text-white transition-colors">
+                  Deep_Sea_Units
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="hover:text-white transition-colors">
+                  Heritage_Line
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="hover:text-white transition-colors">
+                  Bespoke_Builds
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div className="lg:col-span-2">
+            <h4 className="text-[11px] font-black uppercase tracking-widest text-[#d4af37] mb-12">
+              Atelier
+            </h4>
+            <ul className="space-y-6 text-[10px] font-bold uppercase tracking-widest text-white/30">
+              <li>
+                <Link href="#" className="hover:text-white transition-colors">
+                  Movement_Lab
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="hover:text-white transition-colors">
+                  Finishing_Dept
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="hover:text-white transition-colors">
+                  Certification
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="hover:text-white transition-colors">
+                  Sourcing
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div className="lg:col-span-2">
+            <h4 className="text-[11px] font-black uppercase tracking-widest text-[#d4af37] mb-12">
+              Zenith
+            </h4>
+            <ul className="space-y-6 text-[10px] font-bold uppercase tracking-widest text-white/30">
+              <li>
+                <Link href="#" className="hover:text-white transition-colors">
+                  Our_Legacy
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="hover:text-white transition-colors">
+                  Global_Boutiques
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="hover:text-white transition-colors">
+                  Ownership_Care
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="hover:text-white transition-colors">
+                  Press_Archive
+                </Link>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="max-w-[1600px] mx-auto pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-12 text-[10px] font-bold uppercase tracking-[0.4em] text-white/10">
+          <div className="flex items-center gap-12">
+            <span>
+              &copy; {new Date().getFullYear()} ZENITH HOROLOGY SWITZERLAND.
+            </span>
+            <div className="flex gap-8">
+              <span>METAS_CHRONO_COMPLIANT</span>
+              <span>FHH_CERTIFIED_ATELIER</span>
+            </div>
+          </div>
+          <div className="flex gap-12 font-mono">
+            <span>SYNC_STATUS_EXTERNAL</span>
+            <span>CALIBER_V12_NOMINAL</span>
+          </div>
+        </div>
+      </footer>
+
+      <style>{`
+        ::-webkit-scrollbar{width:4px;background:#050505}
+        ::-webkit-scrollbar-thumb{background:#d4af37}
+      `}</style>
     </div>
-  )
+  );
 }

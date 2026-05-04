@@ -1,377 +1,574 @@
-"use client";
+"use client"
 
-import { motion, useScroll, useTransform, useInView, useMotionValue, useSpring, AnimatePresence } from "framer-motion";
-import { useState, useRef, useEffect, useCallback } from "react";
-import Image from "next/image";
-import { Shield, Zap, Globe, Cpu, Lock, Bell, ChevronDown, Menu, X, ArrowRight, Check, Play, BarChart3, Activity, TrendingUp, Users } from "lucide-react";
+import { motion, useScroll, useTransform, useInView, AnimatePresence, useMotionValue, useSpring } from "framer-motion"
+import { useState, useRef, useEffect, useCallback } from "react"
+import Image from "next/image"
+import Link from "next/link"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Separator } from "@/components/ui/separator"
+import {
+  Volume2, Music, Mic2, Disc, Waves,
+  Instagram, Twitter, Mail, MapPin,
+  ChevronRight, ArrowRight, X, Menu,
+  Headphones, Radio, Settings2, Play,
+  Speaker, Zap, Activity, Info,
+  Share2, Heart, Search, ShoppingBag
+} from "lucide-react"
+
 import "../premium.css";
 
-const FEATURES = [
-  { icon: Shield, title: "Zero-Trust Security", desc: "Every packet verified through our 9-layer encryption mesh. No exceptions, no backdoors.", color: "from-cyan-500 to-blue-500" },
-  { icon: Zap, title: "Sub-ms Latency", desc: "Neural relay nodes distributed across 42 global regions for instant response.", color: "from-yellow-400 to-orange-500" },
-  { icon: Globe, title: "Global Mesh", desc: "Decentralized compute power spanning 6 continents with 99.99% uptime SLA.", color: "from-emerald-400 to-teal-500" },
-  { icon: Cpu, title: "Quantum Core", desc: "Next-gen quantum processors optimize every computation in real-time.", color: "from-purple-500 to-violet-600" },
-  { icon: Lock, title: "Homomorphic Keys", desc: "Process encrypted data without ever decrypting. Provably secure by design.", color: "from-rose-500 to-pink-600" },
-  { icon: Bell, title: "Anomaly AI", desc: "12ms threat detection powered by models trained on 2B+ attack signatures.", color: "from-blue-500 to-indigo-600" },
+/* ==========================================================================
+   DATA STRUCTURES
+   ========================================================================= */
+
+const COLLECTIONS = [
+  { 
+    id: 1, 
+    name: "Aether One", 
+    category: "Reference Monitors", 
+    price: "$12,500 / pair",
+    desc: "Electrostatic drivers paired with a vacuum-tube crossover for unparalleled transient response.",
+    img: "https://images.unsplash.com/photo-1545454675-3531b543be5d?w=1200&q=80"
+  },
+  { 
+    id: 2, 
+    name: "Vortex Amp", 
+    category: "Amplification", 
+    price: "$8,200",
+    desc: "Pure Class-A amplification with zero negative feedback, housed in a monolithic copper chassis.",
+    img: "https://images.unsplash.com/photo-1558444479-c8af53670c01?w=1200&q=80"
+  },
+  { 
+    id: 3, 
+    name: "Sonic Prism", 
+    category: "Digital Source", 
+    price: "$6,800",
+    desc: "R2R ladder DAC with femto-second clocking for the most natural digital-to-analog conversion.",
+    img: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=1200&q=80"
+  },
 ];
 
-const PROJECTS = [
-  { title: "Neural Gateway", cat: "Infrastructure", img: "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=1200&auto=format&fit=crop" },
-  { title: "Cipher Mesh", cat: "Security", img: "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1200&auto=format&fit=crop" },
-  { title: "Quantum Relay", cat: "Network", img: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1200&auto=format&fit=crop" },
-  { title: "Sentinel Node", cat: "Defense", img: "https://images.unsplash.com/photo-1614064641938-3bbee52942c7?q=80&w=1200&auto=format&fit=crop" },
-  { title: "Data Vault", cat: "Storage", img: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?q=80&w=1200&auto=format&fit=crop" },
+const ENGINEERING = [
+  { 
+    title: "Acoustic Geometry", 
+    desc: "Every enclosure is CNC-milled from solid blocks of aeronautical aluminum to eliminate internal resonances.",
+    icon: Speaker
+  },
+  { 
+    title: "Signal Purity", 
+    desc: "Point-to-point hand-wiring with 6N silver conductors ensuring zero phase distortion across the spectrum.",
+    icon: Waves
+  },
+  { 
+    title: "Harmonic Integrity", 
+    desc: "Proprietary DSP algorithms that preserve the 'breath' of live recordings while managing room acoustics.",
+    icon: Activity
+  },
 ];
 
 const STATS = [
-  { value: 8442, suffix: "", label: "Active Nodes", icon: Activity },
-  { value: 99.99, suffix: "%", label: "Uptime SLA", icon: TrendingUp },
-  { value: 2, suffix: "B+", label: "Threats Blocked", icon: Shield },
-  { value: 340, suffix: "+", label: "Enterprise Clients", icon: Users },
+  { label: "Frequency Range", value: "8Hz - 120kHz" },
+  { label: "Signal-to-Noise", value: "142dB" },
+  { label: "Master Craftsmen", value: "12" },
+  { label: "Countries Served", value: "45" },
 ];
 
-const TESTIMONIALS = [
-  { name: "Dr. Elena Voss", role: "CISO, Meridian Bank", quote: "QuantumAI stopped a nation-state attack in 8ms. Their mesh doesn't just detect — it eliminates.", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop" },
-  { name: "Marcus Oyelaran", role: "CTO, Nexus Health", quote: "We process 40M patient records daily through their encrypted mesh. Zero breaches in 3 years.", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop" },
-  { name: "Sarah Kim", role: "VP Infra, Prism Capital", quote: "Sub-millisecond latency at global scale. It's not infrastructure anymore — it's a superpower.", avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=200&auto=format&fit=crop" },
-];
+/* ==========================================================================
+   UTILITY COMPONENTS
+   ========================================================================= */
 
-const FAQ = [
-  { q: "What makes your encryption different from AES-256?", a: "We use post-quantum lattice-based cryptography layered with our proprietary Cipher Mesh protocol — resistant to both classical and quantum attacks." },
-  { q: "How does the 99.99% uptime SLA work?", a: "Our mesh is fully decentralized. If any node fails, traffic is instantly rerouted across 42 remaining regions with zero user impact, backed by financial guarantees." },
-  { q: "Can I run QuantumAI on-premise?", a: "Yes — our Sovereign tier includes dedicated on-premise hardware with our Sentinel OS, air-gapped from public internet, with full HSM key management." },
-  { q: "How long does deployment take?", a: "Most enterprise deployments are live within 48 hours. Our neural onboarding AI handles config, existing infrastructure mapping, and compliance validation automatically." },
-];
-
-const PRICING = [
-  { name: "Recon", price: "0", features: ["3 Neural nodes", "1K API calls/day", "Community forum", "Basic analytics"], cta: "Deploy free", popular: false },
-  { name: "Command", price: "199", features: ["Unlimited nodes", "100K API calls", "Priority support", "Advanced analytics", "Custom mesh", "Team roles"], cta: "Start trial", popular: true },
-  { name: "Sovereign", price: "Custom", features: ["Everything in Command", "On-premise option", "SSO/SAML", "HSM key mgmt", "SLA guarantee", "24/7 engineer"], cta: "Contact ops", popular: false },
-];
-
-const MARQUEE_ITEMS = ["Zero-Trust Architecture", "Quantum Encryption", "Neural Threat Detection", "Global Mesh Network", "Sub-ms Latency", "SOC 2 Type II", "ISO 27001", "GDPR Compliant"];
-
-function Reveal({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
+function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
   const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-80px" });
+  const inView = useInView(ref, { once: true, margin: "-50px" });
   return (
-    <motion.div ref={ref} initial={{ opacity: 0, y: 40 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.7, delay, ease: [0.25, 0.1, 0.25, 1] }} className={className}>
+    <motion.div ref={ref} initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 1, delay, ease: [0.22, 1, 0.36, 1] }}>
       {children}
     </motion.div>
   );
 }
 
-function Counter({ target, suffix = "", label, icon: Icon }: { target: number; suffix?: string; label: string; icon: React.ElementType }) {
-  const [count, setCount] = useState(0);
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true });
-  useEffect(() => {
-    if (!inView) return;
-    const duration = 2000;
-    const steps = 60;
-    const increment = target / steps;
-    let current = 0;
-    const timer = setInterval(() => {
-      current += increment;
-      if (current >= target) { setCount(target); clearInterval(timer); }
-      else setCount(Math.floor(current));
-    }, duration / steps);
-    return () => clearInterval(timer);
-  }, [inView, target]);
-  const display = target % 1 !== 0 ? count.toFixed(2) : count.toLocaleString();
+function MagneticBtn({ children, className = "", onClick }: { children: React.ReactNode; className?: string; onClick?: () => void }) {
+  const ref = useRef<HTMLButtonElement>(null);
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const sx = useSpring(x, { stiffness: 150, damping: 20 });
+  const sy = useSpring(y, { stiffness: 150, damping: 20 });
+
+  const handleMouse = useCallback((e: React.MouseEvent) => {
+    const rect = ref.current?.getBoundingClientRect();
+    if (!rect) return;
+    x.set((e.clientX - rect.left - rect.width / 2) * 0.35);
+    y.set((e.clientY - rect.top - rect.height / 2) * 0.35);
+  }, [x, y]);
+
   return (
-    <div ref={ref} className="text-center">
-      <div className="flex justify-center mb-2"><Icon className="w-5 h-5 text-cyan-400" /></div>
-      <div className="text-4xl font-black text-white mb-1">{display}{suffix}</div>
-      <div className="text-slate-400 text-sm">{label}</div>
-    </div>
+    <motion.button ref={ref} style={{ x: sx, y: sy }} onMouseMove={handleMouse} onMouseLeave={() => { x.set(0); y.set(0); }} onClick={onClick} className={className}>
+      {children}
+    </motion.button>
   );
 }
 
-export default function QuantumAI_SPA() {
+/* ==========================================================================
+   MAIN PAGE COMPONENT
+   ========================================================================= */
+
+export default function AetherSoundPage() {
+  const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const [activeTestimonial, setActiveTestimonial] = useState(0);
-  const [billingAnnual, setBillingAnnual] = useState(true);
-  const [hoveredProject, setHoveredProject] = useState<number | null>(null);
-  const heroRef = useRef(null);
-  const { scrollY } = useScroll();
-  const heroY = useTransform(scrollY, [0, 600], [0, 180]);
-  const heroOpacity = useTransform(scrollY, [0, 400], [1, 0]);
-
-  const mx = useMotionValue(0);
-  const my = useMotionValue(0);
-  const springX = useSpring(mx, { stiffness: 150, damping: 20 });
-  const springY = useSpring(my, { stiffness: 150, damping: 20 });
-
-  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    mx.set((e.clientX - rect.left - rect.width / 2) * 0.3);
-    my.set((e.clientY - rect.top - rect.height / 2) * 0.3);
-  }, [mx, my]);
+  const [activeItem, setActiveItem] = useState<number | null>(null);
 
   useEffect(() => {
-    const t = setInterval(() => setActiveTestimonial(p => (p + 1) % TESTIMONIALS.length), 5000);
-    return () => clearInterval(t);
+    const h = () => setScrolled(window.scrollY > 50);
+    window.addEventListener("scroll", h);
+    return () => window.removeEventListener("scroll", h);
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white overflow-x-hidden">
-      {/* Nav */}
-      <motion.nav initial={{ y: -80 }} animate={{ y: 0 }} transition={{ duration: 0.6 }} className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-[#020617]/80 backdrop-blur-xl border-b border-white/5">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center"><Zap className="w-4 h-4 text-white" /></div>
-          <span className="font-bold text-white">QuantumAI</span>
-        </div>
-        <div className="hidden md:flex items-center gap-8 text-sm text-slate-400">
-          {["Platform", "Security", "Pricing", "Docs"].map(item => (
-            <a key={item} href="#" className="hover:text-white transition-colors">{item}</a>
-          ))}
-        </div>
-        <div className="hidden md:flex items-center gap-3">
-          <a href="#" className="text-sm text-slate-400 hover:text-white transition-colors">Log in</a>
-          <motion.button style={{ x: springX, y: springY }} onMouseMove={handleMouseMove} onMouseLeave={() => { mx.set(0); my.set(0); }} className="px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-black text-sm font-bold rounded-lg transition-colors">
-            Deploy now
-          </motion.button>
-        </div>
-        <button className="md:hidden" onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}</button>
-      </motion.nav>
+    <div className="premium-theme min-h-screen bg-[#080808] text-[#d4d4d4] font-sans selection:bg-[#c9a84c] selection:text-black overflow-x-hidden">
 
+      {/* ── NAVIGATION ── */}
+      <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-700 ${scrolled ? "bg-black/90 backdrop-blur-2xl py-4 border-b border-white/5" : "bg-transparent py-8"}`}>
+        <div className="max-w-[1600px] mx-auto px-6 md:px-12 flex items-center justify-between">
+          <Link href="/" className="group flex flex-col items-center">
+             <span className="text-3xl font-black tracking-[0.1em] uppercase leading-none italic">Aether</span>
+             <span className="text-[8px] font-bold uppercase tracking-[0.6em] text-[#c9a84c] -mt-1 ml-1">Sound Labs</span>
+          </Link>
+
+          <div className="hidden lg:flex items-center gap-12 text-[10px] font-bold uppercase tracking-[0.3em] text-white/40">
+            {["Reference", "Amplification", "Source", "Consultation", "Archives"].map(link => (
+              <Link key={link} href="#" className="hover:text-[#c9a84c] transition-colors cursor-pointer">{link}</Link>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-8">
+             <button className="hidden md:flex items-center gap-3 group">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-white/60 group-hover:text-[#c9a84c] transition-colors">Client_Lounge</span>
+                <div className="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center text-white/40 group-hover:bg-[#c9a84c] group-hover:text-black group-hover:border-[#c9a84c] transition-all">
+                   <Volume2 className="w-4 h-4" />
+                </div>
+             </button>
+             <button onClick={() => setMenuOpen(true)} className="lg:hidden text-[#c9a84c]"><Menu className="w-6 h-6" /></button>
+          </div>
+        </div>
+      </nav>
+
+      {/* MOBILE MENU */}
       <AnimatePresence>
         {menuOpen && (
-          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="fixed inset-0 z-40 bg-[#020617] flex flex-col items-center justify-center gap-8 text-2xl font-bold">
-            {["Platform", "Security", "Pricing", "Docs"].map(item => <a key={item} href="#" className="text-white" onClick={() => setMenuOpen(false)}>{item}</a>)}
+          <motion.div initial={{ opacity: 0, x: "100%" }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: "100%" }} className="fixed inset-0 z-[100] bg-black p-12 flex flex-col justify-center gap-10">
+             <button onClick={() => setMenuOpen(false)} className="absolute top-10 right-8 text-white/40 hover:text-[#c9a84c]"><X className="w-10 h-10"/></button>
+             <div className="flex flex-col gap-6 text-6xl font-black uppercase italic text-white/5">
+                {["System", "Engineering", "Consult", "About"].map(l => (
+                   <Link key={l} href="#" onClick={() => setMenuOpen(false)} className="hover:text-[#c9a84c] transition-all">{l}</Link>
+                ))}
+             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Hero */}
-      <div ref={heroRef} className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        <motion.div style={{ y: heroY }} className="absolute inset-0">
-          <Image src="https://images.unsplash.com/photo-733852?w=800&q=80" alt="Hero" fill className="object-cover opacity-20" unoptimized />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#020617]/40 via-transparent to-[#020617]" />
-        </motion.div>
-
-        <div className="absolute inset-0 overflow-hidden">
-          <motion.div animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }} transition={{ duration: 8, repeat: Infinity }} className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl" />
-          <motion.div animate={{ scale: [1.2, 1, 1.2], opacity: [0.2, 0.4, 0.2] }} transition={{ duration: 10, repeat: Infinity }} className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-blue-600/10 rounded-full blur-3xl" />
+      {/* ── HERO ── */}
+      <section className="relative h-[100svh] flex items-center overflow-hidden">
+        <div className="absolute inset-0">
+          <Image src="https://images.unsplash.com/photo-1545454675-3531b543be5d?w=1600&q=80" alt="Audio Studio" fill className="object-cover opacity-40 mix-blend-luminosity grayscale contrast-150" priority />
+          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent" />
         </div>
 
-        <motion.div style={{ opacity: heroOpacity }} className="relative z-10 text-center max-w-5xl mx-auto px-6 pt-24">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-sm font-medium mb-8">
-            <span className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse" />
-            8,442 nodes active globally
-          </motion.div>
-          <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.1 }} className="text-6xl md:text-8xl font-black leading-none mb-6">
-            Quantum-grade
-            <br />
-            <span className="bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
-              AI Security
-            </span>
-          </motion.h1>
-          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2 }} className="text-xl text-slate-400 max-w-2xl mx-auto mb-10">
-            Post-quantum encryption meets neural threat intelligence. Protect your infrastructure with technology that doesn't exist yet — anywhere else.
-          </motion.p>
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.3 }} className="flex flex-wrap gap-4 justify-center">
-            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }} className="px-8 py-4 bg-cyan-500 hover:bg-cyan-400 text-black font-bold rounded-xl flex items-center gap-2 transition-colors">
-              Deploy free <ArrowRight className="w-4 h-4" />
-            </motion.button>
-            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }} className="px-8 py-4 bg-white/5 hover:bg-white/10 text-white font-bold rounded-xl border border-white/10 flex items-center gap-2 transition-colors">
-              <Play className="w-4 h-4" /> Watch demo
-            </motion.button>
-          </motion.div>
-        </motion.div>
+        <div className="relative z-10 max-w-[1600px] mx-auto px-6 md:px-12 w-full grid grid-cols-1 lg:grid-cols-2 items-center">
+          <Reveal>
+             <Badge className="bg-[#c9a84c]/10 text-[#c9a84c] border border-[#c9a84c]/30 text-[10px] font-bold uppercase tracking-[0.5em] mb-10 px-4 py-1.5 rounded-full">
+                Berlin, Germany // Established 1994
+             </Badge>
+             <h1 className="text-8xl md:text-[14rem] font-black leading-[0.75] tracking-tighter mb-12 uppercase text-white italic">
+               The <br/> <span className="text-[#c9a84c] not-italic">Silence.</span>
+             </h1>
+             <p className="max-w-md text-xl text-white/30 leading-relaxed font-light mb-12 uppercase tracking-widest italic">
+               Redefining the threshold of hearing. Precision sonic instruments for the world's most discerning ears.
+             </p>
+             <div className="flex flex-col sm:flex-row gap-6">
+                <MagneticBtn className="px-12 py-5 bg-[#c9a84c] text-black text-[10px] font-black uppercase tracking-[0.3em] rounded-full hover:scale-105 transition-all cursor-pointer shadow-[0_0_40px_rgba(201,168,76,0.3)]">
+                  Request Audition
+                </MagneticBtn>
+                <Link href="#reference" className="px-12 py-5 border border-white/20 text-white text-[10px] font-bold uppercase tracking-[0.3em] rounded-full hover:bg-white hover:text-black transition-all flex items-center justify-center gap-3">
+                  Current Collection <ArrowRight className="w-4 h-4" />
+                </Link>
+             </div>
+          </Reveal>
 
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.2 }} className="absolute bottom-8 left-1/2 -translate-x-1/2">
-          <motion.div animate={{ y: [0, 8, 0] }} transition={{ duration: 2, repeat: Infinity }}>
-            <ChevronDown className="w-6 h-6 text-slate-500" />
-          </motion.div>
-        </motion.div>
-      </div>
-
-      {/* Marquee */}
-      <div className="py-6 bg-white/[0.02] border-y border-white/5 overflow-hidden">
-        <motion.div className="flex gap-12 whitespace-nowrap" animate={{ x: [0, -2000] }} transition={{ duration: 30, repeat: Infinity, ease: "linear" }}>
-          {[...MARQUEE_ITEMS, ...MARQUEE_ITEMS, ...MARQUEE_ITEMS].map((item, i) => (
-            <span key={i} className="text-slate-500 text-sm font-medium flex items-center gap-3">
-              <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full" />{item}
-            </span>
-          ))}
-        </motion.div>
-      </div>
-
-      {/* Stats */}
-      <section className="py-24 px-6 max-w-5xl mx-auto">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-12">
-          {STATS.map((s, i) => (
-            <Reveal key={s.label} delay={i * 0.1}>
-              <Counter target={s.value} suffix={s.suffix} label={s.label} icon={s.icon} />
-            </Reveal>
-          ))}
+          <div className="hidden lg:flex justify-end pr-12 relative">
+             <Reveal delay={0.4}>
+                <div className="relative w-96 h-96 rounded-full border border-white/5 flex items-center justify-center">
+                   <motion.div animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.6, 0.3] }} transition={{ duration: 4, repeat: Infinity }} className="absolute inset-0 border border-[#c9a84c] rounded-full" />
+                   <div className="text-center">
+                      <span className="text-5xl font-black italic block text-[#c9a84c]">-142dB</span>
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-white/30">Signal To Noise Ratio</span>
+                   </div>
+                </div>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-[#c9a84c] rounded-full blur-2xl opacity-20 animate-pulse" />
+             </Reveal>
+          </div>
         </div>
       </section>
 
-      {/* Features */}
-      <section className="py-24 px-6 max-w-7xl mx-auto">
-        <Reveal className="text-center mb-16">
-          <h2 className="text-4xl font-black mb-4">The mesh that never sleeps</h2>
-          <p className="text-slate-400 max-w-xl mx-auto">Six layers of intelligent protection, working in concert across every packet.</p>
-        </Reveal>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {FEATURES.map((f, i) => (
-            <Reveal key={f.title} delay={i * 0.08}>
-              <motion.div whileHover={{ y: -6 }} className="p-6 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-white/10 transition-colors group">
-                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${f.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-                  <f.icon className="w-5 h-5 text-white" />
-                </div>
-                <h3 className="font-bold text-white mb-2">{f.title}</h3>
-                <p className="text-sm text-slate-400 leading-relaxed">{f.desc}</p>
-              </motion.div>
-            </Reveal>
-          ))}
+      {/* ── STATS SECTION ── */}
+      <section className="py-24 border-y border-white/5 bg-[#0a0a0a]">
+        <div className="max-w-[1600px] mx-auto px-6 md:px-12">
+           <div className="grid grid-cols-2 md:grid-cols-4 gap-12">
+              {STATS.map((stat, i) => (
+                <Reveal key={i} delay={i * 0.1}>
+                   <div className="text-center md:text-left">
+                      <div className="text-[9px] font-bold uppercase tracking-[0.3em] text-[#c9a84c] mb-2">{stat.label}</div>
+                      <div className="text-5xl font-black italic text-white">{stat.value}</div>
+                   </div>
+                </Reveal>
+              ))}
+           </div>
         </div>
       </section>
 
-      {/* Gallery */}
-      <section className="py-24 px-6 max-w-7xl mx-auto">
-        <Reveal className="text-center mb-16">
-          <h2 className="text-4xl font-black mb-4">Infrastructure at scale</h2>
-          <p className="text-slate-400">Real deployments. Real threat environments. Real protection.</p>
-        </Reveal>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {PROJECTS.map((p, i) => (
-            <Reveal key={p.title} delay={i * 0.1}>
-              <motion.div
-                className={`relative rounded-2xl overflow-hidden cursor-pointer ${i === 0 ? "md:row-span-2" : ""}`}
-                style={{ height: i === 0 ? "480px" : "220px" }}
-                onHoverStart={() => setHoveredProject(i)}
-                onHoverEnd={() => setHoveredProject(null)}
-                whileHover={{ scale: 1.02 }}
-              >
-                <Image src={p.img} alt={p.title} fill className="object-cover" unoptimized />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-                <AnimatePresence>
-                  {hoveredProject === i && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-cyan-500/20 backdrop-blur-sm flex items-center justify-center">
-                      <ArrowRight className="w-8 h-8 text-white" />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-                <div className="absolute bottom-4 left-4">
-                  <p className="text-xs text-cyan-400 font-medium mb-1">{p.cat}</p>
-                  <h3 className="font-bold text-white">{p.title}</h3>
-                </div>
-              </motion.div>
-            </Reveal>
-          ))}
-        </div>
-      </section>
+      {/* ── REFERENCE ── */}
+      <section id="reference" className="py-32 px-6 md:px-12">
+        <div className="max-w-[1600px] mx-auto">
+          <Reveal>
+            <div className="flex flex-col md:flex-row justify-between items-end mb-24 gap-12">
+               <div>
+                  <h2 className="text-7xl md:text-[10rem] font-black italic tracking-tighter leading-none mb-6 uppercase text-white">The <br/> <span className="text-[#c9a84c]">Line.</span></h2>
+                  <p className="text-white/20 text-[10px] font-bold uppercase tracking-[0.4em]">Reference Manifest // Hand-Crafted // Series 07</p>
+               </div>
+               <Link href="#" className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#c9a84c] border-b border-[#c9a84c] pb-2 hover:text-white hover:border-white transition-all">Download Technical Archive</Link>
+            </div>
+          </Reveal>
 
-      {/* Testimonials */}
-      <section className="py-24 px-6 bg-white/[0.02]">
-        <div className="max-w-3xl mx-auto text-center">
-          <Reveal><h2 className="text-4xl font-black mb-16">Trusted by the most security-conscious teams</h2></Reveal>
-          <AnimatePresence mode="wait">
-            <motion.div key={activeTestimonial} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.5 }}>
-              <p className="text-xl text-slate-300 mb-8 italic leading-relaxed">"{TESTIMONIALS[activeTestimonial].quote}"</p>
-              <div className="flex items-center justify-center gap-3">
-                <Image src={TESTIMONIALS[activeTestimonial].avatar} alt={TESTIMONIALS[activeTestimonial].name} width={48} height={48} className="rounded-full object-cover" unoptimized />
-                <div className="text-left">
-                  <p className="font-bold text-white text-sm">{TESTIMONIALS[activeTestimonial].name}</p>
-                  <p className="text-slate-400 text-xs">{TESTIMONIALS[activeTestimonial].role}</p>
-                </div>
-              </div>
-            </motion.div>
-          </AnimatePresence>
-          <div className="flex justify-center gap-2 mt-8">
-            {TESTIMONIALS.map((_, i) => (
-              <button key={i} onClick={() => setActiveTestimonial(i)} className={`w-2 h-2 rounded-full transition-colors ${i === activeTestimonial ? "bg-cyan-400" : "bg-white/20"}`} />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+            {COLLECTIONS.map((item, i) => (
+              <Reveal key={item.id} delay={i * 0.1}>
+                 <div className="group space-y-10 cursor-pointer" onMouseEnter={() => setActiveItem(item.id)} onMouseLeave={() => setActiveItem(null)}>
+                    <div className="relative aspect-[3/4] overflow-hidden rounded-sm grayscale group-hover:grayscale-0 transition-all duration-[1s]">
+                       <Image src={item.img} alt={item.name} fill className="object-cover transition-transform duration-[2s] group-hover:scale-125" />
+                       <div className="absolute inset-0 bg-black/50 group-hover:bg-transparent transition-colors duration-700" />
+                       
+                       <div className="absolute top-6 left-6">
+                          <Badge className="bg-black/60 backdrop-blur-md text-white border-white/10 text-[9px] font-bold uppercase tracking-widest px-3 py-1">
+                             {item.category}
+                          </Badge>
+                       </div>
+
+                       <AnimatePresence>
+                          {activeItem === item.id && (
+                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 flex items-center justify-center bg-[#c9a84c]/10 backdrop-blur-[2px]">
+                               <button className="px-10 py-4 bg-white text-black text-[10px] font-black uppercase tracking-widest hover:scale-110 transition-all shadow-2xl">Acoustic Specs</button>
+                            </motion.div>
+                          )}
+                       </AnimatePresence>
+                    </div>
+                    <div className="space-y-6">
+                       <div className="flex justify-between items-baseline">
+                          <h3 className="text-4xl font-black uppercase tracking-tighter text-white italic group-hover:text-[#c9a84c] transition-colors">{item.name}</h3>
+                          <span className="text-lg font-black text-[#c9a84c] tracking-tighter">{item.price}</span>
+                       </div>
+                       <p className="text-sm text-white/30 font-light leading-relaxed uppercase tracking-widest italic leading-loose">{item.desc}</p>
+                       <div className="flex items-center gap-4">
+                          <div className="h-[1px] flex-1 bg-white/5" />
+                          <Settings2 className="w-5 h-5 text-white/10 group-hover:text-[#c9a84c] transition-all" />
+                       </div>
+                    </div>
+                 </div>
+              </Reveal>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Pricing */}
-      <section className="py-24 px-6 max-w-6xl mx-auto">
-        <Reveal className="text-center mb-6">
-          <h2 className="text-4xl font-black mb-4">Simple, transparent pricing</h2>
-        </Reveal>
-        <Reveal className="flex items-center justify-center gap-3 mb-12">
-          <span className={`text-sm ${!billingAnnual ? "text-white" : "text-slate-500"}`}>Monthly</span>
-          <button onClick={() => setBillingAnnual(!billingAnnual)} className={`w-12 h-6 rounded-full transition-colors ${billingAnnual ? "bg-cyan-500" : "bg-white/20"}`}>
-            <motion.div animate={{ x: billingAnnual ? 24 : 2 }} className="w-5 h-5 bg-white rounded-full" />
-          </button>
-          <span className={`text-sm ${billingAnnual ? "text-white" : "text-slate-500"}`}>Annual <span className="text-cyan-400 ml-1">-20%</span></span>
-        </Reveal>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {PRICING.map((tier, i) => (
-            <Reveal key={tier.name} delay={i * 0.1}>
-              <div className={`p-8 rounded-2xl flex flex-col ${tier.popular ? "bg-cyan-950/30 border-2 border-cyan-500" : "bg-white/[0.03] border border-white/5"}`}>
-                {tier.popular && <span className="self-start px-3 py-1 bg-cyan-500 text-black text-xs font-bold rounded-full mb-4">MOST POPULAR</span>}
-                <h3 className="text-xl font-bold mb-1">{tier.name}</h3>
-                <div className="flex items-baseline gap-1 my-4">
-                  <span className="text-4xl font-black">{tier.price === "Custom" ? tier.price : `$${tier.price}`}</span>
-                  {tier.price !== "Custom" && <span className="text-slate-500 text-sm">/mo</span>}
-                </div>
-                <ul className="space-y-3 mb-8 flex-1">
-                  {tier.features.map(f => (
-                    <li key={f} className="flex items-center gap-2 text-sm text-slate-300">
-                      <Check className="w-4 h-4 text-cyan-400 shrink-0" />{f}
-                    </li>
+      {/* ── ENGINEERING PHILOSOPHY ── */}
+      <section className="py-40 bg-[#0a0a0a] overflow-hidden relative border-t border-white/5">
+         <div className="absolute -bottom-32 -left-32 w-[40rem] h-[40rem] bg-[#c9a84c]/5 blur-[120px] rounded-full" />
+         <div className="max-w-[1600px] mx-auto px-6 md:px-12">
+            <Reveal>
+               <div className="text-center mb-32">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-[#c9a84c] mb-8 block">Sonic Integrity</span>
+                  <h2 className="text-6xl md:text-8xl font-black italic tracking-tighter uppercase">Physical <span className="text-[#c9a84c] not-italic">Acoustics.</span></h2>
+               </div>
+            </Reveal>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-16">
+               {ENGINEERING.map((s, i) => (
+                 <Reveal key={i} delay={i * 0.1}>
+                    <div className="p-16 border border-white/5 bg-white/[0.01] hover:border-[#c9a84c]/30 transition-all group h-full flex flex-col relative overflow-hidden">
+                       <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center text-[#c9a84c] mb-10 group-hover:bg-[#c9a84c] group-hover:text-black transition-all duration-500">
+                          <s.icon className="w-8 h-8" />
+                       </div>
+                       <h3 className="text-3xl font-black uppercase italic mb-6 tracking-tighter text-white group-hover:translate-x-2 transition-transform">{s.title}</h3>
+                       <p className="text-sm text-white/30 font-light leading-relaxed mb-12 flex-1 tracking-wide uppercase italic leading-loose">{s.desc}</p>
+                       <button className="flex items-center gap-4 text-[9px] font-bold uppercase tracking-[0.3em] text-[#c9a84c] group-hover:gap-6 transition-all">
+                          Read Whitepaper <ArrowRight className="w-4 h-4" />
+                       </button>
+                    </div>
+                 </Reveal>
+               ))}
+            </div>
+         </div>
+      </section>
+
+      {/* ── THE ATELIER ── */}
+      <section className="py-40 px-6 md:px-12 bg-black">
+         <div className="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-32 items-center">
+            <Reveal>
+               <div className="relative aspect-square rounded-sm overflow-hidden group border border-white/5">
+                  <Image src="https://images.unsplash.com/photo-1558444479-c8af53670c01?w=1200&q=80" alt="Audio Engineering" fill className="object-cover group-hover:scale-110 transition-all duration-[3s] grayscale hover:grayscale-0 opacity-60" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
+                  <div className="absolute bottom-16 left-16 text-white">
+                     <span className="text-[10px] font-bold uppercase tracking-[0.4em] mb-4 block text-[#c9a84c]">The Atelier</span>
+                     <h4 className="text-5xl font-black italic uppercase tracking-tighter leading-none">Vacuum Tube <br/> Architecture.</h4>
+                  </div>
+               </div>
+            </Reveal>
+
+            <Reveal delay={0.2}>
+               <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-[#c9a84c] mb-8 block">The Protocol</span>
+               <h2 className="text-6xl md:text-9xl font-black italic tracking-tighter leading-[0.8] mb-12 uppercase text-white">
+                 Pure <br/> <span className="text-[#c9a84c] not-italic">Sync.</span>
+               </h2>
+               <p className="text-white/40 text-xl leading-relaxed mb-16 font-light uppercase tracking-wide italic">
+                 Beyond the measurement. We design sonic instruments that merge the mathematical precision of modern electronics with the emotional warmth of vintage analog philosophy.
+               </p>
+               <div className="grid grid-cols-2 gap-12">
+                  {[
+                    { icon: Mic2, label: "Studio_Reference", desc: "1:1 Accuracy" },
+                    { icon: Radio, label: "Analog_Warmth", desc: "Zero phase drift" },
+                    { icon: Disc, label: "Source_Purity", desc: "R2R Ladder DAC" },
+                    { icon: Zap, label: "Instant_Response", desc: "0.2ms Transient" },
+                  ].map((val, i) => (
+                    <div key={i} className="space-y-4">
+                       <val.icon className="w-6 h-6 text-[#c9a84c]" />
+                       <h4 className="text-[11px] font-black uppercase tracking-widest text-white">{val.label}</h4>
+                       <p className="text-[10px] font-light text-white/30 uppercase tracking-widest leading-loose">{val.desc}</p>
+                    </div>
                   ))}
-                </ul>
-                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className={`py-3 rounded-xl font-bold text-sm transition-colors ${tier.popular ? "bg-cyan-500 text-black hover:bg-cyan-400" : "bg-white/5 text-white hover:bg-white/10 border border-white/10"}`}>
-                  {tier.cta}
-                </motion.button>
-              </div>
+               </div>
+               <MagneticBtn className="mt-20 px-14 py-6 bg-white text-black text-[10px] font-black uppercase tracking-[0.4em] rounded-full hover:bg-[#c9a84c] hover:text-white transition-all shadow-2xl">
+                  Schedule Listening Session
+               </MagneticBtn>
             </Reveal>
-          ))}
+         </div>
+      </section>
+
+      {/* ── HERITAGE & ORIGIN ── */}
+      <section className="py-40 bg-black relative overflow-hidden">
+         <div className="absolute top-0 right-0 w-[60rem] h-[60rem] bg-[#c9a84c]/5 blur-[180px] rounded-full" />
+         <div className="max-w-[1600px] mx-auto px-6 md:px-12">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center">
+               <Reveal>
+                  <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-[#c9a84c] mb-8 block">The Chronology</span>
+                  <h2 className="text-6xl md:text-9xl font-black italic tracking-tighter leading-[0.8] mb-12 uppercase text-white">
+                    Three <br/> <span className="text-[#c9a84c] not-italic">Decades.</span>
+                  </h2>
+                  <p className="text-white/40 text-xl leading-relaxed mb-16 font-light uppercase tracking-wide italic leading-loose">
+                    Since 1994, Aether has operated at the intersection of material science and auditory emotion. Our journey began in a small workshop in Kreuzberg and has evolved into a global benchmark for reference sound.
+                  </p>
+                  <div className="space-y-12">
+                     {[
+                       { year: "1994", event: "The Aether Lab is founded. Initial research into electrostatic driver stability begins." },
+                       { year: "2005", event: "Launch of the Vortex Series. First implementation of pure Class-A copper chassis amplification." },
+                       { year: "2018", event: "Aether One is released. Redefining the frequency response limit for commercial monitors." },
+                       { year: "2024", event: "Integration of femto-clocking across the entire digital source lineup." },
+                     ].map((item, i) => (
+                        <div key={i} className="flex gap-12 group">
+                           <span className="text-3xl font-black italic text-[#c9a84c] opacity-40 group-hover:opacity-100 transition-opacity">{item.year}</span>
+                           <p className="text-[11px] font-bold uppercase tracking-widest text-white/30 leading-loose">{item.event}</p>
+                        </div>
+                     ))}
+                  </div>
+               </Reveal>
+               <Reveal delay={0.2}>
+                  <div className="relative aspect-square grayscale opacity-50 hover:opacity-100 transition-opacity duration-1000 border border-white/5">
+                     <Image src="https://images.unsplash.com/photo-1558444479-c8af53670c01?w=1200&q=80" alt="Vintage Audio" fill className="object-cover" />
+                  </div>
+               </Reveal>
+            </div>
+         </div>
+      </section>
+
+      {/* ── TECHNICAL SPECIFICATIONS ── */}
+      <section className="py-40 bg-[#0a0a0a]">
+        <div className="max-w-[1600px] mx-auto px-6 md:px-12">
+           <Reveal>
+              <div className="mb-32">
+                 <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-[#c9a84c] mb-8 block">Acoustic Manifest</span>
+                 <h2 className="text-6xl md:text-8xl font-black italic tracking-tighter uppercase text-white">Full <br/> <span className="text-[#c9a84c] not-italic">Spectrum.</span></h2>
+              </div>
+           </Reveal>
+
+           <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                 <thead>
+                    <tr className="border-b border-white/10">
+                       <th className="py-8 text-[10px] font-bold uppercase tracking-[0.5em] text-white/20">Specification</th>
+                       <th className="py-8 text-[10px] font-bold uppercase tracking-[0.5em] text-white/20">Aether_One</th>
+                       <th className="py-8 text-[10px] font-bold uppercase tracking-[0.5em] text-white/20">Vortex_Amp</th>
+                       <th className="py-8 text-[10px] font-bold uppercase tracking-[0.5em] text-white/20">Sonic_Prism</th>
+                    </tr>
+                 </thead>
+                 <tbody className="text-[11px] font-bold uppercase tracking-[0.2em]">
+                    {[
+                      { s: "Frequency Response", v1: "8Hz - 120kHz", v2: "1Hz - 250kHz", v3: "DC - 96kHz" },
+                      { s: "Total Harmonic Dist.", v1: "< 0.001%", v2: "< 0.0005%", v3: "< 0.0002%" },
+                      { s: "Output Impedance", v1: "4 - 16 Ohms", v2: "0.01 Ohms", v3: "50 Ohms" },
+                      { s: "Chassis Material", v1: "T6 Aluminum", v2: "C110 Copper", v3: "Aircraft Grade Ti" },
+                      { s: "Weight (KG)", v1: "85kg / unit", v2: "42kg", v3: "18kg" },
+                    ].map((row, i) => (
+                       <tr key={i} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
+                          <td className="py-8 text-white/40 italic">{row.s}</td>
+                          <td className="py-8 text-white">{row.v1}</td>
+                          <td className="py-8 text-white">{row.v2}</td>
+                          <td className="py-8 text-white">{row.v3}</td>
+                       </tr>
+                    ))}
+                 </tbody>
+              </table>
+           </div>
         </div>
       </section>
 
-      {/* FAQ */}
-      <section className="py-24 px-6 max-w-3xl mx-auto">
-        <Reveal className="text-center mb-16"><h2 className="text-4xl font-black">Questions answered</h2></Reveal>
-        <div className="space-y-4">
-          {FAQ.map((f, i) => (
-            <Reveal key={i} delay={i * 0.05}>
-              <div className="rounded-2xl border border-white/5 overflow-hidden">
-                <button onClick={() => setOpenFaq(openFaq === i ? null : i)} className="w-full flex items-center justify-between p-6 text-left hover:bg-white/[0.02] transition-colors">
-                  <span className="font-semibold text-white">{f.q}</span>
-                  <motion.div animate={{ rotate: openFaq === i ? 180 : 0 }}><ChevronDown className="w-5 h-5 text-slate-400 shrink-0" /></motion.div>
-                </button>
-                <AnimatePresence>
-                  {openFaq === i && (
-                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }}>
-                      <p className="px-6 pb-6 text-slate-400 leading-relaxed">{f.a}</p>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+      {/* ── ARTISAN PROFILES ── */}
+      <section className="py-40 bg-black">
+        <div className="max-w-[1600px] mx-auto px-6 md:px-12">
+           <Reveal>
+              <div className="mb-32 text-center">
+                 <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-[#c9a84c] mb-8 block">The Craftsmen</span>
+                 <h2 className="text-6xl md:text-8xl font-black italic tracking-tighter uppercase text-white">Human <span className="text-[#c9a84c] not-italic">Element.</span></h2>
               </div>
-            </Reveal>
-          ))}
+           </Reveal>
+
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-32">
+              {[
+                { name: "Dieter Klaus", role: "Master Luthier & Cabinetist", text: "Wood is a living resonator. We treat our speaker enclosures like cellos—carefully aged, meticulously tensioned, and finished with organic oils to preserve the wood's natural breath.", img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80" },
+                { name: "Elena Volkov", role: "Senior Analog Engineer", text: "Silicon has its place, but for pure emotional transmission, vacuum tubes remain the gold standard. We design circuits that respect the soul of the signal while pushing the limits of modern stability.", img: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&q=80" },
+              ].map((item, i) => (
+                <Reveal key={i} delay={i * 0.2}>
+                   <div className="space-y-12">
+                      <div className="relative w-24 h-24 rounded-full overflow-hidden grayscale border border-[#c9a84c]/30">
+                         <Image src={item.img} alt={item.name} fill className="object-cover" />
+                      </div>
+                      <blockquote className="text-3xl font-light italic text-white/60 leading-relaxed uppercase tracking-widest leading-loose">
+                         "{item.text}"
+                      </blockquote>
+                      <div>
+                         <span className="text-xl font-black text-white italic block mb-1">{item.name}</span>
+                         <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#c9a84c]">{item.role}</span>
+                      </div>
+                   </div>
+                </Reveal>
+              ))}
+           </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-32 px-6">
-        <Reveal>
-          <div className="max-w-4xl mx-auto text-center rounded-3xl p-16 bg-gradient-to-br from-cyan-950/50 to-blue-950/50 border border-cyan-500/20">
-            <h2 className="text-5xl font-black mb-6">Ready to quantum-proof your stack?</h2>
-            <p className="text-xl text-slate-400 mb-10 max-w-xl mx-auto">Join 340+ enterprises running on the most secure mesh network on earth.</p>
-            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }} className="px-10 py-5 bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-lg rounded-2xl flex items-center gap-2 mx-auto transition-colors">
-              Deploy in 48 hours <ArrowRight className="w-5 h-5" />
-            </motion.button>
-          </div>
-        </Reveal>
+      {/* ── FAQ ── */}
+      <section className="py-40 bg-[#080808]">
+        <div className="max-w-4xl mx-auto px-6">
+           <Reveal>
+              <div className="mb-24 text-center">
+                 <h2 className="text-5xl font-black italic uppercase tracking-tighter text-white mb-8">Sonic <span className="text-[#c9a84c] not-italic">Dialogues.</span></h2>
+                 <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/20">Acquisition // Setup // Integrity</p>
+              </div>
+           </Reveal>
+
+           <Accordion type="single" collapsible className="w-full space-y-4">
+              {[
+                { q: "What is the lead time for Aether One monitors?", a: "Due to the hand-crafted nature of our electrostatic drivers and CNC-milled enclosures, current lead time is 12 to 16 weeks from order confirmation." },
+                { q: "Do you offer on-site acoustic calibration?", a: "Every reference system includes a 3-day on-site calibration visit by an Aether Senior Engineer to optimize room acoustics and system alignment." },
+                { q: "Is the system compatible with digital streamers?", a: "While we advocate for pure analog sources, our Sonic Prism DAC is engineered specifically to provide a bridge between modern high-res streaming and traditional hi-fi warmth." },
+                { q: "What is the warranty on vacuum-tube components?", a: "We provide a 5-year comprehensive warranty on all chassis and circuitry, and a 1-year performance guarantee on all selected premium vacuum tubes." },
+                { q: "Can I audition the systems in person?", a: "Auditions are available strictly by appointment at our Berlin Atelier or through our select private partners in London, Tokyo, and New York." },
+              ].map((item, i) => (
+                <AccordionItem key={i} value={`item-${i}`} className="border border-white/5 bg-white/[0.02] px-8 rounded-sm">
+                   <AccordionTrigger className="text-[11px] font-black uppercase tracking-[0.3em] text-white hover:text-[#c9a84c] py-8 no-underline italic">
+                      {item.q}
+                   </AccordionTrigger>
+                   <AccordionContent className="text-[11px] font-light text-white/30 tracking-widest uppercase italic leading-loose pb-8">
+                      {item.a}
+                   </AccordionContent>
+                </AccordionItem>
+              ))}
+           </Accordion>
+        </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-12 px-6 border-t border-white/5 max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-500">
-        <div className="flex items-center gap-2 font-bold text-white"><Zap className="w-4 h-4 text-cyan-400" />QuantumAI</div>
-        <p>© 2026 QuantumAI Systems. All rights reserved.</p>
-        <div className="flex gap-6">{["Privacy", "Terms", "Security", "Docs"].map(l => <a key={l} href="#" className="hover:text-white transition-colors">{l}</a>)}</div>
+      {/* ── FOOTER ── */}
+      <footer className="bg-[#080808] pt-40 pb-16 px-6 md:px-12 border-t border-white/5">
+        <div className="max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-32 mb-40">
+           
+           <div className="lg:col-span-6">
+              <Reveal>
+                 <div className="flex flex-col mb-12">
+                    <span className="text-4xl font-black tracking-[0.1em] uppercase leading-none italic">Aether</span>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-[#c9a84c] -mt-1 ml-1">Sound Labs</span>
+                 </div>
+                 <p className="text-white/20 max-w-md mb-16 text-[11px] font-bold uppercase tracking-[0.2em] leading-loose italic">
+                    The absolute mastery of acoustic engineering. Engineered for the evolutionary audiophile in our Berlin sanctuary.
+                 </p>
+                 <div className="flex gap-6">
+                    {[Instagram, Twitter, Mail].map((Icon, i) => (
+                      <button key={i} className="w-14 h-14 rounded-full border border-white/10 flex items-center justify-center text-white/40 hover:bg-[#c9a84c] hover:text-black hover:border-[#c9a84c] transition-all">
+                         <Icon className="w-5 h-5" />
+                      </button>
+                    ))}
+                 </div>
+              </Reveal>
+           </div>
+
+           <div className="lg:col-span-2">
+              <h4 className="text-[11px] font-black uppercase tracking-widest text-[#c9a84c] mb-12">Instruments</h4>
+              <ul className="space-y-6 text-[10px] font-bold uppercase tracking-widest text-white/30">
+                 <li><Link href="#" className="hover:text-white transition-colors">Aether_One</Link></li>
+                 <li><Link href="#" className="hover:text-white transition-colors">Vortex_Amplification</Link></li>
+                 <li><Link href="#" className="hover:text-white transition-colors">Sonic_Prism_DAC</Link></li>
+                 <li><Link href="#" className="hover:text-white transition-colors">Legacy_Support</Link></li>
+              </ul>
+           </div>
+
+           <div className="lg:col-span-2">
+              <h4 className="text-[11px] font-black uppercase tracking-widest text-[#c9a84c] mb-12">Engineering</h4>
+              <ul className="space-y-6 text-[10px] font-bold uppercase tracking-widest text-white/30">
+                 <li><Link href="#" className="hover:text-white transition-colors">The_Process</Link></li>
+                 <li><Link href="#" className="hover:text-white transition-colors">Material_Science</Link></li>
+                 <li><Link href="#" className="hover:text-white transition-colors">Room_Correction</Link></li>
+                 <li><Link href="#" className="hover:text-white transition-colors">Consultation</Link></li>
+              </ul>
+           </div>
+
+           <div className="lg:col-span-2">
+              <h4 className="text-[11px] font-black uppercase tracking-widest text-[#c9a84c] mb-12">Studio</h4>
+              <ul className="space-y-6 text-[10px] font-bold uppercase tracking-widest text-white/30">
+                 <li><Link href="#" className="hover:text-white transition-colors">The_Maison</Link></li>
+                 <li><Link href="#" className="hover:text-white transition-colors">Global_Units</Link></li>
+                 <li><Link href="#" className="hover:text-white transition-colors">Technical_Kit</Link></li>
+                 <li><Link href="#" className="hover:text-white transition-colors">Archives</Link></li>
+              </ul>
+           </div>
+        </div>
+
+        <div className="max-w-[1600px] mx-auto pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-12 text-[10px] font-bold uppercase tracking-[0.4em] text-white/10">
+           <div className="flex items-center gap-12">
+              <span>&copy; {new Date().getFullYear()} AETHER SOUND LABS GROUP.</span>
+              <div className="flex gap-8">
+                <span>HI_RES_AUDIO_CERTIFIED</span>
+                <span>BERLIN_ENGINEERED</span>
+              </div>
+           </div>
+           <div className="flex gap-12 font-mono">
+              <span>DB_FLOOR_-142</span>
+              <span>SAMPLING_768KHZ_NOMINAL</span>
+           </div>
+        </div>
       </footer>
+
+      <style>{`
+        ::-webkit-scrollbar{width:4px;background:#080808}
+        ::-webkit-scrollbar-thumb{background:#c9a84c}
+      `}</style>
     </div>
   );
 }

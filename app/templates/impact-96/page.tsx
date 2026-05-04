@@ -1,1079 +1,688 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
 import {
   motion,
-  AnimatePresence,
   useScroll,
   useTransform,
-  useSpring,
   useInView,
+  AnimatePresence,
   useMotionValue,
+  useSpring,
 } from "framer-motion";
+import { useState, useRef, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
-  Search,
-  ShoppingBag,
-  Menu,
-  X,
-  ArrowRight,
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Separator } from "@/components/ui/separator";
+import {
+  Camera,
+  Film,
+  Zap,
+  Maximize,
   Play,
-  MapPin,
-  Phone,
-  Mail,
   Instagram,
   Twitter,
-  Facebook,
-  ChevronDown,
-  Plus,
-  Minus,
-  Star,
+  Mail,
+  MapPin,
   ChevronRight,
-  ChevronLeft,
-  ShieldCheck,
-  Gem,
-  Clock,
+  ArrowRight,
+  X,
+  Menu,
+  Layers,
+  Users,
+  Star,
+  Award,
+  Focus,
+  Frame,
+  Monitor,
+  Share2,
+  Lock,
+  Search,
+  ShoppingBag,
 } from "lucide-react";
 
 import "../premium.css";
 
 /* ==========================================================================
-   DATA STRUCTURES (REALISTIC & EXTENSIVE)
-   ========================================================================== */
+   DATA STRUCTURES
+   ========================================================================= */
 
-const COLLECTIONS = [
+const PROJECTS = [
   {
-    id: "c1",
-    title: "Lumière",
-    desc: "Radiant diamonds set in 18k white gold, capturing the essence of Parisian light.",
-    image:
-      "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?q=80&w=1200&auto=format&fit=crop",
+    id: 1,
+    title: "Neon Nights",
+    category: "Street",
+    desc: "A long-exposure study of Tokyo's Shinjuku district at 2AM.",
+    img: "https://images.unsplash.com/photo-1542281286-9e0a16bb7366?w=1200&q=80",
   },
   {
-    id: "c2",
-    title: "Éternité",
-    desc: "Timeless bands symbolizing unbreakable bonds, crafted with precision and passion.",
-    image:
-      "https://images.unsplash.com/photo-1605100804763-247f66150ce8?q=80&w=1200&auto=format&fit=crop",
+    id: 2,
+    title: "The Industrial Soul",
+    category: "Cinematic",
+    desc: "Capturing the raw rhythm of Berlin's abandoned factories.",
+    img: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200&q=80",
   },
   {
-    id: "c3",
-    title: "Sérénade",
-    desc: "Sapphires and emeralds dancing in intricate settings, inspired by classical symphonies.",
-    image:
-      "https://images.unsplash.com/photo-1599643478524-fb66f7ca065b?q=80&w=1200&auto=format&fit=crop",
-  },
-  {
-    id: "c4",
-    title: "Héritage",
-    desc: "Vintage-inspired masterpieces reinventing the archives for the modern era.",
-    image:
-      "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?q=80&w=1200&auto=format&fit=crop",
-  },
-];
-
-const LATEST_ARRIVALS = [
-  {
-    id: "p1",
-    name: "Lumière Solitaire Ring",
-    price: "€12,500",
-    carats: "2.5ct",
-    material: "Platinum",
-    image:
-      "https://images.unsplash.com/photo-1605100804763-247f66150ce8?q=80&w=800&auto=format&fit=crop",
-    tag: "New",
-  },
-  {
-    id: "p2",
-    name: "Éternité Diamond Necklace",
-    price: "€28,000",
-    carats: "5.0ct",
-    material: "18k White Gold",
-    image:
-      "https://images.unsplash.com/photo-1599643477877-530eb83abc8e?q=80&w=800&auto=format&fit=crop",
-  },
-  {
-    id: "p3",
-    name: "Sérénade Sapphire Earrings",
-    price: "€18,200",
-    carats: "3.2ct",
-    material: "Platinum",
-    image:
-      "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?q=80&w=800&auto=format&fit=crop",
-    tag: "Limited",
-  },
-  {
-    id: "p4",
-    name: "Héritage Emerald Bracelet",
-    price: "€45,000",
-    carats: "8.5ct",
-    material: "18k Yellow Gold",
-    image:
-      "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?q=80&w=800&auto=format&fit=crop",
-  },
-  {
-    id: "p5",
-    name: "Lumière Pavé Band",
-    price: "€6,800",
-    carats: "1.2ct",
-    material: "18k Rose Gold",
-    image:
-      "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?q=80&w=800&auto=format&fit=crop",
-  },
-  {
-    id: "p6",
-    name: "Éternité Pearl Drop",
-    price: "€9,500",
-    carats: "0.8ct",
-    material: "Platinum",
-    image:
-      "https://images.unsplash.com/photo-1573408301145-b98c4af0107e?q=80&w=800&auto=format&fit=crop",
-    tag: "Bestseller",
-  },
-];
-
-const HERITAGE_TIMELINE = [
-  {
-    year: "1892",
-    title: "The Foundation",
-    desc: "Monsieur Prism opens the first atelier on Place Vendôme, redefining Parisian high jewelry.",
-  },
-  {
-    year: "1924",
-    title: "The Art Deco Era",
-    desc: "Introduction of the iconic geometric cuts that would become the house's signature.",
-  },
-  {
-    year: "1968",
-    title: "Global Expansion",
-    desc: "Opening of flagship boutiques in New York, Tokyo, and London, bringing Prism to the world.",
-  },
-  {
-    year: "2010",
-    title: "Sustainable Sourcing",
-    desc: "Pioneering the industry's most rigorous ethical sourcing and tracebility standards.",
-  },
-  {
-    year: "2026",
-    title: "The Refractive Collection",
-    desc: "A bold new chapter combining cutting-edge technology with century-old artisanal techniques.",
-  },
-];
-
-const TESTIMONIALS = [
-  {
-    name: "Eleanor V.",
-    role: "Private Client",
-    text: "The craftsmanship is unparalleled. My engagement ring catches the light in a way that defies description. Prism doesn't just make jewelry; they capture magic.",
-    rating: 5,
-  },
-  {
-    name: "James T.",
-    role: "Collector",
-    text: "Acquiring a piece from the Héritage collection was a milestone. The dedication to historical accuracy combined with modern brilliance is simply astounding.",
-    rating: 5,
-  },
-  {
-    name: "Sophia M.",
-    role: "Vogue Editor",
-    text: "Prism continues to lead the high jewelry sector, seamlessly blending their storied heritage with an avant-garde approach to gem-setting.",
-    rating: 5,
-  },
-  {
-    name: "Alexandra K.",
-    role: "Private Client",
-    text: "The bespoke process was flawless from sketch to final polish. They translated my vision into a masterpiece I will pass down for generations.",
-    rating: 5,
-  },
-];
-
-const FAQS = [
-  {
-    question: "How do I schedule a bespoke consultation?",
-    answer:
-      "Consultations can be arranged by contacting our high jewelry concierge via phone or email. We offer both virtual appointments and private viewings at our flagship boutiques in Paris, New York, and Tokyo.",
-  },
-  {
-    question: "What is your policy on diamond sourcing?",
-    answer:
-      "Prism is committed to 100% conflict-free sourcing. Every diamond above 0.5 carats is accompanied by a GIA certificate and a detailed provenance report tracing its journey from mine to masterpiece.",
-  },
-  {
-    question: "Do you offer international shipping?",
-    answer:
-      "Yes, we provide secure, insured global delivery via specialized armored courier services. Delivery timelines vary by region and custom requirements.",
-  },
-  {
-    question: "Can I upgrade my Prism diamond later?",
-    answer:
-      "We proudly offer a lifetime diamond upgrade program. You may exchange any Prism center diamond for full credit toward a new diamond of at least 50% greater value.",
-  },
-  {
-    question: "How should I care for my jewelry?",
-    answer:
-      "We recommend bringing your pieces to a Prism boutique annually for complimentary professional cleaning and prong inspection. For daily care, avoid harsh chemicals and store in the provided suede-lined boxes.",
+    id: 3,
+    title: "Urban Motion",
+    category: "Lifestyle",
+    desc: "High-speed pursuit of street culture in the heart of Brooklyn.",
+    img: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=1200&q=80",
   },
 ];
 
 const SERVICES = [
   {
-    icon: <ShieldCheck className="w-6 h-6" />,
-    title: "Lifetime Warranty",
-    desc: "Unwavering commitment to quality with complimentary maintenance.",
+    title: "Cinematic Narrative",
+    desc: "Full-scale video production for brands that demand a visceral emotional response.",
+    icon: Film,
   },
   {
-    icon: <Gem className="w-6 h-6" />,
-    title: "Ethical Sourcing",
-    desc: "Strict adherence to the Kimberley Process and beyond.",
+    title: "Street Authenticity",
+    desc: "Bespoke photography that captures the raw, unfiltered essence of urban life.",
+    icon: Camera,
   },
   {
-    icon: <Clock className="w-6 h-6" />,
-    title: "Bespoke Design",
-    desc: "Collaborate with our master artisans to create unique heirlooms.",
+    title: "Visual Identity",
+    desc: "Building visual languages for the next generation of lifestyle innovators.",
+    icon: Layers,
   },
+];
+
+const STATS = [
+  { label: "Frames Captured", value: "1.2M+" },
+  { label: "Global Projects", value: "340" },
+  { label: "Award Nominations", value: "28" },
+  { label: "Client Retention", value: "94%" },
 ];
 
 /* ==========================================================================
    UTILITY COMPONENTS
-   ========================================================================== */
+   ========================================================================= */
 
 function Reveal({
   children,
-  className = "",
   delay = 0,
-  y = 30,
 }: {
   children: React.ReactNode;
-  className?: string;
   delay?: number;
-  y?: number;
 }) {
   const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-100px" });
+  const inView = useInView(ref, { once: true, margin: "-50px" });
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y }}
+      initial={{ opacity: 0, y: 30 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.8, delay, ease: [0.25, 0.1, 0.25, 1] }}
-      className={className}
+      transition={{ duration: 1, delay, ease: [0.22, 1, 0.36, 1] }}
     >
       {children}
     </motion.div>
   );
 }
 
-function Accordion({ items }: { items: typeof FAQS }) {
-  const [openIndex, setOpenIndex] = useState<number | null>(0);
+function MagneticBtn({
+  children,
+  className = "",
+  onClick,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  onClick?: () => void;
+}) {
+  const ref = useRef<HTMLButtonElement>(null);
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const sx = useSpring(x, { stiffness: 150, damping: 20 });
+  const sy = useSpring(y, { stiffness: 150, damping: 20 });
+
+  const handleMouse = useCallback(
+    (e: React.MouseEvent) => {
+      const rect = ref.current?.getBoundingClientRect();
+      if (!rect) return;
+      x.set((e.clientX - rect.left - rect.width / 2) * 0.35);
+      y.set((e.clientY - rect.top - rect.height / 2) * 0.35);
+    },
+    [x, y],
+  );
 
   return (
-    <div className="w-full border-t border-white/10">
-      {items.map((item, i) => (
-        <div key={i} className="border-b border-white/10">
-          <button
-            onClick={() => setOpenIndex(openIndex === i ? null : i)}
-            className="w-full py-8 flex items-center justify-between text-left group"
-          >
-            <span
-              className={`text-xl md:text-2xl font-light transition-colors ${openIndex === i ? "text-white" : "text-white/60 group-hover:text-white/90"}`}
-            >
-              {item.question}
-            </span>
-            <div className="relative w-6 h-6 flex items-center justify-center shrink-0">
-              <motion.div
-                animate={{ rotate: openIndex === i ? 180 : 0 }}
-                className="absolute w-full h-[1px] bg-white/60 group-hover:bg-white transition-colors"
-              />
-              <motion.div
-                animate={{ rotate: openIndex === i ? 180 : 90 }}
-                className="absolute w-full h-[1px] bg-white/60 group-hover:bg-white transition-colors"
-              />
-            </div>
-          </button>
-          <AnimatePresence>
-            {openIndex === i && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
-                className="overflow-hidden"
-              >
-                <p className="pb-8 text-white/40 text-lg leading-relaxed max-w-3xl font-light">
-                  {item.answer}
-                </p>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      ))}
-    </div>
+    <motion.button
+      ref={ref}
+      style={{ x: sx, y: sy }}
+      onMouseMove={handleMouse}
+      onMouseLeave={() => {
+        x.set(0);
+        y.set(0);
+      }}
+      onClick={onClick}
+      className={className}
+    >
+      {children}
+    </motion.button>
   );
 }
 
 /* ==========================================================================
    MAIN PAGE COMPONENT
-   ========================================================================== */
+   ========================================================================= */
 
-export default function PrismOSPage() {
-  const [menuOpen, setMenuOpen] = useState(false);
+export default function UrbanPulsePage() {
   const [scrolled, setScrolled] = useState(false);
-
-  // Custom Cursor state
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-  const cursorX = useSpring(mouseX, { stiffness: 100, damping: 25 });
-  const cursorY = useSpring(mouseY, { stiffness: 100, damping: 25 });
-  const [isHoveringImage, setIsHoveringImage] = useState(false);
-
-  // Scroll Parallax
-  const { scrollY } = useScroll();
-  const heroY = useTransform(scrollY, [0, 1000], [0, 400]);
-  const heroOpacity = useTransform(scrollY, [0, 800], [1, 0]);
-  const glassY = useTransform(scrollY, [0, 1000], [0, -150]);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [activeProject, setActiveProject] = useState<number | null>(null);
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 50);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    const h = () => setScrolled(window.scrollY > 50);
+    window.addEventListener("scroll", h);
+    return () => window.removeEventListener("scroll", h);
   }, []);
 
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      mouseX.set(e.clientX);
-      mouseY.set(e.clientY);
-    };
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, [mouseX, mouseY]);
-
   return (
-    <div className="premium-theme min-h-screen bg-[#030303] text-white selection:bg-white/20 selection:text-white font-sans overflow-x-hidden">
-      {/* CUSTOM CURSOR */}
-      <motion.div
-        style={{ x: cursorX, y: cursorY }}
-        className="fixed top-0 left-0 pointer-events-none z-[999] hidden lg:flex items-center justify-center -translate-x-1/2 -translate-y-1/2"
-      >
-        <motion.div
-          animate={{
-            width: isHoveringImage ? 80 : 12,
-            height: isHoveringImage ? 80 : 12,
-            backgroundColor: isHoveringImage
-              ? "rgba(255,255,255,0.1)"
-              : "rgba(255,255,255,1)",
-            border: isHoveringImage
-              ? "1px solid rgba(255,255,255,0.5)"
-              : "0px solid rgba(255,255,255,0)",
-          }}
-          className="rounded-full backdrop-blur-sm flex items-center justify-center transition-colors duration-300"
-        >
-          {isHoveringImage && (
-            <span className="text-[10px] uppercase tracking-widest font-bold">
-              View
-            </span>
-          )}
-        </motion.div>
-      </motion.div>
-
-      {/* NAVIGATION */}
+    <div className="premium-theme min-h-screen bg-[#050505] text-[#fafafa] font-sans selection:bg-[#ff003c] selection:text-white overflow-x-hidden">
+      {/* ── NAVIGATION ── */}
       <nav
-        className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ${scrolled ? "bg-[#030303]/80 backdrop-blur-2xl py-4 border-b border-white/5" : "bg-transparent py-8"}`}
+        className={`fixed top-0 left-0 w-full z-50 transition-all duration-700 ${scrolled ? "bg-black/80 backdrop-blur-2xl py-4 border-b border-white/5" : "bg-transparent py-8"}`}
       >
         <div className="max-w-[1600px] mx-auto px-6 md:px-12 flex items-center justify-between">
-          <div className="flex items-center gap-8">
-            <button
-              onClick={() => setMenuOpen(!menuOpen)}
-              className="group flex items-center gap-3"
-            >
-              <div className="relative w-6 h-4">
-                <span
-                  className={`absolute left-0 w-full h-[1px] bg-white transition-all duration-300 ${menuOpen ? "top-2 rotate-45" : "top-0"}`}
-                />
-                <span
-                  className={`absolute left-0 w-full h-[1px] bg-white transition-all duration-300 ${menuOpen ? "opacity-0" : "top-[7px]"}`}
-                />
-                <span
-                  className={`absolute left-0 w-full h-[1px] bg-white transition-all duration-300 ${menuOpen ? "top-2 -rotate-45" : "top-[14px]"}`}
-                />
-              </div>
-              <span className="text-[10px] uppercase tracking-[0.2em] font-medium hidden md:block">
-                Menu
-              </span>
-            </button>
-            <div className="hidden lg:flex items-center gap-8 text-[11px] uppercase tracking-[0.2em] font-medium text-white/60">
-              {["High Jewelry", "Collections", "Bridal", "Watches"].map(
-                (link) => (
-                  <a
-                    key={link}
-                    href="#"
-                    className="hover:text-white transition-colors"
-                  >
-                    {link}
-                  </a>
-                ),
-              )}
+          <Link href="/" className="group flex items-center gap-4">
+            <div className="w-12 h-12 bg-[#ff003c] rounded-full flex items-center justify-center text-white group-hover:scale-110 transition-transform duration-500">
+              <Zap className="w-6 h-6 fill-current" />
             </div>
-          </div>
-
-          <Link
-            href="/"
-            className="absolute left-1/2 -translate-x-1/2 text-2xl md:text-3xl tracking-[0.3em] font-light uppercase"
-          >
-            Prism
+            <div className="flex flex-col">
+              <span className="text-2xl font-black tracking-tighter uppercase leading-none">
+                Urban Pulse
+              </span>
+              <span className="text-[8px] font-bold uppercase tracking-[0.6em] text-[#ff003c] -mt-1 ml-1">
+                Cinematic Studio
+              </span>
+            </div>
           </Link>
 
-          <div className="flex items-center gap-6">
-            <button className="text-white/60 hover:text-white transition-colors">
-              <Search className="w-5 h-5" />
-            </button>
-            <button className="text-white/60 hover:text-white transition-colors">
-              <MapPin className="w-5 h-5 hidden md:block" />
-            </button>
-            <button className="text-white/60 hover:text-white transition-colors relative">
-              <ShoppingBag className="w-5 h-5" />
-              <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-white text-black text-[8px] flex items-center justify-center font-bold">
-                2
+          <div className="hidden lg:flex items-center gap-12 text-[10px] font-bold uppercase tracking-[0.3em] text-white/40">
+            {["Showreel", "The_Work", "Studio", "Labs", "Contact"].map(
+              (link) => (
+                <Link
+                  key={link}
+                  href="#"
+                  className="hover:text-[#ff003c] transition-colors cursor-pointer"
+                >
+                  {link}
+                </Link>
+              ),
+            )}
+          </div>
+
+          <div className="flex items-center gap-8">
+            <button className="hidden md:flex items-center gap-3 group">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-white/60 group-hover:text-[#ff003c] transition-colors">
+                Start_Project
               </span>
+              <div className="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center text-white/40 group-hover:bg-[#ff003c] group-hover:text-white group-hover:border-[#ff003c] transition-all">
+                <ArrowRight className="w-4 h-4" />
+              </div>
+            </button>
+            <button
+              onClick={() => setMenuOpen(true)}
+              className="lg:hidden text-white"
+            >
+              <Menu className="w-6 h-6" />
             </button>
           </div>
         </div>
       </nav>
 
-      {/* FULLSCREEN MENU */}
+      {/* MOBILE MENU */}
       <AnimatePresence>
         {menuOpen && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-            className="fixed inset-0 z-40 bg-[#030303] flex"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="fixed inset-0 z-[100] bg-black p-12 flex flex-col justify-center gap-10"
           >
-            <div className="w-full lg:w-1/2 h-full p-6 md:p-16 flex flex-col justify-center">
-              <div className="flex flex-col gap-6 md:gap-8 max-w-md mx-auto w-full">
-                {[
-                  "High Jewelry",
-                  "Fine Jewelry",
-                  "Engagement",
-                  "Timepieces",
-                  "The Maison",
-                  "Client Care",
-                ].map((item, i) => (
-                  <motion.div
-                    key={item}
-                    initial={{ opacity: 0, x: -50 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{
-                      delay: i * 0.1,
-                      duration: 0.7,
-                      ease: [0.25, 0.1, 0.25, 1],
-                    }}
-                  >
-                    <Link
-                      href="#"
-                      onClick={() => setMenuOpen(false)}
-                      className="text-4xl md:text-6xl font-light tracking-tight hover:italic hover:pl-4 transition-all duration-300 block"
-                    >
-                      {item}
-                    </Link>
-                  </motion.div>
-                ))}
-              </div>
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.8 }}
-                className="mt-20 max-w-md mx-auto w-full border-t border-white/10 pt-8 flex justify-between text-xs text-white/50 uppercase tracking-widest font-medium"
-              >
-                <a href="#" className="hover:text-white">
-                  Sign In
-                </a>
-                <a href="#" className="hover:text-white">
-                  Find a Boutique
-                </a>
-              </motion.div>
-            </div>
-            <div className="hidden lg:block w-1/2 h-full relative">
-              <Image
-                src="https://images.unsplash.com/photo-1599643478524-fb66f7ca065b?q=80&w=1200&auto=format&fit=crop"
-                alt="Menu bg"
-                fill
-                className="object-cover opacity-60"
-              />
+            <button
+              onClick={() => setMenuOpen(false)}
+              className="absolute top-10 right-8 text-white/40 hover:text-[#ff003c]"
+            >
+              <X className="w-10 h-10" />
+            </button>
+            <div className="flex flex-col gap-4 text-7xl font-black uppercase text-white/10">
+              {["Work", "Studio", "Pricing", "About", "Contact"].map((l) => (
+                <Link
+                  key={l}
+                  href="#"
+                  onClick={() => setMenuOpen(false)}
+                  className="hover:text-[#ff003c] hover:translate-x-4 transition-all"
+                >
+                  {l}
+                </Link>
+              ))}
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* ==========================================
-          1. HERO SECTION (Refractive Parallax)
-          ========================================== */}
-      <section className="relative w-full h-[100svh] overflow-hidden flex items-center justify-center">
-        <motion.div
-          style={{ y: heroY, opacity: heroOpacity }}
-          className="absolute inset-0 z-0"
-        >
+      {/* ── HERO ── */}
+      <section className="relative h-[100svh] flex items-center overflow-hidden">
+        <div className="absolute inset-0">
           <Image
-            src="https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?q=80&w=1600&auto=format&fit=crop"
-            alt="Hero background"
+            src="https://images.unsplash.com/photo-1542281286-9e0a16bb7366?w=1600&q=80"
+            alt="Urban Texture"
             fill
-            className="object-cover"
+            className="object-cover opacity-50 contrast-125"
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#030303]/60 via-transparent to-[#030303]" />
-        </motion.div>
-
-        {/* Refractive Glass Panels */}
-        <motion.div
-          style={{ y: glassY }}
-          className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none opacity-40"
-        >
-          <div className="w-[120%] h-[120%] bg-white/[0.02] backdrop-blur-[2px] border border-white/5 rounded-full blur-3xl absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
-        </motion.div>
-
-        <div className="relative z-20 text-center px-6 mt-20 max-w-5xl mx-auto flex flex-col items-center">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.5 }}
-          >
-            <span className="text-[10px] uppercase tracking-[0.5em] font-medium text-white/60 mb-6 block">
-              The Refractive Collection
-            </span>
-          </motion.div>
-          <div className="overflow-hidden mb-6">
-            <motion.h1
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              transition={{
-                duration: 1.2,
-                ease: [0.25, 0.1, 0.25, 1],
-                delay: 0.7,
-              }}
-              className="text-6xl sm:text-8xl md:text-9xl lg:text-[11rem] font-light tracking-[-0.02em] leading-none mix-blend-difference"
-            >
-              Lumière
-              <br />
-              <span className="italic font-extralight text-white/80">Pure</span>
-            </motion.h1>
-          </div>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1, delay: 1.5 }}
-          >
-            <button className="mt-8 px-10 py-4 border border-white/20 rounded-full text-[10px] uppercase tracking-widest font-medium hover:bg-white hover:text-black transition-colors backdrop-blur-md">
-              Discover the Collection
-            </button>
-          </motion.div>
+          <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/20 to-transparent" />
         </div>
 
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 2, duration: 1 }}
-          className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 z-20"
-        >
-          <span className="text-[9px] uppercase tracking-[0.3em] text-white/30">
-            Scroll
-          </span>
-          <div className="w-[1px] h-12 bg-gradient-to-b from-white/30 to-transparent" />
-        </motion.div>
-      </section>
-
-      {/* ==========================================
-          2. INTRO / PHILOSOPHY
-          ========================================== */}
-      <section className="py-32 md:py-48 px-6 md:px-12 relative z-20 bg-[#030303]">
-        <div className="max-w-[1200px] mx-auto text-center">
+        <div className="relative z-10 max-w-[1600px] mx-auto px-6 md:px-12 w-full grid grid-cols-1 lg:grid-cols-2 items-center">
           <Reveal>
-            <p className="text-3xl md:text-5xl lg:text-6xl font-light leading-[1.2] text-white/90">
-              "A diamond does not merely reflect light;{" "}
-              <br className="hidden md:block" />
-              <span className="italic text-white/50">it orchestrates it.</span>"
+            <Badge className="bg-[#ff003c]/20 text-[#ff003c] border border-[#ff003c]/30 text-[10px] font-bold uppercase tracking-[0.5em] mb-10 px-4 py-1.5 rounded-full">
+              Independent Visual Studio // NYC - BERLIN
+            </Badge>
+            <h1 className="text-8xl md:text-[14rem] font-black leading-[0.75] tracking-tighter mb-12 uppercase text-white italic">
+              Visual <br />{" "}
+              <span className="text-[#ff003c] not-italic">Entropy.</span>
+            </h1>
+            <p className="max-w-md text-xl text-white/50 leading-relaxed font-light mb-12 uppercase tracking-wide">
+              Capturing the raw energy of urban transition through high-fidelity
+              cinematic storytelling.
             </p>
-          </Reveal>
-          <Reveal delay={0.2}>
-            <p className="mt-12 text-lg text-white/40 max-w-2xl mx-auto font-light leading-relaxed">
-              For over a century, Prism has mastered the interplay between
-              precious stones and light. Every facet is calculated, every
-              setting engineered to maximize brilliance. We do not just make
-              jewelry—we sculpt radiance.
-            </p>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* ==========================================
-          3. LATEST ARRIVALS (Horizontal Carousel)
-          ========================================== */}
-      <section className="py-20 md:py-32 overflow-hidden border-t border-white/5 bg-[#050505]">
-        <div className="max-w-[1600px] mx-auto px-6 md:px-12 mb-16 flex flex-col md:flex-row md:items-end justify-between gap-8">
-          <Reveal>
-            <span className="text-[10px] uppercase tracking-[0.3em] font-medium text-white/40 mb-4 block">
-              Boutique
-            </span>
-            <h2 className="text-4xl md:text-6xl font-light tracking-tight">
-              Latest <span className="italic">Arrivals</span>
-            </h2>
-          </Reveal>
-          <Reveal delay={0.2}>
-            <Link
-              href="#"
-              className="flex items-center gap-3 text-[11px] uppercase tracking-widest font-medium border-b border-white/20 pb-1 hover:border-white transition-colors"
-            >
-              View All Masterpieces <ArrowRight className="w-4 h-4" />
-            </Link>
-          </Reveal>
-        </div>
-
-        {/* CSS-based drag carousel approximation using overflow-x-auto */}
-        <div
-          className="flex gap-6 md:gap-8 px-6 md:px-12 overflow-x-auto pb-20 snap-x snap-mandatory hide-scrollbar"
-          style={{ scrollbarWidth: "none" }}
-        >
-          {LATEST_ARRIVALS.map((product, i) => (
-            <Reveal
-              key={product.id}
-              delay={i * 0.1}
-              className="shrink-0 snap-start"
-            >
-              <div
-                className="w-[300px] md:w-[400px] group cursor-pointer"
-                onMouseEnter={() => setIsHoveringImage(true)}
-                onMouseLeave={() => setIsHoveringImage(false)}
-              >
-                <div className="relative aspect-[4/5] bg-[#0a0a0a] rounded-2xl overflow-hidden mb-6">
-                  {product.tag && (
-                    <span className="absolute top-4 left-4 z-10 px-3 py-1 bg-white text-black text-[9px] uppercase tracking-widest font-bold rounded-full">
-                      {product.tag}
-                    </span>
-                  )}
-                  <Image
-                    src={product.image}
-                    alt={product.name}
-                    fill
-                    className="object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700 mix-blend-luminosity group-hover:mix-blend-normal"
-                  />
-                </div>
-                <div className="flex justify-between items-start gap-4">
-                  <div>
-                    <h3 className="text-xl font-light mb-1">{product.name}</h3>
-                    <p className="text-[11px] text-white/40 uppercase tracking-widest">
-                      {product.material} · {product.carats}
-                    </p>
-                  </div>
-                  <span className="text-lg font-medium">{product.price}</span>
-                </div>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      {/* ==========================================
-          4. HERITAGE TIMELINE (Scroll Linked)
-          ========================================== */}
-      <section className="py-32 md:py-48 px-6 md:px-12 bg-[#030303]">
-        <div className="max-w-[1200px] mx-auto">
-          <Reveal className="text-center mb-24">
-            <span className="text-[10px] uppercase tracking-[0.3em] font-medium text-white/40 mb-4 block">
-              Legacy
-            </span>
-            <h2 className="text-4xl md:text-6xl font-light tracking-tight">
-              The Maison <span className="italic">Timeline</span>
-            </h2>
-          </Reveal>
-
-          <div className="relative border-l border-white/10 ml-4 md:ml-1/2">
-            {HERITAGE_TIMELINE.map((item, i) => (
-              <Reveal
-                key={i}
-                delay={0.1}
-                y={50}
-                className="relative pl-12 md:pl-16 md:w-1/2 mb-24 last:mb-0 even:md:ml-auto even:md:pl-16 odd:md:pl-0 odd:md:pr-16 odd:md:text-right odd:md:-ml-[1px]"
-              >
-                {/* Dot */}
-                <div
-                  className={`absolute top-0 w-3 h-3 rounded-full bg-white shadow-[0_0_15px_rgba(255,255,255,0.5)] ${i % 2 === 0 ? "left-[-6.5px] md:right-[-6.5px] md:left-auto" : "left-[-6.5px]"}`}
-                />
-
-                <span className="text-5xl md:text-7xl font-extralight text-white/10 block mb-6 leading-none">
-                  {item.year}
-                </span>
-                <h3 className="text-2xl md:text-3xl font-light mb-4">
-                  {item.title}
-                </h3>
-                <p className="text-white/50 text-lg font-light leading-relaxed max-w-sm ml-0 odd:md:ml-auto">
-                  {item.desc}
-                </p>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ==========================================
-          5. CURATED COLLECTIONS (Bento Grid)
-          ========================================== */}
-      <section className="py-32 md:py-40 px-6 md:px-12 border-t border-white/5 bg-[#050505]">
-        <div className="max-w-[1600px] mx-auto">
-          <Reveal className="mb-16">
-            <h2 className="text-4xl md:text-6xl font-light tracking-tight">
-              Curated <span className="italic">Collections</span>
-            </h2>
-          </Reveal>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {COLLECTIONS.map((col, i) => (
-              <Reveal
-                key={col.id}
-                delay={i * 0.1}
-                className={
-                  i === 0
-                    ? "lg:col-span-2 lg:row-span-2"
-                    : i === 3
-                      ? "lg:col-span-3 lg:row-span-1"
-                      : ""
-                }
-              >
-                <div
-                  className={`group relative rounded-3xl overflow-hidden bg-[#111] w-full ${i === 0 ? "h-[500px] lg:h-full" : i === 3 ? "h-[400px]" : "h-[400px]"}`}
-                  onMouseEnter={() => setIsHoveringImage(true)}
-                  onMouseLeave={() => setIsHoveringImage(false)}
-                >
-                  <Image
-                    src={col.image}
-                    alt={col.title}
-                    fill
-                    className="object-cover opacity-60 group-hover:opacity-80 group-hover:scale-105 transition-all duration-[1.5s] ease-out"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-
-                  <div className="absolute inset-0 p-8 md:p-12 flex flex-col justify-end">
-                    <div className="overflow-hidden">
-                      <h3 className="text-3xl md:text-5xl font-light mb-4 translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                        {col.title}
-                      </h3>
-                    </div>
-                    <div className="overflow-hidden">
-                      <p className="text-white/60 text-lg font-light max-w-md translate-y-full opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 delay-100">
-                        {col.desc}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="absolute top-8 right-8 w-12 h-12 rounded-full border border-white/20 backdrop-blur-md flex items-center justify-center -translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
-                    <ArrowUpRight className="w-5 h-5" />
-                  </div>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ==========================================
-          6. SERVICES
-          ========================================== */}
-      <section className="py-24 border-t border-white/5 bg-[#030303]">
-        <div className="max-w-[1400px] mx-auto px-6 md:px-12">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 lg:gap-24">
-            {SERVICES.map((srv, i) => (
-              <Reveal
-                key={i}
-                delay={i * 0.1}
-                className="text-center md:text-left"
-              >
-                <div className="w-16 h-16 mx-auto md:mx-0 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-6 text-white/70">
-                  {srv.icon}
-                </div>
-                <h4 className="text-xl font-light mb-4">{srv.title}</h4>
-                <p className="text-white/40 text-sm leading-relaxed">
-                  {srv.desc}
-                </p>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ==========================================
-          7. REVIEWS (Marquee)
-          ========================================== */}
-      <section className="py-32 overflow-hidden border-t border-white/5 bg-[#050505]">
-        <Reveal className="mb-16 px-6 md:px-12 text-center">
-          <span className="text-[10px] uppercase tracking-[0.3em] font-medium text-white/40 mb-4 block">
-            Clientele
-          </span>
-          <h2 className="text-4xl md:text-5xl font-light tracking-tight">
-            A Legacy of <span className="italic">Trust</span>
-          </h2>
-        </Reveal>
-
-        <div className="relative flex whitespace-nowrap">
-          <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-[#050505] to-transparent z-10" />
-          <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-[#050505] to-transparent z-10" />
-
-          <motion.div
-            animate={{ x: ["0%", "-50%"] }}
-            transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
-            className="flex gap-8 px-4"
-          >
-            {[...TESTIMONIALS, ...TESTIMONIALS].map((t, i) => (
-              <div
-                key={i}
-                className="w-[350px] md:w-[450px] bg-[#0a0a0a] border border-white/5 p-10 rounded-3xl shrink-0 whitespace-normal"
-              >
-                <div className="flex gap-1 mb-6 text-white">
-                  {[...Array(t.rating)].map((_, j) => (
-                    <Star key={j} className="w-4 h-4 fill-white" />
-                  ))}
-                </div>
-                <p className="text-lg font-light text-white/80 leading-relaxed mb-8 italic">
-                  "{t.text}"
-                </p>
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold">
-                    {t.name.charAt(0)}
-                  </div>
-                  <div>
-                    <div className="font-medium text-sm">{t.name}</div>
-                    <div className="text-xs text-white/40">{t.role}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ==========================================
-          8. FAQ (Accordion)
-          ========================================== */}
-      <section className="py-32 md:py-40 px-6 md:px-12 bg-[#030303] border-t border-white/5">
-        <div className="max-w-[1000px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-16">
-          <div className="lg:col-span-5">
-            <Reveal>
-              <h2 className="text-4xl md:text-6xl font-light tracking-tight mb-6">
-                Client <span className="italic">Care</span>
-              </h2>
-              <p className="text-white/50 text-lg font-light leading-relaxed mb-10">
-                Everything you need to know about purchasing, maintaining, and
-                cherishing your Prism pieces.
-              </p>
-              <button className="px-8 py-3 bg-white text-black text-[10px] uppercase tracking-widest font-bold rounded-full hover:scale-105 transition-transform">
-                Contact Concierge
-              </button>
-            </Reveal>
-          </div>
-          <div className="lg:col-span-7">
-            <Reveal delay={0.2}>
-              <Accordion items={FAQS} />
-            </Reveal>
-          </div>
-        </div>
-      </section>
-
-      {/* ==========================================
-          9. CTA / NEWSLETTER
-          ========================================== */}
-      <section className="py-32 md:py-48 relative overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          <Image
-            src="https://images.unsplash.com/photo-1599643477877-530eb83abc8e?q=80&w=1600&auto=format&fit=crop"
-            fill
-            className="object-cover opacity-30"
-            alt="CTA bg"
-          />
-          <div className="absolute inset-0 bg-[#030303]/80 backdrop-blur-sm" />
-        </div>
-
-        <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
-          <Reveal>
-            <h2 className="text-5xl md:text-7xl lg:text-8xl font-light mb-8">
-              Enter the <span className="italic">Vault</span>
-            </h2>
-            <p className="text-white/60 text-xl font-light mb-12 max-w-2xl mx-auto">
-              Join our private registry to receive exclusive invitations to high
-              jewelry unveilings and private boutique events.
-            </p>
-
-            <form
-              className="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto"
-              onSubmit={(e) => e.preventDefault()}
-            >
-              <input
-                type="email"
-                placeholder="Your Email Address"
-                className="flex-1 bg-transparent border-b border-white/30 px-4 py-4 text-center sm:text-left text-white placeholder-white/30 focus:outline-none focus:border-white transition-colors"
-              />
-              <button
-                type="submit"
-                className="px-10 py-4 bg-white text-black text-[11px] uppercase tracking-widest font-bold hover:bg-white/90 transition-colors shrink-0"
-              >
-                Subscribe
-              </button>
-            </form>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* ==========================================
-          10. MEGA FOOTER
-          ========================================== */}
-      <footer className="bg-[#000] pt-24 pb-12 px-6 md:px-12 border-t border-white/10">
-        <div className="max-w-[1600px] mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 lg:gap-8 mb-24">
-            <div className="lg:col-span-2">
+            <div className="flex flex-col sm:flex-row gap-6">
+              <MagneticBtn className="px-12 py-5 bg-[#ff003c] text-white text-[10px] font-bold uppercase tracking-[0.3em] rounded-full hover:scale-105 transition-all cursor-pointer shadow-[0_0_40px_rgba(255,0,60,0.3)]">
+                Watch 2024 Showreel
+              </MagneticBtn>
               <Link
-                href="/"
-                className="text-3xl tracking-[0.3em] font-light uppercase block mb-8"
+                href="#work"
+                className="px-12 py-5 border border-white/20 text-white text-[10px] font-bold uppercase tracking-[0.3em] rounded-full hover:bg-white hover:text-black transition-all flex items-center justify-center gap-3"
               >
-                Prism
+                The Archive <ArrowRight className="w-4 h-4" />
               </Link>
-              <p className="text-white/40 text-sm leading-relaxed max-w-sm mb-8 font-light">
-                High jewelry conceived in Paris, crafted by masters, and
-                designed for eternity. Elevating the art of diamond setting
-                since 1892.
+            </div>
+          </Reveal>
+
+          <div className="hidden lg:flex justify-end pr-12">
+            <Reveal delay={0.4}>
+              <div className="relative w-80 h-80 rounded-full border border-white/5 flex items-center justify-center">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{
+                    duration: 20,
+                    repeat: Infinity,
+                    ease: "linear",
+                  }}
+                  className="absolute inset-0 border-t border-[#ff003c] rounded-full"
+                />
+                <div className="text-center">
+                  <span className="text-5xl font-black italic block">8K</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-white/30">
+                    Native Capture
+                  </span>
+                </div>
+              </div>
+            </Reveal>
+          </div>
+        </div>
+      </section>
+
+      {/* ── STATS SECTION ── */}
+      <section className="py-24 border-y border-white/5 bg-[#0a0a0a]">
+        <div className="max-w-[1600px] mx-auto px-6 md:px-12">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-12">
+            {STATS.map((stat, i) => (
+              <Reveal key={i} delay={i * 0.1}>
+                <div className="text-center md:text-left">
+                  <div className="text-[9px] font-bold uppercase tracking-[0.3em] text-[#ff003c] mb-2">
+                    {stat.label}
+                  </div>
+                  <div className="text-5xl font-black italic text-white">
+                    {stat.value}
+                  </div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── THE WORK ── */}
+      <section id="work" className="py-32 px-6 md:px-12">
+        <div className="max-w-[1600px] mx-auto">
+          <Reveal>
+            <div className="flex flex-col md:flex-row justify-between items-end mb-24 gap-12">
+              <div>
+                <h2 className="text-7xl md:text-[10rem] font-black italic tracking-tighter leading-none mb-6 uppercase text-white">
+                  The <br /> <span className="text-[#ff003c]">Grit.</span>
+                </h2>
+                <p className="text-white/20 text-[10px] font-bold uppercase tracking-[0.4em]">
+                  Project Logs // Vertical Cinema // 2024
+                </p>
+              </div>
+              <Link
+                href="#"
+                className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#ff003c] border-b border-[#ff003c] pb-2 hover:text-white hover:border-white transition-all"
+              >
+                Full Portfolio Archive
+              </Link>
+            </div>
+          </Reveal>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+            {PROJECTS.map((item, i) => (
+              <Reveal key={item.id} delay={i * 0.1}>
+                <div
+                  className="group space-y-10 cursor-pointer"
+                  onMouseEnter={() => setActiveProject(item.id)}
+                  onMouseLeave={() => setActiveProject(null)}
+                >
+                  <div className="relative aspect-video overflow-hidden rounded-sm">
+                    <Image
+                      src={item.img}
+                      alt={item.title}
+                      fill
+                      className="object-cover transition-transform duration-[1.5s] group-hover:scale-125"
+                    />
+                    <div className="absolute inset-0 bg-black/40 group-hover:bg-transparent transition-colors duration-700" />
+
+                    <div className="absolute top-6 left-6">
+                      <Badge className="bg-black/50 backdrop-blur-md text-white border-white/10 text-[9px] font-bold uppercase tracking-widest px-3 py-1">
+                        {item.category}
+                      </Badge>
+                    </div>
+
+                    <AnimatePresence>
+                      {activeProject === item.id && (
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="absolute inset-0 flex items-center justify-center bg-[#ff003c]/10 backdrop-blur-[2px]"
+                        >
+                          <button className="w-20 h-20 rounded-full bg-white text-black flex items-center justify-center hover:scale-110 transition-all shadow-2xl">
+                            <Play className="w-8 h-8 fill-current ml-1" />
+                          </button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                  <div className="space-y-6">
+                    <div className="flex justify-between items-baseline">
+                      <h3 className="text-4xl font-black uppercase tracking-tighter text-white italic group-hover:text-[#ff003c] transition-colors">
+                        {item.title}
+                      </h3>
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-white/20 group-hover:text-white/60 transition-colors">
+                        Project_0{item.id}
+                      </span>
+                    </div>
+                    <p className="text-sm text-white/30 font-light leading-relaxed uppercase tracking-widest">
+                      {item.desc}
+                    </p>
+                    <div className="flex items-center gap-4">
+                      <div className="h-[1px] flex-1 bg-white/5 group-hover:bg-[#ff003c]/20 transition-all" />
+                      <button className="text-[9px] font-black uppercase tracking-[0.3em] text-white group-hover:text-[#ff003c] transition-colors">
+                        Case_Study
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── STUDIO SERVICES ── */}
+      <section className="py-40 bg-[#0a0a0a] overflow-hidden relative">
+        <div className="absolute -bottom-32 -left-32 w-[40rem] h-[40rem] bg-[#ff003c]/5 blur-[120px] rounded-full" />
+        <div className="max-w-[1600px] mx-auto px-6 md:px-12">
+          <Reveal>
+            <div className="text-center mb-32">
+              <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-[#ff003c] mb-8 block">
+                Visual Engineering
+              </span>
+              <h2 className="text-6xl md:text-8xl font-black italic tracking-tighter uppercase">
+                High{" "}
+                <span className="text-[#ff003c] not-italic">Production.</span>
+              </h2>
+            </div>
+          </Reveal>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-16">
+            {SERVICES.map((s, i) => (
+              <Reveal key={i} delay={i * 0.1}>
+                <div className="p-16 border border-white/5 bg-white/[0.01] hover:border-[#ff003c]/30 transition-all group h-full flex flex-col relative overflow-hidden">
+                  <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <s.icon className="w-24 h-24" />
+                  </div>
+                  <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center text-[#ff003c] mb-10 group-hover:bg-[#ff003c] group-hover:text-white transition-all duration-500">
+                    <s.icon className="w-8 h-8" />
+                  </div>
+                  <h3 className="text-3xl font-black uppercase italic mb-6 tracking-tighter text-white group-hover:translate-x-2 transition-transform">
+                    {s.title}
+                  </h3>
+                  <p className="text-sm text-white/30 font-light leading-relaxed mb-12 flex-1 tracking-wide">
+                    {s.desc}
+                  </p>
+                  <button className="flex items-center gap-4 text-[9px] font-bold uppercase tracking-[0.3em] text-[#ff003c] group-hover:gap-6 transition-all">
+                    Capabilities <ArrowRight className="w-5 h-5" />
+                  </button>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── THE PHILOSOPHY ── */}
+      <section className="py-40 px-6 md:px-12 bg-black">
+        <div className="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-32 items-center">
+          <Reveal>
+            <div className="relative aspect-square rounded-sm overflow-hidden group">
+              <Image
+                src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200&q=80"
+                alt="Studio"
+                fill
+                className="object-cover group-hover:scale-110 transition-all duration-[2s] contrast-125"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+              <div className="absolute bottom-16 left-16 text-white">
+                <span className="text-[10px] font-bold uppercase tracking-[0.4em] mb-4 block text-[#ff003c]">
+                  Our Labs
+                </span>
+                <h4 className="text-5xl font-black italic uppercase tracking-tighter leading-none">
+                  The Future <br /> Is Analog.
+                </h4>
+              </div>
+            </div>
+          </Reveal>
+
+          <Reveal delay={0.2}>
+            <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-[#ff003c] mb-8 block">
+              The Philosophy
+            </span>
+            <h2 className="text-6xl md:text-9xl font-black italic tracking-tighter leading-[0.8] mb-12 uppercase text-white">
+              Capture <br />{" "}
+              <span className="text-[#ff003c] not-italic">Raw.</span>
+            </h2>
+            <p className="text-white/40 text-xl leading-relaxed mb-16 font-light uppercase tracking-wide">
+              We reject the sterile perfection of modern digital capture. Our
+              process introduces planned entropy—leaking light, organic grain,
+              and the visceral imperfection of real life.
+            </p>
+            <div className="grid grid-cols-2 gap-12">
+              {[
+                { icon: Focus, label: "Deep_Focus", desc: "Optic precision" },
+                { icon: Frame, label: "Celluloid_Tone", desc: "Organic grain" },
+                { icon: Monitor, label: "Mastering", desc: "Grade v4.1" },
+                { icon: Share2, label: "Distribution", desc: "Global reach" },
+              ].map((val, i) => (
+                <div key={i} className="space-y-4">
+                  <val.icon className="w-6 h-6 text-[#ff003c]" />
+                  <h4 className="text-[11px] font-black uppercase tracking-widest text-white">
+                    {val.label}
+                  </h4>
+                  <p className="text-[10px] font-light text-white/30 uppercase tracking-widest">
+                    {val.desc}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <MagneticBtn className="mt-20 px-14 py-6 bg-white text-black text-[10px] font-black uppercase tracking-[0.4em] rounded-full hover:bg-[#ff003c] hover:text-white transition-all shadow-2xl">
+              Collaborate With Us
+            </MagneticBtn>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ── FOOTER ── */}
+      <footer className="bg-[#050505] pt-40 pb-16 px-6 md:px-12 border-t border-white/5">
+        <div className="max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-32 mb-40">
+          <div className="lg:col-span-6">
+            <Reveal>
+              <div className="flex items-center gap-6 mb-12">
+                <div className="w-16 h-16 bg-[#ff003c] rounded-full flex items-center justify-center text-white">
+                  <Zap className="w-8 h-8 fill-current" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-4xl font-black tracking-tighter uppercase leading-none">
+                    Urban Pulse
+                  </span>
+                  <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-[#ff003c] -mt-1 ml-1">
+                    Cinematic Studio
+                  </span>
+                </div>
+              </div>
+              <p className="text-white/20 max-w-md mb-16 text-[11px] font-bold uppercase tracking-[0.2em] leading-loose italic">
+                A visual narrative collective specialized in high-energy
+                cinematic production and raw street photography. Operating
+                between NYC and the digital void.
               </p>
-              <div className="flex gap-4">
-                {[
-                  <Instagram key="ig" className="w-5 h-5" />,
-                  <Twitter key="tw" className="w-5 h-5" />,
-                  <Facebook key="fb" className="w-5 h-5" />,
-                ].map((icon, i) => (
-                  <a
+              <div className="flex gap-6">
+                {[Instagram, Twitter, Mail].map((Icon, i) => (
+                  <button
                     key={i}
-                    href="#"
-                    className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-white/50 hover:text-white hover:border-white transition-all"
+                    className="w-14 h-14 rounded-full border border-white/10 flex items-center justify-center text-white/40 hover:bg-[#ff003c] hover:text-white hover:border-[#ff003c] transition-all"
                   >
-                    {icon}
-                  </a>
+                    <Icon className="w-5 h-5" />
+                  </button>
                 ))}
               </div>
-            </div>
-
-            <div>
-              <h4 className="text-[10px] text-white/60 uppercase tracking-widest font-semibold mb-6">
-                Collections
-              </h4>
-              <ul className="space-y-4 text-sm font-light text-white/40">
-                <li>
-                  <a href="#" className="hover:text-white transition-colors">
-                    Lumière
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white transition-colors">
-                    Éternité
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white transition-colors">
-                    Sérénade
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white transition-colors">
-                    Héritage
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white transition-colors">
-                    High Jewelry
-                  </a>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="text-[10px] text-white/60 uppercase tracking-widest font-semibold mb-6">
-                The Maison
-              </h4>
-              <ul className="space-y-4 text-sm font-light text-white/40">
-                <li>
-                  <a href="#" className="hover:text-white transition-colors">
-                    Our History
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white transition-colors">
-                    Savoir-Faire
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white transition-colors">
-                    Ethical Sourcing
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white transition-colors">
-                    Boutiques
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white transition-colors">
-                    Careers
-                  </a>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="text-[10px] text-white/60 uppercase tracking-widest font-semibold mb-6">
-                Client Care
-              </h4>
-              <ul className="space-y-4 text-sm font-light text-white/40">
-                <li>
-                  <a href="#" className="hover:text-white transition-colors">
-                    Contact Us
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white transition-colors">
-                    Book an Appointment
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white transition-colors">
-                    Shipping & Returns
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white transition-colors">
-                    Care Guide
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white transition-colors">
-                    FAQ
-                  </a>
-                </li>
-              </ul>
-            </div>
+            </Reveal>
           </div>
 
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6 pt-8 border-t border-white/10 text-[10px] text-white/30 uppercase tracking-widest font-medium">
-            <span>
-              &copy; {new Date().getFullYear()} Prism High Jewelry. All Rights
-              Reserved.
-            </span>
-            <div className="flex gap-6">
-              <a href="#" className="hover:text-white transition-colors">
-                Privacy Policy
-              </a>
-              <a href="#" className="hover:text-white transition-colors">
-                Terms of Service
-              </a>
-              <a href="#" className="hover:text-white transition-colors">
-                Cookie Policy
-              </a>
+          <div className="lg:col-span-2">
+            <h4 className="text-[11px] font-black uppercase tracking-widest text-[#ff003c] mb-12">
+              Showcase
+            </h4>
+            <ul className="space-y-6 text-[10px] font-bold uppercase tracking-widest text-white/30">
+              <li>
+                <Link href="#" className="hover:text-white transition-colors">
+                  2024_Reel
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="hover:text-white transition-colors">
+                  Street_Series
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="hover:text-white transition-colors">
+                  Commercial_Work
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="hover:text-white transition-colors">
+                  NFT_Archive
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div className="lg:col-span-2">
+            <h4 className="text-[11px] font-black uppercase tracking-widest text-[#ff003c] mb-12">
+              Capabilities
+            </h4>
+            <ul className="space-y-6 text-[10px] font-bold uppercase tracking-widest text-white/30">
+              <li>
+                <Link href="#" className="hover:text-white transition-colors">
+                  Production
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="hover:text-white transition-colors">
+                  Color_Grading
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="hover:text-white transition-colors">
+                  VFX_Labs
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="hover:text-white transition-colors">
+                  Sound_Design
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div className="lg:col-span-2">
+            <h4 className="text-[11px] font-black uppercase tracking-widest text-[#ff003c] mb-12">
+              Studio
+            </h4>
+            <ul className="space-y-6 text-[10px] font-bold uppercase tracking-widest text-white/30">
+              <li>
+                <Link href="#" className="hover:text-white transition-colors">
+                  Our_Process
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="hover:text-white transition-colors">
+                  The_Equipment
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="hover:text-white transition-colors">
+                  Career_Openings
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="hover:text-white transition-colors">
+                  Legal_Notice
+                </Link>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="max-w-[1600px] mx-auto pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-12 text-[10px] font-bold uppercase tracking-[0.4em] text-white/10">
+          <div className="flex items-center gap-12">
+            <span>&copy; {new Date().getFullYear()} URBAN PULSE VISUALS.</span>
+            <div className="flex gap-8">
+              <span>NYC_FLATIRON_HQ</span>
+              <span>BERLIN_M_STUDIO</span>
             </div>
+          </div>
+          <div className="flex gap-12 font-mono">
+            <span>FRAME_RATE_24.00</span>
+            <span>BUFFER_STATUS_OPTIMAL</span>
           </div>
         </div>
       </footer>
+
+      <style>{`
+        ::-webkit-scrollbar{width:4px;background:#050505}
+        ::-webkit-scrollbar-thumb{background:#ff003c}
+      `}</style>
     </div>
   );
 }

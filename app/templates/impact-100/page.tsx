@@ -1,381 +1,673 @@
-"use client"
-import { motion, useScroll, useTransform, useInView, AnimatePresence, useMotionValue, useSpring } from "framer-motion"
-import { useState, useRef, useEffect } from "react"
-import Image from "next/image"
-import Link from "next/link"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
-import { Progress } from "@/components/ui/progress"
+"use client";
 
-const PROPERTIES = [
-  { id: 1, city: "Paris", name: "Palais Lumière", image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=600&auto=format&fit=crop", rooms: 45, amenities: ["Michelin-Star Restaurant", "Spa", "Wine Cellar"], rating: 4.9 },
-  { id: 2, city: "Côte d'Azur", name: "Villa Azurea", image: "https://images.unsplash.com/photo-1564078516156-91b97c9eff7f?q=80&w=600&auto=format&fit=crop", rooms: 38, amenities: ["Private Beach", "Helipad", "Cinema"], rating: 4.8 },
-  { id: 3, city: "Marrakech", name: "Riad Étoile", image: "https://images.unsplash.com/photo-1515266623033-32e4864c1f2a?q=80&w=600&auto=format&fit=crop", rooms: 32, amenities: ["Hammam", "Rooftop Bar", "Garden"], rating: 4.9 },
-  { id: 4, city: "Maldives", name: "Coral Palace", image: "https://images.unsplash.com/photo-1559827260-dc66d52bef19?q=80&w=600&auto=format&fit=crop", rooms: 52, amenities: ["Overwater Villas", "Dive Center", "Sunset Bar"], rating: 5.0 },
-]
+import {
+  motion,
+  useScroll,
+  useTransform,
+  useInView,
+  AnimatePresence,
+  useMotionValue,
+  useSpring,
+} from "framer-motion";
+import { useState, useRef, useEffect, useCallback } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Separator } from "@/components/ui/separator";
+import {
+  Compass,
+  Layout,
+  Maximize,
+  Ruler,
+  Sparkles,
+  Instagram,
+  Twitter,
+  Mail,
+  MapPin,
+  ChevronRight,
+  ArrowRight,
+  X,
+  Menu,
+  Box,
+  Home,
+  Layers,
+  PencilLine,
+  Focus,
+  Frame,
+  Monitor,
+  Share2,
+  Lock,
+  Search,
+  ShoppingBag,
+} from "lucide-react";
 
-const EXPERIENCES = [
-  { title: "Spa & Wellness", desc: "Rejuvenate with world-class treatments in serene sanctuaries." },
-  { title: "Gastronomy", desc: "Michelin-starred cuisine celebrating local and global flavors." },
-  { title: "Adventures", desc: "Curated excursions from private yachts to mountain treks." },
-  { title: "Culture", desc: "Exclusive access to art, heritage, and local masterpieces." },
-]
+import "../premium.css";
 
-const ROOM_TYPES = [
-  { name: "Deluxe Queen", price: "€450/night", size: "42m²", amenities: ["Marble Bath", "City View", "Nespresso"] },
-  { name: "Junior Suite", price: "€750/night", size: "62m²", amenities: ["Separate Living", "Spa Tub", "Terrace"] },
-  { name: "Presidential", price: "€2,500/night", size: "180m²", amenities: ["Private Elevator", "Cinema", "Full Kitchen"] },
-]
+/* ==========================================================================
+   DATA STRUCTURES
+   ========================================================================= */
 
-const CONCIERGE_SERVICES = [
-  { service: "Private Transfers", desc: "Dedicated cars with English-speaking drivers worldwide." },
-  { service: "Restaurant Reservations", desc: "Access to the finest dining establishments globally." },
-  { service: "Private Tours", desc: "Expert-led immersive cultural and adventure experiences." },
-  { service: "Special Events", desc: "Bespoke celebrations and gatherings coordination." },
-]
+const PROJECTS = [
+  {
+    id: 1,
+    name: "The Obsidian Loft",
+    category: "Residential",
+    location: "London, UK",
+    desc: "A study in monochromatic minimalism, utilizing raw concrete and reclaimed oak to create a silent sanctuary.",
+    img: "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=1200&q=80",
+  },
+  {
+    id: 2,
+    name: "Lumière Office HQ",
+    category: "Commercial",
+    location: "Paris, FR",
+    desc: "Redefining workspace through glass-brick acoustics and architectural light channeling.",
+    img: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&q=80",
+  },
+  {
+    id: 3,
+    name: "Aura Boutique Hotel",
+    category: "Hospitality",
+    location: "Kyoto, JP",
+    desc: "Merging traditional Japanese spatial philosophy with brutalist structural integrity.",
+    img: "https://images.unsplash.com/photo-1590490359683-658d3d23f972?w=1200&q=80",
+  },
+];
 
-const CHEFS = [
-  { name: "Jean-Claude Arnaud", specialty: "French Cuisine", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop", dishes: ["Coq au Vin", "Crème Brûlée", "Soufflé"] },
-]
-
-const TESTIMONIALS = [
-  { text: "Palais Lumière redefined luxury for us. Every detail was perfection.", author: "The Marchands" },
-  { text: "A sanctuary from the world. Service anticipated our every need.", author: "Sophie & Laurent" },
-  { text: "Pure magic. We felt like royalty. Already planning our return.", author: "The Hakimi Family" },
-]
+const PHILOSOPHY = [
+  {
+    title: "Spatial Psychology",
+    desc: "We design for the subconscious, utilizing negative space to reduce cognitive load and enhance focus.",
+    icon: Layout,
+  },
+  {
+    title: "Material Integrity",
+    desc: "Zero-compromise sourcing of raw elements. We let the stone, wood, and metal speak for themselves.",
+    icon: Box,
+  },
+  {
+    title: "Luminous Strategy",
+    desc: "Lighting isn't a feature; it's the primary architectural material. We sculpt with photon paths.",
+    icon: Sparkles,
+  },
+];
 
 const STATS = [
-  { value: "8", label: "Properties" },
-  { value: "500", label: "Rooms" },
-  { value: "95%", label: "Satisfaction" },
-  { value: "15", label: "Years Legacy" },
-]
+  { label: "Spaces Transformed", value: "140+" },
+  { label: "Design Awards", value: "24" },
+  { label: "Material Partnerships", value: "85" },
+  { label: "Client Retention", value: "98%" },
+];
 
-const FAQ_ITEMS = [
-  { q: "What is your check-in/check-out time?", a: "Check-in is 3 PM and check-out is 11 AM. Early check-in and late check-out available on request." },
-  { q: "What is your cancellation policy?", a: "Flexible cancellation up to 48 hours before arrival. Shorter notice incurs 50% charge." },
-  { q: "Do you allow pets?", a: "Yes, select properties welcome pets. Please inquire directly for specific policies." },
-  { q: "Can I host a wedding?", a: "Absolutely. We specialize in destination weddings with complete coordination." },
-]
+/* ==========================================================================
+   UTILITY COMPONENTS
+   ========================================================================= */
 
-function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true, margin: "-60px" })
-  return <motion.div ref={ref} initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, delay }}>{children}</motion.div>
+function Reveal({
+  children,
+  delay = 0,
+}: {
+  children: React.ReactNode;
+  delay?: number;
+}) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-50px" });
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 30 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 1, delay, ease: [0.22, 1, 0.36, 1] }}
+    >
+      {children}
+    </motion.div>
+  );
 }
 
-function Counter({ target, suffix = "" }: { target: number; suffix?: string }) {
-  const [count, setCount] = useState(0)
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true })
-  useEffect(() => {
-    if (!inView) return
-    const step = Math.ceil(target / 60)
-    const t = setInterval(() => setCount(c => Math.min(c + step, target)), 16)
-    return () => clearInterval(t)
-  }, [inView, target])
-  return <span ref={ref}>{count}{suffix}</span>
-}
+function MagneticBtn({
+  children,
+  className = "",
+  onClick,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  onClick?: () => void;
+}) {
+  const ref = useRef<HTMLButtonElement>(null);
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const sx = useSpring(x, { stiffness: 150, damping: 20 });
+  const sy = useSpring(y, { stiffness: 150, damping: 20 });
 
-function MagneticBtn({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  const x = useMotionValue(0); const y = useMotionValue(0)
-  const sx = useSpring(x, { stiffness: 500, damping: 25 })
-  const sy = useSpring(y, { stiffness: 500, damping: 25 })
-  const ref = useRef<HTMLButtonElement>(null)
-  const handleMouse = (e: React.MouseEvent) => {
-    const r = ref.current!.getBoundingClientRect()
-    x.set((e.clientX - r.left - r.width/2) * 0.35)
-    y.set((e.clientY - r.top - r.height/2) * 0.35)
-  }
-  return <motion.button ref={ref} style={{ x: sx, y: sy }} onMouseMove={handleMouse} onMouseLeave={() => { x.set(0); y.set(0) }} className={className}>{children}</motion.button>
-}
-
-export default function LuxeStay() {
-  const [selectedTab, setSelectedTab] = useState("Paris")
-  const { scrollY } = useScroll()
-  const heroOpacity = useTransform(scrollY, [0, 400], [1, 0])
-  const heroY = useTransform(scrollY, [0, 400], [0, 100])
+  const handleMouse = useCallback(
+    (e: React.MouseEvent) => {
+      const rect = ref.current?.getBoundingClientRect();
+      if (!rect) return;
+      x.set((e.clientX - rect.left - rect.width / 2) * 0.35);
+      y.set((e.clientY - rect.top - rect.height / 2) * 0.35);
+    },
+    [x, y],
+  );
 
   return (
-    <div className="bg-[#faf6f0] text-[#3d1f0f] overflow-hidden">
-      <nav className="fixed top-0 left-0 right-0 h-16 bg-white/80 backdrop-blur-md border-b border-[#c9a84c]/20 z-50 flex items-center justify-between px-6">
-        <div className="text-2xl font-serif tracking-wide">LUXE STAY</div>
-        <div className="hidden md:flex gap-8 text-sm">
-          <Link href="#properties" className="hover:text-[#c9a84c] transition">Properties</Link>
-          <Link href="#experiences" className="hover:text-[#c9a84c] transition">Experiences</Link>
-          <Link href="#concierge" className="hover:text-[#c9a84c] transition">Concierge</Link>
+    <motion.button
+      ref={ref}
+      style={{ x: sx, y: sy }}
+      onMouseMove={handleMouse}
+      onMouseLeave={() => {
+        x.set(0);
+        y.set(0);
+      }}
+      onClick={onClick}
+      className={className}
+    >
+      {children}
+    </motion.button>
+  );
+}
+
+/* ==========================================================================
+   MAIN PAGE COMPONENT
+   ========================================================================= */
+
+export default function NovaSpacesPage() {
+  const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [activeProject, setActiveProject] = useState<number | null>(null);
+
+  useEffect(() => {
+    const h = () => setScrolled(window.scrollY > 50);
+    window.addEventListener("scroll", h);
+    return () => window.removeEventListener("scroll", h);
+  }, []);
+
+  return (
+    <div className="premium-theme min-h-screen bg-[#f7f7f7] text-[#1a1a1a] font-sans selection:bg-[#1a1a1a] selection:text-white overflow-x-hidden">
+      {/* ── NAVIGATION ── */}
+      <nav
+        className={`fixed top-0 left-0 w-full z-50 transition-all duration-700 ${scrolled ? "bg-white/90 backdrop-blur-2xl py-4 border-b border-black/5" : "bg-transparent py-8"}`}
+      >
+        <div className="max-w-[1600px] mx-auto px-6 md:px-12 flex items-center justify-between">
+          <Link href="/" className="group flex flex-col items-center">
+            <span className="text-3xl font-light tracking-[0.3em] uppercase leading-none">
+              Nova
+            </span>
+            <span className="text-[7px] font-bold uppercase tracking-[0.8em] text-black/30 -mt-1 ml-1">
+              Spatial Design
+            </span>
+          </Link>
+
+          <div className="hidden lg:flex items-center gap-12 text-[9px] font-bold uppercase tracking-[0.4em] text-black/40">
+            {["The_Work", "Atelier", "Method", "Bespoke", "Contact"].map(
+              (link) => (
+                <Link
+                  key={link}
+                  href="#"
+                  className="hover:text-black transition-colors cursor-pointer"
+                >
+                  {link}
+                </Link>
+              ),
+            )}
+          </div>
+
+          <div className="flex items-center gap-8">
+            <button className="hidden md:flex items-center gap-3 group">
+              <span className="text-[9px] font-bold uppercase tracking-widest text-black/60 group-hover:text-black transition-colors">
+                Start_Project
+              </span>
+              <div className="w-8 h-8 rounded-full border border-black/10 flex items-center justify-center text-black/40 group-hover:bg-black group-hover:text-white group-hover:border-black transition-all">
+                <ArrowRight className="w-4 h-4" />
+              </div>
+            </button>
+            <button
+              onClick={() => setMenuOpen(true)}
+              className="lg:hidden text-black"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+          </div>
         </div>
       </nav>
 
-      <motion.section style={{ opacity: heroOpacity, y: heroY }} className="relative h-screen flex items-center justify-center overflow-hidden pt-16">
-        <div className="absolute inset-0">
-          <Image src="https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=1600&auto=format&fit=crop" alt="Luxury Hotel" fill className="object-cover" unoptimized />
-          <div className="absolute inset-0 bg-black/40" />
-        </div>
-        <div className="relative z-10 text-center max-w-4xl px-4">
-          <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2 }} className="text-6xl md:text-7xl font-serif mb-6 text-white tracking-tight">
-            RESORT LUXURY
-          </motion.h1>
-          <motion.p initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.4 }} className="text-lg text-gray-100 mb-8 max-w-2xl mx-auto">
-            Eight exquisite properties across the globe's most coveted destinations.
-          </motion.p>
-          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.6 }}>
-            <Dialog>
-              <DialogTrigger asChild>
-                <MagneticBtn className="px-8 py-4 bg-[#c9a84c] text-[#3d1f0f] font-semibold rounded-full hover:bg-[#b8965f] transition">
-                  Reserve Now
-                </MagneticBtn>
-              </DialogTrigger>
-              <DialogContent className="bg-[#faf6f0] border-[#c9a84c]/20 max-w-md">
-                <DialogTitle>Plan Your Escape</DialogTitle>
-                <form className="space-y-4">
-                  <input type="text" placeholder="Guest Name" className="w-full px-4 py-2 bg-white border border-[#c9a84c]/30 rounded text-[#3d1f0f]" />
-                  <input type="email" placeholder="Email" className="w-full px-4 py-2 bg-white border border-[#c9a84c]/30 rounded text-[#3d1f0f]" />
-                  <input type="date" className="w-full px-4 py-2 bg-white border border-[#c9a84c]/30 rounded text-[#3d1f0f]" />
-                  <select className="w-full px-4 py-2 bg-white border border-[#c9a84c]/30 rounded text-[#3d1f0f]">
-                    <option>Select Property</option>
-                    {PROPERTIES.map((p) => <option key={p.id}>{p.city}</option>)}
-                  </select>
-                  <button type="submit" className="w-full px-4 py-3 bg-[#c9a84c] text-[#3d1f0f] font-semibold rounded hover:bg-[#b8965f] transition">
-                    Check Availability
-                  </button>
-                </form>
-              </DialogContent>
-            </Dialog>
+      {/* MOBILE MENU */}
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div
+            initial={{ opacity: 0, x: "-100%" }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: "-100%" }}
+            className="fixed inset-0 z-[100] bg-[#f7f7f7] p-12 flex flex-col justify-center gap-10"
+          >
+            <button
+              onClick={() => setMenuOpen(false)}
+              className="absolute top-10 right-8 text-black/40"
+            >
+              <X className="w-10 h-10" />
+            </button>
+            <div className="flex flex-col gap-4 text-7xl font-light uppercase text-black/10">
+              {["Work", "Method", "Contact"].map((l) => (
+                <Link
+                  key={l}
+                  href="#"
+                  onClick={() => setMenuOpen(false)}
+                  className="hover:text-black hover:translate-x-4 transition-all"
+                >
+                  {l}
+                </Link>
+              ))}
+            </div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── HERO ── */}
+      <section className="relative h-[100svh] flex items-center overflow-hidden">
+        <div className="absolute inset-0">
+          <Image
+            src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=1600&q=80"
+            alt="Architectural Minimal"
+            fill
+            className="object-cover opacity-80"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#f7f7f7] via-[#f7f7f7]/40 to-transparent" />
         </div>
-      </motion.section>
 
-      <section id="properties" className="py-24 px-6 max-w-7xl mx-auto">
-        <Reveal delay={0.1}>
-          <h2 className="text-5xl font-serif mb-4 text-center">Our Collection</h2>
-          <p className="text-gray-600 text-center mb-12 max-w-2xl mx-auto">Handpicked havens in Paris, Côte d'Azur, Marrakech, and the Maldives.</p>
-        </Reveal>
+        <div className="relative z-10 max-w-[1600px] mx-auto px-6 md:px-12 w-full">
+          <Reveal>
+            <Badge className="bg-black/5 text-black border border-black/10 text-[9px] font-bold uppercase tracking-[0.5em] mb-10 px-4 py-1.5 rounded-full">
+              Global Architectural Collective // NYC - TOKYO
+            </Badge>
+            <h1 className="text-8xl md:text-[14rem] font-light leading-[0.85] tracking-tighter mb-12 uppercase text-black">
+              The Silence <br />{" "}
+              <span className="font-black italic">Of Space.</span>
+            </h1>
+            <p className="max-w-md text-xl text-black/40 leading-relaxed font-light mb-12 uppercase tracking-widest italic">
+              Sculpting void into atmosphere through architectural precision and
+              material truth.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-6">
+              <MagneticBtn className="px-12 py-5 bg-black text-white text-[10px] font-bold uppercase tracking-[0.3em] rounded-full hover:scale-105 transition-all cursor-pointer">
+                Explore The Portfolio
+              </MagneticBtn>
+              <Link
+                href="#work"
+                className="px-12 py-5 border border-black/20 text-black text-[10px] font-bold uppercase tracking-[0.3em] rounded-full hover:bg-black hover:text-white transition-all flex items-center justify-center gap-3"
+              >
+                The Method <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </Reveal>
+        </div>
 
-        <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-          <TabsList className="grid w-full grid-cols-4 bg-[#f0e6d2] border border-[#c9a84c]/30 mb-8">
-            {PROPERTIES.map((prop) => (
-              <TabsTrigger key={prop.id} value={prop.city} className="text-sm data-[state=active]:bg-[#c9a84c] data-[state=active]:text-[#faf6f0]">
-                {prop.city}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-
-          {PROPERTIES.map((prop) => (
-            <TabsContent key={prop.id} value={prop.city}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                <Reveal delay={0.1}>
-                  <div className="relative h-96 rounded-lg overflow-hidden border border-[#c9a84c]/20">
-                    <Image src={prop.image} alt={prop.name} fill className="object-cover" unoptimized />
-                  </div>
-                </Reveal>
-
-                <Reveal delay={0.2}>
-                  <h3 className="text-4xl font-serif mb-4">{prop.name}</h3>
-                  <p className="text-gray-600 mb-6">{prop.rooms} luxuriously appointed rooms across premier suite categories.</p>
-
-                  <div className="mb-8">
-                    <p className="text-sm text-gray-600 mb-3 font-semibold">KEY AMENITIES</p>
-                    <div className="space-y-2">
-                      {prop.amenities.map((amenity, i) => (
-                        <Badge key={i} className="bg-[#c9a84c]/20 text-[#c9a84c] font-normal">{amenity}</Badge>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 mb-8">
-                    <span className="font-semibold">{prop.rating} / 5</span>
-                    <span className="text-sm text-gray-600">★★★★★</span>
-                  </div>
-
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <MagneticBtn className="px-6 py-3 bg-[#c9a84c] text-[#3d1f0f] font-semibold rounded hover:bg-[#b8965f] transition">
-                        View Rooms & Book
-                      </MagneticBtn>
-                    </DialogTrigger>
-                    <DialogContent className="bg-[#faf6f0] border-[#c9a84c]/20 max-w-2xl">
-                      <DialogTitle>Room Categories</DialogTitle>
-                      <div className="space-y-4">
-                        {ROOM_TYPES.map((room, idx) => (
-                          <Card key={idx} className="bg-white border-[#c9a84c]/20">
-                            <CardContent className="p-6">
-                              <h4 className="text-xl font-semibold mb-2">{room.name}</h4>
-                              <p className="text-[#c9a84c] font-semibold mb-3">{room.price}</p>
-                              <p className="text-sm text-gray-600 mb-4">{room.size}</p>
-                              <button className="text-[#c9a84c] font-semibold hover:underline">Select Room →</button>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                </Reveal>
-              </div>
-            </TabsContent>
-          ))}
-        </Tabs>
+        <div className="absolute bottom-12 right-12 hidden lg:flex flex-col items-end gap-2 text-black/20">
+          <span className="text-[9px] font-bold uppercase tracking-[0.3em]">
+            Vertical_Axis_Aligned
+          </span>
+          <span className="text-[9px] font-bold uppercase tracking-[0.3em]">
+            Spatial_Purity_Index_0.98
+          </span>
+        </div>
       </section>
 
-      <section id="experiences" className="py-24 px-6 bg-[#f0e6d2]">
-        <div className="max-w-7xl mx-auto">
-          <Reveal delay={0.1} className="mb-16">
-            <h2 className="text-5xl font-serif text-center mb-4">Curated Experiences</h2>
-            <p className="text-gray-600 text-center max-w-2xl mx-auto">Beyond accommodation—moments that transform.</p>
-          </Reveal>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {EXPERIENCES.map((exp, idx) => (
-              <Reveal key={idx} delay={idx * 0.1}>
-                <Card className="bg-white border-[#c9a84c]/20 h-full">
-                  <CardContent className="p-6 text-center">
-                    <h3 className="text-xl font-semibold mb-2">{exp.title}</h3>
-                    <p className="text-sm text-gray-600">{exp.desc}</p>
-                  </CardContent>
-                </Card>
+      {/* ── STATS SECTION ── */}
+      <section className="py-24 border-y border-black/5 bg-white">
+        <div className="max-w-[1600px] mx-auto px-6 md:px-12">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-12">
+            {STATS.map((stat, i) => (
+              <Reveal key={i} delay={i * 0.1}>
+                <div className="text-center md:text-left">
+                  <div className="text-[9px] font-bold uppercase tracking-[0.3em] text-black/30 mb-2">
+                    {stat.label}
+                  </div>
+                  <div className="text-5xl font-light italic text-black">
+                    {stat.value}
+                  </div>
+                </div>
               </Reveal>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="py-24 px-6 max-w-7xl mx-auto">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-          {STATS.map((stat, idx) => (
-            <Reveal key={idx} delay={idx * 0.1} className="text-center">
-              <div className="text-4xl font-bold text-[#c9a84c] mb-2"><Counter target={parseInt(stat.value)} /></div>
-              <div className="text-sm text-gray-600">{stat.label}</div>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      <section id="concierge" className="py-24 px-6 bg-[#f0e6d2]">
-        <div className="max-w-7xl mx-auto">
-          <Reveal delay={0.1} className="mb-16">
-            <h2 className="text-5xl font-serif text-center mb-4">24/7 Concierge</h2>
-            <p className="text-gray-600 text-center max-w-2xl mx-auto">Your personal wish-granter at your service.</p>
+      {/* ── THE WORK ── */}
+      <section id="work" className="py-32 px-6 md:px-12">
+        <div className="max-w-[1600px] mx-auto">
+          <Reveal>
+            <div className="flex flex-col md:flex-row justify-between items-end mb-24 gap-12">
+              <div>
+                <h2 className="text-7xl md:text-[10rem] font-light tracking-tighter leading-none mb-6 uppercase text-black">
+                  The <br /> <span className="font-black italic">Form.</span>
+                </h2>
+                <p className="text-black/20 text-[10px] font-bold uppercase tracking-[0.4em]">
+                  Project Index // Interior Architecture // 2024
+                </p>
+              </div>
+              <Link
+                href="#"
+                className="text-[10px] font-bold uppercase tracking-[0.3em] text-black border-b border-black pb-2 hover:text-black/40 hover:border-black/40 transition-all"
+              >
+                Download Press Archive
+              </Link>
+            </div>
           </Reveal>
 
-          <Accordion type="single" collapsible className="space-y-4 max-w-3xl mx-auto">
-            {CONCIERGE_SERVICES.map((item, idx) => (
-              <AccordionItem key={idx} value={`service-${idx}`} className="border-[#c9a84c]/20 bg-white rounded">
-                <AccordionTrigger className="text-lg font-semibold hover:text-[#c9a84c] transition px-6">
-                  {item.service}
-                </AccordionTrigger>
-                <AccordionContent className="text-gray-600 px-6 pb-4">
-                  {item.desc}
-                </AccordionContent>
-              </AccordionItem>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+            {PROJECTS.map((item, i) => (
+              <Reveal key={item.id} delay={i * 0.1}>
+                <div
+                  className="group space-y-10 cursor-pointer"
+                  onMouseEnter={() => setActiveProject(item.id)}
+                  onMouseLeave={() => setActiveProject(null)}
+                >
+                  <div className="relative aspect-[4/5] overflow-hidden rounded-sm grayscale group-hover:grayscale-0 transition-all duration-[1.5s]">
+                    <Image
+                      src={item.img}
+                      alt={item.name}
+                      fill
+                      className="object-cover transition-transform duration-[2s] group-hover:scale-125"
+                    />
+                    <div className="absolute inset-0 bg-[#f7f7f7]/30 group-hover:bg-transparent transition-colors duration-700" />
+
+                    <div className="absolute top-6 left-6">
+                      <Badge className="bg-white/60 backdrop-blur-md text-black border-black/10 text-[9px] font-bold uppercase tracking-widest px-3 py-1">
+                        {item.category}
+                      </Badge>
+                    </div>
+
+                    <AnimatePresence>
+                      {activeProject === item.id && (
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="absolute inset-0 flex items-center justify-center bg-black/5 backdrop-blur-[2px]"
+                        >
+                          <button className="px-10 py-4 bg-black text-white text-[10px] font-bold uppercase tracking-widest hover:scale-110 transition-all shadow-2xl">
+                            View Space
+                          </button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                  <div className="space-y-6">
+                    <div className="flex justify-between items-baseline">
+                      <h3 className="text-4xl font-light uppercase tracking-tighter text-black italic group-hover:translate-x-2 transition-transform">
+                        {item.name}
+                      </h3>
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-black/20">
+                        {item.location}
+                      </span>
+                    </div>
+                    <p className="text-sm text-black/40 font-light leading-relaxed uppercase tracking-widest italic leading-loose">
+                      {item.desc}
+                    </p>
+                    <div className="flex items-center gap-4">
+                      <div className="h-[1px] flex-1 bg-black/5" />
+                      <Ruler className="w-5 h-5 text-black/10 group-hover:text-black transition-all" />
+                    </div>
+                  </div>
+                </div>
+              </Reveal>
             ))}
-          </Accordion>
+          </div>
         </div>
       </section>
 
-      <section className="py-24 px-6 max-w-7xl mx-auto">
-        <Reveal delay={0.1} className="mb-16">
-          <h2 className="text-5xl font-serif text-center mb-4">Culinary Excellence</h2>
-          <p className="text-gray-600 text-center">Michelin-starred cuisine at every property.</p>
-        </Reveal>
-
-        {CHEFS.map((chef, idx) => (
-          <Reveal key={idx} delay={0.2} className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-            <div className="relative h-96 rounded-lg overflow-hidden border border-[#c9a84c]/20">
-              <Image src={chef.image} alt={chef.name} fill className="object-cover" unoptimized />
+      {/* ── METHODOLOGY ── */}
+      <section className="py-40 bg-white overflow-hidden relative border-t border-black/5">
+        <div className="absolute -top-32 -right-32 w-[40rem] h-[40rem] bg-black/5 blur-[120px] rounded-full" />
+        <div className="max-w-[1600px] mx-auto px-6 md:px-12">
+          <Reveal>
+            <div className="text-center mb-32">
+              <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-black/30 mb-8 block">
+                The Methodology
+              </span>
+              <h2 className="text-6xl md:text-8xl font-light italic tracking-tighter uppercase">
+                Spatial{" "}
+                <span className="font-black not-italic text-black">
+                  Refinement.
+                </span>
+              </h2>
             </div>
-            <div>
-              <h3 className="text-3xl font-serif mb-2">{chef.name}</h3>
-              <p className="text-[#c9a84c] font-semibold mb-6">Executive Chef</p>
-              <p className="text-gray-600 mb-6">Specializing in {chef.specialty.toLowerCase()}, crafting signature dishes that define our culinary identity.</p>
-              <p className="text-sm text-gray-600 mb-4 font-semibold">SIGNATURE DISHES</p>
-              <div className="space-y-2">
-                {chef.dishes.map((dish, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <span className="text-[#c9a84c]">→</span>
-                    <span>{dish}</span>
+          </Reveal>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-16">
+            {PHILOSOPHY.map((s, i) => (
+              <Reveal key={i} delay={i * 0.1}>
+                <div className="p-16 border border-black/5 bg-black/[0.01] hover:border-black/30 transition-all group h-full flex flex-col relative overflow-hidden">
+                  <div className="w-16 h-16 bg-black/5 rounded-full flex items-center justify-center text-black/40 mb-10 group-hover:bg-black group-hover:text-white transition-all duration-500">
+                    <s.icon className="w-8 h-8" />
                   </div>
-                ))}
+                  <h3 className="text-3xl font-light uppercase mb-6 tracking-tighter text-black group-hover:translate-x-2 transition-transform">
+                    {s.title}
+                  </h3>
+                  <p className="text-sm text-black/40 font-light leading-relaxed mb-12 flex-1 tracking-wide uppercase italic leading-loose">
+                    {s.desc}
+                  </p>
+                  <button className="flex items-center gap-4 text-[9px] font-bold uppercase tracking-[0.3em] text-black/60 group-hover:text-black group-hover:gap-6 transition-all">
+                    Read Principle <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── THE ATELIER ── */}
+      <section className="py-40 px-6 md:px-12 bg-[#f7f7f7]">
+        <div className="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-32 items-center">
+          <Reveal>
+            <div className="relative aspect-square rounded-sm overflow-hidden group border border-black/5">
+              <Image
+                src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&q=80"
+                alt="Atelier"
+                fill
+                className="object-cover group-hover:scale-110 transition-all duration-[3s] grayscale hover:grayscale-0 transition-all duration-1000"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#f7f7f7] via-transparent to-transparent" />
+              <div className="absolute bottom-16 left-16 text-black">
+                <span className="text-[10px] font-bold uppercase tracking-[0.4em] mb-4 block text-black/40">
+                  The Atelier
+                </span>
+                <h4 className="text-5xl font-light italic uppercase tracking-tighter leading-none">
+                  Architectural <br /> Integrity.
+                </h4>
               </div>
             </div>
           </Reveal>
-        ))}
-      </section>
 
-      <section className="py-24 px-6 bg-[#f0e6d2]">
-        <div className="max-w-7xl mx-auto">
-          <Reveal delay={0.1} className="mb-16">
-            <h2 className="text-5xl font-serif text-center mb-4">Guest Stories</h2>
-            <p className="text-gray-600 text-center">Cherished memories from our beloved guests.</p>
-          </Reveal>
-
-          <Carousel className="w-full">
-            <CarouselContent>
-              {TESTIMONIALS.map((testi, idx) => (
-                <CarouselItem key={idx} className="basis-full md:basis-1/2 lg:basis-1/3">
-                  <Card className="bg-white border-[#c9a84c]/20 h-full">
-                    <CardContent className="p-6 flex flex-col justify-between h-full">
-                      <p className="text-gray-700 italic mb-4 flex-1">"{testi.text}"</p>
-                      <p className="text-sm font-semibold text-[#3d1f0f]">— {testi.author}</p>
-                    </CardContent>
-                  </Card>
-                </CarouselItem>
+          <Reveal delay={0.2}>
+            <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-black/30 mb-8 block">
+              Project Process
+            </span>
+            <h2 className="text-6xl md:text-9xl font-light italic tracking-tighter leading-[0.8] mb-12 uppercase text-black">
+              Primal <br />{" "}
+              <span className="font-black not-italic">Order.</span>
+            </h2>
+            <p className="text-black/40 text-xl leading-relaxed mb-16 font-light uppercase tracking-wide italic">
+              Beyond decoration. We re-engineer the fundamental structure of
+              living, creating environments that align with the human cadence.
+            </p>
+            <div className="grid grid-cols-2 gap-12">
+              {[
+                {
+                  icon: Compass,
+                  label: "Navigation",
+                  desc: "Orientation study",
+                },
+                {
+                  icon: PencilLine,
+                  label: "Bespoke",
+                  desc: "Custom furniture",
+                },
+                { icon: Home, label: "Residential", desc: "Private enclaves" },
+                { icon: Layers, label: "Layers", desc: "Texture mapping" },
+              ].map((val, i) => (
+                <div key={i} className="space-y-4">
+                  <val.icon className="w-6 h-6 text-black/30" />
+                  <h4 className="text-[10px] font-bold uppercase tracking-widest text-black">
+                    {val.label}
+                  </h4>
+                  <p className="text-[9px] font-light text-black/30 uppercase tracking-widest leading-loose">
+                    {val.desc}
+                  </p>
+                </div>
               ))}
-            </CarouselContent>
-            <CarouselPrevious className="border-[#c9a84c]/30" />
-            <CarouselNext className="border-[#c9a84c]/30" />
-          </Carousel>
+            </div>
+            <MagneticBtn className="mt-20 px-14 py-6 bg-black text-white text-[10px] font-bold uppercase tracking-[0.4em] rounded-full hover:scale-105 transition-all shadow-2xl">
+              Schedule Spatial Audit
+            </MagneticBtn>
+          </Reveal>
         </div>
       </section>
 
-      <section className="py-24 px-6 max-w-7xl mx-auto">
-        <Reveal delay={0.1} className="mb-12">
-          <h2 className="text-5xl font-serif text-center mb-4">Frequently Asked</h2>
-        </Reveal>
+      {/* ── FOOTER ── */}
+      <footer className="bg-white pt-40 pb-16 px-6 md:px-12 border-t border-black/5">
+        <div className="max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-32 mb-40">
+          <div className="lg:col-span-6">
+            <Reveal>
+              <div className="flex flex-col mb-12">
+                <span className="text-4xl font-light tracking-[0.3em] uppercase leading-none">
+                  Nova
+                </span>
+                <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-black/30 -mt-1 ml-1">
+                  Spatial Design
+                </span>
+              </div>
+              <p className="text-black/20 max-w-md mb-16 text-[11px] font-bold uppercase tracking-[0.2em] leading-loose italic">
+                A global spatial design atelier dedicated to the pursuit of
+                architectural purity and the silent power of minimalism.
+              </p>
+              <div className="flex gap-6">
+                {[Instagram, Twitter, Mail].map((Icon, i) => (
+                  <button
+                    key={i}
+                    className="w-14 h-14 rounded-full border border-black/10 flex items-center justify-center text-black/40 hover:bg-black hover:text-white hover:border-black transition-all"
+                  >
+                    <Icon className="w-5 h-5" />
+                  </button>
+                ))}
+              </div>
+            </Reveal>
+          </div>
 
-        <Accordion type="single" collapsible className="space-y-4 max-w-3xl mx-auto">
-          {FAQ_ITEMS.map((item, idx) => (
-            <AccordionItem key={idx} value={`faq-${idx}`} className="border-[#c9a84c]/20 bg-[#f0e6d2] rounded">
-              <AccordionTrigger className="text-lg font-semibold hover:text-[#c9a84c] transition px-6">
-                {item.q}
-              </AccordionTrigger>
-              <AccordionContent className="text-gray-600 px-6 pb-4">
-                {item.a}
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
-      </section>
+          <div className="lg:col-span-2">
+            <h4 className="text-[10px] font-bold uppercase tracking-widest text-black/40 mb-12">
+              Projects
+            </h4>
+            <ul className="space-y-6 text-[10px] font-bold uppercase tracking-widest text-black/20">
+              <li>
+                <Link href="#" className="hover:text-black transition-colors">
+                  Residential
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="hover:text-black transition-colors">
+                  Commercial
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="hover:text-black transition-colors">
+                  Hospitality
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="hover:text-black transition-colors">
+                  Furniture
+                </Link>
+              </li>
+            </ul>
+          </div>
 
-      <section className="py-24 px-6 bg-[#f0e6d2] text-center">
-        <Reveal>
-          <h2 className="text-4xl md:text-5xl font-serif mb-6">Begin Your Journey</h2>
-          <p className="text-gray-600 mb-8 max-w-2xl mx-auto">Luxury awaits at one of our exquisite properties.</p>
-          <Dialog>
-            <DialogTrigger asChild>
-              <MagneticBtn className="px-8 py-4 bg-[#c9a84c] text-[#3d1f0f] font-semibold rounded-full hover:bg-[#b8965f] transition">
-                Plan Your Escape
-              </MagneticBtn>
-            </DialogTrigger>
-            <DialogContent className="bg-[#faf6f0] border-[#c9a84c]/20">
-              <DialogTitle>Get in Touch</DialogTitle>
-              <form className="space-y-4">
-                <input type="text" placeholder="Your Name" className="w-full px-4 py-2 bg-white border border-[#c9a84c]/30 rounded text-[#3d1f0f]" />
-                <input type="email" placeholder="Email Address" className="w-full px-4 py-2 bg-white border border-[#c9a84c]/30 rounded text-[#3d1f0f]" />
-                <textarea placeholder="Tell us about your ideal stay..." className="w-full px-4 py-2 bg-white border border-[#c9a84c]/30 rounded text-[#3d1f0f] h-24" />
-                <button type="submit" className="w-full px-4 py-3 bg-[#c9a84c] text-[#3d1f0f] font-semibold rounded hover:bg-[#b8965f] transition">
-                  Submit Request
-                </button>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </Reveal>
-      </section>
+          <div className="lg:col-span-2">
+            <h4 className="text-[10px] font-bold uppercase tracking-widest text-black/40 mb-12">
+              Method
+            </h4>
+            <ul className="space-y-6 text-[10px] font-bold uppercase tracking-widest text-black/20">
+              <li>
+                <Link href="#" className="hover:text-black transition-colors">
+                  Spatial_Logic
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="hover:text-black transition-colors">
+                  Material_Sourcing
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="hover:text-black transition-colors">
+                  Light_Sculpting
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="hover:text-black transition-colors">
+                  Sustainability
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div className="lg:col-span-2">
+            <h4 className="text-[10px] font-bold uppercase tracking-widest text-black/40 mb-12">
+              Atelier
+            </h4>
+            <ul className="space-y-6 text-[10px] font-bold uppercase tracking-widest text-black/20">
+              <li>
+                <Link href="#" className="hover:text-black transition-colors">
+                  The_Studio
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="hover:text-black transition-colors">
+                  Locations
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="hover:text-black transition-colors">
+                  Press_Archive
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="hover:text-black transition-colors">
+                  Careers
+                </Link>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="max-w-[1600px] mx-auto pt-12 border-t border-black/5 flex flex-col md:flex-row justify-between items-center gap-12 text-[10px] font-bold uppercase tracking-[0.4em] text-black/10">
+          <div className="flex items-center gap-12">
+            <span>
+              &copy; {new Date().getFullYear()} NOVA SPATIAL DESIGN COLLECTIVE.
+            </span>
+            <div className="flex gap-8">
+              <span>RIBA_CHARTERED_PRACTICE</span>
+              <span>AIA_VERIFIED_STUDIO</span>
+            </div>
+          </div>
+          <div className="flex gap-12 font-mono">
+            <span>GRID_STATUS_LOCKED</span>
+            <span>VOID_RATIO_OPTIMAL</span>
+          </div>
+        </div>
+      </footer>
+
+      <style>{`
+        ::-webkit-scrollbar{width:4px;background:#f7f7f7}
+        ::-webkit-scrollbar-thumb{background:#1a1a1a}
+      `}</style>
     </div>
-  )
+  );
 }

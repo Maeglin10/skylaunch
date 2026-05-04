@@ -1,293 +1,457 @@
 "use client";
 
-import { motion, useScroll, useTransform, useInView, useMotionValue, useSpring, AnimatePresence } from "framer-motion";
-import { useState, useRef, useEffect, useCallback } from "react";
+import { motion, useScroll, useTransform, useInView, AnimatePresence } from "framer-motion";
+import { useState, useRef, useEffect, Suspense } from "react";
 import Image from "next/image";
-import { Ghost, Zap, Shield, Eye, Cpu, Lock, ChevronDown, Menu, X, ArrowRight, Code2, Network } from "lucide-react";
+import { 
+  ArrowUpRight, 
+  Menu, 
+  X, 
+  Layers, 
+  ShieldCheck,
+  Plus,
+  Play,
+  ArrowRight,
+  ChevronDown,
+  Monitor,
+  LayoutGrid,
+  Lock,
+  Cpu,
+  Ghost,
+  Eye,
+  Network,
+  Zap,
+  Terminal
+} from "lucide-react";
 import "../premium.css";
 
+// ─── DATA ──────────────────────────────────────────────────────────────────
+
+const DEFENSE_VECTORS = [
+  { 
+    id: "01",
+    title: "PHANTOM_NODES", 
+    category: "Network Isolation",
+    status: "ACTIVE",
+    img: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=1200&q=80",
+    desc: "Self-healing network topology that isolates compromised nodes within 200ms of any detection event."
+  },
+  { 
+    id: "02",
+    title: "SHADOW_VAULT", 
+    category: "Data Integrity",
+    status: "ENCRYPTED",
+    img: "https://images.unsplash.com/photo-1563986768609-322da13575f3?w=1200&q=80",
+    desc: "Decentralized storage nodes utilizing post-quantum cryptography to protect high-value tactical assets."
+  },
+  { 
+    id: "03",
+    title: "ZERO_FOOTPRINT", 
+    category: "Covert Ops",
+    status: "NOMINAL",
+    img: "https://images.unsplash.com/photo-1614064641938-3bbee52942c7?w=1200&q=80",
+    desc: "Operational doctrine ensuring all system actions leave no traces in memory, logs, or network traffic."
+  }
+];
+
 const CAPABILITIES = [
-  { icon: Shield, title: "Phantom Defense", desc: "Multi-vector protection with adaptive countermeasures that learn attacker behavior in real-time.", glyph: "01" },
-  { icon: Eye, title: "Shadow Recon", desc: "Passive intelligence gathering across dark web, surface web, and grey zones simultaneously.", glyph: "02" },
-  { icon: Network, title: "Neural Mesh", desc: "Self-healing network topology that reroutes and isolates compromised nodes within 200ms.", glyph: "03" },
-  { icon: Code2, title: "Ghost Protocol", desc: "Zero-footprint deployment leaving no traces in host system logs, memory, or network traffic.", glyph: "04" },
-  { icon: Cpu, title: "Quantum Shell", desc: "Post-quantum cryptographic shell protecting against all known and theoretical attack vectors.", glyph: "05" },
-  { icon: Lock, title: "Void Archive", desc: "Encrypted data vaults with multi-signature access and automatic self-destruct failsafes.", glyph: "06" },
+  { icon: ShieldCheck, title: "Neural Defense", desc: "AI-driven countermeasures that adapt to attacker behavior in real-time." },
+  { icon: Eye, title: "Deep Recon", desc: "Passive intelligence gathering across surface, deep, and dark web sectors." },
+  { icon: Cpu, title: "Quantum Shell", desc: "Encryption layers designed to withstand future quantum-computing based attacks." },
+  { icon: Lock, title: "Void Protocol", desc: "Automated self-destruct failsafes for compromised tactical environments." }
 ];
 
-const MISSIONS = [
-  { codename: "WRAITH", clearance: "TS/SCI", status: "COMPLETE", img: "https://images.unsplash.com/photo-1534972195531-d756b9bfa9f2?q=80&w=1200&auto=format&fit=crop" },
-  { codename: "BANSHEE", clearance: "TOP SECRET", status: "ACTIVE", img: "https://images.unsplash.com/photo-1542751110-97427bbecfd8?q=80&w=1200&auto=format&fit=crop" },
-  { codename: "SPECTRE", clearance: "CLASSIFIED", status: "COMPLETE", img: "https://images.unsplash.com/photo-1614064641938-3bbee52942c7?q=80&w=1200&auto=format&fit=crop" },
-  { codename: "PHANTOM", clearance: "TS/SCI", status: "ACTIVE", img: "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=1200&auto=format&fit=crop" },
-  { codename: "ECLIPSE", clearance: "SECRET", status: "COMPLETE", img: "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1200&auto=format&fit=crop" },
+const LOGS = [
+  { time: "02:14:01", event: "SYSTEM_BOOT", status: "OK", detail: "Ghost Shell Kernel v4.2.0 loaded" },
+  { time: "02:14:04", event: "NET_SCAN", status: "OK", detail: "Zero-latency mesh established" },
+  { time: "02:14:08", event: "VAULT_SYNC", status: "OK", detail: "AES-512-VULCAN keys rotated" },
+  { time: "02:14:15", event: "THREAT_DET", status: "NOMINAL", detail: "No unauthorized ingress detected" }
 ];
 
-const STATS = [
-  { value: 99.97, suffix: "%", label: "Ghost-mode uptime" },
-  { value: 0, suffix: "", label: "Footprint detected" },
-  { value: 580, suffix: "+", label: "Missions completed" },
-  { value: 18, suffix: " yrs", label: "Operational history" },
-];
+// ─── COMPONENTS ──────────────────────────────────────────────────────────────
 
-const TESTIMONIALS = [
-  { name: "[REDACTED]", role: "Director, Cyber Operations — [AGENCY CLASSIFIED]", quote: "Ghost Shell has operated in environments where failure wasn't an option. It has never failed.", avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=200&auto=format&fit=crop" },
-  { name: "[REDACTED]", role: "VP Security, [COMPANY CLASSIFIED]", quote: "Six months. Zero detections. Our adversaries don't know we're watching.", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop" },
-  { name: "[REDACTED]", role: "Chief of Staff, [GOVERNMENT AGENCY]", quote: "The ghost protocol is not a feature. It's a doctrine. We've adopted it across all our operations.", avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=200&auto=format&fit=crop" },
-];
-
-const FAQ = [
-  { q: "Who is Ghost Shell for?", a: "Ghost Shell is available exclusively to vetted government agencies, allied defense contractors, and select Fortune 50 security operations centers. All clients undergo a 60-day vetting process." },
-  { q: "How does the zero-footprint guarantee work?", a: "Ghost Protocol operates entirely in encrypted memory with no disk writes. All network operations are routed through our proprietary dark-relay network. Forensic analysis leaves nothing." },
-  { q: "What happens if Ghost Shell is discovered?", a: "Cascade Protocol activates automatically — overwriting all memory, triggering key destruction, and severing all relay connections within 50ms of any detection event." },
-  { q: "Can Ghost Shell operate in air-gapped environments?", a: "Yes. Our Dark Bridge hardware module enables covert communication across air-gapped networks via timing and electromagnetic side-channels." },
-];
-
-function Reveal({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
+function Reveal({ children, className = "", delay = 0, y = 20 }: { children: React.ReactNode; className?: string; delay?: number; y?: number }) {
   const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-60px" });
+  const inView = useInView(ref, { once: true, margin: "-100px" });
   return (
-    <motion.div ref={ref} initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.7, delay, ease: [0.25, 0.1, 0.25, 1] }} className={className}>
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.8, delay, ease: [0.16, 1, 0.3, 1] }}
+      className={className}
+    >
       {children}
     </motion.div>
   );
 }
 
-function Counter({ target, suffix = "", label }: { target: number; suffix?: string; label: string }) {
-  const [count, setCount] = useState(0);
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true });
-  useEffect(() => {
-    if (!inView) return;
-    const steps = 60;
-    let cur = 0;
-    const t = setInterval(() => {
-      cur += target / steps;
-      if (cur >= target) { setCount(target); clearInterval(t); }
-      else setCount(parseFloat(cur.toFixed(target % 1 !== 0 ? 2 : 0)));
-    }, 2000 / steps);
-    return () => clearInterval(t);
-  }, [inView, target]);
-  const display = target === 0 ? "0" : target % 1 !== 0 ? count.toFixed(2) : count.toString();
-  return (
-    <div ref={ref} className="text-center">
-      <div className="text-4xl font-black text-white font-mono mb-2">{display}{suffix}</div>
-      <div className="text-xs text-purple-400/60 uppercase tracking-widest">{label}</div>
-    </div>
-  );
-}
+// ─── MAIN SPA ────────────────────────────────────────────────────────────────
 
-export default function GhostShellSPA() {
+export default function GhostShellDefenseSPA() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const [activeT, setActiveT] = useState(0);
-  const [hoveredMission, setHoveredMission] = useState<number | null>(null);
+  const [activeVector, setActiveVector] = useState(0);
   const { scrollY } = useScroll();
-  const heroY = useTransform(scrollY, [0, 600], [0, 180]);
+  
   const heroOpacity = useTransform(scrollY, [0, 400], [1, 0]);
-
-  useEffect(() => {
-    const t = setInterval(() => setActiveT(p => (p + 1) % TESTIMONIALS.length), 6000);
-    return () => clearInterval(t);
-  }, []);
+  const heroScale = useTransform(scrollY, [0, 800], [1, 1.1]);
+  const glitchX = useTransform(scrollY, [0, 1000], [0, 20]);
 
   return (
-    <div className="min-h-screen bg-[#04020a] text-white overflow-x-hidden font-mono">
-      <div className="fixed inset-0 z-0 pointer-events-none opacity-30" style={{ backgroundImage: "radial-gradient(circle at 20% 50%, rgba(124,58,237,0.05) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(99,102,241,0.05) 0%, transparent 50%)" }} />
+    <div className="min-h-screen bg-[#020202] text-[#00ff41] font-mono selection:bg-[#00ff41] selection:text-black">
+      
+      {/* ── SCANLINE OVERLAY ── */}
+      <div className="fixed inset-0 z-[9999] pointer-events-none opacity-[0.05] bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%]" />
 
-      <motion.nav initial={{ y: -80 }} animate={{ y: 0 }} transition={{ duration: 0.6 }} className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-[#04020a]/95 backdrop-blur-xl border-b border-purple-900/20">
-        <div className="flex items-center gap-2">
-          <Ghost className="w-5 h-5 text-purple-400" />
-          <span className="text-purple-400 text-sm font-bold tracking-widest">GHOST<span className="text-white">SHELL</span></span>
+      {/* ── NAVIGATION ── */}
+      <motion.nav 
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 md:px-16 py-10 mix-blend-difference"
+      >
+        <div className="flex items-center gap-4">
+          <Ghost className="w-10 h-10 text-[#00ff41]" />
+          <span className="text-2xl font-black tracking-tighter uppercase italic">GHOST_SHELL<span className="text-[#00ff41]/30">//</span>DEFENSE</span>
         </div>
-        <div className="hidden md:flex gap-8 text-xs text-purple-400/40 tracking-widest uppercase">
-          {["Protocol", "Capabilities", "Missions", "Access"].map(item => (
-            <a key={item} href="#" className="hover:text-purple-400 transition-colors">{item}</a>
+        
+        <div className="hidden lg:flex items-center gap-16 text-[10px] font-bold uppercase tracking-[0.4em] text-[#00ff41]/40">
+          {["Vectors", "Capabilities", "Terminal", "Auth"].map(item => (
+            <a key={item} href={`#${item.toLowerCase()}`} className="hover:text-[#00ff41] transition-colors">/{item}</a>
           ))}
         </div>
-        <motion.button whileHover={{ scale: 1.02 }} className="hidden md:block px-4 py-2 border border-purple-500/30 text-purple-400 text-xs tracking-widest hover:bg-purple-500/10 transition-colors rounded">
-          REQUEST ACCESS
-        </motion.button>
-        <button className="md:hidden text-purple-400" onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}</button>
+
+        <button 
+          onClick={() => setMenuOpen(true)}
+          className="w-12 h-12 flex flex-col items-center justify-center gap-1.5 group"
+        >
+          <span className="w-6 h-[2px] bg-[#00ff41] group-hover:w-10 transition-all" />
+          <span className="w-10 h-[2px] bg-[#00ff41] group-hover:w-6 transition-all" />
+        </button>
       </motion.nav>
 
+      {/* ── MOBILE MENU ── */}
       <AnimatePresence>
         {menuOpen && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-40 bg-[#04020a] flex flex-col items-center justify-center gap-8">
-            {["Protocol", "Capabilities", "Missions", "Access"].map(item => (
-              <a key={item} href="#" className="text-purple-400 text-xl tracking-widest" onClick={() => setMenuOpen(false)}>{item}</a>
-            ))}
+          <motion.div 
+            initial={{ opacity: 0, x: "100%" }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: "100%" }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            className="fixed inset-0 z-[60] bg-[#000] text-[#00ff41] p-12 flex flex-col justify-between"
+          >
+            <div className="flex justify-between items-center border-b border-[#00ff41]/10 pb-12">
+              <span className="text-xl font-black uppercase tracking-[0.4em] italic">GHOST_SHELL//DEFENSE</span>
+              <button onClick={() => setMenuOpen(false)} className="w-12 h-12 flex items-center justify-center border border-[#00ff41]/20 rounded-full">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="flex flex-col gap-12">
+              {["DEFENSE VECTORS", "TACTICAL CAPABILITIES", "TERMINAL CONSOLE", "OPERATOR LOGS", "SECURE ACCESS"].map((item, i) => (
+                <motion.a 
+                  key={item}
+                  initial={{ opacity: 0, x: 50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.1 + 0.3 }}
+                  href="#"
+                  className="text-5xl md:text-8xl font-black uppercase italic tracking-tighter hover:text-white transition-all leading-none"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  {item}
+                </motion.a>
+              ))}
+            </div>
+            <div className="flex justify-between text-[10px] font-bold uppercase tracking-[0.5em] border-t border-[#00ff41]/10 pt-12">
+              <span>ZERO_FOOTPRINT_DOCTRINE</span>
+              <span>CLASSIFIED_ENCLAVE // DARK_MESH</span>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Hero */}
-      <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        <motion.div style={{ y: heroY }} className="absolute inset-0">
-          <Image src="https://images.unsplash.com/photo-546819?w=800&q=80" alt="Ghost Shell" fill className="object-cover opacity-8" unoptimized />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#04020a]/50 via-transparent to-[#04020a]" />
+      {/* ── HERO SECTION ── */}
+      <section className="relative h-screen flex items-center justify-center overflow-hidden">
+        <motion.div 
+          style={{ opacity: heroOpacity, scale: heroScale, x: glitchX }}
+          className="absolute inset-0 z-0"
+        >
+          <Image 
+            src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=1600&q=80" 
+            alt="Hero Cyber" 
+            fill 
+            className="object-cover grayscale brightness-50 contrast-150 opacity-20" 
+            unoptimized 
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#020202]/40 via-transparent to-[#020202]" />
         </motion.div>
-        <div className="absolute inset-0 opacity-3" style={{ backgroundImage: "linear-gradient(rgba(124,58,237,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(124,58,237,0.1) 1px, transparent 1px)", backgroundSize: "80px 80px" }} />
 
-        <motion.div style={{ opacity: heroOpacity }} className="relative z-10 text-center max-w-5xl mx-auto px-6 pt-24">
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="flex items-center justify-center gap-3 text-purple-400/50 text-xs tracking-widest uppercase mb-10">
-            <span className="w-8 h-px bg-purple-500/30" />
-            CLASSIFIED OPERATIONS PLATFORM
-            <span className="w-8 h-px bg-purple-500/30" />
-          </motion.div>
-          <motion.h1 initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.15 }} className="text-6xl md:text-9xl font-black leading-none mb-8 tracking-tight">
-            GO<br /><span className="text-purple-400">GHOST.</span>
-          </motion.h1>
-          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="text-purple-300/40 text-lg max-w-lg mx-auto mb-12 font-sans leading-relaxed">
-            Zero-footprint cyber operations platform for the most sensitive and contested environments on earth.
-          </motion.p>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }} className="flex flex-wrap gap-4 justify-center">
-            <motion.button whileHover={{ scale: 1.02 }} className="px-8 py-4 bg-purple-500 hover:bg-purple-400 text-white font-black tracking-wider flex items-center gap-2 rounded transition-colors">
-              REQUEST ACCESS <ArrowRight className="w-4 h-4" />
-            </motion.button>
-            <motion.button whileHover={{ scale: 1.02 }} className="px-8 py-4 border border-purple-500/20 text-purple-400 font-bold tracking-wider hover:bg-purple-500/10 transition-colors rounded">
-              READ PROTOCOL
-            </motion.button>
-          </motion.div>
-        </motion.div>
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.5 }} className="absolute bottom-8 left-1/2 -translate-x-1/2">
-          <motion.div animate={{ y: [0, 8, 0] }} transition={{ duration: 2, repeat: Infinity }}>
-            <ChevronDown className="w-5 h-5 text-purple-400/30" />
-          </motion.div>
-        </motion.div>
-      </div>
-
-      {/* Stats */}
-      <section className="py-20 border-y border-purple-900/20 px-6">
-        <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-12">
-          {STATS.map((s, i) => <Reveal key={s.label} delay={i * 0.1}><Counter target={s.value} suffix={s.suffix} label={s.label} /></Reveal>)}
-        </div>
-      </section>
-
-      {/* Capabilities */}
-      <section className="py-24 px-6 max-w-7xl mx-auto">
-        <Reveal className="mb-16">
-          <p className="text-purple-400/40 text-xs tracking-widest uppercase mb-3">// CAPABILITIES</p>
-          <h2 className="text-4xl font-black text-white">Six-vector operations</h2>
-        </Reveal>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {CAPABILITIES.map((c, i) => (
-            <Reveal key={c.title} delay={i * 0.07}>
-              <motion.div whileHover={{ scale: 1.01, borderColor: "rgba(124,58,237,0.3)" }} className="p-6 border border-purple-900/20 rounded-xl transition-colors group">
-                <div className="flex items-center justify-between mb-4">
-                  <c.icon className="w-5 h-5 text-purple-400" />
-                  <span className="text-purple-900 text-xs font-black">{c.glyph}</span>
-                </div>
-                <h3 className="font-bold text-white text-sm mb-2 tracking-wider">{c.title}</h3>
-                <p className="text-purple-300/30 text-xs leading-relaxed font-sans">{c.desc}</p>
-                <div className="mt-4 text-purple-400/50 text-xs tracking-widest group-hover:text-purple-400 transition-colors">CLASSIFIED →</div>
-              </motion.div>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      {/* Missions */}
-      <section className="py-24 px-6 max-w-7xl mx-auto">
-        <Reveal className="mb-16">
-          <p className="text-purple-400/40 text-xs tracking-widest uppercase mb-3">// MISSION LOG</p>
-          <h2 className="text-4xl font-black text-white">Operation record</h2>
-        </Reveal>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-          {MISSIONS.map((m, i) => (
-            <Reveal key={m.codename} delay={i * 0.06}>
-              <motion.div
-                className="relative rounded-xl overflow-hidden cursor-pointer h-52"
-                onHoverStart={() => setHoveredMission(i)} onHoverEnd={() => setHoveredMission(null)}
-                whileHover={{ scale: 1.02 }}
-              >
-                <Image src={m.img} alt={m.codename} fill className="object-cover opacity-40" unoptimized />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#04020a] to-transparent" />
-                <div className="absolute inset-0 border border-purple-500/10 rounded-xl" />
-                <AnimatePresence>
-                  {hoveredMission === i && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-purple-500/10" />}
-                </AnimatePresence>
-                <div className="absolute top-3 right-3">
-                  <span className={`text-xs px-2 py-1 rounded font-bold ${m.status === "ACTIVE" ? "bg-green-500/20 text-green-400" : "bg-purple-500/20 text-purple-400"}`}>{m.status}</span>
-                </div>
-                <div className="absolute bottom-3 left-3">
-                  <p className="text-purple-400/50 text-xs mb-1">{m.clearance}</p>
-                  <p className="font-black text-white text-sm tracking-wider">{m.codename}</p>
-                </div>
-              </motion.div>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section className="py-24 px-6 max-w-3xl mx-auto text-center">
-        <Reveal><p className="text-purple-400/40 text-xs tracking-widest uppercase mb-3">// FIELD REPORTS</p></Reveal>
-        <Reveal><h2 className="text-4xl font-black mb-16 text-white">Operator testimony</h2></Reveal>
-        <AnimatePresence mode="wait">
-          <motion.div key={activeT} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.4 }}>
-            <p className="text-lg text-purple-300/50 font-sans italic mb-8 leading-relaxed">"{TESTIMONIALS[activeT].quote}"</p>
-            <div className="flex items-center justify-center gap-3">
-              <div className="w-11 h-11 rounded-full bg-purple-900/40 border border-purple-500/20 flex items-center justify-center">
-                <Ghost className="w-5 h-5 text-purple-400" />
-              </div>
-              <div className="text-left">
-                <p className="text-white text-sm font-bold">{TESTIMONIALS[activeT].name}</p>
-                <p className="text-purple-400/40 text-xs">{TESTIMONIALS[activeT].role}</p>
+        <div className="relative z-10 text-center px-6">
+          <Reveal>
+            <span className="text-[10px] font-bold uppercase tracking-[1.5em] text-[#00ff41]/60 mb-12 block">Vulnerability: 0.00%</span>
+          </Reveal>
+          <Reveal delay={0.2}>
+            <h1 className="text-8xl md:text-[16rem] font-black tracking-tighter leading-[0.75] uppercase italic text-white mb-20">
+              GO <br/> <span className="not-italic text-[#00ff41]">GHOST.</span>
+            </h1>
+          </Reveal>
+          <Reveal delay={0.4}>
+            <div className="max-w-2xl mx-auto flex flex-col items-center gap-16 border-t border-[#00ff41]/10 pt-20">
+              <p className="text-[#00ff41]/40 text-xl leading-relaxed font-light uppercase tracking-[0.2em] italic leading-loose text-center">
+                The ultimate cyber-defense platform for high-value enclaves. Zero footprint. Zero detection. Absolute integrity.
+              </p>
+              <div className="flex gap-8">
+                <button className="px-16 py-6 bg-[#00ff41] text-black font-black uppercase text-xs tracking-[0.4em] hover:bg-white transition-colors">
+                  Initiate_Scan
+                </button>
+                <button className="px-16 py-6 border border-[#00ff41]/20 text-[#00ff41] font-black uppercase text-xs tracking-[0.4em] hover:bg-[#00ff41]/5 transition-colors">
+                  Read_Protocol
+                </button>
               </div>
             </div>
-          </motion.div>
-        </AnimatePresence>
-        <div className="flex justify-center gap-2 mt-8">
-          {TESTIMONIALS.map((_, i) => <button key={i} onClick={() => setActiveT(i)} className={`w-6 h-px transition-colors ${i === activeT ? "bg-purple-400" : "bg-purple-900"}`} />)}
+          </Reveal>
+        </div>
+
+        <div className="absolute bottom-12 left-12 right-12 flex justify-between items-end text-[10px] font-bold uppercase tracking-[0.5em] text-[#00ff41]/20">
+          <div className="flex flex-col gap-2">
+            <span>Uptime: 99.9997%</span>
+            <div className="w-48 h-[1px] bg-[#00ff41]/20" />
+          </div>
+          <div className="flex items-center gap-4">
+             <span className="animate-pulse">●</span> STATUS: NOMINAL // SESSION_ID: GX-772
+          </div>
         </div>
       </section>
 
-      {/* FAQ */}
-      <section className="py-24 px-6 max-w-3xl mx-auto">
-        <Reveal className="mb-12"><p className="text-purple-400/40 text-xs tracking-widest uppercase mb-3">// BRIEFING</p><h2 className="text-4xl font-black">Classified FAQ</h2></Reveal>
-        <div className="space-y-3">
-          {FAQ.map((f, i) => (
-            <Reveal key={i} delay={i * 0.05}>
-              <div className="border border-purple-900/20 rounded-xl overflow-hidden">
-                <button onClick={() => setOpenFaq(openFaq === i ? null : i)} className="w-full flex items-center justify-between p-5 text-left hover:bg-purple-900/10 transition-colors">
-                  <span className="text-sm font-bold text-white">{f.q}</span>
-                  <motion.div animate={{ rotate: openFaq === i ? 180 : 0 }}><ChevronDown className="w-4 h-4 text-purple-400/40 shrink-0" /></motion.div>
-                </button>
-                <AnimatePresence>
-                  {openFaq === i && (
-                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}>
-                      <p className="px-5 pb-5 text-purple-300/40 text-sm font-sans leading-relaxed">{f.a}</p>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-      </section>
+      {/* ── VECTORS GRID ── */}
+      <section className="py-40 bg-[#050505] relative overflow-hidden">
+        <div className="max-w-[1600px] mx-auto px-8 md:px-16">
+          <Reveal className="mb-32">
+             <div className="flex flex-col lg:flex-row justify-between items-end gap-12 border-b border-[#00ff41]/10 pb-12">
+               <h2 className="text-7xl md:text-[10rem] font-black italic tracking-tighter leading-[0.8] uppercase text-white">
+                 Defense <br/> <span className="text-[#00ff41] not-italic">Vectors.</span>
+               </h2>
+               <div className="text-right">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-[#00ff41]/40 mb-4 block italic">Audit_Manifest_v4.2</span>
+                  <div className="flex gap-4">
+                    {DEFENSE_VECTORS.map((_, i) => (
+                      <button 
+                        key={i} 
+                        onClick={() => setActiveVector(i)}
+                        className={`w-16 h-1 transition-all ${activeVector === i ? "bg-[#00ff41] w-32" : "bg-[#00ff41]/10"}`}
+                      />
+                    ))}
+                  </div>
+               </div>
+             </div>
+          </Reveal>
 
-      {/* CTA */}
-      <section className="py-32 px-6">
-        <Reveal>
-          <div className="max-w-4xl mx-auto text-center border border-purple-500/20 rounded-2xl p-16 relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-950/30 to-transparent" />
-            <div className="relative z-10">
-              <p className="text-purple-400/40 text-xs tracking-widest uppercase mb-4">// AUTHORIZATION</p>
-              <h2 className="text-5xl font-black mb-6">Ready to go ghost?</h2>
-              <p className="text-purple-300/40 mb-10 font-sans">Access is granted only to verified entities. Begin the vetting process.</p>
-              <motion.button whileHover={{ scale: 1.02 }} className="px-10 py-5 bg-purple-500 hover:bg-purple-400 text-white font-black tracking-wider flex items-center gap-2 mx-auto rounded transition-colors">
-                REQUEST ACCESS <ArrowRight className="w-4 h-4" />
-              </motion.button>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-24 items-center">
+            <div className="lg:col-span-8 relative aspect-video rounded-sm overflow-hidden border border-[#00ff41]/10 group">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeVector}
+                  initial={{ opacity: 0, x: -50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 50 }}
+                  transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                  className="absolute inset-0"
+                >
+                  <Image src={DEFENSE_VECTORS[activeVector].img} alt={DEFENSE_VECTORS[activeVector].title} fill className="object-cover grayscale contrast-125 opacity-40 group-hover:opacity-60 transition-opacity duration-1000" unoptimized />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent opacity-90" />
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            <div className="lg:col-span-4 space-y-12">
+               <motion.div
+                  key={activeVector}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6 }}
+                  className="space-y-12"
+               >
+                 <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[#00ff41]">{DEFENSE_VECTORS[activeVector].id} // VECTOR_LOG</span>
+                 <h3 className="text-6xl font-black italic uppercase text-white tracking-tighter">{DEFENSE_VECTORS[activeVector].title}</h3>
+                 <div className="space-y-6 border-y border-[#00ff41]/10 py-12">
+                    <div className="flex justify-between items-center">
+                       <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#00ff41]/30">Vector_Category</span>
+                       <span className="text-sm font-black text-white uppercase tracking-widest">{DEFENSE_VECTORS[activeVector].category}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                       <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#00ff41]/30">Operational_Status</span>
+                       <span className="text-sm font-black text-[#00ff41] uppercase tracking-widest">{DEFENSE_VECTORS[activeVector].status}</span>
+                    </div>
+                 </div>
+                 <p className="text-[#00ff41]/30 text-lg font-light italic leading-loose uppercase tracking-wide">
+                   {DEFENSE_VECTORS[activeVector].desc}
+                 </p>
+                 <button className="flex items-center gap-6 group">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.8em] text-[#00ff41]">Audit_Vector</span>
+                    <div className="w-16 h-16 border border-[#00ff41]/10 rounded-full flex items-center justify-center group-hover:bg-[#00ff41] transition-all">
+                       <ArrowUpRight className="w-6 h-6 text-white" />
+                    </div>
+                 </button>
+               </motion.div>
             </div>
           </div>
-        </Reveal>
+        </div>
       </section>
 
-      <footer className="py-8 px-6 border-t border-purple-900/20 max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-purple-400/30 tracking-widest uppercase">
-        <div className="flex items-center gap-2 text-purple-400"><Ghost className="w-4 h-4" />GHOST SHELL SYSTEMS</div>
-        <p>© 2026 — CLASSIFIED — ALL RIGHTS RESERVED</p>
-        <div className="flex gap-6">{["Protocol", "Terms", "Access"].map(l => <a key={l} href="#" className="hover:text-purple-400 transition-colors">{l}</a>)}</div>
+      {/* ── CAPABILITIES ── */}
+      <section className="py-40 bg-black border-y border-[#00ff41]/10">
+        <div className="max-w-[1600px] mx-auto px-8 md:px-16">
+          <Reveal className="mb-32 text-center">
+             <span className="text-[10px] font-bold uppercase tracking-[1em] text-[#00ff41]/40 mb-8 block">Operational Scope</span>
+             <h2 className="text-7xl md:text-[10rem] font-black italic tracking-tighter leading-[0.8] uppercase text-white">
+                Technical <br/> <span className="text-[#00ff41] not-italic">Prowess.</span>
+             </h2>
+          </Reveal>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {CAPABILITIES.map((item, i) => (
+              <Reveal key={item.title} delay={i * 0.1} className="bg-[#050505] border border-[#00ff41]/5 p-12 hover:border-[#00ff41]/20 transition-all group">
+                 <item.icon className="w-12 h-12 text-[#00ff41] mb-12 group-hover:scale-110 transition-transform" />
+                 <h3 className="text-2xl font-black italic uppercase text-white mb-6">{item.title}</h3>
+                 <p className="text-xs text-[#00ff41]/30 font-light tracking-widest uppercase italic leading-loose">
+                   {item.desc}
+                 </p>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── TERMINAL LOGS ── */}
+      <section className="py-40 bg-[#020202]">
+        <div className="max-w-[1600px] mx-auto px-8 md:px-16 grid grid-cols-1 lg:grid-cols-2 gap-32 items-center">
+          <Reveal>
+             <div className="relative aspect-square bg-[#0a0a0a] border border-[#00ff41]/10 p-12 flex flex-col justify-between overflow-hidden group">
+                <div className="absolute top-0 right-0 p-12">
+                   <Terminal className="w-16 h-16 text-[#00ff41]/5 group-hover:text-[#00ff41]/20 transition-colors" />
+                </div>
+                <div className="space-y-4">
+                   <div className="flex gap-4 border-b border-[#00ff41]/10 pb-4">
+                      <span className="w-3 h-3 rounded-full bg-red-500/40" />
+                      <span className="w-3 h-3 rounded-full bg-yellow-500/40" />
+                      <span className="w-3 h-3 rounded-full bg-[#00ff41]/40" />
+                   </div>
+                   <div className="space-y-2 font-mono text-[10px] tracking-widest">
+                      {LOGS.map((log, i) => (
+                         <div key={i} className="flex gap-4">
+                            <span className="text-[#00ff41]/30">[{log.time}]</span>
+                            <span className="text-[#00ff41]">{log.event}</span>
+                            <span className="text-white/20 italic">{log.detail}</span>
+                            <span className="ml-auto text-[#00ff41]/60 font-black">{log.status}</span>
+                         </div>
+                      ))}
+                      <motion.div 
+                        animate={{ opacity: [1, 0, 1] }}
+                        transition={{ duration: 1, repeat: Infinity }}
+                        className="w-2 h-4 bg-[#00ff41]"
+                      />
+                   </div>
+                </div>
+                <div className="space-y-6">
+                   <h3 className="text-4xl font-black italic uppercase text-white">Kernel <br/> <span className="text-[#00ff41] not-italic">Integrity.</span></h3>
+                   <p className="text-[#00ff41]/30 text-sm font-light uppercase tracking-widest italic leading-loose">
+                     All system actions are verified against the Ghost Shell immutable ledger. Any deviation triggers an immediate Cascade Protocol lockdown.
+                   </p>
+                </div>
+             </div>
+          </Reveal>
+          <div className="space-y-24">
+             <Reveal delay={0.2}>
+                <span className="text-[10px] font-bold uppercase tracking-[1em] text-[#00ff41]/40 mb-8 block italic">Operational Doctrine</span>
+                <h2 className="text-6xl md:text-8xl font-black italic tracking-tighter leading-none uppercase text-white">Ghost <br/> <span className="text-[#00ff41] not-italic">Protocol.</span></h2>
+             </Reveal>
+             <div className="space-y-12">
+                {[
+                  { n: "01", t: "Ingress Scrub", d: "Filtering all incoming traffic through a multi-layered neural scrubbing station." },
+                  { n: "02", t: "Shadow Execution", d: "Running tactical processes in encrypted memory-only enclaves." },
+                  { n: "03", t: "Trace Erasure", d: "Active byte-level overwriting of all ephemeral session data post-execution." }
+                ].map((step, i) => (
+                  <Reveal key={step.n} delay={i * 0.1 + 0.3} className="flex gap-12 group border-l border-[#00ff41]/10 pl-8 hover:border-[#00ff41] transition-colors">
+                    <span className="text-4xl font-black italic text-[#00ff41]/10 group-hover:text-[#00ff41] transition-colors">{step.n}</span>
+                    <div>
+                      <h4 className="text-xl font-black uppercase italic text-white mb-2">{step.t}</h4>
+                      <p className="text-xs text-[#00ff41]/30 font-light tracking-widest uppercase italic leading-loose">{step.d}</p>
+                    </div>
+                  </Reveal>
+                ))}
+             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA / ACCESS ── */}
+      <section className="py-40 bg-[#020202] relative">
+         <div className="max-w-[1600px] mx-auto px-8 md:px-16">
+            <div className="bg-[#00ff41] text-black p-24 lg:p-40 relative overflow-hidden flex flex-col items-center text-center group">
+               <div className="absolute inset-0 opacity-10 grayscale brightness-50 group-hover:opacity-20 transition-opacity">
+                  <Image src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=1600&q=80" alt="CTA Cyber" fill className="object-cover" />
+               </div>
+               <Reveal>
+                  <span className="text-[10px] font-bold uppercase tracking-[1em] text-black/50 mb-12 block italic">Vetting Required</span>
+                  <h2 className="text-7xl md:text-[12rem] font-black italic tracking-tighter leading-[0.8] uppercase mb-16">
+                     Initiate <br/> <span className="text-black/30 not-italic">Access.</span>
+                  </h2>
+                  <div className="flex flex-wrap justify-center gap-8 relative z-10">
+                     <button className="px-20 py-8 bg-black text-[#00ff41] font-black uppercase text-sm tracking-[0.5em] hover:italic transition-all">
+                        Request_Authorization
+                     </button>
+                     <button className="px-20 py-8 border border-black/20 text-black font-black uppercase text-sm tracking-[0.5em] hover:bg-black/5 transition-all">
+                        Technical_Vault
+                     </button>
+                  </div>
+               </Reveal>
+            </div>
+         </div>
+      </section>
+
+      {/* ── FOOTER ── */}
+      <footer className="bg-black pt-40 pb-20 px-8 md:px-16 border-t border-[#00ff41]/10">
+         <div className="max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-32 mb-40">
+            <div className="lg:col-span-6">
+               <div className="flex items-center gap-4 mb-12">
+                 <Ghost className="w-10 h-10 text-[#00ff41]" />
+                 <span className="text-3xl font-black tracking-tighter uppercase italic">GHOST_SHELL<span className="text-[#00ff41]/30">//</span>DEFENSE</span>
+               </div>
+               <p className="text-[#00ff41]/30 text-sm font-light leading-relaxed uppercase tracking-[0.3em] mb-12 italic max-w-md">
+                 Securing high-value enclaves through zero-footprint operational doctrine and post-quantum cryptographic synthesis.
+               </p>
+               <div className="flex gap-12">
+                 {["TERMINAL", "NETWORK", "ENCLAVE", "DECRYPT"].map(s => (
+                   <a key={s} href="#" className="text-[10px] font-bold hover:text-white text-[#00ff41]/30 transition-colors tracking-[0.5em]">[{s}]</a>
+                 ))}
+               </div>
+            </div>
+            
+            <div className="lg:col-span-2">
+               <h4 className="text-[10px] font-bold uppercase tracking-[0.5em] text-[#00ff41]/40 mb-12">System</h4>
+               <ul className="space-y-6 text-xs font-bold uppercase tracking-[0.4em]">
+                 {["Vectors", "Capabilities", "Terminal", "Protocol"].map(item => (
+                   <li key={item}><a href="#" className="hover:text-white transition-colors">{item}</a></li>
+                 ))}
+               </ul>
+            </div>
+
+            <div className="lg:col-span-4">
+               <h4 className="text-[10px] font-bold uppercase tracking-[0.5em] text-[#00ff41]/40 mb-12">Access Inquiry</h4>
+               <p className="text-sm text-[#00ff41]/20 font-light mb-12 italic uppercase tracking-[0.2em] leading-loose">
+                 Vetting is mandatory for all access requests. Ensure your session is encrypted before initiating dialogue.
+               </p>
+               <a href="mailto:access@ghost-shell.defense" className="text-3xl font-black italic hover:text-white transition-colors block border-b border-[#00ff41]/10 pb-8 uppercase tracking-tighter">
+                  access@ghost.shell
+               </a>
+            </div>
+         </div>
+
+         <div className="max-w-[1600px] mx-auto flex flex-col md:row items-center justify-between gap-12 text-[9px] font-bold uppercase tracking-[0.8em] text-[#00ff41]/10 border-t border-[#00ff41]/5 pt-20">
+            <p>© 2024 GHOST SHELL SYSTEMS. ALL RIGHTS RESERVED. [CLASSIFIED].</p>
+            <div className="flex gap-16">
+               <a href="#" className="hover:text-white transition-colors">[Privacy_Scrub]</a>
+               <a href="#" className="hover:text-white transition-colors">[Terms_of_Shadow]</a>
+            </div>
+         </div>
       </footer>
     </div>
   );
